@@ -20,3 +20,10 @@ test('web demo shell keeps CSS and data bridge separate', () => {
   assert.match(html, /styles.css/);
   assert.match(html, /src\/demoData.mjs/);
 });
+
+test('web demo shell is wired to the MVP API endpoint', () => {
+  const dataBridge = readFileSync('apps/web/src/demoData.mjs', 'utf8');
+
+  assert.match(dataBridge, /\/api\/mvp\/task/);
+  assert.doesNotMatch(dataBridge, /from '..\/..\/api\/src\/demoScenario\.mjs'/);
+});

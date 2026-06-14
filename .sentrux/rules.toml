@@ -1,0 +1,66 @@
+[constraints]
+min_quality = 0.60
+min_acyclicity = 1.00
+max_cycles = 0
+max_upward_violations = 0
+no_god_files = true
+
+[[layers]]
+name = "truth_and_specs"
+paths = ["docs/*", "docs/**/*", "specs/*", "specs/**/*", "changes/*", "changes/**/*"]
+order = 6
+
+[[layers]]
+name = "verification"
+paths = ["scripts/*", "tests/*", "tests/**/*", "package.json"]
+order = 0
+
+[[layers]]
+name = "web"
+paths = ["apps/web/*", "apps/web/**/*"]
+order = 1
+
+[[layers]]
+name = "api"
+paths = ["apps/api/*", "apps/api/**/*"]
+order = 1
+
+[[layers]]
+name = "core"
+paths = ["packages/core/*", "packages/core/**/*"]
+order = 2
+
+[[layers]]
+name = "adapter"
+paths = ["packages/opl-adapter/*", "packages/opl-adapter/**/*"]
+order = 3
+
+[[layers]]
+name = "contracts"
+paths = ["packages/contracts/*", "packages/contracts/**/*"]
+order = 4
+
+[[boundaries]]
+from = "apps/web/**/*"
+to = "apps/api/src/**/*"
+reason = "Web UI talks to SaaS API through HTTP contract, not source imports."
+
+[[boundaries]]
+from = "apps/web/**/*"
+to = "packages/**/*"
+reason = "Web UI must not import backend packages directly."
+
+[[boundaries]]
+from = "apps/api/src/**/*"
+to = "apps/web/**/*"
+reason = "API serves static files by path and must not import UI implementation."
+
+[[boundaries]]
+from = "packages/core/**/*"
+to = "apps/**/*"
+reason = "Core loop must stay app-agnostic."
+
+[[boundaries]]
+from = "packages/opl-adapter/**/*"
+to = "apps/**/*"
+reason = "OPL adapter must stay behind API/core boundaries."

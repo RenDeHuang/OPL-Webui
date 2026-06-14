@@ -34,6 +34,20 @@ test('package lifecycle exposes verification-only commands', () => {
   }
 });
 
+test('repo exposes active truth, durable specs, and structural rules', () => {
+  const requiredTruthFiles = [
+    'docs/active/README.md',
+    'specs/product/spec.md',
+    'specs/runtime/spec.md',
+    'specs/source/spec.md',
+    '.sentrux/rules.toml',
+  ];
+
+  for (const file of requiredTruthFiles) {
+    assert.equal(existsSync(file), true, `missing governance truth file: ${file}`);
+  }
+});
+
 test('package does not introduce runtime or dev dependencies', () => {
   assert.equal(pkg.dependencies, undefined);
   assert.equal(pkg.devDependencies, undefined);

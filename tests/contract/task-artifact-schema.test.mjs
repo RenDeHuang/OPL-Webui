@@ -18,3 +18,10 @@ test('artifact contract keeps source refs mandatory for traceability', () => {
   assert.ok(schema.required.includes('sourceRefs'));
   assert.equal(schema.properties.sourceRefs.minItems, 1);
 });
+
+test('MVP HTTP task contract requires tenant, workspace, and user boundary', () => {
+  const schema = readJson('packages/contracts/opl/mvp-task-http.schema.json');
+  assert.deepEqual(schema.required, ['tenantId', 'workspaceId', 'userId', 'prompt']);
+  assert.equal(schema.additionalProperties, false);
+  assert.deepEqual(schema.properties.intent.enum, ['research', 'grant', 'presentation', 'general']);
+});

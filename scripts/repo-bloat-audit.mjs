@@ -40,7 +40,7 @@ const tracked = gitFiles(['ls-files']);
 const untracked = gitFiles(['ls-files', '--others', '--exclude-standard']);
 const visibleFiles = new Set([...tracked, ...untracked].filter((path) => {
   const first = path.split('/')[0];
-  return !ignoredDirectories.includes(first);
+  return !ignoredDirectories.includes(first) && statSync(path, { throwIfNoEntry: false })?.isFile();
 }));
 
 const allFiles = walk().filter((path) => visibleFiles.has(path));
@@ -75,6 +75,7 @@ const report = {
   largestFile,
   violations,
   ignoredDirectories,
+  files: allFiles,
 };
 
 console.log(JSON.stringify(report, null, 2));

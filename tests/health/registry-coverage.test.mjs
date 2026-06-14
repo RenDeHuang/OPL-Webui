@@ -23,6 +23,9 @@ test('registry points only at existing node test files', () => {
       assert.equal(typeof entry.lifecycleRole, 'string');
       assert.ok(Array.isArray(entry.contracts));
       assert.ok(entry.contracts.length > 0, `${entry.file} must declare contract refs`);
+      for (const contractRef of entry.contracts) {
+        assert.ok(existsSync(contractRef), `${entry.file} references missing contract: ${contractRef}`);
+      }
       assert.ok(Array.isArray(entry.verifySuites));
       assert.ok(entry.verifySuites.length > 0, `${entry.file} must declare verify suites`);
     }

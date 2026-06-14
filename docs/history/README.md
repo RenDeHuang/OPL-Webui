@@ -24,3 +24,12 @@
 - verified: `npm run gate:review`
 - can claim: 本地 demo 纵切能完成 task/artifact projection，且只通过 mock readonly OPL command。
 - cannot claim: 未实现真实 OPL execution、生产 API、WebUI、多租户鉴权、数据库或队列。
+
+## 2026-06-14 web-demo-workspace-shell
+
+- commit: `daad591`
+- archive: `changes/archive/2026-06-14-web-demo-workspace-shell/`
+- summary: 建立静态中文 AI workspace shell，展示 demo task/artifact projection。
+- verified: `npm run gate:review`
+- can claim: 本地静态 Web shell 方向可预览。
+- cannot claim: 未实现云端服务、真实 API 调用、登录、多租户数据库或真实 OPL execution。

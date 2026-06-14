@@ -9,6 +9,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['gate:review'], 'node scripts/workflow-gate.mjs');
   assert.equal(pkg.scripts['repo:bloat'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
+  assert.equal(pkg.scripts['start:mvp'], 'node apps/api/src/server.mjs');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');

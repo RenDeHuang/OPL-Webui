@@ -32,6 +32,18 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'tests/contract/api-mvp-http.test.mjs',
+    lane: 'contract',
+    ownerSurface: 'apps-api',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze([
+      'apps/api/src/server.mjs',
+      'apps/api/src/mvpTaskHandler.mjs',
+      'packages/contracts/opl/mvp-task-http.schema.json',
+    ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'tests/contract/api-demo-loop.test.mjs',
     lane: 'contract',
     ownerSurface: 'apps-api',
@@ -85,7 +97,10 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'smoke',
     ownerSurface: 'mvp-task-artifact-loop',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['apps/api/src/demoScenario.mjs', 'changes/active/mvp-task-artifact-loop/eval-plan.md']),
+    contracts: Object.freeze([
+      'apps/api/src/demoScenario.mjs',
+      'changes/archive/2026-06-14-mvp-task-artifact-loop/closeout.md',
+    ]),
     verifySuites: Object.freeze(['current', 'smoke']),
   }),
   Object.freeze({
