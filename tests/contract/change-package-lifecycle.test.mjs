@@ -4,6 +4,16 @@ import test from 'node:test';
 
 import pkg from '../../package.json' with { type: 'json' };
 
+const lifecycleFiles = [
+  'proposal.md',
+  'spec-delta.md',
+  'design.md',
+  'tasks.md',
+  'eval-plan.md',
+  'review.md',
+  'closeout.md',
+];
+
 test('package lifecycle exposes verification-only commands', () => {
   const requiredScripts = [
     'verify',
@@ -31,17 +41,8 @@ test('package does not introduce runtime or dev dependencies', () => {
 
 test('foundation change package is archived after closeout', () => {
   const root = 'changes/archive/2026-06-14-foundation-loop-contracts';
-  const requiredFiles = [
-    'proposal.md',
-    'spec-delta.md',
-    'design.md',
-    'tasks.md',
-    'eval-plan.md',
-    'review.md',
-    'closeout.md',
-  ];
 
-  for (const file of requiredFiles) {
+  for (const file of lifecycleFiles) {
     assert.equal(existsSync(`${root}/${file}`), true, `missing change lifecycle file: ${file}`);
   }
 
@@ -51,9 +52,21 @@ test('foundation change package is archived after closeout', () => {
   assert.match(evalPlan, /npm run repo:bloat/);
   assert.match(evalPlan, /Cannot Claim/);
 
-  assert.deepEqual(readdirSync('changes/active'), [], 'closed changes must leave changes/active empty');
-
   const history = readFileSync('docs/history/README.md', 'utf8');
   assert.match(history, /foundation-loop-contracts/);
   assert.match(history, /41515a6/);
+});
+
+test('active change packages are complete and eval-backed', () => {
+  for (const changeId of readdirSync('changes/active')) {
+    const root = `changes/active/${changeId}`;
+    for (const file of lifecycleFiles) {
+      assert.equal(existsSync(`${root}/${file}`), true, `missing ${changeId}/${file}`);
+    }
+
+    const evalPlan = readFileSync(`${root}/eval-plan.md`, 'utf8');
+    assert.match(evalPlan, /npm run verify/);
+    assert.match(evalPlan, /npm run gate:review/);
+    assert.match(evalPlan, /Cannot Claim/);
+  }
 });

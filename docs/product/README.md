@@ -21,3 +21,8 @@ OPL-WebUI 是公网多租户 SaaS，提供 Genspark 风格 AI Workspace，并作
 - 不能声称已实现未落地的 OPL 内部能力。
 - 不能声称绕过白名单直接执行任意 CLI。
 - 不能把 Markdown 当作机器可执行 contract。
+
+## Current MVP Slice
+
+- `mvp-task-artifact-loop`: 本地 demo tenant 可完成 task -> mock OPL Adapter -> artifact projection。
+- 该 slice 只证明产品主链路形状，不证明真实 OPL execution、登录、多租户数据库或生产 SaaS。

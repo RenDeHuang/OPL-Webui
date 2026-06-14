@@ -14,3 +14,9 @@
 - `packages/opl-adapter`: 白名单 OPL CLI/contracts 适配层。
 - `tests`: 跨包验证、契约测试、回归测试。
 - `scripts`: 仓库维护脚本和本地自动化。
+
+## Current Implemented Surface
+
+- `apps/api/src/demoLoop.mjs`: 本地 demo API loop 函数，不启动服务。
+- `apps/api/src/demoScenario.mjs`: 中文 demo scenario。
+- `packages/core/src/taskArtifactLoop.mjs`: task/artifact projection builder。

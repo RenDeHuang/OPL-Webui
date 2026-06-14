@@ -6,7 +6,7 @@ import { join } from 'node:path';
 const ignoredDirectories = ['.git', 'node_modules', '.runtime', '.superpowers'];
 const budgets = {
   files: 80,
-  markdownDocs: 24,
+  markdownDocs: 32,
   scripts: 8,
   tests: 16,
   maxFileLines: 260,
