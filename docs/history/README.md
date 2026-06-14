@@ -33,3 +33,12 @@
 - verified: `npm run gate:review`
 - can claim: 本地静态 Web shell 方向可预览。
 - cannot claim: 未实现云端服务、真实 API 调用、登录、多租户数据库或真实 OPL execution。
+
+## 2026-06-14 cloud-mvp-service-slice
+
+- commit: `f81f62b`
+- archive: `changes/archive/2026-06-14-cloud-mvp-service-slice/`
+- summary: 建立最小 Node MVP server，同源服务 Web shell 和 `POST /api/mvp/task`，并补齐 `docs/active`、`specs/*`、`.sentrux/rules.toml`。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
+- can claim: 本地 MVP 服务能返回 tenant-scoped task/artifact projection。
+- cannot claim: 未实现真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。

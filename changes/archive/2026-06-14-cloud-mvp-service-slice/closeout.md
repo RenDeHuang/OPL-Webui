@@ -1,7 +1,7 @@
-# Closeout
+# cloud-mvp-service-slice Closeout
 
 - owner: cloud-mvp-service-slice
-- state: pending
+- state: archived
 
 ## Summary
 
@@ -11,10 +11,7 @@
 
 ## Verification
 
-- `npm run verify:health`: pass
-- `npm run verify:contract`: pass
-- `npm run verify:smoke`: pass
-- `npm run repo:bloat`: pass, 55 files / 21 markdown / 13 tests / max 158 lines
+- `npm run gate:review`: pass at commit `f81f62b`
 - `sentrux check /home/dev/projects/ui`: pass
 - `npm run start:mvp` + `curl /api/mvp/task`: pass, local service returned tenant-scoped artifact projection
 
