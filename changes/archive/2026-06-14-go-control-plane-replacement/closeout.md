@@ -1,7 +1,7 @@
-# Closeout
+# go-control-plane-replacement Closeout
 
 - owner: go-control-plane-replacement
-- state: pending
+- state: archived
 
 ## Summary
 
@@ -11,10 +11,7 @@
 
 ## Verification
 
-- `cd services/control-plane-go && go test ./...`: pass
-- `npm run verify:contract`: pass
-- `npm run verify:smoke`: pass
-- `npm run verify:health`: pass
+- `npm run gate:review`: pass at commit `35c11a3`
 - `sentrux check /home/dev/projects/ui`: pass
 - `npm run start:mvp` + local curl `/` and `/api/mvp/task`: pass
 

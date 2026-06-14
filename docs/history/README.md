@@ -42,3 +42,12 @@
 - verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
 - can claim: 本地 MVP 服务能返回 tenant-scoped task/artifact projection。
 - cannot claim: 未实现真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。
+
+## 2026-06-14 go-control-plane-replacement
+
+- commit: `35c11a3`
+- archive: `changes/archive/2026-06-14-go-control-plane-replacement/`
+- summary: 用 Go control plane 直接替换 Node MVP API，删除 `apps/api` 后端和旧 Node API 测试。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
+- can claim: 本地 Go control plane 能服务 Web shell 和 tenant-scoped `/api/mvp/task`。
+- cannot claim: 未实现真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。
