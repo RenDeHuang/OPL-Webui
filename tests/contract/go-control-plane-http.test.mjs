@@ -79,6 +79,22 @@ test('Go control plane creates a tenant scoped task artifact projection', async 
   }
 });
 
+test('Go control plane exposes a deployment health check', async () => {
+  const { child, baseUrl } = await startGoServer();
+  try {
+    const response = await fetch(`${baseUrl}/healthz`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
+
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.service, 'opl-webui-control-plane');
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
 test('Go control plane rejects requests without tenant boundary', async () => {
   const { child, baseUrl } = await startGoServer();
   try {

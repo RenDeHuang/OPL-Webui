@@ -24,6 +24,14 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({
+    file: 'tests/health/deploy-container-readiness.test.mjs',
+    lane: 'health',
+    ownerSurface: 'deploy',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['Dockerfile', '.dockerignore', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
+    verifySuites: Object.freeze(['current', 'health']),
+  }),
+  Object.freeze({
     file: 'tests/contract/change-package-lifecycle.test.mjs',
     lane: 'contract',
     ownerSurface: 'change-lifecycle',

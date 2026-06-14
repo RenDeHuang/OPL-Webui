@@ -60,3 +60,12 @@
 - verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
 - can claim: 当前后端业务 surface 收敛为 Go control plane + HTTP contract。
 - cannot claim: 未实现真实 OPL execution、真实登录、多租户数据库、队列、计费或生产部署。
+
+## 2026-06-14 deploy-container-readiness
+
+- commit: this commit
+- archive: `changes/archive/2026-06-14-deploy-container-readiness/`
+- summary: 增加 Go control plane 容器部署入口、`HOST`/`PORT` 地址配置和 `/healthz` 健康检查。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
+- can claim: Go control plane 具备通用容器部署底座。
+- cannot claim: 未实现真实 OPL execution、真实登录、多租户数据库、队列、计费或生产运行证据。

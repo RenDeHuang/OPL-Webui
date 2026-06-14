@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,19 +11,43 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "4173"
-	}
-
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", handleHealthz)
 	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
 	mux.Handle("/", http.FileServer(http.Dir("apps/web")))
 
-	addr := "127.0.0.1:" + port
+	addr := serverAddress()
 	log.Printf("OPL WebUI Go control plane listening on http://%s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func serverAddress() string {
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4173"
+	}
+
+	return host + ":" + port
+}
+
+func handleHealthz(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		response.Header().Set("allow", http.MethodGet)
+		http.Error(response, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	response.Header().Set("content-type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(response).Encode(map[string]any{
+		"ok":      true,
+		"service": "opl-webui-control-plane",
+	})
 }

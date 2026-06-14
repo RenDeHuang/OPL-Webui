@@ -1,0 +1,10 @@
+*
+!.dockerignore
+!Dockerfile
+!go.work
+!services
+!services/control-plane-go
+!services/control-plane-go/**
+!apps
+!apps/web
+!apps/web/**
