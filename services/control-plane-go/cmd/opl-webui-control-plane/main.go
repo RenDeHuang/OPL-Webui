@@ -13,6 +13,11 @@ import (
 )
 
 func main() {
+	if err := mvp.ConfigureDefaultTaskStoreFromEnv(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", handleHealthz)
 	mux.HandleFunc("/readyz", handleReadyz)

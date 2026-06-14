@@ -62,7 +62,7 @@ type ErrorResponse struct {
 	Message   string `json:"message"`
 }
 
-var defaultTaskStore = NewMemoryTaskStore()
+var defaultTaskStore TaskProjectionStore = NewMemoryTaskStore()
 
 func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 	return CreateTaskResponseWithRoute(context.Background(), input, nil)

@@ -75,3 +75,9 @@
 - summary: 增加零 ORM 的 Postgres `TaskStore` adapter 和最小 `task_projections` schema 常量。
 - verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
 - cannot claim: runtime 已连接真实 Postgres、队列、计费、object storage、OPL worker 或公网生产部署。
+
+## 2026-06-14 task-store-runtime-wiring
+
+- summary: runtime 启动时按 `OPL_DATABASE_URL` 选择 task store；无 DB 用 memory，有 DB 走 Postgres opener，driver 未链接时 fail closed。
+- verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
+- cannot claim: 真实 Postgres driver 已接入、生产数据库已运行、队列、计费、object storage、OPL worker 或公网生产部署。
