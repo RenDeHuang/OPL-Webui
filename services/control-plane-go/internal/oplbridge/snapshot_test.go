@@ -101,6 +101,27 @@ func TestTaskRouteUsesReadonlyResolveAndHandoffCommands(t *testing.T) {
 	}
 }
 
+func TestTaskRouteDoesNotExposeRawRunnerErrors(t *testing.T) {
+	route := BuildTaskRoute(context.Background(), failingRunner{}, TaskRouteRequest{
+		Prompt: "生成一个医学研究项目的证据整理任务",
+		Intent: "research",
+		Target: "deliverable",
+	})
+
+	if route.OK {
+		t.Fatal("expected degraded route")
+	}
+	if len(route.Commands) == 0 {
+		t.Fatal("expected command projections")
+	}
+	if route.Commands[0].Error != "OPL CLI command failed" {
+		t.Fatalf("Error = %q, want stable public message", route.Commands[0].Error)
+	}
+	if route.Commands[0].Error == "raw runner stderr with local diagnostics" {
+		t.Fatal("raw runner error leaked into public route")
+	}
+}
+
 func TestSnapshotDoesNotExposeRawRunnerErrors(t *testing.T) {
 	snapshot := BuildSnapshot(context.Background(), failingRunner{})
 

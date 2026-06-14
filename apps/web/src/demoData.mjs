@@ -8,12 +8,13 @@ const DEFAULT_DEMO_REQUEST = Object.freeze({
 
 export function createDemoCards(scenario) {
   const route = scenario.adapter.route ?? {};
-  const routedDomain = route.resolution?.resolution?.domain_id
-    ?? route.handoffBundle?.handoff_bundle?.target_domain_id
-    ?? 'unknown_domain';
-  const routingStatus = route.resolution?.resolution?.status
-    ?? route.handoffBundle?.handoff_bundle?.routing_status
-    ?? scenario.adapter.mode;
+  const routeValue = route.ok === false
+    ? 'OPL route degraded'
+    : `${route.resolution?.resolution?.domain_id
+      ?? route.handoffBundle?.handoff_bundle?.target_domain_id
+      ?? 'unknown_domain'} / ${route.resolution?.resolution?.status
+      ?? route.handoffBundle?.handoff_bundle?.routing_status
+      ?? scenario.adapter.mode}`;
 
   return [
     {
@@ -26,7 +27,7 @@ export function createDemoCards(scenario) {
     },
     {
       label: 'OPL 路由',
-      value: `${routedDomain} / ${routingStatus}`,
+      value: routeValue,
     },
   ];
 }

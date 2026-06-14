@@ -151,3 +151,25 @@ test('web demo data renderer writes cards into DOM-like targets', async () => {
   assert.match(writes.get('[data-opl-modules]'), /1\/3/);
   assert.match(writes.get('[data-opl-domains]'), /medautoscience/);
 });
+
+test('web demo data surfaces degraded OPL route state', async () => {
+  const degradedProjection = {
+    ...apiProjection,
+    adapter: {
+      ...apiProjection.adapter,
+      route: {
+        ok: false,
+        mode: 'readonly',
+        policyId: 'opl.cli.readonly.task-route',
+        commands: [
+          { args: ['domain', 'resolve-request'], policyId: 'opl.cli.readonly.task-route', mutating: false, ok: false },
+        ],
+      },
+    },
+  };
+
+  const data = await getWebDemoData(async (url) => createFetchResponse(url === '/api/opl/snapshot' ? oplSnapshot : degradedProjection));
+
+  assert.equal(data.cards[2].label, 'OPL 路由');
+  assert.equal(data.cards[2].value, 'OPL route degraded');
+});
