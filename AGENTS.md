@@ -12,8 +12,8 @@
 ## 产品边界
 
 - 本仓是公网多租户 SaaS WebUI，用 Genspark 风格承载 OPL formal deliverable workbench。
-- Web UI 只调用 SaaS API；SaaS API 只通过 `packages/opl-adapter` 接触 OPL。
-- `packages/opl-adapter` 只能使用 `packages/contracts/opl/command-policy.json` 白名单里的 OPL CLI/contract surface。
+- Web UI 只调用 Go control plane HTTP API。
+- Go control plane 是当前唯一后端业务入口；真实 OPL CLI 集成必须先新增 Go-side contract、eval 和白名单边界。
 - 不 import `one-person-lab` 内部模块，不读取 OPL state 文件，不直接调用 MAS/MAG/RCA 私有 runtime。
 - OPL 安装、repair、module exec、family-runtime mutation、engine install/update/remove 默认禁止，除非新增 contract、eval 和人工授权边界。
 
@@ -27,7 +27,7 @@
 ## 防膨胀规则
 
 - 没有 consumer 的 contract 不新增。
-- 没有 eval/test 的 AI 或 adapter 行为不算完成。
+- 没有 eval/test 的 AI、OPL 或 control-plane 行为不算完成。
 - `scripts/` 只放 runner、classifier、gate；不要把业务逻辑塞进脚本。
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
 - 单文件超过约 `260` 行会触发当前 repo bloat gate；需要先拆分或调整明确预算。

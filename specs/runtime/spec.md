@@ -1,7 +1,7 @@
 # Runtime Spec
 
 - owner: runtime owner
-- purpose: Go control plane、OPL adapter 和运行边界 durable spec。
+- purpose: Go control plane 和运行边界 durable spec。
 - state: active
 - machine boundary: 机器接口在 `services/control-plane-go`、`packages/contracts/opl/*.json` 和 tests。
 
@@ -9,7 +9,7 @@
 
 - `runtime.go.mvp-task`: Go control plane 的 `POST /api/mvp/task` 创建 tenant-scoped task/artifact projection。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
-- `runtime.opl.fail-closed`: OPL projection 默认 mock readonly，真实 OPL CLI 只能进入白名单边界。
+- `runtime.opl.fail-closed`: OPL projection 默认 mock readonly，真实 OPL CLI 只能通过 Go-side contract 和白名单边界进入。
 - `runtime.opl.no-mutation`: install、repair、module exec、family-runtime mutation 默认禁止。
 
 ## Cannot Claim

@@ -56,26 +56,6 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
-    file: 'tests/contract/opl-adapter-whitelist.test.mjs',
-    lane: 'contract',
-    ownerSurface: 'opl-adapter',
-    lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['packages/contracts/opl/command-policy.json']),
-    verifySuites: Object.freeze(['current', 'contract']),
-  }),
-  Object.freeze({
-    file: 'tests/contract/task-artifact-schema.test.mjs',
-    lane: 'contract',
-    ownerSurface: 'contracts',
-    lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'packages/contracts/opl/task-contract.schema.json',
-      'packages/contracts/opl/artifact-contract.schema.json',
-      'packages/core/src/loops.mjs',
-    ]),
-    verifySuites: Object.freeze(['current', 'contract']),
-  }),
-  Object.freeze({
     file: 'tests/smoke/foundation.test.mjs',
     lane: 'smoke',
     ownerSurface: 'foundation',

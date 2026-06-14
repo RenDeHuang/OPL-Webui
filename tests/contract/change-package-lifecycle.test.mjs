@@ -56,6 +56,15 @@ test('Go control plane replaces the Node API backend', () => {
   assert.match(pkg.scripts['start:mvp'], /^go run \.\/services\/control-plane-go\/cmd\/opl-webui-control-plane/);
 });
 
+test('post-Go cleanup removes retired Node adapter surfaces', () => {
+  assert.equal(existsSync('packages/core'), false);
+  assert.equal(existsSync('packages/opl-adapter'), false);
+  assert.equal(existsSync('packages/contracts/opl/command-policy.json'), false);
+  assert.equal(existsSync('packages/contracts/opl/task-contract.schema.json'), false);
+  assert.equal(existsSync('packages/contracts/opl/artifact-contract.schema.json'), false);
+  assert.equal(existsSync('packages/contracts/opl/mvp-task-http.schema.json'), true);
+});
+
 test('package does not introduce runtime or dev dependencies', () => {
   assert.equal(pkg.dependencies, undefined);
   assert.equal(pkg.devDependencies, undefined);

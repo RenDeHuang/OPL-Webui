@@ -26,16 +26,6 @@ paths = ["services/control-plane-go/*", "services/control-plane-go/**/*"]
 order = 2
 
 [[layers]]
-name = "core"
-paths = ["packages/core/*", "packages/core/**/*"]
-order = 2
-
-[[layers]]
-name = "adapter"
-paths = ["packages/opl-adapter/*", "packages/opl-adapter/**/*"]
-order = 3
-
-[[layers]]
 name = "contracts"
 paths = ["packages/contracts/*", "packages/contracts/**/*"]
 order = 4
@@ -54,13 +44,3 @@ reason = "Web UI must not import backend packages directly."
 from = "services/control-plane-go/**/*"
 to = "apps/web/**/*"
 reason = "Go control plane serves static files by path and must not import UI implementation."
-
-[[boundaries]]
-from = "packages/core/**/*"
-to = "apps/**/*"
-reason = "Core loop must stay app-agnostic."
-
-[[boundaries]]
-from = "packages/opl-adapter/**/*"
-to = "apps/**/*"
-reason = "OPL adapter must stay behind control-plane boundaries."
