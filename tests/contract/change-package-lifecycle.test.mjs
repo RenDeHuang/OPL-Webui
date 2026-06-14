@@ -39,26 +39,26 @@ test('package does not introduce runtime or dev dependencies', () => {
   assert.equal(pkg.devDependencies, undefined);
 });
 
-test('foundation change package is archived after closeout', () => {
-  const root = 'changes/archive/2026-06-14-foundation-loop-contracts';
-
-  for (const file of lifecycleFiles) {
-    assert.equal(existsSync(`${root}/${file}`), true, `missing change lifecycle file: ${file}`);
+test('archived change packages keep only compact closeout summaries', () => {
+  for (const archiveId of readdirSync('changes/archive')) {
+    const root = `changes/archive/${archiveId}`;
+    assert.deepEqual(readdirSync(root).sort(), ['closeout.md'], `${archiveId} archive must stay compact`);
+    const closeout = readFileSync(`${root}/closeout.md`, 'utf8');
+    assert.match(closeout, /Summary/);
+    assert.match(closeout, /Verification/);
+    assert.match(closeout, /Cannot Claim/);
   }
-
-  const evalPlan = readFileSync(`${root}/eval-plan.md`, 'utf8');
-  assert.match(evalPlan, /npm run verify/);
-  assert.match(evalPlan, /npm run gate:review/);
-  assert.match(evalPlan, /npm run repo:bloat/);
-  assert.match(evalPlan, /Cannot Claim/);
 
   const history = readFileSync('docs/history/README.md', 'utf8');
   assert.match(history, /foundation-loop-contracts/);
   assert.match(history, /41515a6/);
+  assert.match(history, /mvp-task-artifact-loop/);
+  assert.match(history, /8626e29/);
 });
 
 test('active change packages are complete and eval-backed', () => {
-  for (const changeId of readdirSync('changes/active')) {
+  const activeChanges = existsSync('changes/active') ? readdirSync('changes/active') : [];
+  for (const changeId of activeChanges) {
     const root = `changes/active/${changeId}`;
     for (const file of lifecycleFiles) {
       assert.equal(existsSync(`${root}/${file}`), true, `missing ${changeId}/${file}`);

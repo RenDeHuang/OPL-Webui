@@ -16,6 +16,10 @@
 - `npm run repo:bloat`
 - `npm run check:diff`
 
+## Cannot Claim
+
+- 不能声明真实 WebUI、API、数据库、队列、多租户鉴权或真实 OPL execution 已实现。
+
 ## Follow-Up
 
 - 下一步应从一个 vertical slice 开始：tenant demo -> project -> task -> mock OPL adapter -> artifact projection -> Genspark-style UI。
