@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "owner": "OPL-WebUI",
+  "purpose": "MVP OPL CLI command policy for the backend adapter",
+  "defaultMode": "deny",
+  "allowed": [
+    {
+      "id": "opl.help.json",
+      "command": ["opl", "help", "--json"],
+      "mode": "readonly",
+      "reason": "Discover machine-readable OPL CLI surface."
+    },
+    {
+      "id": "opl.contract.validate",
+      "command": ["opl", "contract", "validate"],
+      "mode": "readonly",
+      "reason": "Validate OPL contract corpus without running domain actions."
+    },
+    {
+      "id": "opl.contract.workstreams",
+      "command": ["opl", "contract", "workstreams"],
+      "mode": "readonly",
+      "reason": "Read admitted OPL workstreams."
+    },
+    {
+      "id": "opl.contract.domains",
+      "command": ["opl", "contract", "domains"],
+      "mode": "readonly",
+      "reason": "Read admitted OPL domains."
+    },
+    {
+      "id": "opl.contract.surfaces",
+      "command": ["opl", "contract", "surfaces"],
+      "mode": "readonly",
+      "reason": "Read public OPL contract surfaces."
+    },
+    {
+      "id": "opl.workspace.projects",
+      "command": ["opl", "workspace", "projects"],
+      "mode": "readonly",
+      "reason": "Read OPL workspace project projection."
+    },
+    {
+      "id": "opl.workspace.root",
+      "command": ["opl", "workspace", "root"],
+      "mode": "readonly",
+      "reason": "Read active OPL workspace root."
+    },
+    {
+      "id": "opl.modules",
+      "command": ["opl", "modules"],
+      "mode": "readonly",
+      "reason": "Read installed OPL module projection."
+    },
+    {
+      "id": "opl.skill.list",
+      "command": ["opl", "skill", "list"],
+      "mode": "readonly",
+      "reason": "Read OPL-visible skill projection."
+    },
+    {
+      "id": "opl.actions.list",
+      "command": ["opl", "actions", "list"],
+      "mode": "readonly",
+      "reason": "Read domain-owned action catalog without executing actions."
+    }
+  ],
+  "deniedPrefixes": [
+    ["opl", "install"],
+    ["opl", "system", "configure-codex"],
+    ["opl", "system", "repair"],
+    ["opl", "system", "update"],
+    ["opl", "module", "install"],
+    ["opl", "module", "update"],
+    ["opl", "module", "reinstall"],
+    ["opl", "module", "remove"],
+    ["opl", "module", "exec"],
+    ["opl", "engine", "install"],
+    ["opl", "engine", "update"],
+    ["opl", "engine", "reinstall"],
+    ["opl", "engine", "remove"],
+    ["opl", "workspace", "root", "set"],
+    ["opl", "workspace", "bind"],
+    ["opl", "workspace", "activate"],
+    ["opl", "workspace", "archive"],
+    ["opl", "family-runtime", "install"],
+    ["opl", "family-runtime", "repair"],
+    ["opl", "family-runtime", "tick"],
+    ["opl", "family-runtime", "enqueue"],
+    ["opl", "family-runtime", "approve"],
+    ["opl", "runtime", "repair-gateway"],
+    ["opl", "runtime", "manager", "action", "--apply"],
+    ["opl", "domain", "launch"],
+    ["opl", "start"],
+    ["opl", "exec"],
+    ["opl", "resume"],
+    ["opl", "session", "resume"]
+  ],
+  "experimentalNeedsProof": [
+    ["opl", "family-runtime", "status"],
+    ["opl", "family-runtime", "doctor"],
+    ["opl", "family-runtime", "queue", "list"],
+    ["opl", "family-runtime", "notify", "list"],
+    ["opl", "family-runtime", "events", "export"],
+    ["opl", "runtime", "snapshot"],
+    ["opl", "runtime", "index"],
+    ["opl", "session", "list"]
+  ]
+}

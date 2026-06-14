@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opl-webui.local/contracts/opl/artifact-contract.schema.json",
+  "title": "OPL WebUI Artifact Contract",
+  "type": "object",
+  "required": ["artifactId", "tenantId", "workspaceId", "kind", "version", "sourceRefs"],
+  "additionalProperties": false,
+  "properties": {
+    "artifactId": { "type": "string", "minLength": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "workspaceId": { "type": "string", "minLength": 1 },
+    "kind": {
+      "type": "string",
+      "enum": ["analysis_package", "grant_package", "slide_deck", "document", "log_projection"]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "sourceRefs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "downloadRef": { "type": "string" }
+  }
+}
