@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OPL WebUI</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./src/demoData.mjs"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">OPL WebUI</div>
+      <nav aria-label="主导航">
+        <a href="#workspace">工作台</a>
+        <a href="#artifacts">交付物</a>
+        <a href="#tenant">租户</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="workspace">
+        <p class="eyebrow">One Person Lab AI Workspace</p>
+        <h1>今天想推进什么正式交付？</h1>
+        <div class="prompt" role="search">
+          <span>生成一个医学研究项目的证据整理任务</span>
+          <button type="button">开始</button>
+        </div>
+      </section>
+
+      <section class="workspace-grid" aria-label="任务工作区">
+        <article class="task-panel">
+          <p class="panel-kicker">医学研究证据整理</p>
+          <h2>任务进度</h2>
+          <ol>
+            <li>接收目标和约束</li>
+            <li>通过 mock OPL Adapter 读取 domain contract</li>
+            <li>生成可追踪 artifact projection</li>
+          </ol>
+          <dl class="metrics">
+            <div>
+              <dt>当前场景</dt>
+              <dd data-demo-title>医学研究证据整理</dd>
+            </div>
+            <div>
+              <dt>任务状态</dt>
+              <dd data-demo-status>completed / research</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="artifact-panel" id="artifacts">
+          <p class="panel-kicker">正式交付物</p>
+          <h2>analysis_package v1</h2>
+          <p data-demo-summary>已生成 1 个交付物，来源绑定 task 和 OPL command policy。</p>
+          <p><strong data-demo-artifact>1 个正式产物</strong></p>
+          <p class="boundary" data-demo-boundary>opl contract domains</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

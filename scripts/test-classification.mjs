@@ -45,6 +45,14 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'tests/contract/web-demo-data.test.mjs',
+    lane: 'contract',
+    ownerSurface: 'apps-web',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['apps/web/src/demoData.mjs', 'apps/api/src/demoScenario.mjs']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'tests/contract/opl-adapter-whitelist.test.mjs',
     lane: 'contract',
     ownerSurface: 'opl-adapter',
@@ -78,6 +86,14 @@ const TEST_ENTRIES = Object.freeze([
     ownerSurface: 'mvp-task-artifact-loop',
     lifecycleRole: 'current-owner',
     contracts: Object.freeze(['apps/api/src/demoScenario.mjs', 'changes/active/mvp-task-artifact-loop/eval-plan.md']),
+    verifySuites: Object.freeze(['current', 'smoke']),
+  }),
+  Object.freeze({
+    file: 'tests/smoke/web-demo-shell.test.mjs',
+    lane: 'smoke',
+    ownerSurface: 'apps-web',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['apps/web/index.html', 'apps/web/styles.css', 'apps/web/src/demoData.mjs']),
     verifySuites: Object.freeze(['current', 'smoke']),
   }),
 ]);
