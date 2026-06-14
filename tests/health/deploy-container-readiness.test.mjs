@@ -17,6 +17,7 @@ test('container deploy entrypoint builds the Go control plane only', () => {
   assert.doesNotMatch(dockerfile, /npm install|node /);
   assert.doesNotMatch(dockerfile, /apk add/);
   assert.doesNotMatch(dockerfile, /one-person-lab/);
+  assert.doesNotMatch(dockerfile, /COPY .*\/opt\/opl\/bin\/opl/);
 });
 
 test('docker build context excludes runtime bloat', () => {

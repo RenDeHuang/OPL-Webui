@@ -3,10 +3,21 @@
   "kind": "List",
   "items": [
     {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "opl-webui",
+        "labels": {
+          "app.kubernetes.io/name": "opl-webui"
+        }
+      }
+    },
+    {
       "apiVersion": "apps/v1",
       "kind": "Deployment",
       "metadata": {
         "name": "opl-webui-control-plane",
+        "namespace": "opl-webui",
         "labels": {
           "app.kubernetes.io/name": "opl-webui"
         }
@@ -25,6 +36,14 @@
             }
           },
           "spec": {
+            "imagePullSecrets": [
+              {
+                "name": "tcr-pull-secret"
+              }
+            ],
+            "nodeSelector": {
+              "medopl.cn/workload": "webui"
+            },
             "containers": [
               {
                 "name": "control-plane",
@@ -77,6 +96,16 @@
                     "path": "/healthz",
                     "port": 4173
                   }
+                },
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
                 }
               }
             ]
@@ -88,7 +117,8 @@
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
-        "name": "opl-webui-control-plane"
+        "name": "opl-webui-control-plane",
+        "namespace": "opl-webui"
       },
       "spec": {
         "selector": {
@@ -107,9 +137,11 @@
       "apiVersion": "networking.k8s.io/v1",
       "kind": "Ingress",
       "metadata": {
-        "name": "opl-webui"
+        "name": "opl-webui",
+        "namespace": "opl-webui"
       },
       "spec": {
+        "ingressClassName": "nginx",
         "rules": [
           {
             "host": "opl.medopl.cn",

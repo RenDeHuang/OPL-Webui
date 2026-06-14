@@ -93,3 +93,9 @@
 - summary: 增加 `cloud_mvp` runtime gate、DB/OPL readonly canary 命令、canary cleanup、Postgres projection delete 边界和 `opl.medopl.cn` K8s/Ingress shape contract。
 - verified: `npm run verify`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`。
 - cannot claim: 已执行 kubectl、build/push、Ingress 上线、公网 smoke、VPC/TKE DB canary、queue、billing、object storage、OPL worker 或真实 OPL execution。
+
+## 2026-06-15 cloud-mvp-deploy-handoff
+
+- summary: 补齐 TKE handoff 包：fixture 增加 namespace、imagePullSecret、nodeSelector、resources 和 ingress class；新增无 secret runbook 覆盖 TCR/CCR、Secret、apply、canary、smoke、rollback，并明确 OPL CLI 需由派生镜像或只读挂载提供。
+- verified: `npm run verify`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`。
+- cannot claim: 已执行 kubectl、读取 kubeconfig、build/push、打开 PostgreSQL 公网、真实云端部署、公网 smoke 或 VPC DB canary。

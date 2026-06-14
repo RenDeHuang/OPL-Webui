@@ -50,7 +50,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'deploy',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['deploy/cloud-mvp/opl-webui.k8s.json']),
+    contracts: Object.freeze(['deploy/cloud-mvp/opl-webui.k8s.json', 'deploy/cloud-mvp/RUNBOOK.md']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

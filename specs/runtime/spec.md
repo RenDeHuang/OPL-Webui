@@ -21,7 +21,8 @@
 - `runtime.deploy.cloud-mvp-profile`: `OPL_WEBUI_ENV=cloud_mvp` 要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`；queue、object store、billing 和 worker 仍属于 production 后续阶段。
 - `runtime.deploy.db-canary`: control-plane binary 提供 `canary db`，只从环境变量读取 `OPL_DATABASE_URL`，验证 Postgres open/ping/schema/write/read/delete，并且 JSON 报告不能泄露连接串。
 - `runtime.deploy.opl-cli-canary`: control-plane binary 提供 `canary opl-cli`，只调用 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
-- `runtime.deploy.cloud-mvp-shape`: `deploy/cloud-mvp/opl-webui.k8s.json` 固定 `opl.medopl.cn`、`4173`、`/healthz`、`/readyz`、`cloud_mvp` env 和 `OPL_DATABASE_URL` secretKeyRef；该 fixture 是声明式形状，不代表已经执行 kubectl 或公网部署。
+- `runtime.deploy.cloud-mvp-shape`: `deploy/cloud-mvp/opl-webui.k8s.json` 固定 `opl.medopl.cn`、namespace、imagePullSecret、nodeSelector、resources、ingress class、`4173`、`/healthz`、`/readyz`、`cloud_mvp` env 和 `OPL_DATABASE_URL` secretKeyRef；该 fixture 是声明式形状，不代表已经执行 kubectl 或公网部署。
+- `runtime.deploy.cloud-mvp-runbook`: `deploy/cloud-mvp/RUNBOOK.md` 提供云端/VPC runner handoff 步骤，覆盖 TCR/CCR build/push、Secret 创建、镜像替换、apply、canary、smoke 和 rollback；真实 kubeconfig、数据库密码、云 API key 只能由外部路径或执行环境注入。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
 - `runtime.opl.task-route`: `POST /api/mvp/task` 通过 Go control plane 读取 `opl domain resolve-request --json` 与 `opl contract handoff-envelope --json`，只返回 route/handoff evidence。
 - `runtime.opl.cli-allowlist`: snapshot 允许 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`；task route 允许 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json`。

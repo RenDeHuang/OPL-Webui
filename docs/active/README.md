@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `cloud-mvp-readiness`：Go control plane 已有 cloud MVP runtime gate、Postgres/OPL readonly canary 命令和 `opl.medopl.cn` 部署形状契约，但尚未执行云端部署。
+当前是 `cloud-mvp-deploy-handoff`：Go control plane 已有 cloud MVP runtime gate、Postgres/OPL readonly canary 命令、`opl.medopl.cn` TKE 部署形状契约和无 secret 云端执行 runbook，但尚未执行云端部署。
 
 ## Can Claim
 
@@ -18,7 +18,8 @@
 - Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`，不把 queue、object store、billing、worker 误算进 MVP preview。
 - Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
 - Control-plane binary 提供 `canary opl-cli`，验证 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
-- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
+- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、imagePullSecret、nodeSelector、resources、ingress class、4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
+- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、K8s Secret、镜像替换、apply、canary、smoke 和 rollback，不保存真实 secret。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
@@ -38,4 +39,4 @@
 
 ## Next Cursor
 
-下一步是在云端 runner/VPC 内注入 `/home/dev/.secrets/opl-webui/postgresql/oplweb.env` 等价 Secret，构建镜像并按 `deploy/cloud-mvp/opl-webui.k8s.json` 落地到 `opl.medopl.cn`，随后跑 `canary db`、`canary opl-cli` 和公网 smoke。
+下一步是在云端 runner/VPC 内按 `deploy/cloud-mvp/RUNBOOK.md` 注入外部 kubeconfig、TCR/CCR 凭据和 `/home/dev/.secrets/opl-webui/postgresql/oplweb.env` 等价 Secret，提供 `/opt/opl/bin/opl`，构建镜像并落地到 `opl.medopl.cn`，随后跑 `canary db`、`canary opl-cli` 和公网 smoke。
