@@ -11,6 +11,7 @@
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。
+- `runtime.deploy.opl-cli`: 容器默认读取 `OPL_CLI_PATH=/opt/opl/bin/opl`；OPL CLI 是外部只读运行依赖，不随 WebUI 镜像复制。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
 - `runtime.opl.task-route`: `POST /api/mvp/task` 通过 Go control plane 读取 `opl domain resolve-request --json` 与 `opl contract handoff-envelope --json`，只返回 route/handoff evidence。

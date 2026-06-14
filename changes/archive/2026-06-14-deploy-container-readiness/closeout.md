@@ -5,6 +5,7 @@
 - Go control plane 支持 `HOST`/`PORT` 地址配置，本机默认仍是 `127.0.0.1:4173`。
 - 新增 `GET /healthz` 健康检查，供云平台探活。
 - 新增 Dockerfile 和 `.dockerignore`，容器只构建 Go control plane 并复制 `apps/web`。
+- 容器默认 `OPL_CLI_PATH=/opt/opl/bin/opl`，OPL CLI 作为外部只读依赖提供，不复制 OPL 主仓进镜像。
 - 部署 readiness 测试已登记到 test registry。
 
 ## Verification

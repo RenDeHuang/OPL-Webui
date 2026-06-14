@@ -17,6 +17,7 @@
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
 - Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
+- 容器默认 `OPL_CLI_PATH=/opt/opl/bin/opl`；部署时应把 OPL CLI 作为外部只读依赖挂载或安装到该路径，不把 `one-person-lab` 主仓复制进 WebUI 镜像。
 - `GET /healthz` 可用于云平台 HTTP health check。
 - Task/artifact 本体仍是 projection；OPL route/snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
 - `npm run gate:review` 是默认 review gate。
@@ -29,4 +30,4 @@
 
 ## Next Cursor
 
-下一步是选择云平台部署预览环境，并把 OPL route failure/degraded 状态做成更清晰的 UI 状态。
+下一步是选择云平台部署预览环境，并把 OPL CLI 挂载缺失时的 route failure/degraded 状态做成更清晰的 UI 状态。

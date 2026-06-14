@@ -11,6 +11,7 @@ FROM alpine:3.22
 WORKDIR /app
 ENV HOST=0.0.0.0
 ENV PORT=4173
+ENV OPL_CLI_PATH=/opt/opl/bin/opl
 COPY --from=builder /out/opl-webui-control-plane /app/opl-webui-control-plane
 COPY apps/web apps/web
 EXPOSE 4173

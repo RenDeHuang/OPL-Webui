@@ -11,10 +11,12 @@ test('container deploy entrypoint builds the Go control plane only', () => {
   assert.match(dockerfile, /COPY --from=builder .*\/opl-webui-control-plane/);
   assert.match(dockerfile, /COPY apps\/web apps\/web/);
   assert.match(dockerfile, /ENV HOST=0\.0\.0\.0/);
+  assert.match(dockerfile, /ENV OPL_CLI_PATH=\/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /EXPOSE 4173/);
   assert.match(dockerfile, /HEALTHCHECK .*127\.0\.0\.1:\$\{PORT\}\/healthz/);
   assert.doesNotMatch(dockerfile, /npm install|node /);
   assert.doesNotMatch(dockerfile, /apk add/);
+  assert.doesNotMatch(dockerfile, /one-person-lab/);
 });
 
 test('docker build context excludes runtime bloat', () => {
