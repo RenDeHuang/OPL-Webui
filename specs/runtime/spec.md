@@ -8,6 +8,7 @@
 ## Requirements
 
 - `runtime.go.mvp-task`: Go control plane 的 `POST /api/mvp/task` 创建 tenant-scoped task/artifact projection。
+- `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。

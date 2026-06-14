@@ -18,6 +18,7 @@ func main() {
 	mux.HandleFunc("/readyz", handleReadyz)
 	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
 	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
+	mux.HandleFunc("/api/mvp/tasks/", mvp.HandleStoredTask)
 	mux.Handle("/", http.FileServer(http.Dir("apps/web")))
 
 	addr := serverAddress()

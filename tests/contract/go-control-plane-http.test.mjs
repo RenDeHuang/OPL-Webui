@@ -104,6 +104,15 @@ test('Go control plane creates a tenant scoped task artifact projection', async 
       'contract handoff-envelope',
     ]);
     assert.equal(body.adapter.route.commands.every((entry) => entry.mutating === false), true);
+
+    const storedResponse = await fetch(
+      `${baseUrl}/api/mvp/tasks/${body.tenantId}/${body.workspaceId}/${body.task.taskId}`,
+    );
+    assert.equal(storedResponse.status, 200);
+    const storedBody = await storedResponse.json();
+    assert.equal(storedBody.runId, body.runId);
+    assert.equal(storedBody.task.taskId, body.task.taskId);
+    assert.equal(storedBody.artifacts[0].artifactId, body.artifacts[0].artifactId);
   } finally {
     await stopGoServer(child);
   }

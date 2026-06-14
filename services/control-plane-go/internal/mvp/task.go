@@ -2,14 +2,11 @@ package mvp
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
 )
 
 type TaskRequest struct {
@@ -65,8 +62,21 @@ type ErrorResponse struct {
 	Message   string `json:"message"`
 }
 
+var defaultTaskStore = NewMemoryTaskStore()
+
 func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 	return CreateTaskResponseWithRoute(context.Background(), input, nil)
+}
+
+func CreateAndStoreTaskResponse(input TaskRequest, store TaskStore) (TaskResponse, error) {
+	projection, err := CreateTaskResponse(input)
+	if err != nil {
+		return TaskResponse{}, err
+	}
+	if err := store.SaveTaskProjection(projection); err != nil {
+		return TaskResponse{}, err
+	}
+	return projection, nil
 }
 
 func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner oplbridge.Runner) (TaskResponse, error) {
@@ -124,40 +134,6 @@ func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner 
 	}, nil
 }
 
-func HandleTask(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{
-			OK:        false,
-			ErrorCode: "METHOD_NOT_ALLOWED",
-			Message:   "method not allowed",
-		})
-		return
-	}
-
-	if status := runtimegate.CurrentStatus(); !status.OK {
-		writeJSON(response, http.StatusServiceUnavailable, ErrorResponse{
-			OK:        false,
-			ErrorCode: "PRODUCTION_RUNTIME_NOT_READY",
-			Message:   "production runtime dependencies are not configured",
-		})
-		return
-	}
-
-	var payload TaskRequest
-	if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
-		writeInvalid(response, err)
-		return
-	}
-
-	projection, err := CreateTaskResponseWithRoute(request.Context(), payload, oplbridge.NewDefaultRunner())
-	if err != nil {
-		writeInvalid(response, err)
-		return
-	}
-
-	writeJSON(response, http.StatusOK, projection)
-}
-
 func validateRequest(input TaskRequest) (TaskRequest, error) {
 	input.TenantID = strings.TrimSpace(input.TenantID)
 	input.WorkspaceID = strings.TrimSpace(input.WorkspaceID)
@@ -193,18 +169,4 @@ func artifactKind(intent string) string {
 	default:
 		return "document"
 	}
-}
-
-func writeInvalid(response http.ResponseWriter, err error) {
-	writeJSON(response, http.StatusBadRequest, ErrorResponse{
-		OK:        false,
-		ErrorCode: "INVALID_MVP_TASK_REQUEST",
-		Message:   err.Error(),
-	})
-}
-
-func writeJSON(response http.ResponseWriter, status int, body any) {
-	response.Header().Set("content-type", "application/json; charset=utf-8")
-	response.WriteHeader(status)
-	_ = json.NewEncoder(response).Encode(body)
 }

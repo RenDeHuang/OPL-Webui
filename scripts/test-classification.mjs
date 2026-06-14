@@ -120,7 +120,11 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['services/control-plane-go/internal/mvp/task.go']),
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/mvp/handlers.go',
+      'services/control-plane-go/internal/mvp/store.go',
+      'services/control-plane-go/internal/mvp/task.go',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
