@@ -12,7 +12,9 @@
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
-- `runtime.opl.fail-closed`: OPL projection 默认 mock readonly，真实 OPL CLI 只能通过 Go-side contract 和白名单边界进入。
+- `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
+- `runtime.opl.cli-allowlist`: 允许命令只包括 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
+- `runtime.opl.fail-closed`: OPL CLI 调用必须通过 Go-side allowlist；命令失败只返回 degraded projection，不执行替代 mutation。
 - `runtime.opl.no-mutation`: install、repair、module exec、family-runtime mutation 默认禁止。
 
 ## Cannot Claim

@@ -11,8 +11,9 @@
 - `product.mvp.loop`: MVP 主链路是 intake -> task run -> artifact projection -> review-ready output。
 - `product.mvp.tenant`: 所有 API projection 必须带 `tenantId`、`workspaceId` 和 `userId`。
 - `product.mvp.style`: Genspark-like 只作为交互参考，产品语义服务于 OPL formal deliverable workbench。
+- `product.mvp.opl-readonly`: WebUI 必须显示真实 OPL readiness、domain modules 和 admitted domains，但不能把只读 snapshot 写成真实任务执行。
 
 ## Cannot Claim
 
 - 未部署前不能宣称云端可用。
-- 未接真实 OPL readonly CLI 前不能宣称真实 OPL execution。
+- 当前只接入真实 OPL readonly CLI snapshot，不能宣称真实 OPL execution。

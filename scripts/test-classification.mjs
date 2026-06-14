@@ -1,6 +1,7 @@
 const TEST_ENTRIES = Object.freeze([
   Object.freeze({
     file: 'tests/health/registry-coverage.test.mjs',
+    runner: 'node',
     lane: 'health',
     ownerSurface: 'workflow',
     lifecycleRole: 'current-owner',
@@ -9,6 +10,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/health/repo-bloat.test.mjs',
+    runner: 'node',
     lane: 'health',
     ownerSurface: 'repo-hygiene',
     lifecycleRole: 'current-owner',
@@ -17,6 +19,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/health/workflow-entrypoint.test.mjs',
+    runner: 'node',
     lane: 'health',
     ownerSurface: 'workflow',
     lifecycleRole: 'current-owner',
@@ -25,6 +28,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/health/deploy-container-readiness.test.mjs',
+    runner: 'node',
     lane: 'health',
     ownerSurface: 'deploy',
     lifecycleRole: 'current-owner',
@@ -33,6 +37,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/contract/change-package-lifecycle.test.mjs',
+    runner: 'node',
     lane: 'contract',
     ownerSurface: 'change-lifecycle',
     lifecycleRole: 'current-owner',
@@ -41,6 +46,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/contract/go-control-plane-http.test.mjs',
+    runner: 'node',
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
@@ -52,7 +58,20 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'tests/contract/opl-readonly-bridge.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'opl-bridge',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/oplbridge/snapshot.go',
+      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+    ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'tests/contract/web-demo-data.test.mjs',
+    runner: 'node',
     lane: 'contract',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
@@ -65,6 +84,7 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/smoke/foundation.test.mjs',
+    runner: 'node',
     lane: 'smoke',
     ownerSurface: 'foundation',
     lifecycleRole: 'current-owner',
@@ -73,11 +93,45 @@ const TEST_ENTRIES = Object.freeze([
   }),
   Object.freeze({
     file: 'tests/smoke/web-demo-shell.test.mjs',
+    runner: 'node',
     lane: 'smoke',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
     contracts: Object.freeze(['apps/web/index.html', 'apps/web/styles.css', 'apps/web/src/demoData.mjs']),
     verifySuites: Object.freeze(['current', 'smoke']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/cmd/opl-webui-control-plane/main_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './cmd/opl-webui-control-plane',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/mvp/task_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/mvp',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/internal/mvp/task.go']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/oplbridge/snapshot_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/oplbridge',
+    lane: 'contract',
+    ownerSurface: 'opl-bridge',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/internal/oplbridge/snapshot.go']),
+    verifySuites: Object.freeze(['current', 'contract']),
   }),
 ]);
 

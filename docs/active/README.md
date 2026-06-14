@@ -7,15 +7,17 @@
 
 ## Current Stage
 
-当前是 `deploy-container-readiness`：Go control plane 具备通用容器部署入口和健康检查。
+当前是 `opl-readonly-bridge`：Go control plane 已通过白名单连接真实 OPL CLI 只读 JSON surfaces。
 
 ## Can Claim
 
 - Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 的 task/artifact projection。
+- Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
+- OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
 - `GET /healthz` 可用于云平台 HTTP health check。
-- OPL projection 仍是 mock readonly，不 import OPL internals，不执行 mutation。
+- Task/artifact projection 仍是 mock；OPL snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
 - `npm run gate:review` 是默认 review gate。
 
 ## Cannot Claim
@@ -26,4 +28,4 @@
 
 ## Next Cursor
 
-下一步是选择云平台并部署 Go control plane 预览环境，然后把 mock OPL projection 替换为只读真实 OPL CLI 探测边界。
+下一步是把 task intake 从 mock projection 升级为 OPL handoff-envelope/domain resolve 只读路由，再选择云平台部署预览环境。

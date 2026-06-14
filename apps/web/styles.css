@@ -99,11 +99,19 @@ button {
 }
 
 .task-panel,
-.artifact-panel {
+.artifact-panel,
+.opl-status {
   background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(30, 33, 38, 0.08);
   border-radius: 8px;
   padding: 24px;
+}
+
+.opl-status {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1fr);
+  margin-top: 18px;
 }
 
 h2 {
@@ -145,7 +153,8 @@ dd {
 @media (max-width: 720px) {
   .topbar,
   .prompt,
-  .workspace-grid {
+  .workspace-grid,
+  .opl-status {
     align-items: stretch;
     flex-direction: column;
     grid-template-columns: 1fr;

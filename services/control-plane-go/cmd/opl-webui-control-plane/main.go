@@ -8,11 +8,13 @@ import (
 	"os"
 
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 )
 
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", handleHealthz)
+	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
 	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
 	mux.Handle("/", http.FileServer(http.Dir("apps/web")))
 

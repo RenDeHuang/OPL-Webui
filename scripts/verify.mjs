@@ -27,11 +27,22 @@ for (const laneName of lanes) {
     continue;
   }
 
-  const files = lane.tests.map((entry) => entry.file);
-  console.log(`[verify] ${laneName}: ${files.join(', ')}`);
-  const result = spawnSync(process.execPath, ['--test', ...files], { stdio: 'inherit' });
-  if (result.status !== 0) {
-    failed = true;
+  const nodeFiles = lane.tests.filter((entry) => entry.runner === 'node').map((entry) => entry.file);
+  if (nodeFiles.length > 0) {
+    console.log(`[verify] ${laneName}: ${nodeFiles.join(', ')}`);
+    const result = spawnSync(process.execPath, ['--test', ...nodeFiles], { stdio: 'inherit' });
+    if (result.status !== 0) {
+      failed = true;
+    }
+  }
+
+  const goEntries = lane.tests.filter((entry) => entry.runner === 'go');
+  for (const entry of goEntries) {
+    console.log(`[verify] ${laneName}: go test ${entry.goPackage}`);
+    const result = spawnSync('go', ['test', entry.goPackage], { cwd: entry.cwd, stdio: 'inherit' });
+    if (result.status !== 0) {
+      failed = true;
+    }
   }
 }
 

@@ -69,3 +69,12 @@
 - verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
 - can claim: Go control plane 具备通用容器部署底座。
 - cannot claim: 未实现真实 OPL execution、真实登录、多租户数据库、队列、计费或生产运行证据。
+
+## 2026-06-14 opl-readonly-bridge
+
+- commit: this commit
+- archive: `changes/archive/2026-06-14-opl-readonly-bridge/`
+- summary: Go control plane 通过白名单连接真实 OPL CLI readonly JSON surfaces，并在 WebUI 展示 OPL 连接状态。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/opl/snapshot`
+- can claim: WebUI 已连接真实 OPL CLI 只读 snapshot。
+- cannot claim: 未实现真实 OPL mutation、真实 task execution、登录、多租户数据库、队列、计费或生产部署。

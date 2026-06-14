@@ -12,13 +12,22 @@ test('registry covers the initial health, contract, and smoke lanes', () => {
   }
 });
 
-test('registry points only at existing node test files', () => {
+test('registry points only at existing test files', () => {
   const registeredFiles = [];
   for (const lane of Object.values(TEST_LANE_REGISTRY)) {
     for (const entry of lane.tests) {
       registeredFiles.push(entry.file);
-      assert.match(entry.file, /^tests\/.+\.test\.mjs$/);
       assert.ok(existsSync(entry.file), `missing registered test file: ${entry.file}`);
+      assert.ok(['node', 'go'].includes(entry.runner), `${entry.file} must declare a supported runner`);
+      if (entry.runner === 'node') {
+        assert.match(entry.file, /^tests\/.+\.test\.mjs$/);
+      }
+      if (entry.runner === 'go') {
+        assert.match(entry.file, /^services\/.+_test\.go$/);
+        assert.equal(typeof entry.cwd, 'string');
+        assert.ok(existsSync(entry.cwd), `${entry.file} references missing cwd: ${entry.cwd}`);
+        assert.equal(typeof entry.goPackage, 'string');
+      }
       assert.equal(typeof entry.ownerSurface, 'string');
       assert.equal(typeof entry.lifecycleRole, 'string');
       assert.ok(Array.isArray(entry.contracts));
@@ -46,21 +55,24 @@ test('every current-suite test points back to the current suite', () => {
   }
 });
 
-function collectTestFiles(dir) {
+function collectTestFiles(dir, predicate) {
   const files = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      files.push(...collectTestFiles(path));
-    } else if (entry.isFile() && path.endsWith('.test.mjs')) {
+      files.push(...collectTestFiles(path, predicate));
+    } else if (entry.isFile() && predicate(path)) {
       files.push(path);
     }
   }
   return files.sort();
 }
 
-test('every node test file is explicitly registered', () => {
-  const allTestFiles = collectTestFiles('tests');
+test('every current test file is explicitly registered', () => {
+  const allTestFiles = [
+    ...collectTestFiles('tests', (path) => path.endsWith('.test.mjs')),
+    ...collectTestFiles('services', (path) => path.endsWith('_test.go')),
+  ].sort();
   const registered = new Set(
     Object.values(TEST_LANE_REGISTRY).flatMap((lane) => lane.tests.map((entry) => entry.file)),
   );

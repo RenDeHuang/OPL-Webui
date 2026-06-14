@@ -33,7 +33,7 @@
           <h2>任务进度</h2>
           <ol>
             <li>接收目标和约束</li>
-            <li>通过 mock OPL Adapter 读取 domain contract</li>
+            <li>通过 Go control plane 只读桥读取 OPL 状态</li>
             <li>生成可追踪 artifact projection</li>
           </ol>
           <dl class="metrics">
@@ -55,6 +55,32 @@
           <p><strong data-demo-artifact>1 个正式产物</strong></p>
           <p class="boundary" data-demo-boundary>opl contract domains</p>
         </article>
+      </section>
+
+      <section class="opl-status" aria-label="OPL 连接状态">
+        <div>
+          <p class="panel-kicker">OPL 连接</p>
+          <h2>真实 OPL CLI 只读桥</h2>
+          <p>当前 WebUI 通过 Go control plane 白名单读取 OPL machine-readable surfaces。</p>
+        </div>
+        <dl class="metrics">
+          <div>
+            <dt>Readiness</dt>
+            <dd data-opl-readiness>core ready / full degraded</dd>
+          </div>
+          <div>
+            <dt>模块状态</dt>
+            <dd data-opl-modules>0/3 default modules ready</dd>
+          </div>
+          <div>
+            <dt>Domain agents</dt>
+            <dd data-opl-domains>medautoscience / medautogrant / redcube</dd>
+          </div>
+          <div>
+            <dt>Bridge</dt>
+            <dd data-opl-bridge>readonly / opl.cli.readonly.snapshot</dd>
+          </div>
+        </dl>
       </section>
     </main>
   </body>
