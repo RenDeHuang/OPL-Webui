@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `opl-task-route-bridge`：Go control plane 已通过白名单连接真实 OPL CLI 只读 snapshot、domain resolve 和 handoff envelope surfaces。
+当前是 `cloud-mvp-readiness`：Go control plane 已有 cloud MVP runtime gate、Postgres/OPL readonly canary 命令和 `opl.medopl.cn` 部署形状契约，但尚未执行云端部署。
 
 ## Can Claim
 
@@ -15,6 +15,10 @@
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
 - Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
+- Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`，不把 queue、object store、billing、worker 误算进 MVP preview。
+- Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
+- Control-plane binary 提供 `canary opl-cli`，验证 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
+- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
@@ -28,9 +32,10 @@
 ## Cannot Claim
 
 - 还不是完整公网多用户生产 SaaS。
-- 还没有真实登录、数据库、队列、计费、真实 OPL execution 或生产运行证据。
+- 还没有执行 kubectl、build/push、Ingress 上线、公网 smoke 或 VPC/TKE DB canary。
+- 还没有真实登录、队列、计费、object storage、OPL worker、真实 OPL execution 或生产运行证据。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步是选择云平台部署预览环境，并把 OPL CLI 挂载缺失时的 route failure/degraded 状态做成更清晰的 UI 状态。
+下一步是在云端 runner/VPC 内注入 `/home/dev/.secrets/opl-webui/postgresql/oplweb.env` 等价 Secret，构建镜像并按 `deploy/cloud-mvp/opl-webui.k8s.json` 落地到 `opl.medopl.cn`，随后跑 `canary db`、`canary opl-cli` 和公网 smoke。

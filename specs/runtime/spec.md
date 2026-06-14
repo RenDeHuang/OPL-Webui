@@ -18,6 +18,10 @@
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
 - `runtime.deploy.readyz`: `GET /readyz` 返回生产依赖就绪状态；production 缺 auth、database、queue、object store、billing 或 worker 配置时返回 `503`。
 - `runtime.deploy.production-gate`: `OPL_WEBUI_ENV=production` 且 `/readyz` 未就绪时，`POST /api/mvp/task` 必须 fail closed。
+- `runtime.deploy.cloud-mvp-profile`: `OPL_WEBUI_ENV=cloud_mvp` 要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`；queue、object store、billing 和 worker 仍属于 production 后续阶段。
+- `runtime.deploy.db-canary`: control-plane binary 提供 `canary db`，只从环境变量读取 `OPL_DATABASE_URL`，验证 Postgres open/ping/schema/write/read/delete，并且 JSON 报告不能泄露连接串。
+- `runtime.deploy.opl-cli-canary`: control-plane binary 提供 `canary opl-cli`，只调用 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
+- `runtime.deploy.cloud-mvp-shape`: `deploy/cloud-mvp/opl-webui.k8s.json` 固定 `opl.medopl.cn`、`4173`、`/healthz`、`/readyz`、`cloud_mvp` env 和 `OPL_DATABASE_URL` secretKeyRef；该 fixture 是声明式形状，不代表已经执行 kubectl 或公网部署。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
 - `runtime.opl.task-route`: `POST /api/mvp/task` 通过 Go control plane 读取 `opl domain resolve-request --json` 与 `opl contract handoff-envelope --json`，只返回 route/handoff evidence。
 - `runtime.opl.cli-allowlist`: snapshot 允许 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`；task route 允许 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json`。
@@ -26,4 +30,4 @@
 
 ## Cannot Claim
 
-- 当前 runtime 不包含数据库、队列、鉴权、真实生产运行证据或真实 OPL mutation。
+- 当前 runtime 不包含队列、计费、object storage、worker、真实公网运行证据或真实 OPL mutation。

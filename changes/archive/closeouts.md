@@ -87,3 +87,9 @@
 - summary: 接入 pgx-backed Postgres task store runtime；配置 `OPL_DATABASE_URL` 后启动时 open、ping 并初始化 `task_projections` schema，失败关闭连接并 fail closed。
 - verified: `cd services/control-plane-go && go test ./internal/mvp`, `npm run verify:contract`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`, local 4174 memory-store smoke。
 - cannot claim: 已做真实云 Postgres 联通验证、auth、queue、billing、object storage、OPL worker 或公网生产部署。
+
+## 2026-06-15 cloud-mvp-readiness
+
+- summary: 增加 `cloud_mvp` runtime gate、DB/OPL readonly canary 命令、canary cleanup、Postgres projection delete 边界和 `opl.medopl.cn` K8s/Ingress shape contract。
+- verified: `npm run verify`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`。
+- cannot claim: 已执行 kubectl、build/push、Ingress 上线、公网 smoke、VPC/TKE DB canary、queue、billing、object storage、OPL worker 或真实 OPL execution。

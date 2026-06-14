@@ -13,9 +13,14 @@ type TaskReader interface {
 	GetTaskProjection(tenantID string, workspaceID string, taskID string) (TaskResponse, bool)
 }
 
+type TaskDeleter interface {
+	DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error
+}
+
 type TaskProjectionStore interface {
 	TaskStore
 	TaskReader
+	TaskDeleter
 }
 
 type TaskStoreConfig struct {
@@ -69,6 +74,14 @@ func (store *MemoryTaskStore) GetTaskProjection(tenantID string, workspaceID str
 
 	projection, ok := store.items[taskStoreKey(tenantID, workspaceID, taskID)]
 	return projection, ok
+}
+
+func (store *MemoryTaskStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	delete(store.items, taskStoreKey(tenantID, workspaceID, taskID))
+	return nil
 }
 
 func taskStoreKey(tenantID string, workspaceID string, taskID string) string {

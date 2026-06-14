@@ -12,12 +12,13 @@ type fakeSQLExecutor struct {
 	execQuery string
 	execArgs  []any
 	row       fakeSQLRow
+	execErr   error
 }
 
 func (executor *fakeSQLExecutor) ExecContext(_ context.Context, query string, args ...any) (sql.Result, error) {
 	executor.execQuery = query
 	executor.execArgs = args
-	return nil, nil
+	return nil, executor.execErr
 }
 
 func (executor *fakeSQLExecutor) QueryRowContext(_ context.Context, query string, args ...any) SQLRow {
@@ -123,6 +124,35 @@ func TestPostgresTaskStoreReadsProjectionThroughSQLBoundary(t *testing.T) {
 	}
 	if stored.RunID != projection.RunID {
 		t.Fatalf("stored run mismatch: %s", stored.RunID)
+	}
+}
+
+func TestPostgresTaskStoreDeletesProjectionThroughSQLBoundary(t *testing.T) {
+	executor := &fakeSQLExecutor{}
+	store := NewPostgresTaskStore(executor)
+
+	if err := store.DeleteTaskProjection("tenant_cloud_demo", "workspace_cloud_demo", "task_001"); err != nil {
+		t.Fatalf("DeleteTaskProjection returned error: %v", err)
+	}
+
+	if !strings.Contains(executor.execQuery, "delete from task_projections") {
+		t.Fatalf("expected delete query, got %q", executor.execQuery)
+	}
+	if executor.execArgs[0] != "tenant_cloud_demo" {
+		t.Fatalf("tenant arg mismatch: %#v", executor.execArgs)
+	}
+	if executor.execArgs[2] != "task_001" {
+		t.Fatalf("task arg mismatch: %#v", executor.execArgs)
+	}
+}
+
+func TestPostgresTaskStorePropagatesDeleteError(t *testing.T) {
+	executor := &fakeSQLExecutor{execErr: errors.New("delete denied")}
+	store := NewPostgresTaskStore(executor)
+
+	err := store.DeleteTaskProjection("tenant_cloud_demo", "workspace_cloud_demo", "task_001")
+	if err == nil || !strings.Contains(err.Error(), "delete denied") {
+		t.Fatalf("expected delete error, got %v", err)
 	}
 }
 

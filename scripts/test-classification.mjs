@@ -45,6 +45,15 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'tests/contract/cloud-mvp-deploy-shape.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'deploy',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['deploy/cloud-mvp/opl-webui.k8s.json']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'tests/contract/go-control-plane-http.test.mjs',
     runner: 'node',
     lane: 'contract',

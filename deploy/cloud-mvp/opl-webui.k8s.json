@@ -1,0 +1,137 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "opl-webui-control-plane",
+        "labels": {
+          "app.kubernetes.io/name": "opl-webui"
+        }
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app.kubernetes.io/name": "opl-webui"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/name": "opl-webui"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "control-plane",
+                "image": "registry.example.invalid/opl-webui:cloud-mvp",
+                "ports": [
+                  {
+                    "name": "http",
+                    "containerPort": 4173
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "HOST",
+                    "value": "0.0.0.0"
+                  },
+                  {
+                    "name": "PORT",
+                    "value": "4173"
+                  },
+                  {
+                    "name": "OPL_WEBUI_ENV",
+                    "value": "cloud_mvp"
+                  },
+                  {
+                    "name": "OPL_CLI_PATH",
+                    "value": "/opt/opl/bin/opl"
+                  },
+                  {
+                    "name": "OPL_TENANT_AUTH_MODE",
+                    "value": "medopl_launch_token"
+                  },
+                  {
+                    "name": "OPL_DATABASE_URL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-postgres",
+                        "key": "OPL_DATABASE_URL"
+                      }
+                    }
+                  }
+                ],
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/readyz",
+                    "port": 4173
+                  }
+                },
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/healthz",
+                    "port": 4173
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "opl-webui-control-plane"
+      },
+      "spec": {
+        "selector": {
+          "app.kubernetes.io/name": "opl-webui"
+        },
+        "ports": [
+          {
+            "name": "http",
+            "port": 4173,
+            "targetPort": 4173
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "Ingress",
+      "metadata": {
+        "name": "opl-webui"
+      },
+      "spec": {
+        "rules": [
+          {
+            "host": "opl.medopl.cn",
+            "http": {
+              "paths": [
+                {
+                  "path": "/",
+                  "pathType": "Prefix",
+                  "backend": {
+                    "service": {
+                      "name": "opl-webui-control-plane",
+                      "port": {
+                        "number": 4173
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

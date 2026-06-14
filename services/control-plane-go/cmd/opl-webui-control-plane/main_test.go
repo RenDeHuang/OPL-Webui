@@ -1,6 +1,14 @@
 package main
 
-import "testing"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"strings"
+	"testing"
+
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
+)
 
 func TestServerAddressUsesHostAndPort(t *testing.T) {
 	t.Setenv("HOST", "0.0.0.0")
@@ -17,5 +25,142 @@ func TestServerAddressDefaultsToLocalDevelopment(t *testing.T) {
 
 	if got := serverAddress(); got != "127.0.0.1:4173" {
 		t.Fatalf("serverAddress() = %q, want %q", got, "127.0.0.1:4173")
+	}
+}
+
+func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
+	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
+	called := false
+	store := mvp.NewMemoryTaskStore()
+
+	report, err := runDBCanary(func(databaseURL string) (mvp.TaskProjectionStore, error) {
+		called = true
+		if databaseURL != "postgres://user:secret@example/oplweb" {
+			t.Fatalf("database URL mismatch: %s", databaseURL)
+		}
+		return store, nil
+	})
+	if err != nil {
+		t.Fatalf("runDBCanary returned error: %v", err)
+	}
+	if !called {
+		t.Fatal("expected postgres opener")
+	}
+	if !report.OK {
+		t.Fatalf("expected canary ok: %#v", report)
+	}
+	encoded, err := json.Marshal(report)
+	if err != nil {
+		t.Fatalf("marshal report: %v", err)
+	}
+	if strings.Contains(string(encoded), "secret") || strings.Contains(string(encoded), "postgres://") {
+		t.Fatalf("canary report leaked connection details: %s", encoded)
+	}
+	if !strings.Contains(strings.Join(report.Checks, ","), "delete") {
+		t.Fatalf("canary should report delete check: %#v", report.Checks)
+	}
+	if _, ok := store.GetTaskProjection("tenant_cloud_canary", "workspace_cloud_canary", "workspace_cloud_canary_task_001"); ok {
+		t.Fatal("canary projection should be cleaned up")
+	}
+}
+
+func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
+	t.Setenv("OPL_DATABASE_URL", "")
+
+	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+		t.Fatal("opener should not run without database URL")
+		return nil, nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "OPL_DATABASE_URL is required") {
+		t.Fatalf("expected missing database error, got %v", err)
+	}
+}
+
+func TestRunDBCanaryPropagatesOpenError(t *testing.T) {
+	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
+
+	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+		return nil, errors.New("network timeout")
+	})
+	if err == nil || !strings.Contains(err.Error(), "open postgres canary") {
+		t.Fatalf("expected open error, got %v", err)
+	}
+}
+
+func TestCanaryReportErrorRedactsConnectionDetails(t *testing.T) {
+	report := canaryErrorReport("db", errors.New("dial postgres://user:secret@example/oplweb failed"))
+	encoded, err := json.Marshal(report)
+	if err != nil {
+		t.Fatalf("marshal report: %v", err)
+	}
+	if strings.Contains(string(encoded), "secret") || strings.Contains(string(encoded), "postgres://") {
+		t.Fatalf("canary error report leaked connection details: %s", encoded)
+	}
+	if !strings.Contains(report.Error, "[redacted-database-url]") {
+		t.Fatalf("expected redacted marker, got %q", report.Error)
+	}
+}
+
+type readFailingCanaryStore struct {
+	projection mvp.TaskResponse
+	deleted    bool
+}
+
+func (store *readFailingCanaryStore) SaveTaskProjection(projection mvp.TaskResponse) error {
+	store.projection = projection
+	return nil
+}
+
+func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (mvp.TaskResponse, bool) {
+	return mvp.TaskResponse{}, false
+}
+
+func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
+	if tenantID == store.projection.TenantID && workspaceID == store.projection.WorkspaceID && taskID == store.projection.Task.TaskID {
+		store.deleted = true
+	}
+	return nil
+}
+
+func TestRunDBCanaryCleansUpAfterReadFailure(t *testing.T) {
+	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
+	store := &readFailingCanaryStore{}
+
+	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+		return store, nil
+	})
+
+	if err == nil || !strings.Contains(err.Error(), "read postgres canary projection") {
+		t.Fatalf("expected read error, got %v", err)
+	}
+	if !store.deleted {
+		t.Fatal("canary projection should be cleaned up after read failure")
+	}
+}
+
+type fakeCanaryRunner struct {
+	calls [][]string
+}
+
+func (runner *fakeCanaryRunner) Run(_ context.Context, args []string) ([]byte, error) {
+	runner.calls = append(runner.calls, append([]string{}, args...))
+	return []byte(`{"ok":true}`), nil
+}
+
+func TestRunOPLCLICanaryUsesReadonlySurfaces(t *testing.T) {
+	runner := &fakeCanaryRunner{}
+
+	report := runOPLCLICanary(runner)
+
+	if !report.OK {
+		t.Fatalf("expected canary ok: %#v", report)
+	}
+	if len(runner.calls) != 5 {
+		t.Fatalf("expected snapshot and route readonly commands, got %#v", runner.calls)
+	}
+	for _, call := range runner.calls {
+		if len(call) == 0 || call[0] == "install" || call[0] == "repair" {
+			t.Fatalf("unexpected mutating command: %#v", call)
+		}
 	}
 }

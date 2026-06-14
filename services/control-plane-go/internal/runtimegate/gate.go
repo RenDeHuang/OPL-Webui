@@ -20,6 +20,12 @@ var productionRequiredEnv = []string{
 	"OPL_WORKER_MODE",
 }
 
+var cloudMVPRequiredEnv = []string{
+	"OPL_CLI_PATH",
+	"OPL_DATABASE_URL",
+	"OPL_TENANT_AUTH_MODE",
+}
+
 func CurrentStatus() Status {
 	environment := os.Getenv("OPL_WEBUI_ENV")
 	if environment == "" {
@@ -31,11 +37,12 @@ func CurrentStatus() Status {
 		Environment: environment,
 		Missing:     []string{},
 	}
-	if environment != "production" {
+	requiredEnv := requiredEnvFor(environment)
+	if len(requiredEnv) == 0 {
 		return status
 	}
 
-	for _, key := range productionRequiredEnv {
+	for _, key := range requiredEnv {
 		if os.Getenv(key) == "" {
 			status.Missing = append(status.Missing, key)
 		}
@@ -43,4 +50,15 @@ func CurrentStatus() Status {
 	slices.Sort(status.Missing)
 	status.OK = len(status.Missing) == 0
 	return status
+}
+
+func requiredEnvFor(environment string) []string {
+	switch environment {
+	case "production":
+		return productionRequiredEnv
+	case "cloud_mvp":
+		return cloudMVPRequiredEnv
+	default:
+		return nil
+	}
 }

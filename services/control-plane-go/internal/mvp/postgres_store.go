@@ -125,6 +125,14 @@ where tenant_id = $1 and workspace_id = $2 and task_id = $3
 	return projection, true
 }
 
+func (store PostgresTaskStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
+	_, err := store.db.ExecContext(context.Background(), `
+delete from task_projections
+where tenant_id = $1 and workspace_id = $2 and task_id = $3
+`, tenantID, workspaceID, taskID)
+	return err
+}
+
 func encodeTaskProjection(projection TaskResponse) (string, error) {
 	payload, err := json.Marshal(projection)
 	if err != nil {

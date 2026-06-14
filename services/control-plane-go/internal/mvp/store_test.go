@@ -77,3 +77,27 @@ func TestConfigureDefaultTaskStoreFromEnvPropagatesPostgresOpenError(t *testing.
 		t.Fatalf("expected postgres opener error, got %v", err)
 	}
 }
+
+func TestMemoryTaskStoreDeletesProjection(t *testing.T) {
+	store := NewMemoryTaskStore()
+	projection, err := CreateTaskResponse(TaskRequest{
+		TenantID:    "tenant_cloud_demo",
+		WorkspaceID: "workspace_cloud_demo",
+		UserID:      "user_demo",
+		Prompt:      "生成一个医学研究项目的证据整理任务",
+		Intent:      "research",
+	})
+	if err != nil {
+		t.Fatalf("CreateTaskResponse returned error: %v", err)
+	}
+	if err := store.SaveTaskProjection(projection); err != nil {
+		t.Fatalf("SaveTaskProjection returned error: %v", err)
+	}
+
+	if err := store.DeleteTaskProjection("tenant_cloud_demo", "workspace_cloud_demo", projection.Task.TaskID); err != nil {
+		t.Fatalf("DeleteTaskProjection returned error: %v", err)
+	}
+	if _, ok := store.GetTaskProjection("tenant_cloud_demo", "workspace_cloud_demo", projection.Task.TaskID); ok {
+		t.Fatal("projection should be deleted")
+	}
+}
