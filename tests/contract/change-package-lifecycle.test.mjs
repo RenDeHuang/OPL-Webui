@@ -41,11 +41,19 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
     'specs/runtime/spec.md',
     'specs/source/spec.md',
     '.sentrux/rules.toml',
+    'services/control-plane-go/go.mod',
   ];
 
   for (const file of requiredTruthFiles) {
     assert.equal(existsSync(file), true, `missing governance truth file: ${file}`);
   }
+});
+
+test('Go control plane replaces the Node API backend', () => {
+  assert.equal(existsSync('services/control-plane-go/cmd/opl-webui-control-plane/main.go'), true);
+  assert.equal(existsSync('apps/api/src/server.mjs'), false);
+  assert.equal(existsSync('apps/api/src/mvpTaskHandler.mjs'), false);
+  assert.match(pkg.scripts['start:mvp'], /^go run \.\/services\/control-plane-go\/cmd\/opl-webui-control-plane/);
 });
 
 test('package does not introduce runtime or dev dependencies', () => {

@@ -32,27 +32,14 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
-    file: 'tests/contract/api-mvp-http.test.mjs',
+    file: 'tests/contract/go-control-plane-http.test.mjs',
     lane: 'contract',
-    ownerSurface: 'apps-api',
+    ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
     contracts: Object.freeze([
-      'apps/api/src/server.mjs',
-      'apps/api/src/mvpTaskHandler.mjs',
+      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+      'services/control-plane-go/internal/mvp/task.go',
       'packages/contracts/opl/mvp-task-http.schema.json',
-    ]),
-    verifySuites: Object.freeze(['current', 'contract']),
-  }),
-  Object.freeze({
-    file: 'tests/contract/api-demo-loop.test.mjs',
-    lane: 'contract',
-    ownerSurface: 'apps-api',
-    lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'apps/api/src/demoLoop.mjs',
-      'packages/core/src/taskArtifactLoop.mjs',
-      'packages/contracts/opl/task-contract.schema.json',
-      'packages/contracts/opl/artifact-contract.schema.json',
     ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
@@ -61,7 +48,11 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['apps/web/src/demoData.mjs', 'apps/api/src/demoScenario.mjs']),
+    contracts: Object.freeze([
+      'apps/web/src/demoData.mjs',
+      'packages/contracts/opl/mvp-task-http.schema.json',
+      'services/control-plane-go/internal/mvp/task.go',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -90,17 +81,6 @@ const TEST_ENTRIES = Object.freeze([
     ownerSurface: 'foundation',
     lifecycleRole: 'current-owner',
     contracts: Object.freeze(['AGENTS.md', 'package.json', 'tests/README.md']),
-    verifySuites: Object.freeze(['current', 'smoke']),
-  }),
-  Object.freeze({
-    file: 'tests/smoke/mvp-task-artifact-loop.test.mjs',
-    lane: 'smoke',
-    ownerSurface: 'mvp-task-artifact-loop',
-    lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'apps/api/src/demoScenario.mjs',
-      'changes/archive/2026-06-14-mvp-task-artifact-loop/closeout.md',
-    ]),
     verifySuites: Object.freeze(['current', 'smoke']),
   }),
   Object.freeze({

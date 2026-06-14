@@ -9,7 +9,8 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['gate:review'], 'node scripts/workflow-gate.mjs');
   assert.equal(pkg.scripts['repo:bloat'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
-  assert.equal(pkg.scripts['start:mvp'], 'node apps/api/src/server.mjs');
+  assert.equal(pkg.scripts['start:mvp'], 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
+  assert.equal(pkg.scripts['test:go'], 'cd services/control-plane-go && go test ./...');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
@@ -25,8 +26,10 @@ test('review gate includes diff hygiene, bloat, and current verify', async () =>
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
     'diff hygiene',
     'repo bloat audit',
+    'go tests',
     'current verify',
   ]);
+  assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'go tests').args, ['test', './...']);
 });
 
 test('workflow gate can be imported without executing gate steps', () => {

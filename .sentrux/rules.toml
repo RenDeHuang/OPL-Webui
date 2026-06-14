@@ -21,9 +21,9 @@ paths = ["apps/web/*", "apps/web/**/*"]
 order = 1
 
 [[layers]]
-name = "api"
-paths = ["apps/api/*", "apps/api/**/*"]
-order = 1
+name = "control_plane_go"
+paths = ["services/control-plane-go/*", "services/control-plane-go/**/*"]
+order = 2
 
 [[layers]]
 name = "core"
@@ -42,8 +42,8 @@ order = 4
 
 [[boundaries]]
 from = "apps/web/**/*"
-to = "apps/api/src/**/*"
-reason = "Web UI talks to SaaS API through HTTP contract, not source imports."
+to = "services/control-plane-go/**/*"
+reason = "Web UI talks to the Go control plane through HTTP contract, not source imports."
 
 [[boundaries]]
 from = "apps/web/**/*"
@@ -51,9 +51,9 @@ to = "packages/**/*"
 reason = "Web UI must not import backend packages directly."
 
 [[boundaries]]
-from = "apps/api/src/**/*"
+from = "services/control-plane-go/**/*"
 to = "apps/web/**/*"
-reason = "API serves static files by path and must not import UI implementation."
+reason = "Go control plane serves static files by path and must not import UI implementation."
 
 [[boundaries]]
 from = "packages/core/**/*"
@@ -63,4 +63,4 @@ reason = "Core loop must stay app-agnostic."
 [[boundaries]]
 from = "packages/opl-adapter/**/*"
 to = "apps/**/*"
-reason = "OPL adapter must stay behind API/core boundaries."
+reason = "OPL adapter must stay behind control-plane boundaries."

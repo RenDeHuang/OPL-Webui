@@ -7,13 +7,13 @@
 
 ## Current Stage
 
-当前是 `cloud-mvp-service-slice`：一个可本地启动、可云端部署的最小 SaaS 服务切片。
+当前是 `go-control-plane-replacement`：用 Go control plane 直接替换 Node MVP API。
 
 ## Can Claim
 
-- Web UI 通过同源 `/api/mvp/task` 调用 SaaS API。
-- API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 的 task/artifact projection。
-- OPL 调用仍通过 fail-closed mock adapter 和白名单 command policy。
+- Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
+- Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 的 task/artifact projection。
+- OPL projection 仍是 mock readonly，不 import OPL internals，不执行 mutation。
 - `npm run gate:review` 是默认 review gate。
 
 ## Cannot Claim
@@ -24,4 +24,4 @@
 
 ## Next Cursor
 
-下一步是部署最小服务，然后把 mock adapter 替换为只读真实 OPL CLI 探测边界。
+下一步是部署 Go control plane，然后把 mock OPL projection 替换为只读真实 OPL CLI 探测边界。
