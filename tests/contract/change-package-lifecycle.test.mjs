@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import test from 'node:test';
 
 import pkg from '../../package.json' with { type: 'json' };
@@ -29,8 +29,8 @@ test('package does not introduce runtime or dev dependencies', () => {
   assert.equal(pkg.devDependencies, undefined);
 });
 
-test('foundation change package has lifecycle files and machine eval commands', () => {
-  const root = 'changes/active/foundation-loop-contracts';
+test('foundation change package is archived after closeout', () => {
+  const root = 'changes/archive/2026-06-14-foundation-loop-contracts';
   const requiredFiles = [
     'proposal.md',
     'spec-delta.md',
@@ -50,4 +50,10 @@ test('foundation change package has lifecycle files and machine eval commands', 
   assert.match(evalPlan, /npm run gate:review/);
   assert.match(evalPlan, /npm run repo:bloat/);
   assert.match(evalPlan, /Cannot Claim/);
+
+  assert.deepEqual(readdirSync('changes/active'), [], 'closed changes must leave changes/active empty');
+
+  const history = readFileSync('docs/history/README.md', 'utf8');
+  assert.match(history, /foundation-loop-contracts/);
+  assert.match(history, /41515a6/);
 });
