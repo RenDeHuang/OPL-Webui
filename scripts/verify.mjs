@@ -37,7 +37,7 @@ for (const laneName of lanes) {
   }
 
   const goEntries = lane.tests.filter((entry) => entry.runner === 'go');
-  for (const entry of goEntries) {
+  for (const entry of uniqueGoPackageEntries(goEntries)) {
     console.log(`[verify] ${laneName}: go test ${entry.goPackage}`);
     const result = spawnSync('go', ['test', entry.goPackage], { cwd: entry.cwd, stdio: 'inherit' });
     if (result.status !== 0) {
@@ -47,3 +47,17 @@ for (const laneName of lanes) {
 }
 
 process.exit(failed ? 1 : 0);
+
+function uniqueGoPackageEntries(entries) {
+  const seen = new Set();
+  const unique = [];
+  for (const entry of entries) {
+    const key = `${entry.cwd}:${entry.goPackage}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(entry);
+  }
+  return unique;
+}

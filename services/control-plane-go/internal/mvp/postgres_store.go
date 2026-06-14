@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type SQLExecutor interface {
@@ -15,8 +18,20 @@ type SQLRow interface {
 	Scan(...any) error
 }
 
+type SQLDatabase interface {
+	SQLExecutor
+	PingContext(context.Context) error
+	Close() error
+}
+
+type SQLDatabaseOpener func(driverName string, databaseURL string) (SQLDatabase, error)
+
 type PostgresTaskStore struct {
 	db SQLExecutor
+}
+
+type sqlDatabase struct {
+	db *sql.DB
 }
 
 const PostgresTaskStoreSchema = `
@@ -31,6 +46,50 @@ create table if not exists task_projections (
 
 func NewPostgresTaskStore(db SQLExecutor) PostgresTaskStore {
 	return PostgresTaskStore{db: db}
+}
+
+func openPostgresTaskStore(databaseURL string, openDatabase SQLDatabaseOpener) (TaskProjectionStore, error) {
+	db, err := openDatabase("pgx", databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("open postgres task store: %w", err)
+	}
+	if err := db.PingContext(context.Background()); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("ping postgres task store: %w", err)
+	}
+	if _, err := db.ExecContext(context.Background(), PostgresTaskStoreSchema); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("initialize postgres task store schema: %w", err)
+	}
+	return NewPostgresTaskStore(db), nil
+}
+
+func sqlOpenDatabase(driverName string, databaseURL string) (SQLDatabase, error) {
+	db, err := sql.Open(driverName, databaseURL)
+	if err != nil {
+		return nil, err
+	}
+	return sqlDatabase{db: db}, nil
+}
+
+func OpenPostgresTaskStore(databaseURL string) (TaskProjectionStore, error) {
+	return openPostgresTaskStore(databaseURL, sqlOpenDatabase)
+}
+
+func (database sqlDatabase) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return database.db.ExecContext(ctx, query, args...)
+}
+
+func (database sqlDatabase) QueryRowContext(ctx context.Context, query string, args ...any) SQLRow {
+	return database.db.QueryRowContext(ctx, query, args...)
+}
+
+func (database sqlDatabase) PingContext(ctx context.Context) error {
+	return database.db.PingContext(ctx)
+}
+
+func (database sqlDatabase) Close() error {
+	return database.db.Close()
 }
 
 func (store PostgresTaskStore) SaveTaskProjection(projection TaskResponse) error {

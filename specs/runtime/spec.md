@@ -10,7 +10,7 @@
 - `runtime.go.mvp-task`: Go control plane 的 `POST /api/mvp/task` 创建 tenant-scoped task/artifact projection。
 - `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.postgres-task-store`: Postgres adapter 只实现 `TaskStore` 边界和 schema 常量，不引入 ORM，不改变 HTTP task lifecycle。
-- `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后必须走 Postgres opener，driver 未链接时 fail closed。
+- `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。

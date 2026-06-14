@@ -1,7 +1,6 @@
 package mvp
 
 import (
-	"errors"
 	"os"
 	"sync"
 )
@@ -37,14 +36,14 @@ func NewTaskStore(config TaskStoreConfig, openPostgres PostgresStoreOpener) (Tas
 	return openPostgres(config.DatabaseURL)
 }
 
-func OpenPostgresTaskStore(_ string) (TaskProjectionStore, error) {
-	return nil, errors.New("postgres driver is not linked into this runtime")
+func ConfigureDefaultTaskStoreFromEnv() error {
+	return configureDefaultTaskStoreFromEnv(OpenPostgresTaskStore)
 }
 
-func ConfigureDefaultTaskStoreFromEnv() error {
+func configureDefaultTaskStoreFromEnv(openPostgres PostgresStoreOpener) error {
 	store, err := NewTaskStore(TaskStoreConfig{
 		DatabaseURL: os.Getenv("OPL_DATABASE_URL"),
-	}, OpenPostgresTaskStore)
+	}, openPostgres)
 	if err != nil {
 		return err
 	}

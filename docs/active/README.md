@@ -14,7 +14,7 @@
 - Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
-- Runtime 已按 `OPL_DATABASE_URL` 选择 task store；当前未链接真实 Postgres driver，配置 DB URL 会 fail closed。
+- Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。

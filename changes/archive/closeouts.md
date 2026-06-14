@@ -81,3 +81,9 @@
 - summary: runtime 启动时按 `OPL_DATABASE_URL` 选择 task store；无 DB 用 memory，有 DB 走 Postgres opener，driver 未链接时 fail closed。
 - verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
 - cannot claim: 真实 Postgres driver 已接入、生产数据库已运行、队列、计费、object storage、OPL worker 或公网生产部署。
+
+## 2026-06-14 postgres-driver-runtime
+
+- summary: 接入 pgx-backed Postgres task store runtime；配置 `OPL_DATABASE_URL` 后启动时 open、ping 并初始化 `task_projections` schema，失败关闭连接并 fail closed。
+- verified: `cd services/control-plane-go && go test ./internal/mvp`, `npm run verify:contract`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`, local 4174 memory-store smoke。
+- cannot claim: 已做真实云 Postgres 联通验证、auth、queue、billing、object storage、OPL worker 或公网生产部署。
