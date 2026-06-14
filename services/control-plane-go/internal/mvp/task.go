@@ -1,11 +1,14 @@
 package mvp
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 )
 
 type TaskRequest struct {
@@ -37,9 +40,10 @@ type Artifact struct {
 }
 
 type AdapterProjection struct {
-	Command  []string `json:"command"`
-	PolicyID string   `json:"policyId"`
-	Mode     string   `json:"mode"`
+	Command  []string             `json:"command"`
+	PolicyID string               `json:"policyId"`
+	Mode     string               `json:"mode"`
+	Route    *oplbridge.TaskRoute `json:"route,omitempty"`
 }
 
 type TaskResponse struct {
@@ -61,6 +65,10 @@ type ErrorResponse struct {
 }
 
 func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
+	return CreateTaskResponseWithRoute(context.Background(), input, nil)
+}
+
+func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner oplbridge.Runner) (TaskResponse, error) {
 	request, err := validateRequest(input)
 	if err != nil {
 		return TaskResponse{}, err
@@ -68,7 +76,16 @@ func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 
 	taskID := request.WorkspaceID + "_task_001"
 	artifactID := taskID + "_artifact_001"
-	policyID := "opl.contract.domains"
+	policyID := oplbridge.TaskRoutePolicyID
+	route := (*oplbridge.TaskRoute)(nil)
+	if runner != nil {
+		projection := oplbridge.BuildTaskRoute(ctx, runner, oplbridge.TaskRouteRequest{
+			Prompt: request.Prompt,
+			Intent: request.Intent,
+			Target: "deliverable",
+		})
+		route = &projection
+	}
 
 	return TaskResponse{
 		OK:          true,
@@ -98,9 +115,10 @@ func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 			},
 		},
 		Adapter: AdapterProjection{
-			Command:  []string{"opl", "contract", "domains"},
+			Command:  []string{"opl", "contract", "handoff-envelope"},
 			PolicyID: policyID,
 			Mode:     "readonly",
+			Route:    route,
 		},
 	}, nil
 }
@@ -121,7 +139,7 @@ func HandleTask(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	projection, err := CreateTaskResponse(payload)
+	projection, err := CreateTaskResponseWithRoute(request.Context(), payload, oplbridge.NewDefaultRunner())
 	if err != nil {
 		writeInvalid(response, err)
 		return

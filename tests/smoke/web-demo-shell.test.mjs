@@ -14,6 +14,7 @@ test('web demo shell is a Chinese AI workspace surface', () => {
   assert.match(html, /data-demo-status/);
   assert.match(html, /data-opl-readiness/);
   assert.match(html, /data-opl-modules/);
+  assert.match(html, /medautoscience \/ routed/);
   assert.doesNotMatch(html, /mock OPL Adapter/);
   assert.doesNotMatch(html, /后台管理|控制台|Dashboard/);
 });

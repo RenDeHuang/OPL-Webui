@@ -20,6 +20,10 @@ func (runner *fakeRunner) Run(_ context.Context, args []string) ([]byte, error) 
 		return []byte(`{"version":"g2","modules":{"summary":{"default_modules_count":3,"healthy_default_modules_count":1},"items":[{"module_id":"medautoscience","health_status":"ready"}]}}`), nil
 	case "contract domains":
 		return []byte(`{"version":"g2","domains":[{"domain_id":"medautoscience","single_app_skill":"mas"}]}`), nil
+	case "domain resolve-request":
+		return []byte(`{"version":"g2","resolution":{"status":"routed","workstream_id":"research_ops","domain_id":"medautoscience","entry_surface":"domain_gateway","confidence":"high"}}`), nil
+	case "contract handoff-envelope":
+		return []byte(`{"version":"g2","handoff_bundle":{"surface_id":"opl_family_handoff_bundle","target_domain_id":"medautoscience","task_intent":"research","entry_mode":"product_entry_handoff","routing_status":"routed"}}`), nil
 	default:
 		return []byte(`{}`), nil
 	}
@@ -56,6 +60,44 @@ func TestSnapshotUsesReadonlyOplCommands(t *testing.T) {
 func TestSnapshotRejectsMutationCommandRegistration(t *testing.T) {
 	if err := validateReadonlyCommand([]string{"module", "install", "--module", "medautoscience"}); err == nil {
 		t.Fatal("expected mutation command to be rejected")
+	}
+}
+
+func TestTaskRouteUsesReadonlyResolveAndHandoffCommands(t *testing.T) {
+	runner := &fakeRunner{}
+	route := BuildTaskRoute(context.Background(), runner, TaskRouteRequest{
+		Prompt: "生成一个医学研究项目的证据整理任务",
+		Intent: "research",
+		Target: "deliverable",
+	})
+
+	if !route.OK {
+		t.Fatal("expected ok route")
+	}
+	if route.PolicyID != "opl.cli.readonly.task-route" {
+		t.Fatalf("unexpected policy: %s", route.PolicyID)
+	}
+	if len(route.Commands) != 2 {
+		t.Fatalf("command count = %d, want 2", len(route.Commands))
+	}
+	for _, command := range route.Commands {
+		if command.Mutating {
+			t.Fatalf("route included mutating command: %#v", command.Args)
+		}
+	}
+	if runner.calls[0][0] != "domain" || runner.calls[0][1] != "resolve-request" {
+		t.Fatalf("unexpected resolve call: %#v", runner.calls[0])
+	}
+	if runner.calls[1][0] != "contract" || runner.calls[1][1] != "handoff-envelope" {
+		t.Fatalf("unexpected handoff call: %#v", runner.calls[1])
+	}
+	resolution := route.Resolution["resolution"].(map[string]any)
+	if resolution["domain_id"] != "medautoscience" {
+		t.Fatalf("domain_id = %v, want medautoscience", resolution["domain_id"])
+	}
+	handoff := route.HandoffBundle["handoff_bundle"].(map[string]any)
+	if handoff["target_domain_id"] != "medautoscience" {
+		t.Fatalf("target_domain_id = %v, want medautoscience", handoff["target_domain_id"])
 	}
 }
 

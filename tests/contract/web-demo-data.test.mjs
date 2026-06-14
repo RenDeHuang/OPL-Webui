@@ -40,9 +40,31 @@ const apiProjection = Object.freeze({
     },
   ],
   adapter: {
-    command: ['opl', 'contract', 'domains'],
-    policyId: 'opl.contract.domains.readonly',
+    command: ['opl', 'contract', 'handoff-envelope'],
+    policyId: 'opl.cli.readonly.task-route',
     mode: 'readonly',
+    route: {
+      ok: true,
+      mode: 'readonly',
+      policyId: 'opl.cli.readonly.task-route',
+      commands: [
+        { args: ['domain', 'resolve-request', '--intent', 'research'], policyId: 'opl.cli.readonly.task-route', mutating: false, ok: true },
+        { args: ['contract', 'handoff-envelope', '生成一个医学研究项目的证据整理任务'], policyId: 'opl.cli.readonly.task-route', mutating: false, ok: true },
+      ],
+      resolution: {
+        resolution: {
+          status: 'routed',
+          domain_id: 'medautoscience',
+          entry_surface: 'domain_gateway',
+        },
+      },
+      handoffBundle: {
+        handoff_bundle: {
+          target_domain_id: 'medautoscience',
+          routing_status: 'routed',
+        },
+      },
+    },
   },
 });
 
@@ -96,6 +118,8 @@ test('web demo data is derived from the MVP API endpoint', async () => {
   assert.equal(data.artifacts[0].kind, 'analysis_package');
   assert.equal(data.cards[0].label, '任务状态');
   assert.match(data.cards[0].value, /completed/);
+  assert.equal(data.cards[2].label, 'OPL 路由');
+  assert.match(data.cards[2].value, /medautoscience/);
   assert.equal(data.oplSnapshot.mode, 'readonly');
   assert.equal(data.oplCards[0].label, 'OPL 连接');
   assert.match(data.oplCards[1].value, /1\/3/);
@@ -122,6 +146,7 @@ test('web demo data renderer writes cards into DOM-like targets', async () => {
   assert.equal(writes.get('[data-demo-title]'), '医学研究证据整理');
   assert.match(writes.get('[data-demo-summary]'), /已生成/);
   assert.match(writes.get('[data-demo-status]'), /completed/);
+  assert.match(writes.get('[data-demo-boundary]'), /medautoscience/);
   assert.match(writes.get('[data-opl-readiness]'), /core ready/);
   assert.match(writes.get('[data-opl-modules]'), /1\/3/);
   assert.match(writes.get('[data-opl-domains]'), /medautoscience/);

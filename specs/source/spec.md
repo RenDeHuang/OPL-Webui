@@ -15,6 +15,6 @@
 
 `apps/web -> services/control-plane-go HTTP contract -> packages/contracts`
 
-`services/control-plane-go/internal/oplbridge -> OPL CLI JSON surfaces`
+`services/control-plane-go/internal/oplbridge -> OPL CLI JSON snapshot / route / handoff surfaces`
 
 源码不能 import `one-person-lab` 内部模块，不能读取 OPL 私有 state；OPL 连接只能通过白名单 CLI JSON 命令。

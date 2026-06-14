@@ -13,7 +13,8 @@
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
-- `runtime.opl.cli-allowlist`: 允许命令只包括 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
+- `runtime.opl.task-route`: `POST /api/mvp/task` 通过 Go control plane 读取 `opl domain resolve-request --json` 与 `opl contract handoff-envelope --json`，只返回 route/handoff evidence。
+- `runtime.opl.cli-allowlist`: snapshot 允许 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`；task route 允许 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json`。
 - `runtime.opl.fail-closed`: OPL CLI 调用必须通过 Go-side allowlist；命令失败只返回 degraded projection，不执行替代 mutation。
 - `runtime.opl.no-mutation`: install、repair、module exec、family-runtime mutation 默认禁止。
 

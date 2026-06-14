@@ -1,16 +1,33 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
 const buildDir = mkdtempSync(join(tmpdir(), 'opl-webui-go-control-plane-'));
 const binaryPath = join(buildDir, 'opl-webui-control-plane');
+const fakeOplPath = join(buildDir, 'opl');
 
 execFileSync('go', ['build', '-o', binaryPath, './services/control-plane-go/cmd/opl-webui-control-plane'], {
   stdio: 'inherit',
 });
+
+writeFileSync(fakeOplPath, `#!/usr/bin/env bash
+set -euo pipefail
+case "$1 $2" in
+  "domain resolve-request")
+    printf '%s\\n' '{"version":"g2","resolution":{"status":"routed","request_kind":"discover","workstream_id":"research_ops","domain_id":"medautoscience","entry_surface":"domain_gateway","confidence":"high","routing_evidence":["research delivery semantics","domain-agent entry only"]}}'
+    ;;
+  "contract handoff-envelope")
+    printf '%s\\n' '{"version":"g2","handoff_bundle":{"surface_id":"opl_family_handoff_bundle","target_domain_id":"medautoscience","task_intent":"research","entry_mode":"product_entry_handoff","routing_status":"routed","domain_context":{"project":"med-autoscience"}}}'
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 64
+    ;;
+esac
+`, { mode: 0o755 });
 
 process.once('exit', () => {
   rmSync(buildDir, { recursive: true, force: true });
@@ -23,7 +40,7 @@ function wait(ms) {
 async function startGoServer() {
   const port = String(45000 + Math.floor(Math.random() * 1000));
   const child = spawn(binaryPath, [], {
-    env: { ...process.env, PORT: port },
+    env: { ...process.env, PORT: port, OPL_CLI_PATH: fakeOplPath },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -72,8 +89,17 @@ test('Go control plane creates a tenant scoped task artifact projection', async 
     assert.equal(body.userId, 'user_demo');
     assert.match(body.runId, /^run_/);
     assert.equal(body.task.status, 'completed');
+    assert.equal(body.task.commandPolicyId, 'opl.cli.readonly.task-route');
     assert.equal(body.artifacts.length, 1);
-    assert.equal(body.adapter.command.join(' '), 'opl contract domains');
+    assert.equal(body.adapter.command.join(' '), 'opl contract handoff-envelope');
+    assert.equal(body.adapter.route.policyId, 'opl.cli.readonly.task-route');
+    assert.equal(body.adapter.route.resolution.resolution.domain_id, 'medautoscience');
+    assert.equal(body.adapter.route.handoffBundle.handoff_bundle.target_domain_id, 'medautoscience');
+    assert.deepEqual(body.adapter.route.commands.map((entry) => entry.args.slice(0, 2).join(' ')), [
+      'domain resolve-request',
+      'contract handoff-envelope',
+    ]);
+    assert.equal(body.adapter.route.commands.every((entry) => entry.mutating === false), true);
   } finally {
     await stopGoServer(child);
   }

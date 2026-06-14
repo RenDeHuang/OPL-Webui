@@ -7,17 +7,18 @@
 
 ## Current Stage
 
-当前是 `opl-readonly-bridge`：Go control plane 已通过白名单连接真实 OPL CLI 只读 JSON surfaces。
+当前是 `opl-task-route-bridge`：Go control plane 已通过白名单连接真实 OPL CLI 只读 snapshot、domain resolve 和 handoff envelope surfaces。
 
 ## Can Claim
 
 - Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
-- Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 的 task/artifact projection。
+- Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
+- Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
 - Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
 - `GET /healthz` 可用于云平台 HTTP health check。
-- Task/artifact projection 仍是 mock；OPL snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
+- Task/artifact 本体仍是 projection；OPL route/snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
 - `npm run gate:review` 是默认 review gate。
 
 ## Cannot Claim
@@ -28,4 +29,4 @@
 
 ## Next Cursor
 
-下一步是把 task intake 从 mock projection 升级为 OPL handoff-envelope/domain resolve 只读路由，再选择云平台部署预览环境。
+下一步是选择云平台部署预览环境，并把 OPL route failure/degraded 状态做成更清晰的 UI 状态。

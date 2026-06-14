@@ -7,6 +7,14 @@ const DEFAULT_DEMO_REQUEST = Object.freeze({
 });
 
 export function createDemoCards(scenario) {
+  const route = scenario.adapter.route ?? {};
+  const routedDomain = route.resolution?.resolution?.domain_id
+    ?? route.handoffBundle?.handoff_bundle?.target_domain_id
+    ?? 'unknown_domain';
+  const routingStatus = route.resolution?.resolution?.status
+    ?? route.handoffBundle?.handoff_bundle?.routing_status
+    ?? scenario.adapter.mode;
+
   return [
     {
       label: '任务状态',
@@ -17,8 +25,8 @@ export function createDemoCards(scenario) {
       value: `${scenario.artifacts.length} 个正式产物`,
     },
     {
-      label: 'OPL 边界',
-      value: scenario.adapter.command.join(' '),
+      label: 'OPL 路由',
+      value: `${routedDomain} / ${routingStatus}`,
     },
   ];
 }

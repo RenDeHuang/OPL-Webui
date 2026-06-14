@@ -53,6 +53,7 @@ const TEST_ENTRIES = Object.freeze([
     contracts: Object.freeze([
       'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
       'services/control-plane-go/internal/mvp/task.go',
+      'services/control-plane-go/internal/oplbridge/route.go',
       'packages/contracts/opl/mvp-task-http.schema.json',
     ]),
     verifySuites: Object.freeze(['current', 'contract']),
@@ -130,7 +131,10 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'opl-bridge',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['services/control-plane-go/internal/oplbridge/snapshot.go']),
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/oplbridge/snapshot.go',
+      'services/control-plane-go/internal/oplbridge/route.go',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
 ]);

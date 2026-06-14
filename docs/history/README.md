@@ -78,3 +78,11 @@
 - verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/opl/snapshot`
 - can claim: WebUI 已连接真实 OPL CLI 只读 snapshot。
 - cannot claim: 未实现真实 OPL mutation、真实 task execution、登录、多租户数据库、队列、计费或生产部署。
+
+## 2026-06-14 opl-task-route-bridge
+
+- commit: this commit
+- summary: `/api/mvp/task` 通过 Go control plane 调用真实 OPL CLI readonly domain resolve 与 handoff envelope，并在 WebUI 展示 routed domain。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
+- can claim: Task intake 已带真实 OPL readonly route/handoff evidence。
+- cannot claim: 未执行 domain runtime、module exec、install、repair、登录、多租户数据库、队列、计费或生产部署。
