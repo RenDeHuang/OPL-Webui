@@ -71,20 +71,16 @@ test('package does not introduce runtime or dev dependencies', () => {
 });
 
 test('archived change packages keep only compact closeout summaries', () => {
-  for (const archiveId of readdirSync('changes/archive')) {
-    const root = `changes/archive/${archiveId}`;
-    assert.deepEqual(readdirSync(root).sort(), ['closeout.md'], `${archiveId} archive must stay compact`);
-    const closeout = readFileSync(`${root}/closeout.md`, 'utf8');
-    assert.match(closeout, /Summary/);
-    assert.match(closeout, /Verification/);
-    assert.match(closeout, /Cannot Claim/);
-  }
+  assert.deepEqual(readdirSync('changes/archive').sort(), ['closeouts.md']);
+
+  const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
+  assert.match(closeout, /foundation-loop-contracts/);
+  assert.match(closeout, /production-runtime-gate/);
+  assert.match(closeout, /cannot claim/);
 
   const history = readFileSync('docs/history/README.md', 'utf8');
-  assert.match(history, /foundation-loop-contracts/);
-  assert.match(history, /41515a6/);
-  assert.match(history, /mvp-task-artifact-loop/);
-  assert.match(history, /8626e29/);
+  assert.match(history, /changes\/archive\/closeouts\.md/);
+  assert.doesNotMatch(history, /changes\/archive\/2026-06-14-/);
 });
 
 test('active change packages are complete and eval-backed', () => {
