@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
 )
 
 type TaskRequest struct {
@@ -129,6 +130,15 @@ func HandleTask(response http.ResponseWriter, request *http.Request) {
 			OK:        false,
 			ErrorCode: "METHOD_NOT_ALLOWED",
 			Message:   "method not allowed",
+		})
+		return
+	}
+
+	if status := runtimegate.CurrentStatus(); !status.OK {
+		writeJSON(response, http.StatusServiceUnavailable, ErrorResponse{
+			OK:        false,
+			ErrorCode: "PRODUCTION_RUNTIME_NOT_READY",
+			Message:   "production runtime dependencies are not configured",
 		})
 		return
 	}

@@ -137,6 +137,17 @@ const TEST_ENTRIES = Object.freeze([
     ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/runtimegate/gate_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/runtimegate',
+    lane: 'contract',
+    ownerSurface: 'production-runtime',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/internal/runtimegate/gate.go']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
 ]);
 
 function lane(name, description) {

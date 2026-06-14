@@ -13,6 +13,8 @@
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。
 - `runtime.deploy.opl-cli`: 容器默认读取 `OPL_CLI_PATH=/opt/opl/bin/opl`；OPL CLI 是外部只读运行依赖，不随 WebUI 镜像复制。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
+- `runtime.deploy.readyz`: `GET /readyz` 返回生产依赖就绪状态；production 缺 auth、database、queue、object store、billing 或 worker 配置时返回 `503`。
+- `runtime.deploy.production-gate`: `OPL_WEBUI_ENV=production` 且 `/readyz` 未就绪时，`POST /api/mvp/task` 必须 fail closed。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
 - `runtime.opl.task-route`: `POST /api/mvp/task` 通过 Go control plane 读取 `opl domain resolve-request --json` 与 `opl contract handoff-envelope --json`，只返回 route/handoff evidence。
 - `runtime.opl.cli-allowlist`: snapshot 允许 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`；task route 允许 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json`。

@@ -38,9 +38,13 @@ function wait(ms) {
 }
 
 async function startGoServer() {
+  return startGoServerWithEnv({});
+}
+
+async function startGoServerWithEnv(extraEnv) {
   const port = String(45000 + Math.floor(Math.random() * 1000));
   const child = spawn(binaryPath, [], {
-    env: { ...process.env, PORT: port, OPL_CLI_PATH: fakeOplPath },
+    env: { ...process.env, ...extraEnv, PORT: port, OPL_CLI_PATH: fakeOplPath },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const baseUrl = `http://127.0.0.1:${port}`;
@@ -138,6 +142,45 @@ test('Go control plane rejects requests without tenant boundary', async () => {
     const body = await response.json();
     assert.equal(body.ok, false);
     assert.equal(body.errorCode, 'INVALID_MVP_TASK_REQUEST');
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('production mode blocks task intake until required runtime dependencies are configured', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv({
+    OPL_WEBUI_ENV: 'production',
+  });
+  try {
+    const readyResponse = await fetch(`${baseUrl}/readyz`);
+    assert.equal(readyResponse.status, 503);
+    const readyBody = await readyResponse.json();
+    assert.equal(readyBody.ok, false);
+    assert.equal(readyBody.environment, 'production');
+    assert.deepEqual(readyBody.missing.sort(), [
+      'OPL_BILLING_MODE',
+      'OPL_DATABASE_URL',
+      'OPL_OBJECT_STORE_URL',
+      'OPL_QUEUE_URL',
+      'OPL_TENANT_AUTH_MODE',
+      'OPL_WORKER_MODE',
+    ].sort());
+
+    const taskResponse = await fetch(`${baseUrl}/api/mvp/task`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        tenantId: 'tenant_cloud_demo',
+        workspaceId: 'workspace_cloud_demo',
+        userId: 'user_demo',
+        prompt: '生成一个医学研究项目的证据整理任务',
+      }),
+    });
+
+    assert.equal(taskResponse.status, 503);
+    const taskBody = await taskResponse.json();
+    assert.equal(taskBody.ok, false);
+    assert.equal(taskBody.errorCode, 'PRODUCTION_RUNTIME_NOT_READY');
   } finally {
     await stopGoServer(child);
   }

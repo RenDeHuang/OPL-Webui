@@ -19,6 +19,7 @@
 - Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
 - 容器默认 `OPL_CLI_PATH=/opt/opl/bin/opl`；部署时应把 OPL CLI 作为外部只读依赖挂载或安装到该路径，不把 `one-person-lab` 主仓复制进 WebUI 镜像。
 - `GET /healthz` 可用于云平台 HTTP health check。
+- `GET /readyz` 暴露生产依赖闸门；`OPL_WEBUI_ENV=production` 缺 auth、db、queue、object store、billing 或 worker 配置时会阻断 task intake。
 - Task/artifact 本体仍是 projection；OPL route/snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
 - `npm run gate:review` 是默认 review gate。
 
