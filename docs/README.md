@@ -11,6 +11,6 @@
 - Product spec: `specs/product/spec.md`
 - Runtime spec: `specs/runtime/spec.md`
 - Source spec: `specs/source/spec.md`
-- History: `docs/history/`
+- History: `changes/archive/closeouts.md`
 
 本目录不承载第二份 truth；细节以对应 owner 文件和源码为准。

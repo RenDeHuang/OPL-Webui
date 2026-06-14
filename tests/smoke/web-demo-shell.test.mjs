@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 test('web demo shell is a Chinese AI workspace surface', () => {
@@ -23,7 +23,11 @@ test('web demo shell keeps CSS and data bridge separate', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /styles.css/);
-  assert.match(html, /src\/demoData.mjs/);
+	assert.match(html, /src\/demoData.mjs/);
+});
+
+test('web app does not keep a duplicate local README', () => {
+	assert.equal(existsSync('apps/web/README.md'), false);
 });
 
 test('web demo shell is wired to the MVP API endpoint', () => {

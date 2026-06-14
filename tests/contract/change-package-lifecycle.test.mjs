@@ -36,6 +36,7 @@ test('package lifecycle exposes verification-only commands', () => {
 
 test('repo exposes active truth, durable specs, and structural rules', () => {
   const requiredTruthFiles = [
+    'changes/archive/closeouts.md',
     'docs/active/README.md',
     'specs/product/spec.md',
     'specs/runtime/spec.md',
@@ -78,9 +79,7 @@ test('archived change packages keep only compact closeout summaries', () => {
   assert.match(closeout, /production-runtime-gate/);
   assert.match(closeout, /cannot claim/);
 
-  const history = readFileSync('docs/history/README.md', 'utf8');
-  assert.match(history, /changes\/archive\/closeouts\.md/);
-  assert.doesNotMatch(history, /changes\/archive\/2026-06-14-/);
+  assert.equal(existsSync('docs/history/README.md'), false);
 });
 
 test('active change packages are complete and eval-backed', () => {
