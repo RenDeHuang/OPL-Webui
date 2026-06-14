@@ -122,6 +122,7 @@ const TEST_ENTRIES = Object.freeze([
     lifecycleRole: 'current-owner',
     contracts: Object.freeze([
       'services/control-plane-go/internal/mvp/handlers.go',
+      'services/control-plane-go/internal/mvp/postgres_store.go',
       'services/control-plane-go/internal/mvp/store.go',
       'services/control-plane-go/internal/mvp/task.go',
     ]),

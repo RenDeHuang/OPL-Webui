@@ -69,3 +69,9 @@
 - summary: 增加 Go-side `TaskStore` 边界、内存实现和 task projection lookup endpoint，为 Postgres adapter 留接口。
 - verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
 - cannot claim: 生产数据库、队列、计费、object storage、OPL worker 或公网生产部署。
+
+## 2026-06-14 postgres-task-store-adapter
+
+- summary: 增加零 ORM 的 Postgres `TaskStore` adapter 和最小 `task_projections` schema 常量。
+- verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
+- cannot claim: runtime 已连接真实 Postgres、队列、计费、object storage、OPL worker 或公网生产部署。
