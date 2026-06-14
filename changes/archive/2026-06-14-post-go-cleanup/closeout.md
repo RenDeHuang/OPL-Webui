@@ -1,7 +1,7 @@
-# Closeout
+# post-go-cleanup Closeout
 
 - owner: post-go-cleanup
-- state: pending
+- state: archived
 
 ## Summary
 
@@ -10,7 +10,8 @@
 
 ## Verification
 
-- `npm run verify:contract`: pass
+- `npm run gate:review`: pass at commit `7bd2cb0`
+- `sentrux check /home/dev/projects/ui`: pass
 - `npm run repo:bloat`: pass, 46 files / 22 markdown / 9 tests before archive
 
 ## Cannot Claim

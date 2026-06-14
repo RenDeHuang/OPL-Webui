@@ -51,3 +51,12 @@
 - verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
 - can claim: 本地 Go control plane 能服务 Web shell 和 tenant-scoped `/api/mvp/task`。
 - cannot claim: 未实现真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。
+
+## 2026-06-14 post-go-cleanup
+
+- commit: `7bd2cb0`
+- archive: `changes/archive/2026-06-14-post-go-cleanup/`
+- summary: 清退 Go control plane 不再消费的 Node-era core/adapter、旧 OPL contracts 和旧 adapter/schema tests。
+- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
+- can claim: 当前后端业务 surface 收敛为 Go control plane + HTTP contract。
+- cannot claim: 未实现真实 OPL execution、真实登录、多租户数据库、队列、计费或生产部署。
