@@ -191,24 +191,20 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 
 当前已验证 CLB host 是 `lb-lhj3bgii-ms5ocrjz6hdaki2l.clb.usw-tencentclb.com`。
 
-## HA 警告
+## HA / 安全组收敛设计
 
-当前 qcloud Ingress 可能提示 `EnsureIngressWarning W1012`：
+当前风险是 `EnsureIngressWarning W1012`：只有一个后端节点，节点或 Pod 异常会影响 `https://opl.medopl.cn`。目标态是两个可调度 TKE node、两个 Ready Pod、CLB 至少两个健康 backend，且公网入口只走 CLB 80/443，不再保留 `0.0.0.0/0 TCP:32258` 这种临时 NodePort 暴露。
 
-```text
-Only one node in the backend, may lead to single point of failure.
-```
-
-这是 HA 后续项，不阻断 stable HTTPS handoff。生产化前需要至少两个可调度后端节点、对应安全组规则和滚动发布验证。
-
-## 504 排障
-
-如果 Ingress 返回 504，但 Pod、Service、canary 和集群内访问都正常，优先检查节点安全组：
-
-- TKE qcloud Ingress 会访问 Service 的 NodePort。
-- 当前已验证 NodePort 是 `32258/TCP`。
-- 当前验证临时放通规则是 `0.0.0.0/0 TCP:32258`。
-- 更长期做法是按集群安全策略放通 qcloud CLB 到 NodePort 或 NodePort range，不在仓库记录真实安全组 ID、账号或密钥。
+1. HA 目标态：`Deployment replicas=2`，两个 Pod 分布在不同 `kubernetes.io/hostname`；`/readyz`、`canary db`、`canary opl-cli` 和 HTTPS smoke 全部通过后才收口安全组。
+2. TKE node：需要新增或复用第二个 Ready worker node；必须带 `medopl.cn/workload=webui` 或调整当前 nodeSelector，否则第二个 Pod 仍可能无法调度。
+3. Deployment：建议 `replicas: 2`、`maxUnavailable: 0`、`maxSurge: 1`，保持滚动更新期间至少两个期望副本。
+4. 调度：先用 `topologySpreadConstraints`，`maxSkew: 1`、`topologyKey: kubernetes.io/hostname`、`whenUnsatisfiable: DoNotSchedule`；同时加软 `podAntiAffinity` 作为调度偏好，避免只有一个 node 时永久阻断紧急恢复。
+5. PDB：建议 `minAvailable: 1`，在两副本 MVP 阶段允许一次自愿中断但避免维护动作同时驱逐全部 Pod；后续三副本再升到 `minAvailable: 2`。
+6. 安全组：优先在 qcloud Ingress/CLB 层绑定专用安全组，只允许公网到 CLB `80,443`；节点安全组仅允许来自该 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证通过后删除公网到 NodePort 的临时规则。
+7. 云端执行：新增/确认第二 node -> 给第二 node 打 `medopl.cn/workload=webui` -> 更新 Deployment replicas/rolling 策略/拓扑约束/PDB -> rollout -> 确认 qcloud Ingress backend 节点数 -> 收敛安全组。
+8. 验证：`kubectl get pod -o wide` 确认两个 Pod 在不同 node；`kubectl get ingress` 确认 `ADDRESS` 和 `80,443`；跑 `canary db`、`canary opl-cli`、`curl --http2 -fsS https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
+9. 回滚：若第二 Pod 不 Ready 或 HTTPS/canary 失败，先 `kubectl rollout undo deployment/opl-webui-control-plane` 或恢复 `replicas: 1`；若安全组收敛导致 504，立即恢复上一条 NodePort 规则，再按日志定位 CLB 到 node 的来源范围。
+10. 控制台事项：在腾讯云控制台新增或复用第二 CVM/TKE worker、确认节点安全组和 CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；不要在 CLB 控制台手工改证书，证书仍由 `opl-webui-tls` Secret 驱动。
 
 ## Rollback
 

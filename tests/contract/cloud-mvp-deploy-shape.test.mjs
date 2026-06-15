@@ -110,6 +110,16 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'DNS',
     '504',
     'W1012',
+    'replicas=2',
+    'topologySpreadConstraints',
+    'podAntiAffinity',
+    'PDB',
+    'minAvailable: 1',
+    'DoNotSchedule',
+    'medopl.cn/workload=webui',
+    '80,443',
+    '32258',
+    '腾讯云控制台',
     'rollback',
   ]) {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));

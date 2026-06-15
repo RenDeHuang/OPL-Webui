@@ -19,7 +19,8 @@
 - Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
 - Control-plane binary 提供 `canary opl-cli`，验证 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
 - `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
-- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、504/HA 排障和 rollback，不保存真实 secret。
+- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
+- HA 目标态设计已固定：两个 Ready TKE node、`replicas=2`、跨 node 分布、`PDB minAvailable=1`、CLB 80/443 作为公网入口、NodePort 只允许 CLB 到节点访问。
 - 日常更新发布流程已固定为本地 `npm run verify`/`npm run gate:review`、cloud image build/push、云端 `kubectl set image`、rollout、canary、HTTPS smoke 和 rollback。
 - 当前已验证 cloud stable HTTPS 镜像是 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`，digest 是 `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`。
 - `https://opl.medopl.cn/healthz`、`https://opl.medopl.cn/readyz` 和 `https://opl.medopl.cn/` 已返回 HTTP/2 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
@@ -37,14 +38,14 @@
 ## Cannot Claim
 
 - 还不是完整公网多用户 production ready SaaS。
-- 多节点 HA、HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
+- 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
 - 还没有真实登录、队列、计费、object storage、OPL worker、真实 OPL execution 或生产运行证据。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步是在保持 HTTPS stable 的前提下补齐 HA、HTTP->HTTPS 跳转、登录/租户入口、队列/worker 和计费/object storage 的 contract + eval，不把这些能力误算进当前 cloud MVP。
+下一步是在云端执行 HA/安全组收敛计划，确认 W1012 消失或 backend 不再单节点，再补 HTTP->HTTPS 跳转、登录/租户入口、队列/worker 和计费/object storage 的 contract + eval。
 
 ## Next Priorities
 
-后续优先级按上线风险排序：HA、安全组收敛、监控、auth、MedOPL API integration。每一项都需要先补 contract、eval 和回滚边界，再进入产品功能开发。
+后续优先级按上线风险排序：云端执行 HA/安全组收敛、监控、auth、MedOPL API integration。每一项都需要先补 contract、eval 和回滚边界，再进入产品功能开发。
