@@ -29,9 +29,11 @@ test('cloud MVP fixture exposes opl.medopl.cn through the Go control plane servi
   assert.equal(service.metadata.namespace, 'opl-webui');
   assert.equal(ingress.metadata.namespace, 'opl-webui');
   assert.equal(service.metadata.name, 'opl-webui-control-plane');
+  assert.equal(service.spec.type, 'NodePort');
   assert.equal(service.spec.ports[0].port, 4173);
   assert.equal(service.spec.ports[0].targetPort, 4173);
-  assert.equal(ingress.spec.ingressClassName, 'nginx');
+  assert.equal(service.spec.ports[0].nodePort, 32258);
+  assert.equal(ingress.spec.ingressClassName, 'qcloud');
   assert.equal(ingress.spec.rules[0].host, 'opl.medopl.cn');
   assert.equal(ingress.spec.rules[0].http.paths[0].backend.service.name, 'opl-webui-control-plane');
   assert.equal(ingress.spec.rules[0].http.paths[0].backend.service.port.number, 4173);
@@ -91,6 +93,10 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'canary opl-cli',
     '/healthz',
     '/readyz',
+    'qcloud',
+    'NodePort',
+    'DNS',
+    '504',
     'rollback',
   ]) {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));

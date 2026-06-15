@@ -6,13 +6,14 @@
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
 - PostgreSQL 连接信息在外部文件：`/home/dev/.secrets/opl-webui/postgresql/oplweb.env`。
-- Dockerfile 当前只声明 `OPL_CLI_PATH=/opt/opl/bin/opl`，没有把 OPL CLI 放进镜像；上线镜像必须通过派生镜像或只读挂载提供该 binary。
 - TCR/CCR 登录凭据由云端 runner 注入，仓库不保存 token。
+- TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
+- DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
 
 ## 镜像构建与推送
 
 ```bash
-export OPL_IMAGE="<tcr-or-ccr-registry>/<namespace>/opl-webui:<git-sha>"
+export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<git-sha>"
 docker build \
   -f Dockerfile.cloud \
   --build-context opl=/external/path/to/one-person-lab \
@@ -21,6 +22,11 @@ docker push "$OPL_IMAGE"
 ```
 
 `Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl` 和 `contracts/opl-gateway` 放到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，避免复制外部 stale build output。不能把 `one-person-lab` 主仓复制进本仓。
+
+当前 cloud stable HTTP 已验证镜像：
+
+- image: `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`
+- digest: `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`
 
 ## 创建 Kubernetes Secret
 
@@ -38,6 +44,8 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-
 
 ## 替换真实镜像地址
 
+`deploy/cloud-mvp/opl-webui.k8s.json` 当前固定已验证镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`。如果发布新镜像，只替换 Deployment container image，不改 secret 或业务配置：
+
 ```bash
 tmp_manifest="$(mktemp)"
 node -e '
@@ -54,6 +62,8 @@ process.stdout.write(JSON.stringify(manifest, null, 2));
 ## 部署
 
 以下步骤由云端/VPC runner 执行 `kubectl apply`，本地开发机不执行。
+
+`deploy/cloud-mvp/opl-webui.k8s.json` 的 Service 必须保持 `NodePort`，当前已验证端口是 `4173:32258/TCP`；Ingress 必须保持 `ingressClassName: qcloud`。
 
 ```bash
 kubectl --kubeconfig "$KUBECONFIG" create namespace opl-webui --dry-run=client -o yaml \
@@ -73,12 +83,41 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-co
 ## Smoke
 
 ```bash
-curl -fsS https://opl.medopl.cn/healthz
-curl -fsS https://opl.medopl.cn/readyz
-curl -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
+curl -fsS http://opl.medopl.cn/healthz
+curl -fsS http://opl.medopl.cn/readyz
+curl -fsS http://opl.medopl.cn/ >/tmp/opl-webui-home.html
 ```
 
 `/readyz` 必须返回 `ok: true` 后才能把本次部署视为 cloud MVP preview 可用。
+
+当前 HTTP smoke 已通过：
+
+- `http://opl.medopl.cn/healthz` 返回 200
+- `http://opl.medopl.cn/readyz` 返回 200
+- `http://opl.medopl.cn/` 返回 200
+- `canary db` 通过
+- `canary opl-cli` 通过
+
+HTTPS 证书、HTTPS Ingress 和强制跳转仍是后续项；不要把当前状态表述为完整 production ready。
+
+## DNS
+
+TKE qcloud Ingress 创建 CLB 后，只修改 `opl.medopl.cn`：
+
+```text
+opl.medopl.cn CNAME <qcloud-clb-hostname>
+```
+
+当前已验证 CLB host 是 `lb-lhj3bgii-ms5ocrjz6hdaki2l.clb.usw-tencentclb.com`。
+
+## 504 排障
+
+如果 Ingress 返回 504，但 Pod、Service、canary 和集群内访问都正常，优先检查节点安全组：
+
+- TKE qcloud Ingress 会访问 Service 的 NodePort。
+- 当前已验证 NodePort 是 `32258/TCP`。
+- 当前验证临时放通规则是 `0.0.0.0/0 TCP:32258`。
+- 更长期做法是按集群安全策略放通 qcloud CLB 到 NodePort 或 NodePort range，不在仓库记录真实安全组 ID、账号或密钥。
 
 ## Rollback
 

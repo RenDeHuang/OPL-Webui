@@ -47,7 +47,7 @@
             "containers": [
               {
                 "name": "control-plane",
-                "image": "registry.example.invalid/opl-webui:cloud-mvp",
+                "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249",
                 "ports": [
                   {
                     "name": "http",
@@ -121,6 +121,7 @@
         "namespace": "opl-webui"
       },
       "spec": {
+        "type": "NodePort",
         "selector": {
           "app.kubernetes.io/name": "opl-webui"
         },
@@ -128,7 +129,8 @@
           {
             "name": "http",
             "port": 4173,
-            "targetPort": 4173
+            "targetPort": 4173,
+            "nodePort": 32258
           }
         ]
       }
@@ -141,7 +143,7 @@
         "namespace": "opl-webui"
       },
       "spec": {
-        "ingressClassName": "nginx",
+        "ingressClassName": "qcloud",
         "rules": [
           {
             "host": "opl.medopl.cn",

@@ -99,3 +99,9 @@
 - summary: 补齐 TKE handoff 包：fixture 增加 namespace、imagePullSecret、nodeSelector、resources 和 ingress class；新增无 secret runbook 覆盖 TCR/CCR、Secret、apply、canary、smoke、rollback，并明确 OPL CLI 需由派生镜像或只读挂载提供。
 - verified: `npm run verify`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`。
 - cannot claim: 已执行 kubectl、读取 kubeconfig、build/push、打开 PostgreSQL 公网、真实云端部署、公网 smoke 或 VPC DB canary。
+
+## 2026-06-15 cloud-stable-http-handoff
+
+- summary: 固化已验证的 TKE qcloud HTTP 上线形态：`uswccr` 镜像 `30a3249`、NodePort `32258`、qcloud Ingress、DNS CNAME、HTTP smoke、canary 和 504 安全组排障。
+- verified: `npm run verify`, `npm run gate:review`。
+- cannot claim: HTTPS、完整 production ready SaaS、真实登录、队列、计费、object storage、OPL worker 或真实 OPL mutation。
