@@ -8,12 +8,3 @@
 !apps
 !apps/web
 !apps/web/**
-!opl
-!opl/bin
-!opl/bin/opl
-!opl/dist
-!opl/dist/**
-!opl/contracts
-!opl/contracts/opl-gateway
-!opl/contracts/opl-gateway/**
-!opl/package.json

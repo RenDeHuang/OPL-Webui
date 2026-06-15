@@ -28,18 +28,19 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
   assert.match(dockerfile, /FROM golang:1\.22-alpine AS builder/);
   assert.match(dockerfile, /FROM node:22-alpine AS runtime/);
   assert.match(dockerfile, /ARG OPL_CONTEXT=opl/);
-  assert.match(dockerfile, /COPY \$\{OPL_CONTEXT\}\/bin\/opl \/opt\/opl\/bin\/opl/);
-  assert.match(dockerfile, /COPY \$\{OPL_CONTEXT\}\/dist \/opt\/opl\/dist/);
-  assert.match(dockerfile, /COPY \$\{OPL_CONTEXT\}\/contracts\/opl-gateway \/opt\/opl\/contracts\/opl-gateway/);
+  assert.match(dockerfile, /COPY --from=\$\{OPL_CONTEXT\} \/bin\/opl \/opt\/opl\/bin\/opl/);
+  assert.match(dockerfile, /COPY --from=\$\{OPL_CONTEXT\} \/dist \/opt\/opl\/dist/);
+  assert.match(dockerfile, /COPY --from=\$\{OPL_CONTEXT\} \/contracts\/opl-gateway \/opt\/opl\/contracts\/opl-gateway/);
   assert.match(dockerfile, /RUN chmod \+x \/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /ENV OPL_CLI_PATH=\/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /CMD \["\/app\/opl-webui-control-plane"\]/);
   assert.doesNotMatch(dockerfile, /OPL_DATABASE_URL|PGPASSWORD|kubectl|kubeconfig/i);
 
   const dockerignore = readFileSync('.dockerignore.cloud', 'utf8');
-  for (const required of ['*', '!Dockerfile.cloud', '!go.work', '!services/control-plane-go/**', '!apps/web/**', '!opl/bin/opl', '!opl/dist/**', '!opl/contracts/opl-gateway/**']) {
+  for (const required of ['*', '!Dockerfile.cloud', '!go.work', '!services/control-plane-go/**', '!apps/web/**']) {
     assert.ok(dockerignore.includes(required), `.dockerignore.cloud must include ${required}`);
   }
+  assert.doesNotMatch(dockerignore, /^!opl/m);
   assert.doesNotMatch(dockerignore, /^!opl\/src/m);
   assert.doesNotMatch(dockerignore, /^!opl\/node_modules/m);
 });

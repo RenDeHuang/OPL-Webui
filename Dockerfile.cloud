@@ -16,10 +16,10 @@ ENV OPL_CLI_PATH=/opt/opl/bin/opl
 
 COPY --from=builder /out/opl-webui-control-plane /app/opl-webui-control-plane
 COPY apps/web apps/web
-COPY ${OPL_CONTEXT}/bin/opl /opt/opl/bin/opl
-COPY ${OPL_CONTEXT}/dist /opt/opl/dist
-COPY ${OPL_CONTEXT}/contracts/opl-gateway /opt/opl/contracts/opl-gateway
-COPY ${OPL_CONTEXT}/package.json /opt/opl/package.json
+COPY --from=${OPL_CONTEXT} /bin/opl /opt/opl/bin/opl
+COPY --from=${OPL_CONTEXT} /dist /opt/opl/dist
+COPY --from=${OPL_CONTEXT} /contracts/opl-gateway /opt/opl/contracts/opl-gateway
+COPY --from=${OPL_CONTEXT} /package.json /opt/opl/package.json
 RUN chmod +x /opt/opl/bin/opl
 
 EXPOSE 4173
