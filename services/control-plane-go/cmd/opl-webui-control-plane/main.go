@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -40,8 +41,12 @@ func main() {
 	}
 }
 
-func runCLI(args []string, stdout *os.File, stderr *os.File) (bool, int) {
+func runCLI(args []string, stdout io.Writer, stderr io.Writer) (bool, int) {
 	if len(args) == 0 || args[0] != "canary" {
+		if len(args) == 1 && (args[0] == "--help" || args[0] == "-h" || args[0] == "help") {
+			printUsage(stdout)
+			return true, 0
+		}
 		return false, 0
 	}
 	if len(args) != 2 {
@@ -71,6 +76,14 @@ func runCLI(args []string, stdout *os.File, stderr *os.File) (bool, int) {
 		return true, 1
 	}
 	return true, 0
+}
+
+func printUsage(stdout io.Writer) {
+	fmt.Fprintln(stdout, "usage: opl-webui-control-plane [--help] [canary db|canary opl-cli]")
+	fmt.Fprintln(stdout, "")
+	fmt.Fprintln(stdout, "commands:")
+	fmt.Fprintln(stdout, "  canary db       verify Postgres open/ping/schema/write/read/delete")
+	fmt.Fprintln(stdout, "  canary opl-cli  verify OPL readonly CLI surfaces")
 }
 
 func serverAddress() string {

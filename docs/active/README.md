@@ -24,7 +24,7 @@
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
 - Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
-- 容器默认 `OPL_CLI_PATH=/opt/opl/bin/opl`；部署时应把 OPL CLI 作为外部只读依赖挂载或安装到该路径，不把 `one-person-lab` 主仓复制进 WebUI 镜像。
+- 基础 Dockerfile 只声明 `OPL_CLI_PATH=/opt/opl/bin/opl`；`Dockerfile.cloud` 通过外部 OPL build context 把 `bin/opl`、`dist` 和 `contracts/opl-gateway` materialize 到 `/opt/opl`，不把 `one-person-lab` 主仓提交进 WebUI 仓库。
 - `GET /healthz` 可用于云平台 HTTP health check。
 - `GET /readyz` 暴露生产依赖闸门；`OPL_WEBUI_ENV=production` 缺 auth、db、queue、object store、billing 或 worker 配置时会阻断 task intake。
 - Task/artifact 本体仍是 projection；OPL route/snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
@@ -39,4 +39,4 @@
 
 ## Next Cursor
 
-下一步是在云端 runner/VPC 内按 `deploy/cloud-mvp/RUNBOOK.md` 注入外部 kubeconfig、TCR/CCR 凭据和 `/home/dev/.secrets/opl-webui/postgresql/oplweb.env` 等价 Secret，提供 `/opt/opl/bin/opl`，构建镜像并落地到 `opl.medopl.cn`，随后跑 `canary db`、`canary opl-cli` 和公网 smoke。
+下一步是在可用 Docker/CCR 环境中按 `deploy/cloud-mvp/RUNBOOK.md` 注入外部 OPL build context、kubeconfig、TCR/CCR 凭据和 `/home/dev/.secrets/opl-webui/postgresql/oplweb.env` 等价 Secret，构建镜像并落地到 `opl.medopl.cn`，随后跑 `canary db`、`canary opl-cli` 和公网 smoke。

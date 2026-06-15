@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,6 +26,26 @@ func TestServerAddressDefaultsToLocalDevelopment(t *testing.T) {
 
 	if got := serverAddress(); got != "127.0.0.1:4173" {
 		t.Fatalf("serverAddress() = %q, want %q", got, "127.0.0.1:4173")
+	}
+}
+
+func TestRunCLIHelpPrintsUsage(t *testing.T) {
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+
+	handled, code := runCLI([]string{"--help"}, stdout, stderr)
+
+	if !handled {
+		t.Fatal("expected --help to be handled")
+	}
+	if code != 0 {
+		t.Fatalf("help exit code = %d, want 0, stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "opl-webui-control-plane") {
+		t.Fatalf("help should name binary, got %q", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "canary db") {
+		t.Fatalf("help should include canary db, got %q", stdout.String())
 	}
 }
 

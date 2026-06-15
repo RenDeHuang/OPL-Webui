@@ -13,11 +13,14 @@
 
 ```bash
 export OPL_IMAGE="<tcr-or-ccr-registry>/<namespace>/opl-webui:<git-sha>"
-docker build -t "$OPL_IMAGE" .
+docker build \
+  -f Dockerfile.cloud \
+  --build-context opl=/external/path/to/one-person-lab \
+  -t "$OPL_IMAGE" .
 docker push "$OPL_IMAGE"
 ```
 
-如需把 OPL CLI 放到 `/opt/opl/bin/opl`，请在云端构建派生镜像或用平台只读 volume 挂载，不能把 `one-person-lab` 主仓复制进本仓。
+`Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl`、`dist` 和 `contracts/opl-gateway` 放到 `/opt/opl`。不能把 `one-person-lab` 主仓复制进本仓。
 
 ## 创建 Kubernetes Secret
 
