@@ -20,7 +20,7 @@ docker build \
 docker push "$OPL_IMAGE"
 ```
 
-`Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl`、`dist` 和 `contracts/opl-gateway` 放到 `/opt/opl`。不能把 `one-person-lab` 主仓复制进本仓。
+`Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl` 和 `contracts/opl-gateway` 放到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，避免复制外部 stale build output。不能把 `one-person-lab` 主仓复制进本仓。
 
 ## 创建 Kubernetes Secret
 

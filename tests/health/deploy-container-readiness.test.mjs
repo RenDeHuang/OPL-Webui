@@ -26,12 +26,15 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
 
   const dockerfile = readFileSync('Dockerfile.cloud', 'utf8');
   assert.match(dockerfile, /FROM golang:1\.22-alpine AS builder/);
+  assert.match(dockerfile, /FROM node:22-alpine AS opl-build/);
   assert.match(dockerfile, /FROM node:22-alpine AS runtime/);
   assert.match(dockerfile, /apk add --no-cache bash/);
   assert.doesNotMatch(dockerfile, /COPY --from=\$\{/);
   assert.match(dockerfile, /COPY --from=opl \/bin\/opl \/opt\/opl\/bin\/opl/);
-  assert.match(dockerfile, /COPY --from=opl \/dist \/opt\/opl\/dist/);
+  assert.doesNotMatch(dockerfile, /COPY --from=opl \/dist /);
+  assert.match(dockerfile, /COPY --from=opl-build \/src\/dist \/opt\/opl\/dist/);
   assert.match(dockerfile, /COPY --from=opl \/contracts\/opl-gateway \/opt\/opl\/contracts\/opl-gateway/);
+  assert.match(dockerfile, /npm run build/);
   assert.match(dockerfile, /RUN chmod \+x \/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /ENV OPL_CLI_PATH=\/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /CMD \["\/app\/opl-webui-control-plane"\]/);

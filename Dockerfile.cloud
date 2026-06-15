@@ -6,6 +6,17 @@ COPY services/control-plane-go/go.mod services/control-plane-go/go.mod
 COPY services/control-plane-go services/control-plane-go
 RUN go build -o /out/opl-webui-control-plane ./services/control-plane-go/cmd/opl-webui-control-plane
 
+FROM node:22-alpine AS opl-build
+
+WORKDIR /src
+COPY --from=opl /package.json /src/package.json
+COPY --from=opl /package-lock.json /src/package-lock.json
+COPY --from=opl /tsconfig.json /src/tsconfig.json
+COPY --from=opl /tsconfig.build.json /src/tsconfig.build.json
+COPY --from=opl /src /src/src
+RUN npm ci
+RUN npm run build
+
 FROM node:22-alpine AS runtime
 
 RUN apk add --no-cache bash
@@ -17,7 +28,7 @@ ENV OPL_CLI_PATH=/opt/opl/bin/opl
 COPY --from=builder /out/opl-webui-control-plane /app/opl-webui-control-plane
 COPY apps/web apps/web
 COPY --from=opl /bin/opl /opt/opl/bin/opl
-COPY --from=opl /dist /opt/opl/dist
+COPY --from=opl-build /src/dist /opt/opl/dist
 COPY --from=opl /contracts/opl-gateway /opt/opl/contracts/opl-gateway
 COPY --from=opl /package.json /opt/opl/package.json
 RUN chmod +x /opt/opl/bin/opl

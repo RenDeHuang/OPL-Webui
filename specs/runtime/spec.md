@@ -13,7 +13,7 @@
 - `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
-- `runtime.deploy.cloud-image`: `Dockerfile.cloud` 构建 TKE 镜像，并从外部 OPL build context 复制 `bin/opl`、`dist` 和 `contracts/opl-gateway` 到 `/opt/opl`。
+- `runtime.deploy.cloud-image`: `Dockerfile.cloud` 构建 TKE 镜像，并从外部 OPL build context 复制 `bin/opl` 和 `contracts/opl-gateway` 到 `/opt/opl`，同时从 OPL `src` 在构建期重新生成 `/opt/opl/dist`。
 - `runtime.deploy.address`: 本机默认监听 `127.0.0.1:4173`；容器通过 `HOST=0.0.0.0` 和 `PORT=4173` 对外监听。
 - `runtime.deploy.opl-cli`: 容器默认读取 `OPL_CLI_PATH=/opt/opl/bin/opl`；OPL CLI 是外部只读运行依赖，不随 WebUI 镜像复制。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态，供云平台探活。
