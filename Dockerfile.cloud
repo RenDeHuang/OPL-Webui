@@ -8,7 +8,6 @@ RUN go build -o /out/opl-webui-control-plane ./services/control-plane-go/cmd/opl
 
 FROM node:22-alpine AS runtime
 
-ARG OPL_CONTEXT=opl
 WORKDIR /app
 ENV HOST=0.0.0.0
 ENV PORT=4173
@@ -16,10 +15,10 @@ ENV OPL_CLI_PATH=/opt/opl/bin/opl
 
 COPY --from=builder /out/opl-webui-control-plane /app/opl-webui-control-plane
 COPY apps/web apps/web
-COPY --from=${OPL_CONTEXT} /bin/opl /opt/opl/bin/opl
-COPY --from=${OPL_CONTEXT} /dist /opt/opl/dist
-COPY --from=${OPL_CONTEXT} /contracts/opl-gateway /opt/opl/contracts/opl-gateway
-COPY --from=${OPL_CONTEXT} /package.json /opt/opl/package.json
+COPY --from=opl /bin/opl /opt/opl/bin/opl
+COPY --from=opl /dist /opt/opl/dist
+COPY --from=opl /contracts/opl-gateway /opt/opl/contracts/opl-gateway
+COPY --from=opl /package.json /opt/opl/package.json
 RUN chmod +x /opt/opl/bin/opl
 
 EXPOSE 4173
