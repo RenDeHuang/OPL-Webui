@@ -27,6 +27,7 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
   const dockerfile = readFileSync('Dockerfile.cloud', 'utf8');
   assert.match(dockerfile, /FROM golang:1\.22-alpine AS builder/);
   assert.match(dockerfile, /FROM node:22-alpine AS runtime/);
+  assert.match(dockerfile, /apk add --no-cache bash/);
   assert.doesNotMatch(dockerfile, /COPY --from=\$\{/);
   assert.match(dockerfile, /COPY --from=opl \/bin\/opl \/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /COPY --from=opl \/dist \/opt\/opl\/dist/);
