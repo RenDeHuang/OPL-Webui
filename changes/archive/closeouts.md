@@ -111,3 +111,9 @@
 - summary: 固化已验证的 TKE qcloud HTTPS 上线形态：`opl-webui-tls` 证书 Secret、HTTPS smoke、HTTP 80 非稳定入口、canary 结果和 W1012 单节点 HA 后续项。
 - verified: `npm run verify`, `npm run gate:review`。
 - cannot claim: 完整 production ready SaaS、多节点 HA、HTTP->HTTPS 强制跳转、真实登录、队列、计费、object storage、OPL worker 或真实 OPL mutation。
+
+## 2026-06-16 cloud-update-release-loop
+
+- summary: 固化后续网站更新发布流程：本地验证、短 commit 镜像 build/push、云端 set image、rollout、canary、HTTPS smoke 和 rollback。
+- verified: `npm run verify`, `npm run gate:review`。
+- cannot claim: 自动化 CI/CD、真实本轮 kubectl 执行、生产监控、多节点 HA、auth、MedOPL API integration 或产品功能开发。

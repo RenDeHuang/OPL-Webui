@@ -29,6 +29,73 @@ docker push "$OPL_IMAGE"
 - image: `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`
 - digest: `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`
 
+## 日常更新发布流程
+
+当前 stable baseline 镜像是 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`。后续每次更新都用短 commit 作为不可变 tag：
+
+```bash
+short_commit="$(git rev-parse --short HEAD)"
+export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_commit}"
+```
+
+本地开发机只做开发、镜像构建和推送；云端/VPC runner 执行 Kubernetes rollout、canary 和 smoke。
+
+### 1. 本地开发与验证
+
+```bash
+npm run verify
+npm run gate:review
+```
+
+### 2. 构建并推送 cloud 镜像
+
+```bash
+docker build \
+  -f Dockerfile.cloud \
+  --build-context opl=/external/path/to/one-person-lab \
+  -t "$OPL_IMAGE" .
+docker push "$OPL_IMAGE"
+```
+
+### 3. 云端更新镜像并 rollout
+
+以下命令只由云端/VPC runner 执行，本地开发机不执行。
+
+```bash
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui set image \
+  deployment/opl-webui-control-plane \
+  control-plane="$OPL_IMAGE"
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout status \
+  deployment/opl-webui-control-plane
+```
+
+### 4. Canary
+
+```bash
+pod="$(kubectl --kubeconfig "$KUBECONFIG" -n opl-webui get pod -l app.kubernetes.io/name=opl-webui -o jsonpath='{.items[0].metadata.name}')"
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-control-plane canary db
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-control-plane canary opl-cli
+```
+
+### 5. HTTPS smoke
+
+```bash
+curl --http2 -fsS https://opl.medopl.cn/healthz
+curl --http2 -fsS https://opl.medopl.cn/readyz
+curl --http2 -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
+```
+
+### 6. Rollback
+
+如果 rollout、canary 或 HTTPS smoke 失败，先回滚 Deployment，再重新跑 canary 和 smoke：
+
+```bash
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout undo \
+  deployment/opl-webui-control-plane
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout status \
+  deployment/opl-webui-control-plane
+```
+
 ## 创建 Kubernetes Secret
 
 ```bash

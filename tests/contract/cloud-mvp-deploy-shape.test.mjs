@@ -89,9 +89,14 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   for (const required of [
     'TCR/CCR',
     'OPL_IMAGE',
+    'uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249',
+    'short_commit',
     'opl-webui-postgres',
     'OPL_DATABASE_URL',
     'kubectl apply',
+    'set image',
+    'rollout status',
+    'rollout undo',
     'canary db',
     'canary opl-cli',
     '/healthz',
@@ -109,6 +114,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   ]) {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));
   }
+  assert.match(runbook, /opl-webui:\$\{short_commit\}/);
   assert.match(runbook, /KUBECONFIG=.*external/i);
   assert.match(runbook, /\/home\/dev\/\.secrets\/opl-webui\/postgresql\/oplweb\.env/);
   assert.doesNotMatch(runbook, /postgres(?:ql)?:\/\/[^`\s]+/i);
