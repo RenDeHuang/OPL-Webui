@@ -9,6 +9,7 @@
 - TCR/CCR 登录凭据由云端 runner 注入，仓库不保存 token。
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
 - DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
+- HTTPS 证书由 Kubernetes Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
 
 ## 镜像构建与推送
 
@@ -23,7 +24,7 @@ docker push "$OPL_IMAGE"
 
 `Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl` 和 `contracts/opl-gateway` 放到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，避免复制外部 stale build output。不能把 `one-person-lab` 主仓复制进本仓。
 
-当前 cloud stable HTTP 已验证镜像：
+当前 cloud stable HTTPS 已验证镜像：
 
 - image: `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`
 - digest: `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`
@@ -41,6 +42,19 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-
 ```
 
 `opl-webui-postgres` 只包含 `OPL_DATABASE_URL`，不要把明文值写回仓库。
+
+## 配置 qcloud HTTPS 证书
+
+qcloud Ingress 通过 Opaque Secret 读取腾讯云证书 ID。只创建 Secret，不要把真实 `qcloud_cert_id` 写入仓库，也不要直接在 CLB 控制台手工绑定证书；证书绑定应由 Ingress 声明驱动。
+
+```bash
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-tls \
+  --type=Opaque \
+  --from-literal=qcloud_cert_id="$QCLOUD_CERT_ID" \
+  --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
+```
+
+`QCLOUD_CERT_ID` 由云端执行者从外部 secret manager 或运行环境注入。runbook 只固定 Secret 名 `opl-webui-tls` 和 key `qcloud_cert_id`。
 
 ## 替换真实镜像地址
 
@@ -63,7 +77,7 @@ process.stdout.write(JSON.stringify(manifest, null, 2));
 
 以下步骤由云端/VPC runner 执行 `kubectl apply`，本地开发机不执行。
 
-`deploy/cloud-mvp/opl-webui.k8s.json` 的 Service 必须保持 `NodePort`，当前已验证端口是 `4173:32258/TCP`；Ingress 必须保持 `ingressClassName: qcloud`。
+`deploy/cloud-mvp/opl-webui.k8s.json` 的 Service 必须保持 `NodePort`，当前已验证端口是 `4173:32258/TCP`；Ingress 必须保持 `ingressClassName: qcloud`，并通过 `tls.secretName: opl-webui-tls` 终止 `opl.medopl.cn` 的 HTTPS。
 
 ```bash
 kubectl --kubeconfig "$KUBECONFIG" create namespace opl-webui --dry-run=client -o yaml \
@@ -83,22 +97,22 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-co
 ## Smoke
 
 ```bash
-curl -fsS http://opl.medopl.cn/healthz
-curl -fsS http://opl.medopl.cn/readyz
-curl -fsS http://opl.medopl.cn/ >/tmp/opl-webui-home.html
+curl --http2 -fsS https://opl.medopl.cn/healthz
+curl --http2 -fsS https://opl.medopl.cn/readyz
+curl --http2 -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
 ```
 
 `/readyz` 必须返回 `ok: true` 后才能把本次部署视为 cloud MVP preview 可用。
 
-当前 HTTP smoke 已通过：
+当前 HTTPS smoke 已通过：
 
-- `http://opl.medopl.cn/healthz` 返回 200
-- `http://opl.medopl.cn/readyz` 返回 200
-- `http://opl.medopl.cn/` 返回 200
-- `canary db` 通过
-- `canary opl-cli` 通过
+- `https://opl.medopl.cn/healthz` 返回 HTTP/2 200
+- `https://opl.medopl.cn/readyz` 返回 HTTP/2 200
+- `https://opl.medopl.cn/` 返回 HTTP/2 200
+- `canary db` 返回 `ok=true`，覆盖 open、ping、schema、write、read、delete
+- `canary opl-cli` 返回 `ok=true`，policyId 是 `opl.cli.readonly.task-route`
 
-HTTPS 证书、HTTPS Ingress 和强制跳转仍是后续项；不要把当前状态表述为完整 production ready。
+HTTP 80 当前不是稳定入口，当前稳定入口以 `https://opl.medopl.cn` 为准。不要把当前状态表述为完整 production ready。
 
 ## DNS
 
@@ -109,6 +123,16 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 ```
 
 当前已验证 CLB host 是 `lb-lhj3bgii-ms5ocrjz6hdaki2l.clb.usw-tencentclb.com`。
+
+## HA 警告
+
+当前 qcloud Ingress 可能提示 `EnsureIngressWarning W1012`：
+
+```text
+Only one node in the backend, may lead to single point of failure.
+```
+
+这是 HA 后续项，不阻断 stable HTTPS handoff。生产化前需要至少两个可调度后端节点、对应安全组规则和滚动发布验证。
 
 ## 504 排障
 

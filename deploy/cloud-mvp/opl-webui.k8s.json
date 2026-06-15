@@ -144,6 +144,14 @@
       },
       "spec": {
         "ingressClassName": "qcloud",
+        "tls": [
+          {
+            "hosts": [
+              "opl.medopl.cn"
+            ],
+            "secretName": "opl-webui-tls"
+          }
+        ],
         "rules": [
           {
             "host": "opl.medopl.cn",

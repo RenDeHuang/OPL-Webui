@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `cloud-stable-http-handoff`：`opl.medopl.cn` 已在 TKE qcloud Ingress + NodePort 形态完成 HTTP smoke、DB canary 和 OPL CLI readonly canary；仓库只固化无 secret 的声明式部署形状和云端 runbook。
+当前是 `cloud-stable-https-handoff`：`https://opl.medopl.cn` 已在 TKE qcloud Ingress + NodePort + TLS Secret 形态完成 HTTPS smoke、DB canary 和 OPL CLI readonly canary；仓库只固化无 secret 的声明式部署形状和云端 runbook。
 
 ## Can Claim
 
@@ -18,10 +18,11 @@
 - Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`，不把 queue、object store、billing、worker 误算进 MVP preview。
 - Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
 - Control-plane binary 提供 `canary opl-cli`，验证 OPL readonly allowlist surfaces，不执行 install、repair、module exec 或 mutation。
-- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
-- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、K8s Secret、镜像替换、apply、canary、HTTP smoke、DNS、504 排障和 rollback，不保存真实 secret。
-- 当前已验证 cloud stable HTTP 镜像是 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`，digest 是 `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`。
-- `http://opl.medopl.cn/healthz`、`http://opl.medopl.cn/readyz` 和 `http://opl.medopl.cn/` 已返回 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
+- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
+- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、504/HA 排障和 rollback，不保存真实 secret。
+- 当前已验证 cloud stable HTTPS 镜像是 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`，digest 是 `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`。
+- `https://opl.medopl.cn/healthz`、`https://opl.medopl.cn/readyz` 和 `https://opl.medopl.cn/` 已返回 HTTP/2 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
+- HTTP 80 当前不是稳定入口；`EnsureIngressWarning W1012` 的单节点后端风险是 HA 后续项。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
 - OPL snapshot 聚合 `opl system initialize --json`、`opl modules --json`、`opl contract domains --json`。
 - Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
@@ -35,10 +36,10 @@
 ## Cannot Claim
 
 - 还不是完整公网多用户 production ready SaaS。
-- HTTPS 证书、HTTPS Ingress 和 HTTP->HTTPS 强制跳转仍是后续项。
+- 多节点 HA、HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
 - 还没有真实登录、队列、计费、object storage、OPL worker、真实 OPL execution 或生产运行证据。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步是在保持 HTTP stable 的前提下补齐 HTTPS、登录/租户入口、队列/worker 和计费/object storage 的 contract + eval，不把这些能力误算进当前 cloud MVP。
+下一步是在保持 HTTPS stable 的前提下补齐 HA、HTTP->HTTPS 跳转、登录/租户入口、队列/worker 和计费/object storage 的 contract + eval，不把这些能力误算进当前 cloud MVP。

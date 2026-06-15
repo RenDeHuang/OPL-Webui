@@ -105,3 +105,9 @@
 - summary: 固化已验证的 TKE qcloud HTTP 上线形态：`uswccr` 镜像 `30a3249`、NodePort `32258`、qcloud Ingress、DNS CNAME、HTTP smoke、canary 和 504 安全组排障。
 - verified: `npm run verify`, `npm run gate:review`。
 - cannot claim: HTTPS、完整 production ready SaaS、真实登录、队列、计费、object storage、OPL worker 或真实 OPL mutation。
+
+## 2026-06-15 cloud-stable-https-handoff
+
+- summary: 固化已验证的 TKE qcloud HTTPS 上线形态：`opl-webui-tls` 证书 Secret、HTTPS smoke、HTTP 80 非稳定入口、canary 结果和 W1012 单节点 HA 后续项。
+- verified: `npm run verify`, `npm run gate:review`。
+- cannot claim: 完整 production ready SaaS、多节点 HA、HTTP->HTTPS 强制跳转、真实登录、队列、计费、object storage、OPL worker 或真实 OPL mutation。
