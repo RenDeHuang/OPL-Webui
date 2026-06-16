@@ -57,4 +57,20 @@
   - `node scripts/cloud-rollout.mjs` 默认 dry-run 输出 rollout、canary 和 HTTPS smoke 命令。
   - `npm run verify` 通过。
   - `npm run gate:review` 通过。
+- Phase 7 state-evidence helper 证据：
+  - `tests/contract/cloud-rollout-helper.test.mjs` 新增 rollout state evidence 断言，并通过。
+  - `scripts/cloud-rollout.mjs` dry-run 输出 `rollout status` 后的 rollout revision、Deployment image、Pod lookup、Pod `-o wide` 和 Pod imageID 采集命令。
+  - `OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:1d5ec92 node scripts/cloud-rollout.mjs` 默认仍只打印命令，不执行 mutation。
+  - `npm run verify` 通过。
+  - `npm run gate:review` 通过。
+- Phase 7 API 复测证据：
+  - 当前环境仍没有默认 `KUBECONFIG`。
+  - `/home/dev/.secrets/medopl/kubeconfig`、`kubeconfig-package-d-deploy` 和 `kubeconfig-v20.32` 均指向 `https://medopl.cn`，`kubectl version --request-timeout=8s` 超时。
+  - `/home/dev/.secrets/medopl/kubeconfig-v20.32-external` 指向 `lb-952pntps-mahtufc86zw9ksjo.clb.usw-tencentclb.com`，DNS 不可解析。
+  - `/home/dev/.secrets/medopl/new_kube.config` 指向 `https://kube.medopl.cn`，DNS 不可解析。
+  - `/home/dev/.secrets/medopl/v22/kubeconfig-package-d-deploy` 指向 `https://10.66.0.37`，`kubectl version --request-timeout=8s` 超时。
+- Online re-smoke 证据：
+  - `https://opl.medopl.cn/healthz` 返回 `{"ok":true,"service":"opl-webui-control-plane"}`。
+  - `https://opl.medopl.cn/readyz` 返回 `{"ok":true,"environment":"cloud_mvp","missing":[]}`。
+  - 首页 HTML 仍只命中旧 shell 文案 `今天想推进什么正式交付？` 和 `任务进度`，仍未命中 V3 文案。
 - 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

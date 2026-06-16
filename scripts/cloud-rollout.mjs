@@ -12,6 +12,9 @@ const controlPlaneBin = process.env.OPL_CONTROL_PLANE_BIN ?? '/app/opl-webui-con
 
 const kubeconfig = process.env.KUBECONFIG ?? '$KUBECONFIG';
 const image = process.env.OPL_IMAGE ?? '$OPL_IMAGE';
+const rolloutRevisionJsonpath = 'jsonpath={.metadata.annotations.deployment\\.kubernetes\\.io/revision}';
+const deploymentImageJsonpath = 'jsonpath={.spec.template.spec.containers[?(@.name=="control-plane")].image}';
+const podImageIdJsonpath = 'jsonpath={.status.containerStatuses[?(@.name=="control-plane")].imageID}';
 
 const healthUrl = 'https://opl.medopl.cn/healthz';
 const readyUrl = 'https://opl.medopl.cn/readyz';
@@ -43,6 +46,20 @@ run('kubectl rollout status', 'kubectl', kubectlArgs([
   deployment,
 ]));
 
+capture('rollout revision', kubectlArgs([
+  'get',
+  deployment,
+  '-o',
+  rolloutRevisionJsonpath,
+]));
+
+capture('deployment image', kubectlArgs([
+  'get',
+  deployment,
+  '-o',
+  deploymentImageJsonpath,
+]));
+
 const pod = execFileSync('kubectl', kubectlArgs([
   'get',
   'pod',
@@ -56,6 +73,23 @@ if (!pod) {
   console.error('No pod found for selector:', podSelector);
   process.exit(1);
 }
+
+run('pod status', 'kubectl', kubectlArgs([
+  'get',
+  'pod',
+  '-l',
+  podSelector,
+  '-o',
+  'wide',
+]));
+
+capture('pod imageID', kubectlArgs([
+  'get',
+  'pod',
+  pod,
+  '-o',
+  podImageIdJsonpath,
+]));
 
 run('canary db', 'kubectl', kubectlArgs([
   'exec',
@@ -96,6 +130,18 @@ function printDryRun() {
     'status',
     deployment,
   ])));
+  console.log(formatCommand('kubectl', kubectlArgs([
+    'get',
+    deployment,
+    '-o',
+    rolloutRevisionJsonpath,
+  ])));
+  console.log(formatCommand('kubectl', kubectlArgs([
+    'get',
+    deployment,
+    '-o',
+    deploymentImageJsonpath,
+  ])));
   console.log(`pod="$(${formatCommand('kubectl', kubectlArgs([
     'get',
     'pod',
@@ -104,6 +150,21 @@ function printDryRun() {
     '-o',
     'jsonpath={.items[0].metadata.name}',
   ]))})"`);
+  console.log(formatCommand('kubectl', kubectlArgs([
+    'get',
+    'pod',
+    '-l',
+    podSelector,
+    '-o',
+    'wide',
+  ])));
+  console.log(formatCommand('kubectl', kubectlArgs([
+    'get',
+    'pod',
+    '$pod',
+    '-o',
+    podImageIdJsonpath,
+  ])));
   console.log(formatCommand('kubectl', kubectlArgs([
     'exec',
     '$pod',
@@ -131,6 +192,13 @@ function run(label, command, commandArgs) {
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+function capture(label, commandArgs) {
+  console.log(`[cloud-rollout] ${label}`);
+  const value = execFileSync('kubectl', commandArgs, { encoding: 'utf8' }).trim();
+  console.log(value || '(empty)');
+  return value;
 }
 
 function requireEnv(name) {

@@ -22,3 +22,17 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(helper, /dryRun/);
   assert.doesNotMatch(helper, /OPL_DATABASE_URL|PGPASSWORD|qcloud_cert_id|AKID[A-Za-z0-9]+/);
 });
+
+test('cloud rollout helper captures rollout state evidence for closeout', () => {
+  const helper = readFileSync(helperPath, 'utf8');
+
+  assert.match(helper, /rollout revision/);
+  assert.match(helper, /deployment image/);
+  assert.match(helper, /pod status/);
+  assert.match(helper, /pod imageID/);
+  assert.match(helper, /deployment\\\\.kubernetes\\\\.io\/revision/);
+  assert.match(helper, /jsonpath=\{\.spec\.template\.spec\.containers\[\?\(@\.name=="control-plane"\)\]\.image\}/);
+  assert.match(helper, /jsonpath=\{\.status\.containerStatuses\[\?\(@\.name=="control-plane"\)\]\.imageID\}/);
+  assert.match(helper, /jsonpath=\{\.items\[0\]\.metadata\.name\}/);
+  assert.match(helper, /'wide'/);
+});

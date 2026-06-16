@@ -78,6 +78,7 @@
 - [x] Step 7.2: 由云端/VPC runner 构建 short-SHA image。
 - [x] Step 7.3: 由云端/VPC runner 推送 image。
 - [x] Step 7.3.1: 固化 dry-run first 的 `scripts/cloud-rollout.mjs`，把 rollout、pod canary 和 HTTPS smoke 变成可重复云端执行入口。
+- [x] Step 7.3.2: 补强 `scripts/cloud-rollout.mjs` 的状态采集，输出 rollout revision、Deployment image、Pod wide 状态和 Pod imageID。
 - [ ] Step 7.4: 由云端/VPC runner 执行 Kubernetes rollout。
 - [ ] Step 7.5: 记录 rollout revision、image digest 和 pod 状态。
 
