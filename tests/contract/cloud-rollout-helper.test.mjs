@@ -27,17 +27,18 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/readyz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\//);
 
-  const stagingDryRun = execFileSync(process.execPath, [helperPath], {
+  const configuredBaseUrlDryRun = execFileSync(process.execPath, [helperPath], {
     encoding: 'utf8',
     env: {
       ...process.env,
-      OPL_BASE_URL: 'https://staging.opl.medopl.cn',
-      OPL_NAMESPACE: 'opl-webui-staging',
+      OPL_BASE_URL: 'https://preview.example.test/path/',
+      OPL_NAMESPACE: 'opl-webui-preview',
     },
   });
-  assert.match(stagingDryRun, /-n opl-webui-staging/);
-  assert.match(stagingDryRun, /https:\/\/staging\.opl\.medopl\.cn\/healthz/);
-  assert.match(stagingDryRun, /https:\/\/staging\.opl\.medopl\.cn\/readyz/);
+  assert.match(configuredBaseUrlDryRun, /-n opl-webui-preview/);
+  assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/healthz/);
+  assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/readyz/);
+  assert.doesNotMatch(configuredBaseUrlDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
 });
 
 test('cloud rollout helper captures rollout state evidence for closeout', () => {

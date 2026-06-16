@@ -9,7 +9,7 @@
 - [x] Phase 1: CI 自动测试。
 - [x] Phase 2: CI build/push image。
 - [ ] Phase 3: Cloud CD runner rollout。
-- [ ] Phase 4: Staging / Production。
+- [ ] Phase 4: No-public-staging production-gated release。
 - [ ] Phase 5: Closeout compact。
 
 ## Phase Steps
@@ -42,16 +42,18 @@
 
 - [x] Step 3.1: 定义腾讯云 VPC self-hosted runner 边界。
 - [x] Step 3.2: runner 执行 `scripts/cloud-rollout.mjs` dry-run。
+- [x] Step 3.2.1: 当前 Release Image 只 build/push，不自动触发 staging rollout。
 - [ ] Step 3.3: runner 执行 `scripts/cloud-rollout.mjs --apply`。
 - [ ] Step 3.4: 记录 rollout revision、Deployment image、Pod imageID、canary 和 HTTPS smoke。
 
-### Phase 4: Staging / Production
+### Phase 4: No-public-staging production-gated release
 
-- [x] Step 4.1: 定义 staging namespace、domain 和 secret boundary。
+- [x] Step 4.1: 明确当前没有真实 staging，不允许 fake staging 指向 production。
 - [x] Step 4.1.1: Cloud Rollout 增加 OPL image allowlist，非 `webopl/opl-webui` 镜像 fail closed。
-- [ ] Step 4.2: staging 自动 rollout 并 smoke/canary。
+- [x] Step 4.2: 当前发版路线固定为 CI → image → manual production dry-run → approval → production apply → canary/smoke。
 - [x] Step 4.3: production 需要 manual approval。
 - [ ] Step 4.4: production rollout 后记录 smoke/canary/rollback evidence。
+- [ ] Step 4.5: 后续创建真实 staging namespace/domain/DB/Secret/TLS/DNS 后，再恢复 automatic staging rollout。
 
 ### Phase 5: Closeout compact
 

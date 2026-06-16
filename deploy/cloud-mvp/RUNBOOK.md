@@ -7,11 +7,14 @@
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
 - PostgreSQL 连接信息在外部文件：`/home/dev/.secrets/opl-webui/postgresql/oplweb.env`。
 - 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets；不要使用 `pull_request_target`。
-- TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；staging/production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
+- TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
 - build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
 - Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`；其他输入 fail closed。
 - 腾讯云 VPC self-hosted runner 需要能访问 TKE API。
-- `staging.opl.medopl.cn` 和 `opl.medopl.cn` 分别指向 staging/production Ingress。
+- 当前阶段是 `no-public-staging production-gated release`：还没有真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB、Secret、TLS 或 DNS。
+- 不允许 fake staging 指向 production；如果没有独立 namespace、DB/Secret、TLS 和 DNS，就不能把 staging 作为发布门禁。
+- staging 不是镜像存储；TCR/CCR 才是版本存储，镜像 tag/digest 是 production dry-run 和 apply 的输入。
+- `opl.medopl.cn` 指向 production Ingress。
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
 - DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
 - HTTPS 证书由 Kubernetes Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
@@ -45,6 +48,10 @@ export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_commit}"
 
 常规路径走 GitHub Actions；本地开发机只做开发和验证，不持有 kubeconfig，不直接发布 production。
 
+```text
+CI -> image -> manual production dry-run -> approval -> production apply -> canary/smoke
+```
+
 ### 1. 本地开发与验证
 
 ```bash
@@ -54,29 +61,21 @@ npm run gate:review
 
 ### 2. 合并或 push 到 main
 
-`CI` workflow 会在 PR 和 `main` push 上运行 `npm run verify` 与 `npm run gate:review`。PR 的 `pull_request` CI 不拿 secrets；`Release Image` workflow 只接受同仓库 `main` push 的成功 CI，随后在腾讯云 self-hosted runner 构建 `Dockerfile.cloud`，推送：
+`CI` 在 PR 和 `main` push 上运行 `npm run verify` 与 `npm run gate:review`；PR 不拿 secrets。`Release Image` 只接受同仓库 `main` push 的成功 CI，在腾讯云 self-hosted runner 构建并推送 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<short-commit>`。日志必须记录 image digest。build job 只使用 TCR 与 OPL build context secrets，不拿 kubeconfig，不执行 rollout。
 
-```text
-uswccr.ccs.tencentyun.com/webopl/opl-webui:<short-commit>
-```
+### 3. 手动 production dry-run
 
-workflow 日志必须记录 image digest。build job 只使用 TCR 与 OPL build context secrets，不拿 kubeconfig。
+镜像推送后，手动运行 `Cloud Rollout`：`image` 填 TCR tag/digest，`target_environment=production`，`apply=false`。dry-run 只打印 rollout、evidence、canary 和 HTTPS smoke 命令，不读取 `KUBECONFIG`，不修改集群；输出必须确认 namespace `opl-webui` 和 base URL `https://opl.medopl.cn`。
 
-### 3. 自动发布 staging
+### 4. 手动批准 production apply
 
-镜像推送成功后，同一个 `Release Image` workflow 会转到腾讯云 VPC self-hosted runner，先执行 staging dry-run，再以 `OPL_NAMESPACE=opl-webui-staging`、`OPL_BASE_URL=https://staging.opl.medopl.cn` 执行 `scripts/cloud-rollout.mjs --apply`。staging 必须通过 `canary db`、`canary opl-cli`、`/healthz`、`/readyz` 和首页 HTTPS smoke。
+dry-run 审计通过后，再用同一 `image` 手动运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。`apply=true` 必须通过 GitHub `production` Environment approval。发布日志需要记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、canary 和 HTTPS smoke。
 
-### 4. 手动批准 production
+### 5. 后续恢复 automatic staging rollout 的条件
 
-staging 通过后，在 GitHub Actions 手动运行 `Cloud Rollout`：
+只有在创建真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB/Secret/TLS/DNS 后，才恢复 automatic staging rollout，并同步补 workflow contract、runbook、canary/smoke eval 和 rollback 边界。
 
-- `image`: staging 已验证的完整镜像 tag 或 digest。
-- `target_environment`: `production`。
-- `apply`: 先用 `false` 做 dry-run；确认无误后再用 `true`，并通过 production environment approval。
-
-production 使用 `OPL_NAMESPACE=opl-webui`、`OPL_BASE_URL=https://opl.medopl.cn`。发布日志需要记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide` 状态、canary 和 HTTPS smoke 输出。
-
-### 5. 手工 fallback：构建并推送 cloud 镜像
+### 6. 手工 fallback：构建并推送 cloud 镜像
 
 ```bash
 docker build \
@@ -86,7 +85,7 @@ docker build \
 docker push "$OPL_IMAGE"
 ```
 
-### 6. 手工 fallback：云端 dry-run 审计
+### 7. 手工 fallback：云端 dry-run 审计
 
 以下命令只由云端/VPC runner 执行，本地开发机不执行。先不带 `--apply` 跑 dry-run，确认输出的 image、namespace、Deployment、canary 和 HTTPS smoke 命令都符合预期：
 
@@ -94,7 +93,7 @@ docker push "$OPL_IMAGE"
 node scripts/cloud-rollout.mjs
 ```
 
-### 7. 手工 fallback：云端更新镜像、rollout、canary 和 smoke
+### 8. 手工 fallback：云端更新镜像、rollout、canary 和 smoke
 
 dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli`、`/healthz`、`/readyz` 和首页 HTTPS smoke，并在日志中输出 closeout 需要记录的 rollout revision、Deployment image、Pod `-o wide` 状态和 Pod imageID。
 
@@ -111,7 +110,7 @@ node scripts/cloud-rollout.mjs --apply
 - `canary db` 和 `canary opl-cli` 输出
 - HTTPS smoke 输出
 
-### 8. Rollback
+### 9. Rollback
 
 如果 rollout、canary 或 HTTPS smoke 失败，先回滚 Deployment，再重新跑 canary 和 smoke：
 

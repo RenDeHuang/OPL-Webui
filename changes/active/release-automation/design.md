@@ -34,6 +34,7 @@ Release Automation 的阶段性计划只放在 `changes/active/release-automatio
 ## Workflow Shape
 
 - `ci.yml`: PR/main push 的 test-only gate。
-- `release-image.yml`: CI 成功后构建并推送 TCR 镜像；同一 workflow 在腾讯云 VPC self-hosted runner 上自动发 staging。
-- `cloud-rollout.yml`: 手动发布入口，支持 staging 或 production；production 依赖 GitHub environment approval。
-- `scripts/cloud-rollout.mjs`: dry-run first；通过 `OPL_NAMESPACE` 和 `OPL_BASE_URL` 区分 staging/production。
+- `release-image.yml`: CI 成功后只构建并推送 TCR 镜像；不自动执行 staging 或 production rollout。
+- `cloud-rollout.yml`: 当前只保留手动 production dry-run/apply 入口；`apply=true` 依赖 GitHub production environment approval。
+- `scripts/cloud-rollout.mjs`: dry-run first；默认 production `https://opl.medopl.cn`，只有显式设置 `OPL_BASE_URL` 时才覆盖。
+- Staging: 作为后续目标保留；只有创建真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 DB/Secret/TLS/DNS 后，才恢复 automatic staging rollout。

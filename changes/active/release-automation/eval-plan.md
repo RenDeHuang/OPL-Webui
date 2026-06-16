@@ -34,17 +34,21 @@
 - self-hosted runner 在腾讯云 VPC 内。
 - runner 能访问 TKE API。
 - dry-run 和 `--apply` 分离。
+- `Release Image` 只 build/push，不拿 kubeconfig，不自动执行 staging rollout。
 - `canary db`、`canary opl-cli`、`/healthz`、`/readyz` 和首页 smoke 通过。
 - 记录 rollout revision、Deployment image、Pod imageID。
 - 当前阻塞：本地环境无法访问 TKE API，`kube.medopl.cn` DNS 不可解析，`https://medopl.cn` 和 `https://10.66.0.37` kube API 请求超时；需要腾讯云 VPC self-hosted runner 运行 `--apply`。
 
-### Phase 4: Staging / Production
+### Phase 4: No-public-staging production-gated release
 
-- staging 与 production namespace/domain/secret boundary 不混淆。
-- staging 先自动 rollout，production manual approval 后 rollout。
-- 两个环境都有 smoke/canary/rollback evidence。
+- 当前没有真实 staging；不允许 fake staging 指向 production。
+- TCR/CCR 是版本存储；staging 不是镜像存储。
+- production 入口只通过 `Cloud Rollout` 手动 dry-run/apply。
+- `apply=true` 必须使用 GitHub `production` Environment approval。
+- production rollout 后必须有 smoke/canary/rollback evidence。
 - `Cloud Rollout` 只接受 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。
-- 当前阻塞：`staging.opl.medopl.cn` 未解析；production 入口 `https://opl.medopl.cn` smoke 仍为 200，但本地无法执行 production rollout。
+- 后续只有在真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 DB/Secret/TLS/DNS 存在后，才恢复 automatic staging rollout。
+- 当前阻塞：production 入口 `https://opl.medopl.cn` smoke 仍为 200，但本地无法执行 production rollout。
 
 ## Required Commands
 
@@ -59,4 +63,5 @@
 - 没有 GitHub Actions run URL 不能 claim CI 已上线。
 - 没有 registry digest 不能 claim image push 完成。
 - 没有 VPC runner 日志不能 claim rollout 自动化完成。
-- 没有 staging 和 production 线上证据不能 claim 分环境发布完成。
+- 没有 production 线上证据不能 claim production rollout 完成。
+- 没有真实 staging namespace/domain/DB/Secret/TLS/DNS 不能 claim staging rollout。

@@ -38,7 +38,7 @@
 - Phase 2 implementation: 新增 `.github/workflows/release-image.yml`，在 CI 成功后 build/push `Dockerfile.cloud` 镜像，tag 使用 short commit；build job 不持有 kubeconfig，不执行 rollout。
 - Phase 2 local evidence: `docker build -f Dockerfile.cloud --build-context opl=/home/dev/projects/one-person-lab -t uswccr.ccs.tencentyun.com/webopl/opl-webui:6df9635 .` 成功；`docker push` 成功；registry index digest 是 `sha256:443f02b8b63718c971188f7ec91ec238717f568568d42aab1bc924f37811c2f5`。
 - Phase 3 implementation: 新增 `.github/workflows/cloud-rollout.yml`，只在 `[self-hosted, tencent-cloud, opl-webui]` runner 上执行 `scripts/cloud-rollout.mjs`；`--apply` 由 workflow input 控制。
-- Phase 4 implementation: `release-image.yml` 在镜像成功后自动触发 staging rollout；production 只通过 `cloud-rollout.yml` 手动触发并使用 GitHub environment approval。
+- Phase 4 adjustment: 当前切换为 no-public-staging production-gated release；`release-image.yml` 只 build/push，production 只通过 `cloud-rollout.yml` 手动 dry-run/apply 并使用 GitHub environment approval。
 - Blocker: 当前本机无法访问 TKE API；`kube.medopl.cn` DNS 不可解析，`https://medopl.cn` 与 `https://10.66.0.37` kube API 请求超时。`staging.opl.medopl.cn` 当前无法解析。因此不能 claim Phase 3/4 真实 rollout 已完成。
 
 ## Open Source Secrets Boundary Review
@@ -51,3 +51,9 @@
 
 - Root cause: `Dockerfile.cloud` 仍拷贝旧 OPL contract path `contracts/opl-gateway`；remote OPL `main` `778ed35` 的 package 已切到 `opl-framework-shared`，CLI loader 默认解析 `contracts/opl-framework`。
 - Fix: cloud image runtime 改为 materialize `contracts/opl-framework`，并用 `tests/health/deploy-container-readiness.test.mjs` 禁止再次依赖旧 `contracts/opl-gateway`。
+
+## No-public-staging Release Adjustment
+
+- Root cause: automatic staging rollout 当前绑定 `staging.opl.medopl.cn` 和 `opl-webui-staging`，但真实 staging namespace、DB/Secret、TLS 和 DNS 尚不存在；fake staging 指向 production 会污染发布证据。
+- Fix: `Release Image` 只负责 build/push；`Cloud Rollout` 当前只保留 production dry-run/apply，`apply=true` 走 GitHub production environment approval。
+- Boundary: staging 保留为后续目标；TCR/CCR 是版本存储，staging 不是镜像存储。

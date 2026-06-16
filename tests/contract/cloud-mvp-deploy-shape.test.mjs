@@ -99,8 +99,11 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'short_commit',
     'Release Image',
     'Cloud Rollout',
+    'no-public-staging production-gated release',
     'staging.opl.medopl.cn',
-    'production environment approval',
+    'fake staging',
+    'TCR/CCR 才是版本存储',
+    'Environment approval',
     'PR 不拿 secrets',
     'image allowlist',
     'uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>',
@@ -139,12 +142,16 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));
   }
   assert.match(runbook, /opl-webui:\$\{short_commit\}/);
-  assert.match(runbook, /workflow.*main.*push/is);
+  assert.match(runbook, /CI.*main.*push/is);
   assert.match(runbook, /pull_request.*secrets/is);
   assert.match(runbook, /self-hosted.*tencent-cloud.*opl-webui/is);
   assert.match(runbook, /target_environment.*production/is);
   assert.match(runbook, /apply.*false/is);
   assert.match(runbook, /apply.*true/is);
+  assert.match(runbook, /production.*Environment approval/is);
+  assert.match(runbook, /Release Image.*不执行 rollout/is);
+  assert.match(runbook, /staging.*不是镜像存储/is);
+  assert.match(runbook, /创建真实.*opl-webui-staging.*独立 staging DB\/Secret\/TLS\/DNS/is);
   assert.match(runbook, /KUBECONFIG=.*external/i);
   assert.match(runbook, /\/home\/dev\/\.secrets\/opl-webui\/postgresql\/oplweb\.env/);
   assert.doesNotMatch(runbook, /postgres(?:ql)?:\/\/[^`\s]+/i);

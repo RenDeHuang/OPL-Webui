@@ -12,7 +12,8 @@ const controlPlaneBin = process.env.OPL_CONTROL_PLANE_BIN ?? '/app/opl-webui-con
 
 const kubeconfig = process.env.KUBECONFIG ?? '$KUBECONFIG';
 const image = process.env.OPL_IMAGE ?? '$OPL_IMAGE';
-const baseUrl = (process.env.OPL_BASE_URL ?? 'https://opl.medopl.cn').replace(/\/$/, '');
+const configuredBaseUrl = process.env.OPL_BASE_URL?.trim();
+const baseUrl = (configuredBaseUrl || 'https://opl.medopl.cn').replace(/\/$/, '');
 const rolloutRevisionJsonpath = 'jsonpath={.metadata.annotations.deployment\\.kubernetes\\.io/revision}';
 const deploymentImageJsonpath = 'jsonpath={.spec.template.spec.containers[?(@.name=="control-plane")].image}';
 const podImageIdJsonpath = 'jsonpath={.status.containerStatuses[?(@.name=="control-plane")].imageID}';

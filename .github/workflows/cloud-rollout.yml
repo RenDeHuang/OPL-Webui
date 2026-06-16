@@ -12,7 +12,6 @@ on:
         required: true
         type: choice
         options:
-          - staging
           - production
       apply:
         description: Run rollout mutation instead of dry-run.
@@ -24,14 +23,14 @@ permissions:
   contents: read
 
 jobs:
-  rollout:
-    name: Rollout
+  production-dry-run:
+    name: Production Dry Run
+    if: ${{ !inputs.apply }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
-    environment: ${{ inputs.target_environment }}
     env:
       OPL_IMAGE: ${{ inputs.image }}
-      OPL_NAMESPACE: ${{ inputs.target_environment == 'production' && 'opl-webui' || 'opl-webui-staging' }}
-      OPL_BASE_URL: ${{ inputs.target_environment == 'production' && 'https://opl.medopl.cn' || 'https://staging.opl.medopl.cn' }}
+      OPL_NAMESPACE: opl-webui
+      OPL_BASE_URL: https://opl.medopl.cn
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,11 +47,33 @@ jobs:
           exit 1
 
       - name: Rollout dry-run
-        if: ${{ !inputs.apply }}
         run: node scripts/cloud-rollout.mjs
 
+  production-apply:
+    name: Production Apply
+    if: ${{ inputs.apply }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    environment: production
+    env:
+      OPL_IMAGE: ${{ inputs.image }}
+      OPL_NAMESPACE: opl-webui
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate image allowlist
+        shell: bash
+        run: |
+          tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
+          digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
+          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+            exit 0
+          fi
+          echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
+          exit 1
+
       - name: Rollout apply
-        if: ${{ inputs.apply }}
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
         run: node scripts/cloud-rollout.mjs --apply
