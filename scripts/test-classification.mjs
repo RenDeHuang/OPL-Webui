@@ -107,7 +107,12 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'smoke',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['apps/web/index.html', 'apps/web/styles.css', 'apps/web/src/demoData.mjs']),
+    contracts: Object.freeze([
+      'apps/web/index.html',
+      'apps/web/styles.css',
+      'apps/web/styles/v3.css',
+      'apps/web/src/demoData.mjs',
+    ]),
     verifySuites: Object.freeze(['current', 'smoke']),
   }),
   Object.freeze({

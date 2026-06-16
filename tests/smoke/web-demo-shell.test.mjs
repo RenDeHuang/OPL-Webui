@@ -60,6 +60,7 @@ test('web demo shell keeps CSS and data bridge separate', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /styles.css/);
+  assert.match(html, /styles\/v3.css/);
 	assert.match(html, /src\/demoData.mjs/);
 });
 

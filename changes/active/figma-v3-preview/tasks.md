@@ -9,7 +9,7 @@
 - [x] Phase 1: Target Lock。
 - [x] Phase 2: Gap Inventory。
 - [x] Phase 3: Tests First。
-- [ ] Phase 4: V3 Preview Implementation。
+- [x] Phase 4: V3 Preview Implementation。
 - [ ] Phase 5: Local Visual Loop。
 - [ ] Phase 6: Local Release Gate。
 - [ ] Phase 7: Cloud Rollout。
@@ -48,13 +48,13 @@
 
 ### Phase 4: V3 Preview Implementation
 
-- [ ] Step 4.1: 阅读 `apps/web` 当前 HTML、CSS 和 data modules。
-- [ ] Step 4.2: 设计 focused file split，避免单文件超过 repo bloat gate。
-- [ ] Step 4.3: 实现 V3 view model，不复制第二份业务 truth。
-- [ ] Step 4.4: 实现 Genspark式首页。
-- [ ] Step 4.5: 实现轻量项目工作区。
-- [ ] Step 4.6: 保持按钮为 preview 行为，不伪造真实 auth、Drive、team 或 billing。
-- [ ] Step 4.7: 跑 Phase 3 targeted tests，确认通过。
+- [x] Step 4.1: 阅读 `apps/web` 当前 HTML、CSS 和 data modules。
+- [x] Step 4.2: 设计 focused file split，避免单文件超过 repo bloat gate。
+- [x] Step 4.3: 实现 V3 view model，不复制第二份业务 truth。
+- [x] Step 4.4: 实现 Genspark式首页。
+- [x] Step 4.5: 实现轻量项目工作区。
+- [x] Step 4.6: 保持按钮为 preview 行为，不伪造真实 auth、Drive、team 或 billing。
+- [x] Step 4.7: 跑 Phase 3 targeted tests，确认通过。
 
 ### Phase 5: Local Visual Loop
 

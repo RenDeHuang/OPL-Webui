@@ -1,0 +1,240 @@
+.topbar {
+  align-items: center;
+  backdrop-filter: blur(18px);
+  background: rgba(246, 243, 236, 0.78);
+  display: grid;
+  gap: 20px;
+  grid-template-columns: auto minmax(320px, 1fr) auto;
+  padding: 18px 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+nav {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+nav a,
+.topbar-actions button,
+.prompt-controls button,
+.tool-capsules button {
+  border: 1px solid rgba(21, 23, 28, 0.08);
+  border-radius: 999px;
+  padding: 9px 14px;
+}
+
+nav a {
+  background: rgba(255, 255, 255, 0.45);
+  color: #4a4f59;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ghost-button,
+.primary-button {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.primary-button,
+.launch-button {
+  background: #16181d;
+  color: #fff;
+}
+
+.hero {
+  margin: 0 auto 34px;
+  max-width: 900px;
+  text-align: center;
+}
+
+.eyebrow,
+.panel-kicker {
+  color: #686f7a;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin: 0 0 12px;
+}
+
+h1 {
+  font-size: clamp(42px, 7vw, 78px);
+  letter-spacing: 0;
+  line-height: 1;
+  margin-bottom: 26px;
+}
+
+.prompt-panel {
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(21, 23, 28, 0.08);
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgba(21, 23, 28, 0.13);
+  margin: 0 auto;
+  max-width: 780px;
+  padding: 20px;
+  text-align: left;
+}
+
+.prompt-panel p {
+  font-size: 18px;
+  margin-bottom: 18px;
+}
+
+.prompt-controls,
+.tool-capsules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.prompt-controls button,
+.tool-capsules button {
+  background: #fff;
+}
+
+.launch-button {
+  margin-left: auto;
+}
+
+.tool-capsules {
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.home-grid,
+.workspace-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.home-grid {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  margin-bottom: 18px;
+}
+
+.recommendations,
+.reminder-card,
+.workspace,
+.next-step,
+.stage-flow,
+.evidence-panel,
+.activity-feed,
+.deliverable-preview,
+.project-prompt {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(21, 23, 28, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(21, 23, 28, 0.07);
+}
+
+.recommendations,
+.reminder-card,
+.workspace {
+  padding: 24px;
+}
+
+.section-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.delivery-list {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.delivery-card,
+.next-step,
+.stage-flow,
+.evidence-panel,
+.activity-feed,
+.deliverable-preview,
+.project-prompt {
+  padding: 18px;
+}
+
+.delivery-card span,
+.next-step span {
+  color: #747b86;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reminder-card dl {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.workspace-header {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.workspace-tabs {
+  justify-content: flex-end;
+}
+
+.workspace-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.9fr) minmax(220px, 0.9fr);
+}
+
+.next-step {
+  grid-column: span 2;
+}
+
+.stage-flow ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.boundary {
+  color: #606874;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .topbar,
+  .home-grid,
+  .workspace-grid,
+  .workspace-header,
+  .delivery-list {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .workspace-header {
+    display: grid;
+  }
+
+  nav,
+  .topbar-actions,
+  .workspace-tabs {
+    justify-content: start;
+    overflow-x: auto;
+  }
+
+  .next-step {
+    grid-column: auto;
+  }
+}

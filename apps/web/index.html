@@ -5,82 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OPL WebUI</title>
     <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./styles/v3.css">
     <script type="module" src="./src/demoData.mjs"></script>
   </head>
   <body>
     <header class="topbar">
-      <div class="brand">OPL WebUI</div>
+      <a class="brand" href="#home" aria-label="OPL WebUI 首页">OPL WebUI</a>
       <nav aria-label="主导航">
-        <a href="#workspace">工作台</a>
-        <a href="#artifacts">交付物</a>
-        <a href="#tenant">租户</a>
+        <a href="#home">首页</a>
+        <a href="#workflows">工作流</a>
+        <a href="#drive">Drive</a>
+        <a href="#team">团队</a>
+        <a href="#pricing">定价</a>
       </nav>
+      <div class="topbar-actions">
+        <button class="ghost-button" type="button">登录</button>
+        <button class="primary-button" type="button">免费开始</button>
+      </div>
     </header>
 
     <main>
-      <section class="hero" id="workspace">
-        <p class="eyebrow">One Person Lab AI Workspace</p>
-        <h1>今天想推进什么正式交付？</h1>
-        <div class="prompt" role="search">
-          <span>生成一个医学研究项目的证据整理任务</span>
-          <button type="button">开始</button>
+      <section class="hero" id="home" aria-label="Genspark式首页">
+        <p class="eyebrow">OPL formal deliverable workbench</p>
+        <h1>你想让 OPL 产出什么</h1>
+        <div class="prompt-panel" role="search">
+          <p>为 NSCLC 综述生成证据包、汇报 PPT 和投稿清单</p>
+          <div class="prompt-controls" aria-label="Prompt controls">
+            <button type="button">附件</button>
+            <button type="button">工作区</button>
+            <button type="button">深度研究</button>
+            <button type="button">交付类型</button>
+            <button class="launch-button" type="button">启动</button>
+          </div>
+        </div>
+        <div class="tool-capsules" id="workflows" aria-label="推荐工作流">
+          <button type="button">综述证据包</button>
+          <button type="button">国自然申请书</button>
+          <button type="button">汇报PPT</button>
+          <button type="button">修回回复</button>
+          <button type="button">论文初稿</button>
+          <button type="button">数据分析</button>
         </div>
       </section>
 
-      <section class="workspace-grid" aria-label="任务工作区">
-        <article class="task-panel">
-          <p class="panel-kicker">医学研究证据整理</p>
-          <h2>任务进度</h2>
-          <ol>
-            <li>接收目标和约束</li>
-            <li>通过 Go control plane 只读桥读取 OPL 状态</li>
-            <li>生成可追踪 artifact projection</li>
-          </ol>
-          <dl class="metrics">
+      <section class="home-grid" aria-label="最近交付与待处理">
+        <article class="recommendations">
+          <div class="section-heading">
+            <p class="panel-kicker">Workspace memory</p>
+            <h2>最近交付与推荐工作流</h2>
+          </div>
+          <div class="delivery-list">
+            <article class="delivery-card">
+              <span>证据整理</span>
+              <h3>NSCLC 综述证据包</h3>
+              <p data-demo-summary>已生成 1 个交付物</p>
+            </article>
+            <article class="delivery-card">
+              <span>Grant</span>
+              <h3>国自然青年基金申请</h3>
+              <p data-demo-boundary>medautoscience / routed</p>
+            </article>
+            <article class="delivery-card">
+              <span>Presentation</span>
+              <h3>组会汇报 PPT</h3>
+              <p data-demo-artifact>1 个正式产物</p>
+            </article>
+          </div>
+        </article>
+
+        <aside class="reminder-card" aria-label="今日待处理">
+          <p class="panel-kicker">Inbox</p>
+          <h2>今天需要你处理</h2>
+          <p data-opl-readiness>core ready / full degraded</p>
+          <dl>
             <div>
-              <dt>当前场景</dt>
-              <dd data-demo-title>医学研究证据整理</dd>
+              <dt>模块状态</dt>
+              <dd data-opl-modules>0/3 default modules ready</dd>
             </div>
             <div>
-              <dt>任务状态</dt>
-              <dd data-demo-status>completed / research</dd>
+              <dt>Domain agents</dt>
+              <dd data-opl-domains>medautoscience / medautogrant</dd>
             </div>
           </dl>
-        </article>
-
-        <article class="artifact-panel" id="artifacts">
-          <p class="panel-kicker">正式交付物</p>
-          <h2>analysis_package v1</h2>
-          <p data-demo-summary>已生成 1 个交付物，来源绑定 task 和 OPL command policy。</p>
-          <p><strong data-demo-artifact>1 个正式产物</strong></p>
-          <p class="boundary" data-demo-boundary>medautoscience / routed</p>
-        </article>
+        </aside>
       </section>
 
-      <section class="opl-status" aria-label="OPL 连接状态">
-        <div>
-          <p class="panel-kicker">OPL 连接</p>
-          <h2>真实 OPL CLI 只读桥</h2>
-          <p>当前 WebUI 通过 Go control plane 白名单读取 OPL machine-readable surfaces。</p>
+      <section class="workspace" aria-label="轻量项目工作区">
+        <div class="workspace-header">
+          <div>
+            <p class="panel-kicker">轻量项目工作区</p>
+            <h2 data-v3-project-title>NSCLC 综述证据包</h2>
+            <p data-demo-title>医学研究证据整理</p>
+          </div>
+          <nav class="workspace-tabs" aria-label="项目导航">
+            <a href="#project">项目</a>
+            <a href="#tasks">任务</a>
+            <a href="#evidence">证据</a>
+            <a href="#deliverables">交付物</a>
+            <a href="#team">团队</a>
+          </nav>
         </div>
-        <dl class="metrics">
-          <div>
-            <dt>Readiness</dt>
-            <dd data-opl-readiness>core ready / full degraded</dd>
-          </div>
-          <div>
-            <dt>模块状态</dt>
-            <dd data-opl-modules>0/3 default modules ready</dd>
-          </div>
-          <div>
-            <dt>Domain agents</dt>
-            <dd data-opl-domains>medautoscience / medautogrant / redcube</dd>
-          </div>
-          <div>
-            <dt>Bridge</dt>
-            <dd data-opl-bridge>readonly / opl.cli.readonly.snapshot</dd>
-          </div>
-        </dl>
+
+        <div class="workspace-grid">
+          <article class="next-step" id="project">
+            <span data-demo-status>completed / research</span>
+            <h3>下一步建议</h3>
+            <p data-v3-next-step>先确认证据范围，再进入交付物预览和人工审阅。</p>
+          </article>
+
+          <article class="stage-flow" id="tasks">
+            <h3>交付流程</h3>
+            <ol>
+              <li>接收目标</li>
+              <li>OPL 只读路由</li>
+              <li>证据与来源</li>
+              <li>交付物预览</li>
+            </ol>
+          </article>
+
+          <article class="evidence-panel" id="evidence">
+            <h3>证据与来源</h3>
+            <p>来源绑定 task、artifact 和 readonly command policy。</p>
+            <p class="boundary" data-opl-bridge>readonly / opl.cli.readonly.snapshot</p>
+          </article>
+
+          <article class="activity-feed">
+            <h3>活动流</h3>
+            <p>domain resolve-request</p>
+            <p>contract handoff-envelope</p>
+          </article>
+
+          <article class="deliverable-preview" id="deliverables">
+            <h3>交付物预览</h3>
+            <p data-v3-deliverable-preview>analysis_package v1</p>
+          </article>
+
+          <article class="project-prompt">
+            <h3>项目内 Prompt</h3>
+            <p>继续基于当前证据包生成修回回复或汇报 PPT。</p>
+          </article>
+        </div>
       </section>
     </main>
   </body>
