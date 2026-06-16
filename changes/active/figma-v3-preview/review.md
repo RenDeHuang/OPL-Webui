@@ -37,4 +37,13 @@
   - `main` 已推送到 `origin/main`。
   - 合并后的 `main` 再次通过 `npm run verify`、`npm run gate:review` 和 Sentrux `check_rules`。
   - short-SHA cloud image tag 由云端 runner 在拉取最新 `origin/main` 后用 `git rev-parse --short HEAD` 生成。
+- Phase 7 build/push 证据：
+  - 当前 short SHA 为 `1d5ec92`。
+  - 已构建并推送镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:1d5ec92`。
+  - 推送 digest 为 `sha256:7362737813488519a0b8b94eb95705940ab62a269aa5432d51be16a31d5d9ac6`。
+  - 当前环境未设置 `KUBECONFIG`，因此尚未执行 `kubectl set image`、`rollout status`、pod canary 或 pod 状态记录。
+- Online pre-smoke 证据：
+  - `https://opl.medopl.cn/healthz` 返回 `ok=true`。
+  - `https://opl.medopl.cn/readyz` 返回 `environment=cloud_mvp` 且 `ok=true`。
+  - 首页 HTML 仍包含旧 shell 文案 `今天想推进什么正式交付` 和 `任务进度`，不包含 V3 文案 `你想让 OPL 产出什么`、`最近交付与推荐工作流` 或 `轻量项目工作区`。
 - 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。
