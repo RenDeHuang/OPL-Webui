@@ -37,6 +37,7 @@ test('package lifecycle exposes verification-only commands', () => {
 test('repo exposes active truth, durable specs, and structural rules', () => {
   const requiredTruthFiles = [
     'changes/archive/closeouts.md',
+    'changes/README.md',
     'docs/active/README.md',
     'specs/product/spec.md',
     'specs/runtime/spec.md',
@@ -48,6 +49,8 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
   for (const file of requiredTruthFiles) {
     assert.equal(existsSync(file), true, `missing governance truth file: ${file}`);
   }
+
+  assert.equal(existsSync('docs/README.md'), false);
 });
 
 test('Go control plane replaces the Node API backend', () => {
@@ -80,6 +83,19 @@ test('archived change packages keep only compact closeout summaries', () => {
   assert.match(closeout, /cannot claim/);
 
   assert.equal(existsSync('docs/history/README.md'), false);
+});
+
+test('change lifecycle documents dynamic phase gates and compaction rules', () => {
+  const lifecycle = readFileSync('changes/README.md', 'utf8');
+
+  assert.match(lifecycle, /Dynamic Phase Gates/);
+  assert.match(lifecycle, /design target accepted/);
+  assert.match(lifecycle, /local visual accepted/);
+  assert.match(lifecycle, /data contract accepted/);
+  assert.match(lifecycle, /cloud canary accepted/);
+  assert.match(lifecycle, /online smoke accepted/);
+  assert.match(lifecycle, /active .* detailed/i);
+  assert.match(lifecycle, /closed .* compact/i);
 });
 
 test('active change packages are complete and eval-backed', () => {

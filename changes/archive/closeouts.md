@@ -117,3 +117,9 @@
 - summary: 固化后续网站更新发布流程：本地验证、短 commit 镜像 build/push、云端 set image、rollout、canary、HTTPS smoke 和 rollback。
 - verified: `npm run verify`, `npm run gate:review`。
 - cannot claim: 自动化 CI/CD、真实本轮 kubectl 执行、生产监控、多节点 HA、auth、MedOPL API integration 或产品功能开发。
+
+## 2026-06-16 doc-lifecycle-compaction
+
+- summary: 固化 active detailed、closed compact 的文档生命周期规则；`changes/README.md` 增加 Dynamic Phase Gates；移除重复长期导航 `docs/README.md`。
+- verified: `node --test tests/contract/change-package-lifecycle.test.mjs`, `npm run verify`, `npm run gate:review`, `sentrux check /home/dev/projects/ui`。
+- cannot claim: 改变线上 runtime、删除测试职责、完成 Genspark V3 UI 或执行云端部署。
