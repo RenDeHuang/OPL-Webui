@@ -8,9 +8,14 @@ test('repo bloat audit reports JSON and stays within budget', () => {
     encoding: 'utf8',
   });
   const report = JSON.parse(stdout);
+  const activeChangeDocPattern = /^changes\/active\/[^/]+\/(?:proposal|spec-delta|design|tasks|eval-plan|review|closeout)\.md$/;
+  const activeChangeDocs = report.files.filter((file) => activeChangeDocPattern.test(file));
+  const durableMarkdownDocs = report.files.filter((file) => file.endsWith('.md') && !activeChangeDocPattern.test(file));
 
   assert.equal(report.ok, true, JSON.stringify(report.violations, null, 2));
   assert.ok(report.budgets.files >= report.counts.files);
+  assert.equal(report.counts.activeChangeDocs, activeChangeDocs.length);
+  assert.equal(report.counts.markdownDocs, durableMarkdownDocs.length);
   assert.ok(Array.isArray(report.ignoredDirectories));
   assert.equal(existsSync(report.largestFile.path), true);
   assert.equal(report.counts.files, report.files.length);

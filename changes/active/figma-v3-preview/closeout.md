@@ -13,4 +13,5 @@
 
 ## Cannot Claim
 
-- 当前不能声明 Genspark V3 已实现或上线。
+- 当前只能声明本地 V3 preview 已实现并通过本地 gates。
+- 不能声明 V3 preview 已 cloud rollout、已线上可用或已通过 online smoke。

@@ -14,7 +14,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'repo-hygiene',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['scripts/repo-bloat-audit.mjs']),
+    contracts: Object.freeze(['scripts/repo-bloat-audit.mjs', 'changes/README.md']),
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({
@@ -162,7 +162,10 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['services/control-plane-go/internal/mvp/task.go']),
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/mvp/task.go',
+      'packages/contracts/opl/mvp-task-http.schema.json',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

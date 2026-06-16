@@ -123,3 +123,9 @@
 - summary: 固化 active detailed、closed compact 的文档生命周期规则；`changes/README.md` 增加 Dynamic Phase Gates；移除重复长期导航 `docs/README.md`。
 - verified: `node --test tests/contract/change-package-lifecycle.test.mjs`, `npm run verify`, `npm run gate:review`, `sentrux check /home/dev/projects/ui`。
 - cannot claim: 改变线上 runtime、删除测试职责、完成 Genspark V3 UI 或执行云端部署。
+
+## 2026-06-17 repo-governance-sync
+
+- summary: 同步 active truth 和 next cursor；加固 MVP task HTTP contract；修复 DB canary intent drift；补强 cloud image runtime dependency health coverage；修正 bloat gate 对 active change 七件套的 durable doc 计数语义。
+- verified: `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, `sentrux check .`, `cd services/control-plane-go && go test ./...`。
+- cannot claim: 真实 production rollout、真实 staging、完整 SaaS、真实 OPL execution 或 OPL mutation。

@@ -64,6 +64,13 @@ type ErrorResponse struct {
 
 var defaultTaskStore TaskProjectionStore = NewMemoryTaskStore()
 
+var allowedTaskIntents = map[string]struct{}{
+	"research":     {},
+	"grant":        {},
+	"presentation": {},
+	"general":      {},
+}
+
 func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 	return CreateTaskResponseWithRoute(context.Background(), input, nil)
 }
@@ -153,6 +160,9 @@ func validateRequest(input TaskRequest) (TaskRequest, error) {
 		return TaskRequest{}, errors.New("userId is required")
 	case input.Prompt == "":
 		return TaskRequest{}, errors.New("prompt is required")
+	}
+	if _, ok := allowedTaskIntents[input.Intent]; !ok {
+		return TaskRequest{}, fmt.Errorf("intent must be one of research, grant, presentation, general")
 	}
 
 	return input, nil

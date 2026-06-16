@@ -30,6 +30,7 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
   assert.match(dockerfile, /FROM node:22-bookworm-slim AS runtime/);
   assert.doesNotMatch(dockerfile, /FROM node:22-alpine AS (?:opl-build|runtime)/);
   assert.doesNotMatch(dockerfile, /COPY --from=\$\{/);
+  assert.match(dockerfile, /apt-get install -y --no-install-recommends bash ca-certificates wget/);
   assert.match(dockerfile, /COPY --from=opl \/bin\/opl \/opt\/opl\/bin\/opl/);
   assert.doesNotMatch(dockerfile, /COPY --from=opl \/dist /);
   assert.match(dockerfile, /COPY --from=opl-build \/src\/dist \/opt\/opl\/dist/);

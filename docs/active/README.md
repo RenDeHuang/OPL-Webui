@@ -11,7 +11,8 @@
 
 ## Active Change Work
 
-- `changes/active/release-automation`: 四阶段发布自动化 work package；阶段性计划只保留在 active change 内，完成后 compact closeout。
+- `changes/active/release-automation`: 发布自动化 work package；CI test-only、image build/push 和 dry-run/helper 已有阶段证据，production apply/rollout evidence、真实 staging 和 closeout 仍未完成。
+- `changes/active/figma-v3-preview`: Genspark 风格 V3 preview work package；本地实现和本地 gate 已完成，cloud rollout、online acceptance 和 closeout 仍 blocked。
 
 ## Can Claim
 
@@ -48,7 +49,7 @@
 
 ## Next Cursor
 
-下一步是按 `changes/active/release-automation` 逐阶段推进发布自动化：先完成 CI test-only，再进入 image build/push、VPC runner rollout、staging/production 分环境。
+下一步先处理 `changes/active/release-automation` 的 production rollout evidence 和 closeout：在腾讯云 VPC runner 上执行 production dry-run/apply，记录 rollout revision、Deployment image、Pod imageID、canary、HTTPS smoke 和 rollback evidence。`changes/active/figma-v3-preview` 保持 cloud rollout / online acceptance blocked；真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
 
 ## Next Priorities
 

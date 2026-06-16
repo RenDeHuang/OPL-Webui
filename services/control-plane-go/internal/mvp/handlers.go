@@ -29,7 +29,9 @@ func HandleTask(response http.ResponseWriter, request *http.Request) {
 	}
 
 	var payload TaskRequest
-	if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
+	decoder := json.NewDecoder(request.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&payload); err != nil {
 		writeInvalid(response, err)
 		return
 	}

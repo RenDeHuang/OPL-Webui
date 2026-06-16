@@ -156,6 +156,57 @@ test('Go control plane rejects requests without tenant boundary', async () => {
   }
 });
 
+test('Go control plane rejects MVP task payloads with unknown JSON fields', async () => {
+  const { child, baseUrl } = await startGoServer();
+  try {
+    const response = await fetch(`${baseUrl}/api/mvp/task`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        tenantId: 'tenant_cloud_demo',
+        workspaceId: 'workspace_cloud_demo',
+        userId: 'user_demo',
+        prompt: '生成一个医学研究项目的证据整理任务',
+        intent: 'research',
+        unexpectedField: 'must be rejected',
+      }),
+    });
+
+    assert.equal(response.status, 400);
+    const body = await response.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.errorCode, 'INVALID_MVP_TASK_REQUEST');
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('Go control plane defaults missing MVP task intent to general', async () => {
+  const { child, baseUrl } = await startGoServer();
+  try {
+    const response = await fetch(`${baseUrl}/api/mvp/task`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        tenantId: 'tenant_cloud_demo',
+        workspaceId: 'workspace_cloud_demo',
+        userId: 'user_demo',
+        prompt: '生成一个医学研究项目的证据整理任务',
+      }),
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.task.intent, 'general');
+    assert.deepEqual(body.adapter.route.commands[0].args.slice(0, 2), ['domain', 'resolve-request']);
+    assert.equal(body.adapter.route.commands[0].args.includes('--intent'), true);
+    assert.equal(body.adapter.route.commands[0].args[body.adapter.route.commands[0].args.indexOf('--intent') + 1], 'general');
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
 test('production mode blocks task intake until required runtime dependencies are configured', async () => {
   const { child, baseUrl } = await startGoServerWithEnv({
     OPL_WEBUI_ENV: 'production',

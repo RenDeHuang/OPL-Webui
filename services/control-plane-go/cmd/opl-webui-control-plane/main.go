@@ -165,7 +165,7 @@ func runDBCanary(openPostgres mvp.PostgresStoreOpener) (CanaryReport, error) {
 		WorkspaceID: "workspace_cloud_canary",
 		UserID:      "user_cloud_canary",
 		Prompt:      "OPL-Webui cloud MVP database canary",
-		Intent:      "canary",
+		Intent:      "general",
 	}, store)
 	if err != nil {
 		return CanaryReport{}, fmt.Errorf("write postgres canary projection: %w", err)
