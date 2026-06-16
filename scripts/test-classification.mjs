@@ -41,7 +41,11 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'change-lifecycle',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['changes/README.md']),
+    contracts: Object.freeze([
+      'changes/README.md',
+      'docs/active/README.md',
+      'docs/active/release-automation-goal.md',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

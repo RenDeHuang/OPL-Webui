@@ -39,6 +39,7 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
     'changes/archive/closeouts.md',
     'changes/README.md',
     'docs/active/README.md',
+    'docs/active/release-automation-goal.md',
     'specs/product/spec.md',
     'specs/runtime/spec.md',
     'specs/source/spec.md',
@@ -51,6 +52,52 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
   }
 
   assert.equal(existsSync('docs/README.md'), false);
+});
+
+test('active truth links the release automation goal', () => {
+  const readme = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.match(readme, /release-automation-goal\.md/);
+  assert.match(readme, /Release Automation/i);
+});
+
+test('release automation goal covers phased evals and boundaries', () => {
+  const goal = readFileSync('docs/active/release-automation-goal.md', 'utf8');
+
+  for (const required of [
+    'Phase 1: CI 自动测试',
+    'Phase 2: CI 构建并推送镜像',
+    'Phase 3: 云端 CD runner rollout',
+    'Phase 4: staging / production 分环境',
+    'Goal',
+    'Implementation Steps',
+    'Evals / Acceptance Criteria',
+    'Secret Boundary',
+    'Failure / Rollback Handling',
+    'npm run verify',
+    'npm run gate:review',
+    'Dockerfile.cloud',
+    'short commit',
+    'digest',
+    'self-hosted runner',
+    'scripts/cloud-rollout.mjs',
+    'dry-run',
+    '--apply',
+    'canary db',
+    'canary opl-cli',
+    'manual approval',
+    'staging',
+    'production',
+    'changes/active/release-automation',
+  ]) {
+    assert.ok(goal.includes(required), `missing ${required}`);
+  }
+
+  assert.doesNotMatch(goal, /AKID[A-Za-z0-9]+/);
+  assert.doesNotMatch(goal, /-----BEGIN [A-Z ]+PRIVATE KEY-----/);
+  assert.doesNotMatch(goal, /postgres(?:ql)?:\/\/[^`\s]+/i);
+  assert.doesNotMatch(goal, /KUBECONFIG:\s*[^<\s]+/i);
+  assert.doesNotMatch(goal, /TCR_PASSWORD:\s*[^<\s]+/i);
 });
 
 test('Go control plane replaces the Node API backend', () => {
