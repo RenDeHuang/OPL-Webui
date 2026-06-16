@@ -19,7 +19,7 @@ case "$*" in
   "system initialize --json")
     printf '%s\\n' '{"version":"g2","system_initialize":{"overall_state":"attention_needed","readiness":{"core_ready":true,"domain_ready":false,"full_ready":false},"setup_flow":{"blocking_items":["domain_modules"]}}}'
     ;;
-  "modules --json")
+  "connect modules --json")
     printf '%s\\n' '{"version":"g2","modules":{"summary":{"default_modules_count":3,"healthy_default_modules_count":1},"items":[{"module_id":"medautoscience","health_status":"ready"}]}}'
     ;;
   "contract domains --json")
@@ -84,7 +84,7 @@ test('Go control plane exposes an OPL readonly snapshot endpoint', async () => {
     assert.equal(body.domains.domains[0].domain_id, 'medautoscience');
     assert.deepEqual(body.commands.map((entry) => entry.args.join(' ')), [
       'system initialize --json',
-      'modules --json',
+      'connect modules --json',
       'contract domains --json',
     ]);
   } finally {

@@ -26,13 +26,17 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
 
   const dockerfile = readFileSync('Dockerfile.cloud', 'utf8');
   assert.match(dockerfile, /FROM golang:1\.22-alpine AS builder/);
-  assert.match(dockerfile, /FROM node:22-alpine AS opl-build/);
-  assert.match(dockerfile, /FROM node:22-alpine AS runtime/);
-  assert.match(dockerfile, /apk add --no-cache bash/);
+  assert.match(dockerfile, /FROM node:22-bookworm-slim AS opl-build/);
+  assert.match(dockerfile, /FROM node:22-bookworm-slim AS runtime/);
+  assert.doesNotMatch(dockerfile, /FROM node:22-alpine AS (?:opl-build|runtime)/);
   assert.doesNotMatch(dockerfile, /COPY --from=\$\{/);
   assert.match(dockerfile, /COPY --from=opl \/bin\/opl \/opt\/opl\/bin\/opl/);
   assert.doesNotMatch(dockerfile, /COPY --from=opl \/dist /);
   assert.match(dockerfile, /COPY --from=opl-build \/src\/dist \/opt\/opl\/dist/);
+  assert.match(dockerfile, /npm prune --omit=dev --ignore-scripts/);
+  assert.match(dockerfile, /COPY --from=opl-build \/src\/package-lock\.json \/opt\/opl\/package-lock\.json/);
+  assert.match(dockerfile, /COPY --from=opl-build \/src\/node_modules \/opt\/opl\/node_modules/);
+  assert.doesNotMatch(dockerfile, /COPY --from=opl-build \/src\/node_modules\/@temporalio\/common\b/);
   assert.match(dockerfile, /COPY --from=opl \/contracts\/opl-framework \/opt\/opl\/contracts\/opl-framework/);
   assert.doesNotMatch(dockerfile, /COPY --from=opl \/contracts\/opl-gateway\b/);
   assert.match(dockerfile, /npm run build/);

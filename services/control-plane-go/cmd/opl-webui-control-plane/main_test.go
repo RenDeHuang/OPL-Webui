@@ -176,12 +176,15 @@ func TestRunOPLCLICanaryUsesReadonlySurfaces(t *testing.T) {
 	if !report.OK {
 		t.Fatalf("expected canary ok: %#v", report)
 	}
-	if len(runner.calls) != 5 {
+	if len(runner.calls) != 3 {
 		t.Fatalf("expected snapshot and route readonly commands, got %#v", runner.calls)
 	}
 	for _, call := range runner.calls {
 		if len(call) == 0 || call[0] == "install" || call[0] == "repair" {
 			t.Fatalf("unexpected mutating command: %#v", call)
+		}
+		if len(call) >= 2 && call[0] == "domain" && call[1] == "resolve-request" {
+			t.Fatalf("canary should not require Codex passthrough command: %#v", call)
 		}
 	}
 }

@@ -49,7 +49,7 @@ type ErrorResponse struct {
 
 var readonlyCommands = [][]string{
 	{"system", "initialize", "--json"},
-	{"modules", "--json"},
+	{"connect", "modules", "--json"},
 	{"contract", "domains", "--json"},
 }
 
@@ -135,7 +135,7 @@ func BuildSnapshot(ctx context.Context, runner Runner) Snapshot {
 		switch args[0] {
 		case "system":
 			snapshot.SystemInitialize = projection
-		case "modules":
+		case "connect":
 			snapshot.Modules = projection
 		case "contract":
 			snapshot.Domains = projection

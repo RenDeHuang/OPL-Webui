@@ -63,3 +63,10 @@
 - Root cause: GitHub secret `KUBECONFIG` 保存的是 kubeconfig 内容，旧 workflow 直接把它传给 `KUBECONFIG` env，`kubectl` 会把整段内容当成文件路径。
 - Fix: production apply job 先把 secret 内容写入 `$RUNNER_TEMP/kubeconfig`，`chmod 600` 后再以该路径执行 `scripts/cloud-rollout.mjs --apply`。
 - Boundary: dry-run job 仍不读取 kubeconfig secret；workflow contract 禁止再次把 `secrets.KUBECONFIG` 直接作为 `KUBECONFIG` 路径。
+
+## OPL Runtime Dependencies Boundary
+
+- Root cause: image `2a16a94` 的 final stage 只复制 `/opt/opl/bin/opl`、`/opt/opl/dist` 和 contract root，未复制 OPL production dependencies；Temporal runtime import `@temporalio/common` 因此在云端 `canary opl-cli` 中失败。
+- Fix: `Dockerfile.cloud` 的 OPL build stage 执行 `npm ci`、`npm run build`、`npm prune --omit=dev --ignore-scripts`，final stage 复制 OPL `package-lock.json` 和完整 production `node_modules` 到 `/opt/opl`。
+- Runtime boundary: OPL build/runtime Node stage 从 Alpine 切到 `node:22-bookworm-slim`，因为当前 Temporal native bridge 需要 glibc runtime；不手工复制单个 `@temporalio/*` 包。
+- Canary adjustment: 当前 OPL CLI 已退役 `opl modules --json`，snapshot 改用 `opl connect modules --json`；production `canary opl-cli` 只跑无 Codex/API key 依赖的 snapshot surfaces，不再把 `domain resolve-request` passthrough 作为镜像发布阻塞项。

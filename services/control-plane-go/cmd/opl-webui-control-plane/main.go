@@ -190,17 +190,12 @@ func runDBCanary(openPostgres mvp.PostgresStoreOpener) (CanaryReport, error) {
 
 func runOPLCLICanary(runner oplbridge.Runner) CanaryReport {
 	snapshot := oplbridge.BuildSnapshot(context.Background(), runner)
-	route := oplbridge.BuildTaskRoute(context.Background(), runner, oplbridge.TaskRouteRequest{
-		Prompt: "OPL-Webui cloud MVP readonly route canary",
-		Intent: "canary",
-		Target: "deliverable",
-	})
 
 	report := CanaryReport{
-		OK:       snapshot.OK && route.OK,
+		OK:       snapshot.OK,
 		Kind:     "opl-cli",
-		Checks:   []string{"system.initialize", "modules", "contract.domains", "domain.resolve-request", "contract.handoff-envelope"},
-		PolicyID: oplbridge.TaskRoutePolicyID,
+		Checks:   []string{"system.initialize", "connect.modules", "contract.domains"},
+		PolicyID: oplbridge.PolicyID,
 	}
 	if !report.OK {
 		report.Error = "OPL CLI readonly canary failed"

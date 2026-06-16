@@ -16,7 +16,7 @@ func (runner *fakeRunner) Run(_ context.Context, args []string) ([]byte, error) 
 	switch args[0] + " " + args[1] {
 	case "system initialize":
 		return []byte(`{"version":"g2","system_initialize":{"overall_state":"attention_needed","readiness":{"core_ready":true,"domain_ready":false,"full_ready":false},"setup_flow":{"blocking_items":["domain_modules"]}}}`), nil
-	case "modules --json":
+	case "connect modules":
 		return []byte(`{"version":"g2","modules":{"summary":{"default_modules_count":3,"healthy_default_modules_count":1},"items":[{"module_id":"medautoscience","health_status":"ready"}]}}`), nil
 	case "contract domains":
 		return []byte(`{"version":"g2","domains":[{"domain_id":"medautoscience","single_app_skill":"mas"}]}`), nil
@@ -54,6 +54,9 @@ func TestSnapshotUsesReadonlyOplCommands(t *testing.T) {
 
 	if runner.calls[0][0] != "system" || runner.calls[0][1] != "initialize" || runner.calls[0][2] != "--json" {
 		t.Fatalf("unexpected first call: %#v", runner.calls[0])
+	}
+	if runner.calls[1][0] != "connect" || runner.calls[1][1] != "modules" || runner.calls[1][2] != "--json" {
+		t.Fatalf("unexpected modules call: %#v", runner.calls[1])
 	}
 }
 
