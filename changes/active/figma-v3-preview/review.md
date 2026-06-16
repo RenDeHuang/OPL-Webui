@@ -73,4 +73,19 @@
   - `https://opl.medopl.cn/healthz` 返回 `{"ok":true,"service":"opl-webui-control-plane"}`。
   - `https://opl.medopl.cn/readyz` 返回 `{"ok":true,"environment":"cloud_mvp","missing":[]}`。
   - 首页 HTML 仍只命中旧 shell 文案 `今天想推进什么正式交付？` 和 `任务进度`，仍未命中 V3 文案。
+- Phase 7 runbook 收敛证据：
+  - `tests/contract/cloud-mvp-deploy-shape.test.mjs` 新增 runbook helper 合同，先失败于缺少 `scripts/cloud-rollout.mjs`。
+  - `deploy/cloud-mvp/RUNBOOK.md` 的日常发布流程已改为先 `node scripts/cloud-rollout.mjs` dry-run 审计，再 `node scripts/cloud-rollout.mjs --apply`。
+  - runbook 明确 helper 会执行 rollout、canary、HTTPS smoke，并输出 rollout revision、Deployment image、Pod `-o wide` 和 Pod imageID。
+  - `node --test tests/contract/cloud-mvp-deploy-shape.test.mjs` 通过。
+  - `node --test tests/contract/cloud-rollout-helper.test.mjs` 通过。
+  - `node --test tests/health/registry-coverage.test.mjs` 通过。
+  - `node scripts/repo-bloat-audit.mjs` 通过，当前 counts 仍为 files 63、scripts 5、tests 13、maxFileLines 252。
+- Phase 7 API 再次复测证据：
+  - 工作区干净，`main...origin/main`，最新提交为 `2469e24`。
+  - 线上 `/healthz` 与 `/readyz` 仍返回 `ok=true`。
+  - 线上首页仍只命中旧 shell 文案 `今天想推进什么正式交付？` 和 `任务进度`。
+  - `/home/dev/.secrets/medopl/kubeconfig`、`kubeconfig-package-d-deploy` 和 `kubeconfig-v20.32` 对 `https://medopl.cn` 仍超时。
+  - `/home/dev/.secrets/medopl/kubeconfig-v20.32-external` 和 `new_kube.config` 仍 DNS 不可解析。
+  - `/home/dev/.secrets/medopl/v22/kubeconfig-package-d-deploy` 对 `https://10.66.0.37` 仍超时。
 - 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

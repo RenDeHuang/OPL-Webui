@@ -133,3 +133,14 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.doesNotMatch(runbook, /qcloud_cert_id\s*[:=]\s*(?!["']?\$)[^`\s]+/i);
   assert.doesNotMatch(runbook, /AKID[A-Za-z0-9]+/);
 });
+
+test('cloud MVP runbook routes daily rollout through the dry-run helper', () => {
+  const runbook = readFileSync(runbookPath, 'utf8');
+
+  assert.match(runbook, /scripts\/cloud-rollout\.mjs/);
+  assert.match(runbook, /--apply/);
+  assert.match(runbook, /dry-run/i);
+  assert.match(runbook, /rollout revision/i);
+  assert.match(runbook, /Deployment image/i);
+  assert.match(runbook, /Pod imageID/i);
+});

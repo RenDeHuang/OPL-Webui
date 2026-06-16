@@ -57,33 +57,30 @@ docker build \
 docker push "$OPL_IMAGE"
 ```
 
-### 3. 云端更新镜像并 rollout
+### 3. 云端 dry-run 审计
 
-以下命令只由云端/VPC runner 执行，本地开发机不执行。
-
-```bash
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui set image \
-  deployment/opl-webui-control-plane \
-  control-plane="$OPL_IMAGE"
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout status \
-  deployment/opl-webui-control-plane
-```
-
-### 4. Canary
+以下命令只由云端/VPC runner 执行，本地开发机不执行。先不带 `--apply` 跑 dry-run，确认输出的 image、namespace、Deployment、canary 和 HTTPS smoke 命令都符合预期：
 
 ```bash
-pod="$(kubectl --kubeconfig "$KUBECONFIG" -n opl-webui get pod -l app.kubernetes.io/name=opl-webui -o jsonpath='{.items[0].metadata.name}')"
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-control-plane canary db
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-control-plane canary opl-cli
+node scripts/cloud-rollout.mjs
 ```
 
-### 5. HTTPS smoke
+### 4. 云端更新镜像、rollout、canary 和 smoke
+
+dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli`、`/healthz`、`/readyz` 和首页 HTTPS smoke，并在日志中输出 closeout 需要记录的 rollout revision、Deployment image、Pod `-o wide` 状态和 Pod imageID。
 
 ```bash
-curl --http2 -fsS https://opl.medopl.cn/healthz
-curl --http2 -fsS https://opl.medopl.cn/readyz
-curl --http2 -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
+node scripts/cloud-rollout.mjs --apply
 ```
+
+记录以下字段到 active change review 或 closeout：
+
+- rollout revision
+- Deployment image
+- Pod imageID
+- Pod `-o wide` 状态
+- `canary db` 和 `canary opl-cli` 输出
+- HTTPS smoke 输出
 
 ### 6. Rollback
 
