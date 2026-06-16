@@ -73,7 +73,14 @@ jobs:
           echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
           exit 1
 
-      - name: Rollout apply
+      - name: Write kubeconfig file
         env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
-        run: node scripts/cloud-rollout.mjs --apply
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        shell: bash
+        run: |
+          printf '%s' "$KUBECONFIG_CONTENT" > "$RUNNER_TEMP/kubeconfig"
+          chmod 600 "$RUNNER_TEMP/kubeconfig"
+
+      - name: Rollout apply
+        shell: bash
+        run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --apply

@@ -91,6 +91,9 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
   assert.match(workflow, /--apply/);
   assert.match(workflow, /KUBECONFIG/);
+  assert.match(workflow, /RUNNER_TEMP\/kubeconfig/);
+  assert.match(workflow, /chmod 600 "\$RUNNER_TEMP\/kubeconfig"/);
+  assert.match(workflow, /printf '%s' "\$KUBECONFIG_CONTENT" > "\$RUNNER_TEMP\/kubeconfig"/);
   assert.match(workflow, /OPL_IMAGE/);
   assert.match(workflow, /OPL_NAMESPACE:\s*opl-webui/);
   assert.match(workflow, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
@@ -103,10 +106,15 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.doesNotMatch(workflow, /staging\.opl\.medopl\.cn/);
   assert.doesNotMatch(workflow, /opl-webui-staging/);
   assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action/i);
+  assert.doesNotMatch(workflow, /KUBECONFIG:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
 
   const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('production-apply:'));
   assert.doesNotMatch(dryRunJob, /environment:\s*production/);
   assert.doesNotMatch(dryRunJob, /KUBECONFIG/);
+
+  const applyJob = workflow.slice(workflow.indexOf('production-apply:'));
+  assert.match(applyJob, /KUBECONFIG_CONTENT:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
+  assert.match(applyJob, /KUBECONFIG="\$RUNNER_TEMP\/kubeconfig" node scripts\/cloud-rollout\.mjs --apply/);
 });
 
 test('review gate includes diff hygiene, bloat, and current verify', async () => {

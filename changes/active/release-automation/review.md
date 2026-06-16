@@ -57,3 +57,9 @@
 - Root cause: automatic staging rollout 当前绑定 `staging.opl.medopl.cn` 和 `opl-webui-staging`，但真实 staging namespace、DB/Secret、TLS 和 DNS 尚不存在；fake staging 指向 production 会污染发布证据。
 - Fix: `Release Image` 只负责 build/push；`Cloud Rollout` 当前只保留 production dry-run/apply，`apply=true` 走 GitHub production environment approval。
 - Boundary: staging 保留为后续目标；TCR/CCR 是版本存储，staging 不是镜像存储。
+
+## Production Kubeconfig File Boundary
+
+- Root cause: GitHub secret `KUBECONFIG` 保存的是 kubeconfig 内容，旧 workflow 直接把它传给 `KUBECONFIG` env，`kubectl` 会把整段内容当成文件路径。
+- Fix: production apply job 先把 secret 内容写入 `$RUNNER_TEMP/kubeconfig`，`chmod 600` 后再以该路径执行 `scripts/cloud-rollout.mjs --apply`。
+- Boundary: dry-run job 仍不读取 kubeconfig secret；workflow contract 禁止再次把 `secrets.KUBECONFIG` 直接作为 `KUBECONFIG` 路径。
