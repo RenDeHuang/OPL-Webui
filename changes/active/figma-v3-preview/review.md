@@ -12,7 +12,7 @@
 
 ## Self Review
 
-- 当前完成 Phase 0-5：目标、gap、验收路径、V3 RED tests、V3 Preview 实现和本地 visual loop 已写入 change 包。
+- 当前完成 Phase 0-6：目标、gap、验收路径、V3 RED tests、V3 Preview 实现、本地 visual loop 和本地 release gate 已写入 change 包。
 - Phase 3 RED 证据：
   - `node --test tests/smoke/web-demo-shell.test.mjs` 失败于旧 shell 缺少 V3 首页和轻量项目工作区结构。
   - `node --test tests/contract/web-demo-data.test.mjs` 失败于 `createV3ViewModel` 尚不存在。
@@ -28,4 +28,8 @@
   - mobile 截图保存到 `.runtime/visual/figma-v3-mobile.png`。
   - 浏览器检查无 console error，关键网络请求均为 200 或缓存 304。
   - 已修正 `启动` 按钮白底白字和移动端导航裁切两个视觉 gap。
-- 尚未执行完整 release gate、cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。
+- Phase 6 release gate 证据：
+  - `npm run verify` 通过。
+  - `npm run gate:review` 通过。
+  - Sentrux scan quality signal `7263`，`check_rules` 通过，0 violations。
+- 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

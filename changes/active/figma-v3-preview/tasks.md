@@ -11,7 +11,7 @@
 - [x] Phase 3: Tests First。
 - [x] Phase 4: V3 Preview Implementation。
 - [x] Phase 5: Local Visual Loop。
-- [ ] Phase 6: Local Release Gate。
+- [x] Phase 6: Local Release Gate。
 - [ ] Phase 7: Cloud Rollout。
 - [ ] Phase 8: Online Acceptance & Closeout。
 
@@ -67,10 +67,10 @@
 
 ### Phase 6: Local Release Gate
 
-- [ ] Step 6.1: 跑 `npm run verify`。
-- [ ] Step 6.2: 跑 `npm run gate:review`。
-- [ ] Step 6.3: 跑 `sentrux check /home/dev/projects/ui`。
-- [ ] Step 6.4: 更新 `review.md` 的本地审阅结论。
+- [x] Step 6.1: 跑 `npm run verify`。
+- [x] Step 6.2: 跑 `npm run gate:review`。
+- [x] Step 6.3: 跑 `sentrux check /home/dev/projects/ui`。
+- [x] Step 6.4: 更新 `review.md` 的本地审阅结论。
 
 ### Phase 7: Cloud Rollout
 
