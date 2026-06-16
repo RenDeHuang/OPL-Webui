@@ -7,7 +7,7 @@
 
 - [x] Phase 0: Goal Package。
 - [x] Phase 1: CI 自动测试。
-- [ ] Phase 2: CI build/push image。
+- [x] Phase 2: CI build/push image。
 - [ ] Phase 3: Cloud CD runner rollout。
 - [ ] Phase 4: Staging / Production。
 - [ ] Phase 5: Closeout compact。
@@ -32,23 +32,23 @@
 
 ### Phase 2: CI build/push image
 
-- [ ] Step 2.1: main push 构建 `Dockerfile.cloud` 镜像。
-- [ ] Step 2.2: tag 使用 short commit。
-- [ ] Step 2.3: push 到 TCR 并输出 digest。
-- [ ] Step 2.4: 确认不访问 TKE、不读取 kubeconfig。
+- [x] Step 2.1: main push 构建 `Dockerfile.cloud` 镜像。
+- [x] Step 2.2: tag 使用 short commit。
+- [x] Step 2.3: push 到 TCR 并输出 digest。
+- [x] Step 2.4: 确认 build/push 不访问 TKE、不读取 kubeconfig。
 
 ### Phase 3: Cloud CD runner rollout
 
-- [ ] Step 3.1: 定义腾讯云 VPC self-hosted runner 边界。
-- [ ] Step 3.2: runner 执行 `scripts/cloud-rollout.mjs` dry-run。
-- [ ] Step 3.3: approval 后 runner 执行 `scripts/cloud-rollout.mjs --apply`。
+- [x] Step 3.1: 定义腾讯云 VPC self-hosted runner 边界。
+- [x] Step 3.2: runner 执行 `scripts/cloud-rollout.mjs` dry-run。
+- [ ] Step 3.3: runner 执行 `scripts/cloud-rollout.mjs --apply`。
 - [ ] Step 3.4: 记录 rollout revision、Deployment image、Pod imageID、canary 和 HTTPS smoke。
 
 ### Phase 4: Staging / Production
 
-- [ ] Step 4.1: 定义 staging namespace、domain 和 secret boundary。
+- [x] Step 4.1: 定义 staging namespace、domain 和 secret boundary。
 - [ ] Step 4.2: staging 自动 rollout 并 smoke/canary。
-- [ ] Step 4.3: production 需要 manual approval。
+- [x] Step 4.3: production 需要 manual approval。
 - [ ] Step 4.4: production rollout 后记录 smoke/canary/rollback evidence。
 
 ### Phase 5: Closeout compact

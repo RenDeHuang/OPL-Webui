@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
@@ -16,11 +17,27 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(helper, /rollout status/);
   assert.match(helper, /canary db/);
   assert.match(helper, /canary opl-cli/);
-  assert.match(helper, /https:\/\/opl\.medopl\.cn\/healthz/);
-  assert.match(helper, /https:\/\/opl\.medopl\.cn\/readyz/);
-  assert.match(helper, /https:\/\/opl\.medopl\.cn\//);
+  assert.match(helper, /OPL_BASE_URL/);
+  assert.match(helper, /OPL_NAMESPACE/);
   assert.match(helper, /dryRun/);
   assert.doesNotMatch(helper, /OPL_DATABASE_URL|PGPASSWORD|qcloud_cert_id|AKID[A-Za-z0-9]+/);
+
+  const defaultDryRun = execFileSync(process.execPath, [helperPath], { encoding: 'utf8' });
+  assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
+  assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/readyz/);
+  assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\//);
+
+  const stagingDryRun = execFileSync(process.execPath, [helperPath], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      OPL_BASE_URL: 'https://staging.opl.medopl.cn',
+      OPL_NAMESPACE: 'opl-webui-staging',
+    },
+  });
+  assert.match(stagingDryRun, /-n opl-webui-staging/);
+  assert.match(stagingDryRun, /https:\/\/staging\.opl\.medopl\.cn\/healthz/);
+  assert.match(stagingDryRun, /https:\/\/staging\.opl\.medopl\.cn\/readyz/);
 });
 
 test('cloud rollout helper captures rollout state evidence for closeout', () => {

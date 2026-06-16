@@ -25,6 +25,8 @@ const TEST_ENTRIES = Object.freeze([
     lifecycleRole: 'current-owner',
     contracts: Object.freeze([
       '.github/workflows/ci.yml',
+      '.github/workflows/cloud-rollout.yml',
+      '.github/workflows/release-image.yml',
       'package.json',
       'scripts/verify.mjs',
       'scripts/workflow-gate.mjs',

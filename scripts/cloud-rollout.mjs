@@ -12,13 +12,14 @@ const controlPlaneBin = process.env.OPL_CONTROL_PLANE_BIN ?? '/app/opl-webui-con
 
 const kubeconfig = process.env.KUBECONFIG ?? '$KUBECONFIG';
 const image = process.env.OPL_IMAGE ?? '$OPL_IMAGE';
+const baseUrl = (process.env.OPL_BASE_URL ?? 'https://opl.medopl.cn').replace(/\/$/, '');
 const rolloutRevisionJsonpath = 'jsonpath={.metadata.annotations.deployment\\.kubernetes\\.io/revision}';
 const deploymentImageJsonpath = 'jsonpath={.spec.template.spec.containers[?(@.name=="control-plane")].image}';
 const podImageIdJsonpath = 'jsonpath={.status.containerStatuses[?(@.name=="control-plane")].imageID}';
 
-const healthUrl = 'https://opl.medopl.cn/healthz';
-const readyUrl = 'https://opl.medopl.cn/readyz';
-const homeUrl = 'https://opl.medopl.cn/';
+const healthUrl = `${baseUrl}/healthz`;
+const readyUrl = `${baseUrl}/readyz`;
+const homeUrl = `${baseUrl}/`;
 
 if (args.has('--help')) {
   printUsage();
@@ -222,7 +223,7 @@ function shellQuote(value) {
 function printUsage() {
   console.log(`Usage:
   node scripts/cloud-rollout.mjs
-  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag node scripts/cloud-rollout.mjs --apply
+  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
 
 Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks.`);
 }

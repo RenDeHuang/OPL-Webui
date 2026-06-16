@@ -32,3 +32,11 @@
 - 实现：新增 `.github/workflows/ci.yml`，只在 `pull_request` 和 `main` push 运行 `npm run verify` 与 `npm run gate:review`。
 - 边界：workflow 不读取 secret，不执行 build/push，不执行 deploy，不包含 `kubectl` 或 `scripts/cloud-rollout.mjs`。
 - 平台证据：GitHub Actions `CI` run `27611734207` 已在 `main` push `4f2ffe4` 上完成并成功，URL: `https://github.com/RenDeHuang/OPL-Webui/actions/runs/27611734207`。
+
+## Phase 2-4 Review
+
+- Phase 2 implementation: 新增 `.github/workflows/release-image.yml`，在 CI 成功后 build/push `Dockerfile.cloud` 镜像，tag 使用 short commit；build job 不持有 kubeconfig，不执行 rollout。
+- Phase 2 local evidence: `docker build -f Dockerfile.cloud --build-context opl=/home/dev/projects/one-person-lab -t uswccr.ccs.tencentyun.com/webopl/opl-webui:6df9635 .` 成功；`docker push` 成功；registry index digest 是 `sha256:443f02b8b63718c971188f7ec91ec238717f568568d42aab1bc924f37811c2f5`。
+- Phase 3 implementation: 新增 `.github/workflows/cloud-rollout.yml`，只在 `[self-hosted, tencent-cloud, opl-webui]` runner 上执行 `scripts/cloud-rollout.mjs`；`--apply` 由 workflow input 控制。
+- Phase 4 implementation: `release-image.yml` 在镜像成功后自动触发 staging rollout；production 只通过 `cloud-rollout.yml` 手动触发并使用 GitHub environment approval。
+- Blocker: 当前本机无法访问 TKE API；`kube.medopl.cn` DNS 不可解析，`https://medopl.cn` 与 `https://10.66.0.37` kube API 请求超时。`staging.opl.medopl.cn` 当前无法解析。因此不能 claim Phase 3/4 真实 rollout 已完成。

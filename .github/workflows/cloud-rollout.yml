@@ -1,0 +1,47 @@
+name: Cloud Rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Full image tag or digest to deploy.
+        required: true
+        type: string
+      target_environment:
+        description: Deployment target.
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      apply:
+        description: Run rollout mutation instead of dry-run.
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  rollout:
+    name: Rollout
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    environment: ${{ inputs.target_environment }}
+    env:
+      OPL_IMAGE: ${{ inputs.image }}
+      OPL_NAMESPACE: ${{ inputs.target_environment == 'production' && 'opl-webui' || 'opl-webui-staging' }}
+      OPL_BASE_URL: ${{ inputs.target_environment == 'production' && 'https://opl.medopl.cn' || 'https://staging.opl.medopl.cn' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rollout dry-run
+        if: ${{ !inputs.apply }}
+        run: node scripts/cloud-rollout.mjs
+
+      - name: Rollout apply
+        if: ${{ inputs.apply }}
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: node scripts/cloud-rollout.mjs --apply

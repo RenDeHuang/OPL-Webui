@@ -30,3 +30,10 @@ Release Automation 的阶段性计划只放在 `changes/active/release-automatio
 - 不新增脚本，除非某个 phase 的 eval 需要机器入口。
 - workflow 只按 phase 新增最小入口；Phase 1 只允许 test-only CI。
 - 不复制 release history；发布证据进入 active change review，完成后 compact 到 `changes/archive/closeouts.md`。
+
+## Workflow Shape
+
+- `ci.yml`: PR/main push 的 test-only gate。
+- `release-image.yml`: CI 成功后构建并推送 TCR 镜像；同一 workflow 在腾讯云 VPC self-hosted runner 上自动发 staging。
+- `cloud-rollout.yml`: 手动发布入口，支持 staging 或 production；production 依赖 GitHub environment approval。
+- `scripts/cloud-rollout.mjs`: dry-run first；通过 `OPL_NAMESPACE` 和 `OPL_BASE_URL` 区分 staging/production。

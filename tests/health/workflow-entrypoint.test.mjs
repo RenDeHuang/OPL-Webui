@@ -40,6 +40,60 @@ test('github ci workflow runs local gates only', () => {
   assert.doesNotMatch(workflow, /KUBECONFIG|TCR_PASSWORD|TCR_USERNAME|secrets\./i);
 });
 
+test('github release image workflow builds, pushes, and stages only after ci passes', () => {
+  const workflow = readFileSync('.github/workflows/release-image.yml', 'utf8');
+
+  assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflows:\s*\[\s*CI\s*\]/);
+  assert.match(workflow, /types:\s*\[\s*completed\s*\]/);
+  assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'success'/);
+  assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
+  assert.match(workflow, /github\.event\.workflow_run\.head_repository\.full_name == github\.repository/);
+  assert.match(workflow, /github\.event\.workflow_run\.head_sha/);
+  assert.match(workflow, /docker\/setup-buildx-action/);
+  assert.match(workflow, /docker\/login-action/);
+  assert.match(workflow, /docker\/build-push-action/);
+  assert.match(workflow, /Dockerfile\.cloud/);
+  assert.match(workflow, /tags:.*uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:\$\{\{\s*steps\.meta\.outputs\.short_sha\s*\}\}/s);
+  assert.match(workflow, /digest/);
+  assert.match(workflow, /TCR_USERNAME/);
+  assert.match(workflow, /TCR_PASSWORD/);
+  assert.match(workflow, /OPL_BUILD_CONTEXT/);
+  assert.match(workflow, /staging-rollout:/);
+  assert.match(workflow, /needs:\s*build-push/);
+  assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
+  assert.match(workflow, /environment:\s*staging/);
+  assert.match(workflow, /OPL_NAMESPACE:\s*opl-webui-staging/);
+  assert.match(workflow, /OPL_BASE_URL:\s*https:\/\/staging\.opl\.medopl\.cn/);
+  assert.match(workflow, /Rollout staging dry-run/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs\n/);
+  assert.match(workflow, /Rollout staging apply/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --apply/);
+
+  assert.doesNotMatch(workflow, /environment:\s*production/);
+});
+
+test('github cloud rollout workflow separates staging and production approval', () => {
+  const workflow = readFileSync('.github/workflows/cloud-rollout.yml', 'utf8');
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /image:/);
+  assert.match(workflow, /target_environment:/);
+  assert.match(workflow, /staging/);
+  assert.match(workflow, /production/);
+  assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
+  assert.match(workflow, /environment:\s*\$\{\{\s*inputs\.target_environment\s*\}\}/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
+  assert.match(workflow, /--apply/);
+  assert.match(workflow, /KUBECONFIG/);
+  assert.match(workflow, /OPL_IMAGE/);
+  assert.match(workflow, /OPL_NAMESPACE/);
+  assert.match(workflow, /OPL_BASE_URL/);
+  assert.match(workflow, /contents:\s*read/);
+
+  assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action/i);
+});
+
 test('review gate includes diff hygiene, bloat, and current verify', async () => {
   const { REVIEW_GATE_STEPS } = await import('../../scripts/workflow-gate.mjs');
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
