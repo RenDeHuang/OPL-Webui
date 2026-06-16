@@ -31,4 +31,4 @@
 - 修正：阶段性 release automation goal 不再落成 `docs/active/release-automation-goal.md`；四阶段计划保留在 active change package，完成后走 compact closeout。
 - 实现：新增 `.github/workflows/ci.yml`，只在 `pull_request` 和 `main` push 运行 `npm run verify` 与 `npm run gate:review`。
 - 边界：workflow 不读取 secret，不执行 build/push，不执行 deploy，不包含 `kubectl` 或 `scripts/cloud-rollout.mjs`。
-- 平台证据：GitHub Actions `CI` run `27611399922` 已在 `main` push `cdd3a07` 上完成并成功，URL: `https://github.com/RenDeHuang/OPL-Webui/actions/runs/27611399922`。
+- 平台证据：GitHub Actions `CI` run `27611734207` 已在 `main` push `4f2ffe4` 上完成并成功，URL: `https://github.com/RenDeHuang/OPL-Webui/actions/runs/27611734207`。
