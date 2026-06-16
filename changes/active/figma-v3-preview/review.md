@@ -32,4 +32,9 @@
   - `npm run verify` 通过。
   - `npm run gate:review` 通过。
   - Sentrux scan quality signal `7263`，`check_rules` 通过，0 violations。
+- Phase 7 pre-rollout 证据：
+  - `figma-v3-preview` 已快进合并到本地 `main`。
+  - `main` 已推送到 `origin/main`，当前 commit 为 `af07d4e`。
+  - 合并后的 `main` 再次通过 `npm run verify`、`npm run gate:review` 和 Sentrux `check_rules`。
+  - short-SHA cloud image tag 应为 `uswccr.ccs.tencentyun.com/webopl/opl-webui:af07d4e`。
 - 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

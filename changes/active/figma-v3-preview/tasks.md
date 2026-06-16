@@ -74,7 +74,7 @@
 
 ### Phase 7: Cloud Rollout
 
-- [ ] Step 7.1: 确认本地 gates 全部通过。
+- [x] Step 7.1: 确认本地 gates 全部通过。
 - [ ] Step 7.2: 由云端/VPC runner 构建 short-SHA image。
 - [ ] Step 7.3: 由云端/VPC runner 推送 image。
 - [ ] Step 7.4: 由云端/VPC runner 执行 Kubernetes rollout。
