@@ -47,4 +47,14 @@
   - `https://opl.medopl.cn/healthz` 返回 `ok=true`。
   - `https://opl.medopl.cn/readyz` 返回 `environment=cloud_mvp` 且 `ok=true`。
   - 首页 HTML 仍包含旧 shell 文案 `今天想推进什么正式交付` 和 `任务进度`，不包含 V3 文案 `你想让 OPL 产出什么`、`最近交付与推荐工作流` 或 `轻量项目工作区`。
+- Phase 7 helper 证据：
+  - `tests/contract/cloud-rollout-helper.test.mjs` 先失败于缺少 `scripts/cloud-rollout.mjs`。
+  - 已新增 dry-run first 的 `scripts/cloud-rollout.mjs`；默认只打印 `kubectl set image`、`rollout status`、pod lookup、`canary db`、`canary opl-cli` 和 HTTPS smoke 命令。
+  - `--apply` 才会执行 Kubernetes mutation；脚本只引用 `KUBECONFIG` 和 `OPL_IMAGE`，不保存数据库、云证书或云 API key。
+  - `node --test tests/contract/cloud-rollout-helper.test.mjs` 通过。
+  - `node --test tests/health/registry-coverage.test.mjs` 通过，新增测试已登记。
+  - `node scripts/repo-bloat-audit.mjs` 通过，当前 counts 为 files 63、scripts 5、tests 13、maxFileLines 252。
+  - `node scripts/cloud-rollout.mjs` 默认 dry-run 输出 rollout、canary 和 HTTPS smoke 命令。
+  - `npm run verify` 通过。
+  - `npm run gate:review` 通过。
 - 尚未执行 cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

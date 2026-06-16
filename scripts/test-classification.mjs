@@ -54,6 +54,15 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'tests/contract/cloud-rollout-helper.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'deploy',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['scripts/cloud-rollout.mjs', 'deploy/cloud-mvp/RUNBOOK.md']),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'tests/contract/go-control-plane-http.test.mjs',
     runner: 'node',
     lane: 'contract',
