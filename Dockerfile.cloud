@@ -29,7 +29,7 @@ COPY --from=builder /out/opl-webui-control-plane /app/opl-webui-control-plane
 COPY apps/web apps/web
 COPY --from=opl /bin/opl /opt/opl/bin/opl
 COPY --from=opl-build /src/dist /opt/opl/dist
-COPY --from=opl /contracts/opl-gateway /opt/opl/contracts/opl-gateway
+COPY --from=opl /contracts/opl-framework /opt/opl/contracts/opl-framework
 COPY --from=opl /package.json /opt/opl/package.json
 RUN chmod +x /opt/opl/bin/opl
 

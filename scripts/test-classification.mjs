@@ -39,7 +39,13 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'deploy',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['Dockerfile', '.dockerignore', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
+    contracts: Object.freeze([
+      'Dockerfile',
+      'Dockerfile.cloud',
+      '.dockerignore',
+      '.dockerignore.cloud',
+      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+    ]),
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({

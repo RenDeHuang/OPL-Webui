@@ -46,3 +46,8 @@
 - 加固：`Release Image` 的 build/push job 改为 `[self-hosted, tencent-cloud, opl-webui]`，不再让 GitHub-hosted runner 接触 TCR 或 OPL build context secrets。
 - 加固：`Cloud Rollout` 增加 OPL image allowlist，只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `@sha256:<digest>`，不符合时 fail closed。
 - 保持：`CI` 仍是 `pull_request` test-only，不使用 `pull_request_target`，不读取 secrets。
+
+## Release Image Contract Root Fix
+
+- Root cause: `Dockerfile.cloud` 仍拷贝旧 OPL contract path `contracts/opl-gateway`；remote OPL `main` `778ed35` 的 package 已切到 `opl-framework-shared`，CLI loader 默认解析 `contracts/opl-framework`。
+- Fix: cloud image runtime 改为 materialize `contracts/opl-framework`，并用 `tests/health/deploy-container-readiness.test.mjs` 禁止再次依赖旧 `contracts/opl-gateway`。

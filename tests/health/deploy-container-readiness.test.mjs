@@ -33,7 +33,8 @@ test('cloud image recipe materializes OPL CLI into the runtime path', () => {
   assert.match(dockerfile, /COPY --from=opl \/bin\/opl \/opt\/opl\/bin\/opl/);
   assert.doesNotMatch(dockerfile, /COPY --from=opl \/dist /);
   assert.match(dockerfile, /COPY --from=opl-build \/src\/dist \/opt\/opl\/dist/);
-  assert.match(dockerfile, /COPY --from=opl \/contracts\/opl-gateway \/opt\/opl\/contracts\/opl-gateway/);
+  assert.match(dockerfile, /COPY --from=opl \/contracts\/opl-framework \/opt\/opl\/contracts\/opl-framework/);
+  assert.doesNotMatch(dockerfile, /COPY --from=opl \/contracts\/opl-gateway\b/);
   assert.match(dockerfile, /npm run build/);
   assert.match(dockerfile, /RUN chmod \+x \/opt\/opl\/bin\/opl/);
   assert.match(dockerfile, /ENV OPL_CLI_PATH=\/opt\/opl\/bin\/opl/);

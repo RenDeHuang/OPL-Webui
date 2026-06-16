@@ -26,6 +26,7 @@
 - TCR manifest 可查询并输出 digest。
 - workflow 不引用 kubeconfig、不执行 rollout。
 - build/push 使用腾讯云 self-hosted runner，不在 GitHub-hosted runner 读取 TCR 或 OPL build context secrets。
+- `Dockerfile.cloud` 使用当前 OPL framework contract root `contracts/opl-framework`，不依赖旧 `contracts/opl-gateway`。
 - 本地 Phase 2 证据：`uswccr.ccs.tencentyun.com/webopl/opl-webui:6df9635` 已 build/push 成功，index digest `sha256:443f02b8b63718c971188f7ec91ec238717f568568d42aab1bc924f37811c2f5`。
 
 ### Phase 3: Cloud CD runner rollout
