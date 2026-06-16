@@ -41,7 +41,8 @@
   - 当前 short SHA 为 `1d5ec92`。
   - 已构建并推送镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:1d5ec92`。
   - 推送 digest 为 `sha256:7362737813488519a0b8b94eb95705940ab62a269aa5432d51be16a31d5d9ac6`。
-  - 当前环境未设置 `KUBECONFIG`，因此尚未执行 `kubectl set image`、`rollout status`、pod canary 或 pod 状态记录。
+  - 当前环境没有默认 `KUBECONFIG`；只读检查外部 kubeconfig 时，`medopl.cn` 和 `10.66.0.37` API server 超时，`kube.medopl.cn` 和外部 CLB host DNS 不可解析。
+  - 因当前机器无法稳定访问 Kubernetes API，尚未执行 `kubectl set image`、`rollout status`、pod canary 或 pod 状态记录。
 - Online pre-smoke 证据：
   - `https://opl.medopl.cn/healthz` 返回 `ok=true`。
   - `https://opl.medopl.cn/readyz` 返回 `environment=cloud_mvp` 且 `ok=true`。
