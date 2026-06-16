@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { getWebDemoData, renderWebDemoData } from '../../apps/web/src/demoData.mjs';
+import * as demoData from '../../apps/web/src/demoData.mjs';
+
+const { getWebDemoData, renderWebDemoData } = demoData;
 
 function createFetchResponse(payload) {
   return {
@@ -127,6 +129,35 @@ test('web demo data is derived from the MVP API endpoint', async () => {
   assert.equal(calls[0].options.method, 'POST');
   assert.equal(calls[1].url, '/api/opl/snapshot');
   assert.equal(JSON.parse(calls[0].options.body).tenantId, 'tenant_demo');
+});
+
+test('web demo data derives a Figma V3 view model from current projections', async () => {
+  assert.equal(typeof demoData.createV3ViewModel, 'function');
+
+  const data = await getWebDemoData(async (url) => createFetchResponse(url === '/api/opl/snapshot' ? oplSnapshot : apiProjection));
+  const viewModel = demoData.createV3ViewModel(data);
+
+  assert.equal(viewModel.home.promptTitle, '你想让 OPL 产出什么');
+  assert.deepEqual(viewModel.home.navItems, ['首页', '工作流', 'Drive', '团队', '定价']);
+  assert.deepEqual(viewModel.home.promptControls, ['附件', '工作区', '深度研究', '交付类型']);
+  assert.deepEqual(viewModel.home.toolCapsules, ['综述证据包', '国自然申请书', '汇报PPT', '修回回复', '论文初稿', '数据分析']);
+  assert.equal(viewModel.home.recentCards[0].title, 'NSCLC 综述证据包');
+  assert.equal(viewModel.home.recentCards[0].sourceTaskId, apiProjection.task.taskId);
+  assert.equal(viewModel.home.reminders[0].label, '今天需要你处理');
+
+  assert.equal(viewModel.workspace.title, '轻量项目工作区');
+  assert.equal(viewModel.workspace.project.tenantId, 'tenant_demo');
+  assert.equal(viewModel.workspace.project.workspaceId, 'workspace_demo');
+  assert.equal(viewModel.workspace.project.runId, 'run_workspace_demo_user_demo_001');
+  assert.equal(viewModel.workspace.project.statusTags[0], 'completed');
+  assert.equal(viewModel.workspace.nextStep.title, '下一步建议');
+  assert.equal(viewModel.workspace.stages[0].label, '接收目标');
+  assert.equal(viewModel.workspace.stages.at(-1).label, '交付物预览');
+  assert.equal(viewModel.workspace.evidence[0].sourceRef, 'opl.contract.domains.readonly');
+  assert.equal(viewModel.workspace.activity[0].policyId, 'opl.cli.readonly.task-route');
+  assert.match(viewModel.workspace.deliverablePreview.title, /analysis_package/);
+  assert.equal(viewModel.boundaries.canClaimCompleteSaaS, false);
+  assert.equal(viewModel.boundaries.canMutateOplRuntime, false);
 });
 
 test('web demo data renderer writes cards into DOM-like targets', async () => {

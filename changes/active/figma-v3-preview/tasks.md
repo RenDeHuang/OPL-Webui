@@ -8,7 +8,7 @@
 - [x] Phase 0: Goal & Change Package。
 - [x] Phase 1: Target Lock。
 - [x] Phase 2: Gap Inventory。
-- [ ] Phase 3: Tests First。
+- [x] Phase 3: Tests First。
 - [ ] Phase 4: V3 Preview Implementation。
 - [ ] Phase 5: Local Visual Loop。
 - [ ] Phase 6: Local Release Gate。
@@ -40,11 +40,11 @@
 
 ### Phase 3: Tests First
 
-- [ ] Step 3.1: 更新 `tests/smoke/web-demo-shell.test.mjs`，断言 V3 首页结构。
-- [ ] Step 3.2: 更新 `tests/smoke/web-demo-shell.test.mjs`，断言轻量项目工作区结构。
-- [ ] Step 3.3: 更新 `tests/contract/web-demo-data.test.mjs`，断言 V3 view model 从现有 projection 派生。
-- [ ] Step 3.4: 如新增测试文件，登记 `scripts/test-classification.mjs`。
-- [ ] Step 3.5: 跑 targeted tests，确认旧实现失败。
+- [x] Step 3.1: 更新 `tests/smoke/web-demo-shell.test.mjs`，断言 V3 首页结构。
+- [x] Step 3.2: 更新 `tests/smoke/web-demo-shell.test.mjs`，断言轻量项目工作区结构。
+- [x] Step 3.3: 更新 `tests/contract/web-demo-data.test.mjs`，断言 V3 view model 从现有 projection 派生。
+- [x] Step 3.4: 如新增测试文件，登记 `scripts/test-classification.mjs`。
+- [x] Step 3.5: 跑 targeted tests，确认旧实现失败。
 
 ### Phase 4: V3 Preview Implementation
 
