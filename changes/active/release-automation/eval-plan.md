@@ -16,6 +16,8 @@
 - PR 和 main push 触发测试。
 - workflow 只运行 `npm run verify` 和 `npm run gate:review`。
 - workflow 不引用 secret、不 build image、不 deploy、不包含 `kubectl`。
+- 本地合同测试覆盖 workflow shape。
+- 推送后需要 GitHub Actions run URL 作为平台证据。
 
 ### Phase 2: CI build/push image
 
@@ -41,6 +43,7 @@
 ## Required Commands
 
 - `node --test tests/contract/change-package-lifecycle.test.mjs`
+- `node --test tests/health/workflow-entrypoint.test.mjs`
 - `npm run verify`
 - `npm run gate:review`
 

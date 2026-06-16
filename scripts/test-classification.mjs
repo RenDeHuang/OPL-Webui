@@ -23,7 +23,12 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'workflow',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['package.json', 'scripts/verify.mjs', 'scripts/workflow-gate.mjs']),
+    contracts: Object.freeze([
+      '.github/workflows/ci.yml',
+      'package.json',
+      'scripts/verify.mjs',
+      'scripts/workflow-gate.mjs',
+    ]),
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({
@@ -44,7 +49,9 @@ const TEST_ENTRIES = Object.freeze([
     contracts: Object.freeze([
       'changes/README.md',
       'docs/active/README.md',
-      'docs/active/release-automation-goal.md',
+      'changes/active/release-automation/design.md',
+      'changes/active/release-automation/eval-plan.md',
+      'changes/active/release-automation/tasks.md',
     ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),

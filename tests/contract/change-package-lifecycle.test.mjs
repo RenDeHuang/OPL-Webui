@@ -39,7 +39,6 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
     'changes/archive/closeouts.md',
     'changes/README.md',
     'docs/active/README.md',
-    'docs/active/release-automation-goal.md',
     'specs/product/spec.md',
     'specs/runtime/spec.md',
     'specs/source/spec.md',
@@ -52,17 +51,22 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
   }
 
   assert.equal(existsSync('docs/README.md'), false);
+  assert.equal(existsSync('docs/active/release-automation-goal.md'), false);
 });
 
-test('active truth links the release automation goal', () => {
+test('active truth links active change work instead of phase package docs', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
-  assert.match(readme, /release-automation-goal\.md/);
-  assert.match(readme, /Release Automation/i);
+  assert.doesNotMatch(readme, /release-automation-goal\.md/);
+  assert.match(readme, /changes\/active\/release-automation/);
 });
 
-test('release automation goal covers phased evals and boundaries', () => {
-  const goal = readFileSync('docs/active/release-automation-goal.md', 'utf8');
+test('release automation phase plan lives in the active change package', () => {
+  const plan = [
+    readFileSync('changes/active/release-automation/design.md', 'utf8'),
+    readFileSync('changes/active/release-automation/tasks.md', 'utf8'),
+    readFileSync('changes/active/release-automation/eval-plan.md', 'utf8'),
+  ].join('\n');
 
   for (const required of [
     'Phase 1: CI 自动测试',
@@ -90,14 +94,14 @@ test('release automation goal covers phased evals and boundaries', () => {
     'production',
     'changes/active/release-automation',
   ]) {
-    assert.ok(goal.includes(required), `missing ${required}`);
+    assert.ok(plan.includes(required), `missing ${required}`);
   }
 
-  assert.doesNotMatch(goal, /AKID[A-Za-z0-9]+/);
-  assert.doesNotMatch(goal, /-----BEGIN [A-Z ]+PRIVATE KEY-----/);
-  assert.doesNotMatch(goal, /postgres(?:ql)?:\/\/[^`\s]+/i);
-  assert.doesNotMatch(goal, /KUBECONFIG:\s*[^<\s]+/i);
-  assert.doesNotMatch(goal, /TCR_PASSWORD:\s*[^<\s]+/i);
+  assert.doesNotMatch(plan, /AKID[A-Za-z0-9]+/);
+  assert.doesNotMatch(plan, /-----BEGIN [A-Z ]+PRIVATE KEY-----/);
+  assert.doesNotMatch(plan, /postgres(?:ql)?:\/\/[^`\s]+/i);
+  assert.doesNotMatch(plan, /KUBECONFIG:\s*[^<\s]+/i);
+  assert.doesNotMatch(plan, /TCR_PASSWORD:\s*[^<\s]+/i);
 });
 
 test('Go control plane replaces the Node API backend', () => {

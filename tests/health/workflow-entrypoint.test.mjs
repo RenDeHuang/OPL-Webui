@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import pkg from '../../package.json' with { type: 'json' };
@@ -19,6 +19,25 @@ test('workflow entrypoints are wired through package scripts', () => {
 
 test('workflow gate script exists', () => {
   assert.equal(existsSync('scripts/workflow-gate.mjs'), true);
+});
+
+test('github ci workflow runs local gates only', () => {
+  const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+
+  assert.match(workflow, /pull_request:/);
+  assert.match(workflow, /push:/);
+  assert.match(workflow, /branches:\s*\[\s*main\s*\]/);
+  assert.match(workflow, /actions\/checkout/);
+  assert.match(workflow, /actions\/setup-node/);
+  assert.match(workflow, /actions\/setup-go/);
+  assert.match(workflow, /npm run verify/);
+  assert.match(workflow, /npm run gate:review/);
+  assert.match(workflow, /contents:\s*read/);
+
+  assert.doesNotMatch(workflow, /kubectl/i);
+  assert.doesNotMatch(workflow, /cloud-rollout\.mjs/i);
+  assert.doesNotMatch(workflow, /docker\s+(?:build|push)/i);
+  assert.doesNotMatch(workflow, /KUBECONFIG|TCR_PASSWORD|TCR_USERNAME|secrets\./i);
 });
 
 test('review gate includes diff hygiene, bloat, and current verify', async () => {

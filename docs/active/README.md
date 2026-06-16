@@ -9,9 +9,9 @@
 
 当前是 `cloud-stable-https-handoff`：`https://opl.medopl.cn` 已在 TKE qcloud Ingress + NodePort + TLS Secret 形态完成 HTTPS smoke、DB canary 和 OPL CLI readonly canary；仓库只固化无 secret 的声明式部署形状和云端 runbook。
 
-## Active Goal Docs
+## Active Change Work
 
-- [Release Automation](release-automation-goal.md): 四阶段发布自动化目标，覆盖 CI 自动测试、CI build/push、云端 CD runner rollout、staging / production 分环境；当前只是目标和 eval，不代表 CI/CD 已上线。
+- `changes/active/release-automation`: 四阶段发布自动化 work package；阶段性计划只保留在 active change 内，完成后 compact closeout。
 
 ## Can Claim
 
@@ -48,8 +48,8 @@
 
 ## Next Cursor
 
-下一步是在云端执行 HA/安全组收敛计划，确认 W1012 消失或 backend 不再单节点，再补 HTTP->HTTPS 跳转、登录/租户入口、队列/worker 和计费/object storage 的 contract + eval。
+下一步是按 `changes/active/release-automation` 逐阶段推进发布自动化：先完成 CI test-only，再进入 image build/push、VPC runner rollout、staging/production 分环境。
 
 ## Next Priorities
 
-后续优先级按上线风险排序：云端执行 HA/安全组收敛、监控、auth、MedOPL API integration。每一项都需要先补 contract、eval 和回滚边界，再进入产品功能开发。
+后续优先级按上线风险排序：发布自动化、云端执行 HA/安全组收敛、监控、auth、MedOPL API integration。每一项都需要先补 contract、eval 和回滚边界，再进入产品功能开发。

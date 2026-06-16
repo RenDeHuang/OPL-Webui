@@ -17,17 +17,18 @@
 ### Phase 0: Goal Package
 
 - [x] Step 0.1: 创建 `changes/active/release-automation/` 七件套。
-- [x] Step 0.2: 新增 `docs/active/release-automation-goal.md`。
-- [x] Step 0.3: 更新 `docs/active/README.md` 指向 release automation goal。
-- [x] Step 0.4: 将 release automation goal 合同并入 `tests/contract/change-package-lifecycle.test.mjs`，避免新增测试文件和 registry 膨胀。
+- [x] Step 0.2: 将四阶段 release automation goal 保留在 active change package 内，不新增长期 goal doc。
+- [x] Step 0.3: 更新 `docs/active/README.md` 指向 `changes/active/release-automation`。
+- [x] Step 0.4: 将 release automation phase plan 合同并入 `tests/contract/change-package-lifecycle.test.mjs`，避免新增测试文件和 registry 膨胀。
 - [x] Step 0.5: 跑 `npm run verify` 和 `npm run gate:review`。
 
 ### Phase 1: CI 自动测试
 
-- [ ] Step 1.1: 新增 GitHub Actions CI workflow。
-- [ ] Step 1.2: PR 和 main push 运行 `npm run verify`。
-- [ ] Step 1.3: PR 和 main push 运行 `npm run gate:review`。
-- [ ] Step 1.4: 明确 workflow 不 build image、不 deploy、不读取 secret。
+- [x] Step 1.1: 新增 GitHub Actions CI workflow。
+- [x] Step 1.2: PR 和 main push 运行 `npm run verify`。
+- [x] Step 1.3: PR 和 main push 运行 `npm run gate:review`。
+- [x] Step 1.4: 明确 workflow 不 build image、不 deploy、不读取 secret。
+- [ ] Step 1.5: 推送后记录 GitHub Actions run URL，确认平台触发成功。
 
 ### Phase 2: CI build/push image
 
