@@ -36,6 +36,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate image allowlist
+        shell: bash
+        run: |
+          tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
+          digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
+          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+            exit 0
+          fi
+          echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
+          exit 1
+
       - name: Rollout dry-run
         if: ${{ !inputs.apply }}
         run: node scripts/cloud-rollout.mjs

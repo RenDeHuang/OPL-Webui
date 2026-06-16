@@ -36,6 +36,7 @@
 - [x] Step 2.2: tag 使用 short commit。
 - [x] Step 2.3: push 到 TCR 并输出 digest。
 - [x] Step 2.4: 确认 build/push 不访问 TKE、不读取 kubeconfig。
+- [x] Step 2.5: 开源仓库加固，build/push 迁移到腾讯云 self-hosted runner，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
 
 ### Phase 3: Cloud CD runner rollout
 
@@ -47,6 +48,7 @@
 ### Phase 4: Staging / Production
 
 - [x] Step 4.1: 定义 staging namespace、domain 和 secret boundary。
+- [x] Step 4.1.1: Cloud Rollout 增加 OPL image allowlist，非 `webopl/opl-webui` 镜像 fail closed。
 - [ ] Step 4.2: staging 自动 rollout 并 smoke/canary。
 - [x] Step 4.3: production 需要 manual approval。
 - [ ] Step 4.4: production rollout 后记录 smoke/canary/rollback evidence。

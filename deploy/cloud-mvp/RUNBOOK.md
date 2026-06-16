@@ -6,8 +6,11 @@
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
 - PostgreSQL 连接信息在外部文件：`/home/dev/.secrets/opl-webui/postgresql/oplweb.env`。
+- 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets；不要使用 `pull_request_target`。
 - TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；staging/production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
-- 腾讯云 VPC self-hosted runner 需要带标签 `[self-hosted, tencent-cloud, opl-webui]`，并能访问 TKE API。
+- build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
+- Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`；其他输入 fail closed。
+- 腾讯云 VPC self-hosted runner 需要能访问 TKE API。
 - `staging.opl.medopl.cn` 和 `opl.medopl.cn` 分别指向 staging/production Ingress。
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
 - DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
@@ -51,7 +54,7 @@ npm run gate:review
 
 ### 2. 合并或 push 到 main
 
-`CI` workflow 会在 PR 和 `main` push 上运行 `npm run verify` 与 `npm run gate:review`。`Release Image` workflow 只接受同仓库 `main` push 的成功 CI，随后构建 `Dockerfile.cloud`，推送：
+`CI` workflow 会在 PR 和 `main` push 上运行 `npm run verify` 与 `npm run gate:review`。PR 的 `pull_request` CI 不拿 secrets；`Release Image` workflow 只接受同仓库 `main` push 的成功 CI，随后在腾讯云 self-hosted runner 构建 `Dockerfile.cloud`，推送：
 
 ```text
 uswccr.ccs.tencentyun.com/webopl/opl-webui:<short-commit>

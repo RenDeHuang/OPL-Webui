@@ -25,6 +25,7 @@ test('github ci workflow runs local gates only', () => {
   const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
 
   assert.match(workflow, /pull_request:/);
+  assert.doesNotMatch(workflow, /pull_request_target:/);
   assert.match(workflow, /push:/);
   assert.match(workflow, /branches:\s*\[\s*main\s*\]/);
   assert.match(workflow, /actions\/checkout/);
@@ -59,6 +60,7 @@ test('github release image workflow builds, pushes, and stages only after ci pas
   assert.match(workflow, /TCR_USERNAME/);
   assert.match(workflow, /TCR_PASSWORD/);
   assert.match(workflow, /OPL_BUILD_CONTEXT/);
+  assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
   assert.match(workflow, /staging-rollout:/);
   assert.match(workflow, /needs:\s*build-push/);
   assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
@@ -71,6 +73,7 @@ test('github release image workflow builds, pushes, and stages only after ci pas
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --apply/);
 
   assert.doesNotMatch(workflow, /environment:\s*production/);
+  assert.doesNotMatch(workflow, /runs-on:\s*ubuntu-latest/);
 });
 
 test('github cloud rollout workflow separates staging and production approval', () => {
@@ -89,6 +92,10 @@ test('github cloud rollout workflow separates staging and production approval', 
   assert.match(workflow, /OPL_IMAGE/);
   assert.match(workflow, /OPL_NAMESPACE/);
   assert.match(workflow, /OPL_BASE_URL/);
+  assert.match(workflow, /Validate image allowlist/);
+  assert.match(workflow, /uswccr\\\.ccs\\\.tencentyun\\\.com\/webopl\/opl-webui/);
+  assert.match(workflow, /sha256:\[0-9a-f\]\{64\}/);
+  assert.match(workflow, /exit 1/);
   assert.match(workflow, /contents:\s*read/);
 
   assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action/i);

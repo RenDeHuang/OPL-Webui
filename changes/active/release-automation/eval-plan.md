@@ -25,6 +25,7 @@
 - image tag 等于 short commit。
 - TCR manifest 可查询并输出 digest。
 - workflow 不引用 kubeconfig、不执行 rollout。
+- build/push 使用腾讯云 self-hosted runner，不在 GitHub-hosted runner 读取 TCR 或 OPL build context secrets。
 - 本地 Phase 2 证据：`uswccr.ccs.tencentyun.com/webopl/opl-webui:6df9635` 已 build/push 成功，index digest `sha256:443f02b8b63718c971188f7ec91ec238717f568568d42aab1bc924f37811c2f5`。
 
 ### Phase 3: Cloud CD runner rollout
@@ -41,6 +42,7 @@
 - staging 与 production namespace/domain/secret boundary 不混淆。
 - staging 先自动 rollout，production manual approval 后 rollout。
 - 两个环境都有 smoke/canary/rollback evidence。
+- `Cloud Rollout` 只接受 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。
 - 当前阻塞：`staging.opl.medopl.cn` 未解析；production 入口 `https://opl.medopl.cn` smoke 仍为 200，但本地无法执行 production rollout。
 
 ## Required Commands

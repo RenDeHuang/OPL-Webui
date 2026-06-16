@@ -40,3 +40,9 @@
 - Phase 3 implementation: 新增 `.github/workflows/cloud-rollout.yml`，只在 `[self-hosted, tencent-cloud, opl-webui]` runner 上执行 `scripts/cloud-rollout.mjs`；`--apply` 由 workflow input 控制。
 - Phase 4 implementation: `release-image.yml` 在镜像成功后自动触发 staging rollout；production 只通过 `cloud-rollout.yml` 手动触发并使用 GitHub environment approval。
 - Blocker: 当前本机无法访问 TKE API；`kube.medopl.cn` DNS 不可解析，`https://medopl.cn` 与 `https://10.66.0.37` kube API 请求超时。`staging.opl.medopl.cn` 当前无法解析。因此不能 claim Phase 3/4 真实 rollout 已完成。
+
+## Open Source Secrets Boundary Review
+
+- 加固：`Release Image` 的 build/push job 改为 `[self-hosted, tencent-cloud, opl-webui]`，不再让 GitHub-hosted runner 接触 TCR 或 OPL build context secrets。
+- 加固：`Cloud Rollout` 增加 OPL image allowlist，只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `@sha256:<digest>`，不符合时 fail closed。
+- 保持：`CI` 仍是 `pull_request` test-only，不使用 `pull_request_target`，不读取 secrets。

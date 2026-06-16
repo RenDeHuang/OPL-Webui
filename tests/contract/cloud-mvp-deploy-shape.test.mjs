@@ -101,6 +101,10 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'Cloud Rollout',
     'staging.opl.medopl.cn',
     'production environment approval',
+    'PR 不拿 secrets',
+    'image allowlist',
+    'uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>',
+    'uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>',
     'opl-webui-postgres',
     'OPL_DATABASE_URL',
     'kubectl apply',
@@ -136,6 +140,8 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   }
   assert.match(runbook, /opl-webui:\$\{short_commit\}/);
   assert.match(runbook, /workflow.*main.*push/is);
+  assert.match(runbook, /pull_request.*secrets/is);
+  assert.match(runbook, /self-hosted.*tencent-cloud.*opl-webui/is);
   assert.match(runbook, /target_environment.*production/is);
   assert.match(runbook, /apply.*false/is);
   assert.match(runbook, /apply.*true/is);
