@@ -6,7 +6,7 @@
 ## Checklist
 
 - [x] Phase 0: Goal Package。
-- [ ] Phase 1: CI 自动测试。
+- [x] Phase 1: CI 自动测试。
 - [ ] Phase 2: CI build/push image。
 - [ ] Phase 3: Cloud CD runner rollout。
 - [ ] Phase 4: Staging / Production。
@@ -28,7 +28,7 @@
 - [x] Step 1.2: PR 和 main push 运行 `npm run verify`。
 - [x] Step 1.3: PR 和 main push 运行 `npm run gate:review`。
 - [x] Step 1.4: 明确 workflow 不 build image、不 deploy、不读取 secret。
-- [ ] Step 1.5: 推送后记录 GitHub Actions run URL，确认平台触发成功。
+- [x] Step 1.5: 推送后记录 GitHub Actions run URL，确认平台触发成功。
 
 ### Phase 2: CI build/push image
 
