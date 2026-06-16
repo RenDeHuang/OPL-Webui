@@ -12,7 +12,7 @@
 
 ## Self Review
 
-- 当前完成 Phase 0-4：目标、gap、验收路径、V3 RED tests 和 V3 Preview 实现已写入 change 包。
+- 当前完成 Phase 0-5：目标、gap、验收路径、V3 RED tests、V3 Preview 实现和本地 visual loop 已写入 change 包。
 - Phase 3 RED 证据：
   - `node --test tests/smoke/web-demo-shell.test.mjs` 失败于旧 shell 缺少 V3 首页和轻量项目工作区结构。
   - `node --test tests/contract/web-demo-data.test.mjs` 失败于 `createV3ViewModel` 尚不存在。
@@ -22,4 +22,10 @@
   - `node --test tests/smoke/web-demo-shell.test.mjs` 通过，HTML 暴露 V3 首页和轻量项目工作区。
   - `node --test tests/health/registry-coverage.test.mjs` 通过，新增 `apps/web/styles/v3.css` 已进入 test registry contract。
   - `node scripts/repo-bloat-audit.mjs` 通过，最大文件为 `apps/web/styles/v3.css` 241 行。
-- 尚未执行本地浏览器 visual loop、完整 release gate、cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。
+- Phase 5 visual 证据：
+  - 本地服务 `http://127.0.0.1:4173` 的 `/healthz` 与 `/readyz` 通过。
+  - desktop 截图保存到 `.runtime/visual/figma-v3-desktop.png`。
+  - mobile 截图保存到 `.runtime/visual/figma-v3-mobile.png`。
+  - 浏览器检查无 console error，关键网络请求均为 200 或缓存 304。
+  - 已修正 `启动` 按钮白底白字和移动端导航裁切两个视觉 gap。
+- 尚未执行完整 release gate、cloud rollout 和 online smoke，不能 claim 线上 V3 preview 完成。

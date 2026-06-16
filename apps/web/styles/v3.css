@@ -30,6 +30,7 @@ nav a,
   border: 1px solid rgba(21, 23, 28, 0.08);
   border-radius: 999px;
   padding: 9px 14px;
+  white-space: nowrap;
 }
 
 nav a {
@@ -101,6 +102,11 @@ h1 {
 .prompt-controls button,
 .tool-capsules button {
   background: #fff;
+}
+
+.prompt-controls .launch-button {
+  background: #16181d;
+  color: #fff;
 }
 
 .launch-button {
@@ -227,11 +233,16 @@ h1 {
     display: grid;
   }
 
+  .section-heading {
+    align-items: start;
+    display: grid;
+  }
+
   nav,
   .topbar-actions,
   .workspace-tabs {
+    flex-wrap: wrap;
     justify-content: start;
-    overflow-x: auto;
   }
 
   .next-step {

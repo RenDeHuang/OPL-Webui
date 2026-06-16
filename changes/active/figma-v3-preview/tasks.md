@@ -10,7 +10,7 @@
 - [x] Phase 2: Gap Inventory。
 - [x] Phase 3: Tests First。
 - [x] Phase 4: V3 Preview Implementation。
-- [ ] Phase 5: Local Visual Loop。
+- [x] Phase 5: Local Visual Loop。
 - [ ] Phase 6: Local Release Gate。
 - [ ] Phase 7: Cloud Rollout。
 - [ ] Phase 8: Online Acceptance & Closeout。
@@ -58,12 +58,12 @@
 
 ### Phase 5: Local Visual Loop
 
-- [ ] Step 5.1: 启动本地 Web UI。
-- [ ] Step 5.2: 用浏览器检查 desktop viewport。
-- [ ] Step 5.3: 用浏览器检查 mobile viewport。
-- [ ] Step 5.4: 检查 console/network 错误。
-- [ ] Step 5.5: 对照 Figma V3，记录需要修正的视觉 gap。
-- [ ] Step 5.6: 修正视觉 gap 并重复 Step 5.2 到 Step 5.5，直到本地视觉可接受。
+- [x] Step 5.1: 启动本地 Web UI。
+- [x] Step 5.2: 用浏览器检查 desktop viewport。
+- [x] Step 5.3: 用浏览器检查 mobile viewport。
+- [x] Step 5.4: 检查 console/network 错误。
+- [x] Step 5.5: 对照 Figma V3，记录需要修正的视觉 gap。
+- [x] Step 5.6: 修正视觉 gap 并重复 Step 5.2 到 Step 5.5，直到本地视觉可接受。
 
 ### Phase 6: Local Release Gate
 
