@@ -11,9 +11,12 @@
 
 ## 产品边界
 
-- 本仓是公网多租户 SaaS WebUI，用 Genspark 风格承载 OPL formal deliverable workbench。
-- Web UI 只调用 Go control plane HTTP API。
-- Go control plane 是当前唯一后端业务入口；真实 OPL CLI 集成必须先新增 Go-side contract、eval 和白名单边界。
+- 本仓是公网 OPL 前台 WebUI：用户访问 `opl.medopl.cn` 登录后使用 ChatGPT-like OPL 前台入口。
+- 用户填写自己的 API Key；base_url 固定为我们的 sub2api base_url，不允许用户自定义。
+- Web UI 默认不展示 workspace、runtime、node pool、storage 概念；Go control plane 可保留 hidden default personal workspace 用于隔离、计费投影和未来扩展。
+- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
+- Web UI 只调用 Go control plane HTTP API；Go control plane 消费 sub2api 和 MedOPL 状态。
+- Go control plane 是当前唯一后端业务入口；真实 OPL CLI 集成必须先新增 Go-side contract、eval、白名单和人工授权边界。
 - 不 import `one-person-lab` 内部模块，不读取 OPL state 文件，不直接调用 MAS/MAG/RCA 私有 runtime。
 - OPL 安装、repair、module exec、family-runtime mutation、engine install/update/remove 默认禁止，除非新增 contract、eval 和人工授权边界。
 

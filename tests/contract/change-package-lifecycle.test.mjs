@@ -77,6 +77,7 @@ test('active truth records 24ba41f session auth production evidence', () => {
 test('active truth records fa3bcb7 tenant workspace production evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
+  assert.match(readme, /hidden tenant\/workspace isolation projection v1/);
   assert.match(readme, /fa3bcb7/);
   assert.match(readme, /opl-webui:fa3bcb7/);
   assert.match(readme, /GET \/api\/workspaces\/current[\s\S]{0,160}401 AUTH_REQUIRED/);
@@ -84,20 +85,52 @@ test('active truth records fa3bcb7 tenant workspace production evidence', () => 
   assert.match(readme, /POST \/api\/tasks[\s\S]{0,160}401 AUTH_REQUIRED/);
   assert.match(readme, /GET \/api\/tasks\/example_task[\s\S]{0,160}401 AUTH_REQUIRED/);
   assert.match(readme, /还没有真实注册登录/);
-  assert.match(readme, /workspace invitation/);
+  assert.match(readme, /workspace 不是用户可见产品概念/);
 });
 
 test('active truth records bc0403d usage quota production rollout evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
-  assert.match(readme, /usage-quota-production-rollout-verified/);
+  assert.match(readme, /usage\/quota precheck\/projection v1/);
   assert.match(readme, /bc0403d/);
   assert.match(readme, /opl-webui:bc0403d/);
   assert.match(readme, /AUTH_REQUIRED/);
   assert.match(readme, /用户未提供 rollout revision/);
   assert.match(readme, /不 claim `usageQuota` \/ `QUOTA_EXCEEDED` online behavior/);
-  assert.match(readme, /计费\/billing/);
+  assert.match(readme, /最终计费归 MedOPL\/sub2api/);
   assert.match(readme, /真实 OPL execution/);
+});
+
+test('product truth keeps OPL-Webui as chatbot front door instead of standalone SaaS backend', () => {
+  const active = readFileSync('docs/active/README.md', 'utf8');
+  const product = readFileSync('specs/product/spec.md', 'utf8');
+  const runtime = readFileSync('specs/runtime/spec.md', 'utf8');
+  const runbook = readFileSync('deploy/cloud-mvp/RUNBOOK.md', 'utf8');
+  const combined = `${active}\n${product}\n${runtime}\n${runbook}`;
+
+  for (const required of [
+    'ChatGPT-like OPL 前台入口',
+    '用户填写自己的 API Key',
+    'base_url 固定为 sub2api',
+    '不允许用户自定义 base_url',
+    'hidden default personal workspace',
+    'UI 不展示 workspace',
+    'runtime / storage / node pool',
+    'medopl.medopl.cn',
+    'MedOPL 是充值、runtime、node pool、storage、账单和资源后台',
+    'OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway',
+    'usage/quota v1 是 Webui-side precheck/projection',
+    '最终计费归 MedOPL/sub2api',
+  ]) {
+    assert.ok(combined.includes(required), `missing product positioning truth: ${required}`);
+  }
+
+  assert.doesNotMatch(active, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
+  assert.doesNotMatch(product, /UI 是中文 AI workspace/);
+  assert.doesNotMatch(product, /用户可见 workspace 系统/);
+  assert.doesNotMatch(product, /OPL formal deliverable workbench/);
+  assert.doesNotMatch(product, /拥有完整 billing|billing source of truth 是 OPL-Webui/);
+  assert.match(active, /ChatGPT-like base chatbot[\s\S]{0,240}fixed sub2api base_url \+ user API key binding[\s\S]{0,240}@OPL capability gate/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

@@ -225,3 +225,9 @@
 - summary: 固化 `bc0403d` usage/quota enforcement v1 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:bc0403d`，production rollout 成功；未认证 API guard 由云端验证为 `401 AUTH_REQUIRED`。本地 closeout 未执行 kubectl、未读取 kubeconfig，用户未提供 rollout revision、逐项 health/smoke/canary 数值或安全测试 token 下的 quota behavior 证据。
 - verified: user-provided production rollout evidence, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: `usageQuota` / `QUOTA_EXCEEDED` online behavior、真实支付、billing provider、复杂 plan 管理、注册登录、RBAC、worker、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 product-positioning-calibration
+
+- summary: 重新校准 OPL-Webui 定位：`opl.medopl.cn` 是 ChatGPT-like OPL 前台入口；用户填写自己的 API Key，base_url 固定为 sub2api；workspace/runtime/node pool/storage 默认不在 UI 展示；tenant/workspace persistence 只作为 hidden isolation/projection；usage/quota v1 是 Webui-side precheck/projection；MedOPL/sub2api 持有充值、runtime、node pool、storage、账单、资源后台和 API gateway truth。
+- verified: red `node --test tests/contract/change-package-lifecycle.test.mjs` failed on missing product positioning truth；green `node --test tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`；final gates recorded in commit evidence。
+- cannot claim: ChatGPT-like base chatbot、user API key binding、fixed sub2api bridge、@OPL capability gate、MedOPL runtime opening deep link、runtime status bridge 或 OPL run/artifact projection 已实现。

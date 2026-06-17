@@ -18,6 +18,8 @@
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
 - DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
 - HTTPS 证书由 Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
+- 产品边界：OPL-Webui 是 ChatGPT-like OPL 前台入口；用户 API Key 只能走固定 sub2api base_url，不允许用户自定义 base_url。
+- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway，只消费 sub2api 和 MedOPL 状态。
 
 ## 镜像构建与推送
 
@@ -232,18 +234,15 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 
 ## HA / 安全组收敛设计
 
-当前风险是 `EnsureIngressWarning W1012`：只有一个后端节点，节点或 Pod 异常会影响 `https://opl.medopl.cn`。目标态是两个可调度 TKE node、两个 Ready Pod、CLB 至少两个健康 backend，且公网入口只走 CLB 80/443，不再保留 `0.0.0.0/0 TCP:32258` 这种临时 NodePort 暴露。
+当前风险是 `EnsureIngressWarning W1012`：只有一个后端节点。目标态是两个可调度 TKE node、两个 Ready Pod、CLB 至少两个健康 backend，公网入口只走 CLB `80,443`，NodePort `32258` 只接受 CLB 到节点访问。
 
-1. HA 目标态：`Deployment replicas=2`，两个 Pod 分布在不同 `kubernetes.io/hostname`；`/readyz`、`canary db`、`canary opl-cli` 和 HTTPS smoke 全部通过后才收口安全组。
-2. TKE node：需要新增或复用第二个 Ready worker node；必须带 `medopl.cn/workload=webui` 或调整当前 nodeSelector，否则第二个 Pod 仍可能无法调度。
-3. Deployment：建议 `replicas: 2`、`maxUnavailable: 0`、`maxSurge: 1`，保持滚动更新期间至少两个期望副本。
-4. 调度：先用 `topologySpreadConstraints`，`maxSkew: 1`、`topologyKey: kubernetes.io/hostname`、`whenUnsatisfiable: DoNotSchedule`；同时加软 `podAntiAffinity` 作为调度偏好，避免只有一个 node 时永久阻断紧急恢复。
-5. PDB：建议 `minAvailable: 1`，在两副本 MVP 阶段允许一次自愿中断但避免维护动作同时驱逐全部 Pod；后续三副本再升到 `minAvailable: 2`。
-6. 安全组：优先在 qcloud Ingress/CLB 层绑定专用安全组，只允许公网到 CLB `80,443`；节点安全组仅允许来自该 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证通过后删除公网到 NodePort 的临时规则。
-7. 云端执行：新增/确认第二 node -> 给第二 node 打 `medopl.cn/workload=webui` -> 更新 Deployment replicas/rolling 策略/拓扑约束/PDB -> rollout -> 确认 qcloud Ingress backend 节点数 -> 收敛安全组。
-8. 验证：`kubectl get pod -o wide` 确认两个 Pod 在不同 node；`kubectl get ingress` 确认 `ADDRESS` 和 `80,443`；跑 `canary db`、`canary opl-cli`、`curl --http2 -fsS https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
-9. 回滚：若第二 Pod 不 Ready 或 HTTPS/canary 失败，先 `kubectl rollout undo deployment/opl-webui-control-plane` 或恢复 `replicas: 1`；若安全组收敛导致 504，立即恢复上一条 NodePort 规则，再按日志定位 CLB 到 node 的来源范围。
-10. 控制台事项：在腾讯云控制台新增或复用第二 CVM/TKE worker、确认节点安全组和 CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；不要在 CLB 控制台手工改证书，证书仍由 `opl-webui-tls` Secret 驱动。
+1. HA：`replicas=2`、跨 `kubernetes.io/hostname` 分布、`topologySpreadConstraints maxSkew: 1`、`DoNotSchedule`、软 `podAntiAffinity`、`PDB minAvailable: 1`、滚动更新 `maxUnavailable: 0`。
+2. TKE node：新增或复用第二个 Ready worker node，并带 `medopl.cn/workload=webui`，否则当前 nodeSelector 可能让第二 Pod 无法调度。
+3. 安全组：qcloud Ingress/CLB 只允许公网 `80,443`；节点安全组只允许 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证后删除公网到 NodePort 的临时规则。
+4. 云端执行：确认第二 node -> 打 label -> 更新 replicas/rolling/拓扑约束/PDB -> rollout -> 确认 Ingress backend 节点数 -> 收敛安全组。
+5. 验证：`kubectl get pod -o wide` 两 Pod 在不同 node；`kubectl get ingress` 有 `80,443`；跑 `canary db`、`canary opl-cli`、`https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
+6. 回滚：Pod 不 Ready 或 HTTPS/canary 失败时 `rollout undo` 或恢复 `replicas: 1`；安全组导致 504 时先恢复上一条 NodePort 规则。
+7. 腾讯云控制台事项：新增/复用第二 CVM/TKE worker、确认节点/CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；证书仍由 `opl-webui-tls` Secret 驱动，不在 CLB 控制台手工改证书。
 
 ## Rollback
 
