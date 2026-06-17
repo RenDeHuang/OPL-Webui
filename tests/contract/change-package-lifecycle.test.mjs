@@ -77,7 +77,6 @@ test('active truth records 24ba41f session auth production evidence', () => {
 test('active truth records fa3bcb7 tenant workspace production evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
-  assert.match(readme, /tenant-workspace-persistence-production-verified/);
   assert.match(readme, /fa3bcb7/);
   assert.match(readme, /opl-webui:fa3bcb7/);
   assert.match(readme, /GET \/api\/workspaces\/current[\s\S]{0,160}401 AUTH_REQUIRED/);
@@ -86,6 +85,19 @@ test('active truth records fa3bcb7 tenant workspace production evidence', () => 
   assert.match(readme, /GET \/api\/tasks\/example_task[\s\S]{0,160}401 AUTH_REQUIRED/);
   assert.match(readme, /还没有真实注册登录/);
   assert.match(readme, /workspace invitation/);
+});
+
+test('active truth records bc0403d usage quota production rollout evidence', () => {
+  const readme = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.match(readme, /usage-quota-production-rollout-verified/);
+  assert.match(readme, /bc0403d/);
+  assert.match(readme, /opl-webui:bc0403d/);
+  assert.match(readme, /AUTH_REQUIRED/);
+  assert.match(readme, /用户未提供 rollout revision/);
+  assert.match(readme, /不 claim `usageQuota` \/ `QUOTA_EXCEEDED` online behavior/);
+  assert.match(readme, /计费\/billing/);
+  assert.match(readme, /真实 OPL execution/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {
