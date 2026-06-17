@@ -62,13 +62,17 @@ test('active truth links active change work instead of phase package docs', () =
   assert.match(readme, /changes\/active\/figma-v3-preview/);
 });
 
-test('active truth keeps 010c2b9 metrics production evidence pending', () => {
+test('active truth records 24ba41f session auth production evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
-  assert.match(readme, /010c2b9/);
-  assert.match(readme, /production rollout evidence/i);
-  assert.match(readme, /\/metricsz.*尚未线上验证/);
-  assert.doesNotMatch(readme, /010c2b9[\s\S]{0,160}\/metricsz[\s\S]{0,80}(?:已通过|HTTP\/2 200)/);
+  assert.match(readme, /session-auth-boundary-production-verified/);
+  assert.match(readme, /24ba41f/);
+  assert.match(readme, /rollout revision `9`/);
+  assert.match(readme, /\/metricsz`? 200/);
+  assert.match(readme, /opl-webui-auth[\s\S]{0,80}keys=1/);
+  assert.match(readme, /POST \/api\/session\/launch[\s\S]{0,80}401 AUTH_REQUIRED/);
+  assert.match(readme, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/);
+  assert.match(readme, /还没有真实注册登录/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

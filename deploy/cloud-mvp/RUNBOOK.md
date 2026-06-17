@@ -5,7 +5,7 @@
 ## 前置条件
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
-- PostgreSQL 与 launch-token auth 配置由外部文件或云端注入，不进 git。
+- Production 必需 Secret：`opl-webui-postgres` 提供 `OPL_DATABASE_URL`，`opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`；明文值由外部文件或云端注入，不进 git。
 - 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets；不要使用 `pull_request_target`。
 - TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
 - build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
@@ -41,7 +41,7 @@ docker push "$OPL_IMAGE"
 - Production Apply: passed
 - Cloud Rollout #5: green
 - canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke 通过
-- pending: `010c2b9` requires production rollout evidence；云端/VPC runner 需设置 `OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:010c2b9`，执行 dry-run/apply/canary，并记录 `/metricsz` production smoke evidence 后才能标记线上通过
+- session/auth boundary: `24ba41f` image `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f` production rollout revision 9 通过；`opl-webui-auth` Opaque Secret 存在且 keys=1，未授权 `POST /api/session/launch` 和无 cookie `GET /api/session/current` 均返回 `401 AUTH_REQUIRED`
 
 ## 日常更新发布流程
 

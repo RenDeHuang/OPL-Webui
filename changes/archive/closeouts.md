@@ -195,3 +195,9 @@
 - summary: Go control plane 增加 `GET /api/session/current`，复用 Bearer/session cookie HMAC 校验后返回当前 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection；HTTP contract 断言 session cookie 可查询 current boundary 且响应不含 token material。
 - verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
 - cannot claim: 真实登录/OAuth、RBAC、session revocation、workspace membership、MedOPL API integration、production rollout、完整多租户 SaaS、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 session-auth-production-evidence
+
+- summary: 固化 `24ba41f` session/auth boundary production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f`，rollout revision `9`；`/healthz`、`/readyz`、`/metricsz` 和首页均返回 200；DB canary 与 OPL CLI canary 通过；`opl-webui-auth` Opaque Secret 存在且 keys=1；未带 Authorization 的 `POST /api/session/launch` 与无 cookie 的 `GET /api/session/current` 均返回 `401 AUTH_REQUIRED`。
+- verified: user-provided production evidence, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 完整商业 SaaS、真实注册登录、workspace membership、RBAC、billing、worker、真实 OPL execution 或 OPL mutation。

@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `production-gated-release-loop-verified`：`https://opl.medopl.cn` 已完成 no-public-staging production-gated release loop。Release Image、Production Dry Run、GitHub production approval、Production Apply、DB canary、OPL CLI canary 和 HTTPS smoke 已在 Cloud Rollout #5 上真实通过。
+当前是 `session-auth-boundary-production-verified`：`https://opl.medopl.cn` 已完成 no-public-staging production-gated release loop；`24ba41f` 的 session/auth boundary 已在 production rollout revision 9 真实验证通过。
 
 ## Active Change Work
 
@@ -19,6 +19,7 @@
 - Web UI 创建 task 时不再自报 tenant/workspace/user；cloud/production 的 `medopl_launch_token` 模式由 Go control plane 验证 Bearer launch token 并注入身份边界。
 - Go control plane 支持 `POST /api/session/launch`，可用一次 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可通过同源 cookie 注入 tenant/workspace/user 边界。
 - Go control plane 支持 `GET /api/session/current`，返回当前认证的 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection，不返回 token 或 secret。
+- `24ba41f` session/auth boundary 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f`、rollout revision `9`、`/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass、`opl-webui-auth` Opaque Secret 存在且 keys=1、未带 Authorization 的 `POST /api/session/launch` 返回 `401 AUTH_REQUIRED`、无 cookie 的 `GET /api/session/current` 返回 `401 AUTH_REQUIRED`。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
 - Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
@@ -29,8 +30,8 @@
 - `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres/auth Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
 - HA 目标态设计已固定：两个 Ready TKE node、`replicas=2`、跨 node 分布、`PDB minAvailable=1`、CLB 80/443 作为公网入口、NodePort 只允许 CLB 到节点访问。
 - 当前 production-gated release loop 已固定为 CI -> Release Image -> manual production dry-run -> GitHub production approval -> production apply -> canary/smoke。
-- Release loop 的 helper smoke 覆盖 `/healthz`、`/readyz`、`/metricsz` 和首页；`010c2b9` 的 `/metricsz` production rollout evidence 仍 pending，`/metricsz` 尚未线上验证。
-- 当前已验证 production release commit/tag 是 `d0c4de5`；Release Image green，Cloud Rollout #5 green，Production Dry Run 通过，Production Apply 通过，production approval 已通过。
+- Release loop 的 helper smoke 覆盖 `/healthz`、`/readyz`、`/metricsz` 和首页；`24ba41f` 已有 `/metricsz` production rollout evidence。
+- 当前已验证 production release loop baseline commit/tag 是 `d0c4de5`；当前已验证 session/auth boundary commit/tag 是 `24ba41f`。
 - `https://opl.medopl.cn/healthz`、`https://opl.medopl.cn/readyz` 和 `https://opl.medopl.cn/` 已返回 HTTP/2 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
 - HTTP 80 当前不是稳定入口；`EnsureIngressWarning W1012` 的单节点后端风险是 HA 后续项。
 - Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
@@ -48,12 +49,12 @@
 
 - 还不是完整公网多用户 production ready SaaS。
 - 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
-- 还没有真实登录/RBAC、session revocation、队列、计费、object storage、OPL worker、真实 OPL execution 或本 slice 的生产运行证据。
+- 还没有真实注册登录、workspace membership、RBAC、session revocation、队列、计费/billing、object storage、OPL worker 或真实 OPL execution。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进真实 auth/session、tenant-scoped persistence、usage/quota 和 GitHub update integration。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
+下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进真实注册登录、workspace membership、tenant-scoped persistence、usage/quota 和 GitHub update integration。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
 
 ## Next Priorities
 
