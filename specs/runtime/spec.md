@@ -9,6 +9,7 @@
 
 - `runtime.go.mvp-task`: Go control plane 的 `POST /api/mvp/task` 创建 tenant-scoped task/artifact projection。
 - `runtime.go.tenant-auth-boundary`: cloud/production 的 `medopl_launch_token` 模式必须用 HMAC Bearer launch token 注入 `tenantId`、`workspaceId`、`userId`；body identity 冲突返回 `TENANT_BOUNDARY_MISMATCH`，缺 token 返回 `AUTH_REQUIRED`。
+- `runtime.go.session-boundary`: cloud/production 支持 `POST /api/session/launch` 用有效 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可用该 cookie 注入 tenant/workspace/user。
 - `runtime.go.boundary-stable-id`: `tenantId`、`workspaceId`、`userId` 必须是 stable boundary ID，禁止 path separator、空格和过长值进入 task projection 或 launch-token claims。
 - `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.postgres-task-store`: Postgres adapter 只实现 `TaskStore` 边界和 schema 常量，不引入 ORM，不改变 HTTP task lifecycle。
@@ -38,4 +39,4 @@
 
 ## Cannot Claim
 
-- 当前 runtime 不包含真实登录/session/RBAC、已执行验证的多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、计费、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。
+- 当前 runtime 不包含真实登录/RBAC、session revocation、已执行验证的多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、计费、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。

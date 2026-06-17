@@ -11,6 +11,8 @@ import (
 )
 
 const launchTokenAuthMode = "medopl_launch_token"
+const sessionCookieName = "opl_session"
+const sessionTokenVersion = "session_v1"
 
 type launchTokenClaims struct {
 	TenantID    string `json:"tenantId"`
@@ -85,14 +87,18 @@ func applyPreviewIdentity(payload TaskRequest) TaskRequest {
 
 func launchClaimsFromRequest(request *http.Request) (launchTokenClaims, *taskAuthError) {
 	token := bearerToken(request.Header.Get("authorization"))
-	if token == "" {
-		return launchTokenClaims{}, &taskAuthError{
-			StatusCode: http.StatusUnauthorized,
-			ErrorCode:  "AUTH_REQUIRED",
-			Message:    "authorization bearer token is required",
-		}
+	if token != "" {
+		return parseSignedClaimsToken(token, "v1")
 	}
-	return parseLaunchToken(token)
+	cookie, err := request.Cookie(sessionCookieName)
+	if err == nil && strings.TrimSpace(cookie.Value) != "" {
+		return parseSignedClaimsToken(strings.TrimSpace(cookie.Value), sessionTokenVersion)
+	}
+	return launchTokenClaims{}, &taskAuthError{
+		StatusCode: http.StatusUnauthorized,
+		ErrorCode:  "AUTH_REQUIRED",
+		Message:    "authorization bearer token or session cookie is required",
+	}
 }
 
 func bearerToken(header string) string {
@@ -104,13 +110,36 @@ func bearerToken(header string) string {
 }
 
 func parseLaunchToken(token string) (launchTokenClaims, *taskAuthError) {
+	return parseSignedClaimsToken(token, "v1")
+}
+
+func signSessionToken(claims launchTokenClaims) (string, *taskAuthError) {
+	return signClaimsToken(sessionTokenVersion, claims)
+}
+
+func signClaimsToken(version string, claims launchTokenClaims) (string, *taskAuthError) {
+	secret := os.Getenv("OPL_TENANT_AUTH_SECRET")
+	if secret == "" {
+		return "", invalidLaunchToken()
+	}
+	claimsPayload, err := json.Marshal(claims)
+	if err != nil {
+		return "", invalidLaunchToken()
+	}
+	payloadSegment := base64.RawURLEncoding.EncodeToString(claimsPayload)
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(version + "." + payloadSegment))
+	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	return version + "." + payloadSegment + "." + signature, nil
+}
+
+func parseSignedClaimsToken(token string, version string) (launchTokenClaims, *taskAuthError) {
 	secret := os.Getenv("OPL_TENANT_AUTH_SECRET")
 	if secret == "" {
 		return launchTokenClaims{}, invalidLaunchToken()
 	}
-
 	parts := strings.Split(token, ".")
-	if len(parts) != 3 || parts[0] != "v1" {
+	if len(parts) != 3 || parts[0] != version {
 		return launchTokenClaims{}, invalidLaunchToken()
 	}
 	expectedMAC := hmac.New(sha256.New, []byte(secret))

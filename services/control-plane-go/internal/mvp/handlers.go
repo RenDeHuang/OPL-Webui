@@ -13,6 +13,37 @@ func HandleTask(response http.ResponseWriter, request *http.Request) {
 	handleTaskWithRunner(response, request, oplbridge.NewDefaultRunner())
 }
 
+func HandleSessionLaunch(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{
+			OK:        false,
+			ErrorCode: "METHOD_NOT_ALLOWED",
+			Message:   "method not allowed",
+		})
+		return
+	}
+
+	claims, authErr := launchClaimsFromRequest(request)
+	if authErr != nil {
+		writeTaskAuthError(response, authErr)
+		return
+	}
+	sessionToken, authErr := signSessionToken(claims)
+	if authErr != nil {
+		writeTaskAuthError(response, authErr)
+		return
+	}
+
+	http.SetCookie(response, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    sessionToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	response.WriteHeader(http.StatusNoContent)
+}
+
 func handleTaskWithRunner(response http.ResponseWriter, request *http.Request, runner oplbridge.Runner) {
 	if request.Method != http.MethodPost {
 		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{

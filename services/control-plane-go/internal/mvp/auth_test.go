@@ -152,15 +152,25 @@ func jsonBody(t *testing.T, payload any) *bytes.Reader {
 
 func signedLaunchToken(t *testing.T, secret string, claims launchTokenClaims) string {
 	t.Helper()
+	return signedToken(t, secret, "v1", claims)
+}
+
+func signedSessionToken(t *testing.T, secret string, claims launchTokenClaims) string {
+	t.Helper()
+	return signedToken(t, secret, "session_v1", claims)
+}
+
+func signedToken(t *testing.T, secret string, version string, claims launchTokenClaims) string {
+	t.Helper()
 	encodedClaims, err := json.Marshal(claims)
 	if err != nil {
 		t.Fatalf("marshal claims: %v", err)
 	}
 	claimsSegment := base64.RawURLEncoding.EncodeToString(encodedClaims)
 	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte("v1." + claimsSegment))
+	mac.Write([]byte(version + "." + claimsSegment))
 	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
-	return "v1." + claimsSegment + "." + signature
+	return version + "." + claimsSegment + "." + signature
 }
 
 func assertErrorResponse(t *testing.T, response *httptest.ResponseRecorder, status int, code string) {

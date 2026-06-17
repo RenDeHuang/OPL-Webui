@@ -86,11 +86,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'apps/web/src/demoData.mjs',
-      'packages/contracts/opl/mvp-task-http.schema.json',
-      'services/control-plane-go/internal/mvp/task.go',
-    ]),
+    contracts: Object.freeze(['apps/web/src/demoData.mjs', 'packages/contracts/opl/mvp-task-http.schema.json', 'services/control-plane-go/internal/mvp/task.go']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -108,12 +104,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'smoke',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'apps/web/index.html',
-      'apps/web/styles.css',
-      'apps/web/styles/v3.css',
-      'apps/web/src/demoData.mjs',
-    ]),
+    contracts: Object.freeze(['apps/web/index.html', 'apps/web/styles.css', 'apps/web/styles/v3.css', 'apps/web/src/demoData.mjs']),
     verifySuites: Object.freeze(['current', 'smoke']),
   }),
   Object.freeze({
@@ -135,10 +126,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'services/control-plane-go/internal/mvp/task.go',
-      'packages/contracts/opl/mvp-task-http.schema.json',
-    ]),
+    contracts: Object.freeze(['services/control-plane-go/internal/mvp/task.go', 'packages/contracts/opl/mvp-task-http.schema.json']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -153,6 +141,17 @@ const TEST_ENTRIES = Object.freeze([
       'services/control-plane-go/internal/mvp/auth.go',
       'services/control-plane-go/internal/mvp/handlers.go',
     ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/mvp/session_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/mvp',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/internal/mvp/auth.go', 'services/control-plane-go/internal/mvp/handlers.go']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
