@@ -31,6 +31,7 @@ func main() {
 	mux.HandleFunc("/metricsz", handleMetricsz)
 	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
 	mux.HandleFunc("/api/session/launch", mvp.HandleSessionLaunch)
+	mux.HandleFunc("/api/session/current", mvp.HandleSessionCurrent)
 	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
 	mux.HandleFunc("/api/mvp/tasks/", mvp.HandleStoredTask)
 	mux.Handle("/", http.FileServer(http.Dir("apps/web")))

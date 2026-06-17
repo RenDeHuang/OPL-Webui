@@ -198,6 +198,19 @@ test('Go control plane exchanges launch token for browser session cookie', async
     assert.match(cookie, /opl_session=/);
     assert.match(cookie, /HttpOnly/);
     assert.match(cookie, /SameSite=Lax/);
+
+    const currentResponse = await fetch(`${baseUrl}/api/session/current`, {
+      headers: { cookie: cookie.split(';')[0] },
+    });
+    assert.equal(currentResponse.status, 200);
+    const current = await currentResponse.json();
+    assert.deepEqual(current, {
+      ok: true,
+      tenantId: 'tenant_token',
+      workspaceId: 'workspace_token',
+      userId: 'user_token',
+      authMode: 'medopl_launch_token',
+    });
   } finally {
     await stopGoServer(child);
   }

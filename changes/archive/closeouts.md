@@ -189,3 +189,9 @@
 - summary: Go control plane 增加 `POST /api/session/launch`，用有效 `medopl_launch_token` Bearer token 签发 HttpOnly `opl_session` cookie；task create / lookup 在 Bearer token 后 fallback 到 session cookie 注入 tenant/workspace/user 边界；HTTP contract helper 拆分以保持 test 文件收敛。
 - verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
 - cannot claim: 真实登录/OAuth、RBAC、session revocation、workspace membership、MedOPL API integration、production rollout、完整多租户 SaaS、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 session-current-boundary
+
+- summary: Go control plane 增加 `GET /api/session/current`，复用 Bearer/session cookie HMAC 校验后返回当前 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection；HTTP contract 断言 session cookie 可查询 current boundary 且响应不含 token material。
+- verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
+- cannot claim: 真实登录/OAuth、RBAC、session revocation、workspace membership、MedOPL API integration、production rollout、完整多租户 SaaS、真实 OPL execution 或 OPL mutation。

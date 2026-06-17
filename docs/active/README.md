@@ -18,6 +18,7 @@
 - Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
 - Web UI 创建 task 时不再自报 tenant/workspace/user；cloud/production 的 `medopl_launch_token` 模式由 Go control plane 验证 Bearer launch token 并注入身份边界。
 - Go control plane 支持 `POST /api/session/launch`，可用一次 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可通过同源 cookie 注入 tenant/workspace/user 边界。
+- Go control plane 支持 `GET /api/session/current`，返回当前认证的 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection，不返回 token 或 secret。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
 - Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。

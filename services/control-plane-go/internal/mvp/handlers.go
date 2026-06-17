@@ -44,6 +44,30 @@ func HandleSessionLaunch(response http.ResponseWriter, request *http.Request) {
 	response.WriteHeader(http.StatusNoContent)
 }
 
+func HandleSessionCurrent(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{
+			OK:        false,
+			ErrorCode: "METHOD_NOT_ALLOWED",
+			Message:   "method not allowed",
+		})
+		return
+	}
+
+	claims, authErr := launchClaimsFromRequest(request)
+	if authErr != nil {
+		writeTaskAuthError(response, authErr)
+		return
+	}
+	writeJSON(response, http.StatusOK, map[string]any{
+		"ok":          true,
+		"tenantId":    claims.TenantID,
+		"workspaceId": claims.WorkspaceID,
+		"userId":      claims.UserID,
+		"authMode":    launchTokenAuthMode,
+	})
+}
+
 func handleTaskWithRunner(response http.ResponseWriter, request *http.Request, runner oplbridge.Runner) {
 	if request.Method != http.MethodPost {
 		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{

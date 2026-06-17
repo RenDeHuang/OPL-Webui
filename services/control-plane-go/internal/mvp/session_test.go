@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -64,5 +65,32 @@ func TestSessionCookieDerivesTaskIdentity(t *testing.T) {
 	}
 	if projection.TenantID != "tenant_token" || projection.WorkspaceID != "workspace_token" || projection.UserID != "user_token" {
 		t.Fatalf("projection did not derive identity from session: %#v", projection)
+	}
+}
+
+func TestSessionCurrentReturnsAuthenticatedBoundary(t *testing.T) {
+	setCloudMVPAuthEnv(t)
+
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/session/current", nil)
+	request.AddCookie(&http.Cookie{
+		Name:  "opl_session",
+		Value: signedSessionToken(t, "test-secret", launchTokenClaims{TenantID: "tenant_token", WorkspaceID: "workspace_token", UserID: "user_token"}),
+	})
+
+	HandleSessionCurrent(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body=%s", response.Code, response.Body.String())
+	}
+	var body map[string]any
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body["ok"] != true || body["tenantId"] != "tenant_token" || body["workspaceId"] != "workspace_token" || body["userId"] != "user_token" {
+		t.Fatalf("current session boundary mismatch: %#v", body)
+	}
+	if strings.Contains(response.Body.String(), "opl_session") || strings.Contains(response.Body.String(), "test-secret") {
+		t.Fatalf("current session response leaked token material: %s", response.Body.String())
 	}
 }
