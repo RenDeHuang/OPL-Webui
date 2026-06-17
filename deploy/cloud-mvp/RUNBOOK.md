@@ -32,14 +32,19 @@ docker push "$OPL_IMAGE"
 
 `Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl` 和当前 OPL CLI 解析的 framework contract root `contracts/opl-framework` 放到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，避免复制外部 stale build output。不能把 `one-person-lab` 主仓复制进本仓，也不能依赖旧版或未跟踪的 `contracts/opl-gateway`。
 
-当前 cloud stable HTTPS 已验证镜像：
+当前 production-gated release loop 已验证：
 
-- image: `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`
-- digest: `sha256:3b1b903fcb02ec87527d7567604d2b2bb1102f126b00cb03e88de425f17f4fb7`
+- commit/tag: `d0c4de5`
+- Release Image: green
+- Production Dry Run: passed
+- GitHub production approval: approved
+- Production Apply: passed
+- Cloud Rollout #5: green
+- canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz` 和首页 HTTPS smoke 通过
 
 ## 日常更新发布流程
 
-当前 stable baseline 镜像是 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`。后续每次更新都用短 commit 作为不可变 tag：
+当前 production baseline commit/tag 是 `d0c4de5`。后续每次更新都用短 commit 作为不可变 tag：
 
 ```bash
 short_commit="$(git rev-parse --short HEAD)"
@@ -51,6 +56,8 @@ export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_commit}"
 ```text
 CI -> image -> manual production dry-run -> approval -> production apply -> canary/smoke
 ```
+
+这条 no-public-staging production-gated release loop 已在 Cloud Rollout #5 真实跑通。当前仍没有真实 staging；不要把 production 当 staging，也不要让 Release Image 自动触发 staging rollout。
 
 ### 1. 本地开发与验证
 

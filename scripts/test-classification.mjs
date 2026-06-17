@@ -56,10 +56,9 @@ const TEST_ENTRIES = Object.freeze([
     lifecycleRole: 'current-owner',
     contracts: Object.freeze([
       'changes/README.md',
+      'changes/archive/closeouts.md',
       'docs/active/README.md',
-      'changes/active/release-automation/design.md',
-      'changes/active/release-automation/eval-plan.md',
-      'changes/active/release-automation/tasks.md',
+      'deploy/cloud-mvp/RUNBOOK.md',
     ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),

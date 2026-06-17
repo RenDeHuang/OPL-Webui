@@ -58,50 +58,28 @@ test('active truth links active change work instead of phase package docs', () =
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
   assert.doesNotMatch(readme, /release-automation-goal\.md/);
-  assert.match(readme, /changes\/active\/release-automation/);
+  assert.doesNotMatch(readme, /changes\/active\/release-automation/);
+  assert.match(readme, /changes\/active\/figma-v3-preview/);
 });
 
-test('release automation phase plan lives in the active change package', () => {
-  const plan = [
-    readFileSync('changes/active/release-automation/design.md', 'utf8'),
-    readFileSync('changes/active/release-automation/tasks.md', 'utf8'),
-    readFileSync('changes/active/release-automation/eval-plan.md', 'utf8'),
-  ].join('\n');
+test('release automation is compacted after production-gated closeout', () => {
+  assert.equal(existsSync('changes/active/release-automation'), false);
 
+  const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
   for (const required of [
-    'Phase 1: CI 自动测试',
-    'Phase 2: CI 构建并推送镜像',
-    'Phase 3: 云端 CD runner rollout',
-    'Phase 4: staging / production 分环境',
-    'Goal',
-    'Implementation Steps',
-    'Evals / Acceptance Criteria',
-    'Secret Boundary',
-    'Failure / Rollback Handling',
-    'npm run verify',
-    'npm run gate:review',
-    'Dockerfile.cloud',
-    'short commit',
-    'digest',
-    'self-hosted runner',
-    'scripts/cloud-rollout.mjs',
-    'dry-run',
-    '--apply',
-    'canary db',
-    'canary opl-cli',
-    'manual approval',
-    'staging',
-    'production',
-    'changes/active/release-automation',
+    'release-automation',
+    'no-public-staging production-gated release loop',
+    'Release Image green',
+    'Cloud Rollout #5 green',
+    'Production Dry Run passed',
+    'Production Apply passed',
+    'DB canary passed',
+    'OPL CLI canary passed',
+    'HTTPS smoke 200',
+    'cannot claim: 真实 staging',
   ]) {
-    assert.ok(plan.includes(required), `missing ${required}`);
+    assert.ok(closeout.includes(required), `missing archived evidence: ${required}`);
   }
-
-  assert.doesNotMatch(plan, /AKID[A-Za-z0-9]+/);
-  assert.doesNotMatch(plan, /-----BEGIN [A-Z ]+PRIVATE KEY-----/);
-  assert.doesNotMatch(plan, /postgres(?:ql)?:\/\/[^`\s]+/i);
-  assert.doesNotMatch(plan, /KUBECONFIG:\s*[^<\s]+/i);
-  assert.doesNotMatch(plan, /TCR_PASSWORD:\s*[^<\s]+/i);
 });
 
 test('Go control plane replaces the Node API backend', () => {
@@ -131,6 +109,7 @@ test('archived change packages keep only compact closeout summaries', () => {
   const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
   assert.match(closeout, /foundation-loop-contracts/);
   assert.match(closeout, /production-runtime-gate/);
+  assert.match(closeout, /release-automation/);
   assert.match(closeout, /cannot claim/);
 
   assert.equal(existsSync('docs/history/README.md'), false);
