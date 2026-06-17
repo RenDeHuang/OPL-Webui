@@ -134,23 +134,23 @@ test('Go control plane exposes a deployment health check', async () => {
   }
 });
 
-test('Go control plane rejects requests without tenant boundary', async () => {
+test('Go control plane applies preview identity when development body omits it', async () => {
   const { child, baseUrl } = await startGoServer();
   try {
     const response = await fetch(`${baseUrl}/api/mvp/task`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        workspaceId: 'workspace_cloud_demo',
-        userId: 'user_demo',
         prompt: '生成一个医学研究项目的证据整理任务',
       }),
     });
 
-    assert.equal(response.status, 400);
+    assert.equal(response.status, 200);
     const body = await response.json();
-    assert.equal(body.ok, false);
-    assert.equal(body.errorCode, 'INVALID_MVP_TASK_REQUEST');
+    assert.equal(body.ok, true);
+    assert.equal(body.tenantId, 'tenant_demo');
+    assert.equal(body.workspaceId, 'workspace_demo');
+    assert.equal(body.userId, 'user_demo');
   } finally {
     await stopGoServer(child);
   }

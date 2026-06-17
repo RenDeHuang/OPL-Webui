@@ -3,7 +3,7 @@
   "$id": "https://opl-webui.local/contracts/opl/mvp-task-http.schema.json",
   "title": "OPL WebUI MVP Task HTTP Contract",
   "type": "object",
-  "required": ["tenantId", "workspaceId", "userId", "prompt"],
+  "required": ["prompt"],
   "additionalProperties": false,
   "properties": {
     "tenantId": { "type": "string", "minLength": 1 },

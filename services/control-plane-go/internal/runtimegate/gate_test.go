@@ -60,6 +60,7 @@ func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
 	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
 	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
+	t.Setenv("OPL_TENANT_AUTH_SECRET", "test-secret")
 	t.Setenv("OPL_CLI_PATH", "/opt/opl/bin/opl")
 
 	status := CurrentStatus()
@@ -68,5 +69,20 @@ func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
 	}
 	if status.Environment != "cloud_mvp" {
 		t.Fatalf("environment mismatch: %s", status.Environment)
+	}
+}
+
+func TestCurrentStatusRequiresLaunchTokenSecret(t *testing.T) {
+	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+	t.Setenv("OPL_DATABASE_URL", "postgres://example")
+	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
+	t.Setenv("OPL_CLI_PATH", "/opt/opl/bin/opl")
+
+	status := CurrentStatus()
+	if status.OK {
+		t.Fatalf("expected cloud MVP launch token mode to require auth secret: %#v", status)
+	}
+	if !slices.Contains(status.Missing, "OPL_TENANT_AUTH_SECRET") {
+		t.Fatalf("expected missing launch token secret: %#v", status.Missing)
 	}
 }

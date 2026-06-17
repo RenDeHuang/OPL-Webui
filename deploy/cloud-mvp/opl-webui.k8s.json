@@ -76,6 +76,15 @@
                     "value": "medopl_launch_token"
                   },
                   {
+                    "name": "OPL_TENANT_AUTH_SECRET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-auth",
+                        "key": "OPL_TENANT_AUTH_SECRET"
+                      }
+                    }
+                  },
+                  {
                     "name": "OPL_DATABASE_URL",
                     "valueFrom": {
                       "secretKeyRef": {

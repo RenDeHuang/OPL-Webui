@@ -8,6 +8,7 @@
 ## Requirements
 
 - `runtime.go.mvp-task`: Go control plane 的 `POST /api/mvp/task` 创建 tenant-scoped task/artifact projection。
+- `runtime.go.tenant-auth-boundary`: cloud/production 的 `medopl_launch_token` 模式必须用 HMAC Bearer launch token 注入 `tenantId`、`workspaceId`、`userId`；body identity 冲突返回 `TENANT_BOUNDARY_MISMATCH`，缺 token 返回 `AUTH_REQUIRED`。
 - `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.postgres-task-store`: Postgres adapter 只实现 `TaskStore` 边界和 schema 常量，不引入 ORM，不改变 HTTP task lifecycle。
 - `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
@@ -20,10 +21,10 @@
 - `runtime.deploy.readyz`: `GET /readyz` 返回生产依赖就绪状态；production 缺 auth、database、queue、object store、billing 或 worker 配置时返回 `503`。
 - `runtime.deploy.metricsz`: `GET /metricsz` 返回只读 JSON monitoring projection，复用 runtime readiness truth，只暴露 service、environment、ready、missing dependency count 和 missing dependency keys；cloud rollout helper 必须把它纳入 HTTPS smoke。
 - `runtime.deploy.production-gate`: `OPL_WEBUI_ENV=production` 且 `/readyz` 未就绪时，`POST /api/mvp/task` 必须 fail closed。
-- `runtime.deploy.cloud-mvp-profile`: `OPL_WEBUI_ENV=cloud_mvp` 要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`；queue、object store、billing 和 worker 仍属于 production 后续阶段。
+- `runtime.deploy.cloud-mvp-profile`: `OPL_WEBUI_ENV=cloud_mvp` 要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL`、`OPL_TENANT_AUTH_MODE` 和 `OPL_TENANT_AUTH_SECRET`；queue、object store、billing 和 worker 仍属于 production 后续阶段。
 - `runtime.deploy.db-canary`: control-plane binary 提供 `canary db`，只从环境变量读取 `OPL_DATABASE_URL`，验证 Postgres open/ping/schema/write/read/delete，并且 JSON 报告不能泄露连接串。
 - `runtime.deploy.opl-cli-canary`: control-plane binary 提供 `canary opl-cli`，只调用无 Codex/API key 依赖的 OPL snapshot readonly allowlist surfaces，不执行 install、repair、module exec、task-route passthrough 或 mutation。
-- `runtime.deploy.cloud-mvp-shape`: `deploy/cloud-mvp/opl-webui.k8s.json` 固定 `opl.medopl.cn`、namespace、`uswccr` cloud stable HTTPS image、imagePullSecret、nodeSelector、resources、`qcloud` ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、`4173`、`/healthz`、`/readyz`、`cloud_mvp` env 和 `OPL_DATABASE_URL` secretKeyRef。
+- `runtime.deploy.cloud-mvp-shape`: `deploy/cloud-mvp/opl-webui.k8s.json` 固定 `opl.medopl.cn`、namespace、`uswccr` cloud stable HTTPS image、imagePullSecret、nodeSelector、resources、`qcloud` ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、`4173`、`/healthz`、`/readyz`、`cloud_mvp` env、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_SECRET` secretKeyRef。
 - `runtime.deploy.cloud-mvp-runbook`: `deploy/cloud-mvp/RUNBOOK.md` 提供云端/VPC runner handoff 步骤，覆盖 TCR/CCR build/push、Postgres Secret 创建、qcloud HTTPS Secret 创建、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback；真实 kubeconfig、数据库密码、证书 ID、云 API key 只能由外部路径或执行环境注入。
 - `runtime.deploy.ha-sg-target`: HA/安全组目标态是两个可调度 TKE node、`replicas=2`、跨 `kubernetes.io/hostname` 分布、`PDB minAvailable=1`、公网只进 CLB `80,443`，NodePort `32258` 只接受 CLB 到节点访问。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 通过 Go control plane 聚合真实 OPL CLI 只读 JSON surfaces。
@@ -34,4 +35,4 @@
 
 ## Cannot Claim
 
-- 当前 runtime 不包含已执行验证的多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、计费、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。
+- 当前 runtime 不包含真实登录/session/RBAC、已执行验证的多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、计费、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。

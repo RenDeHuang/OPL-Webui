@@ -1,7 +1,4 @@
 const DEFAULT_DEMO_REQUEST = Object.freeze({
-  tenantId: 'tenant_demo',
-  workspaceId: 'workspace_demo',
-  userId: 'user_demo',
   prompt: '生成一个医学研究项目的证据整理任务',
   intent: 'research',
 });

@@ -168,6 +168,20 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
+    file: 'services/control-plane-go/internal/mvp/auth_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/mvp',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/mvp/auth.go',
+      'services/control-plane-go/internal/mvp/handlers.go',
+    ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
     file: 'services/control-plane-go/internal/mvp/postgres_store_test.go',
     runner: 'go',
     cwd: 'services/control-plane-go',

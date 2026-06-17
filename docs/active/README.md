@@ -16,14 +16,15 @@
 ## Can Claim
 
 - Web UI 通过同源 `/api/mvp/task` 调用 Go control plane。
+- Web UI 创建 task 时不再自报 tenant/workspace/user；cloud/production 的 `medopl_launch_token` 模式由 Go control plane 验证 Bearer launch token 并注入身份边界。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
 - Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
-- Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL` 和 `OPL_TENANT_AUTH_MODE`，不把 queue、object store、billing、worker 误算进 MVP preview。
+- Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL`、`OPL_TENANT_AUTH_MODE` 和 launch-token signing secret，不把 queue、object store、billing、worker 误算进 MVP preview。
 - Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
 - Control-plane binary 提供 `canary opl-cli`，验证无 Codex/API key 依赖的 OPL snapshot readonly allowlist surfaces，不执行 install、repair、module exec、task-route passthrough 或 mutation。
-- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env 和 Postgres SecretRef。
-- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
+- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env、Postgres SecretRef 和 auth SecretRef。
+- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres/auth Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
 - HA 目标态设计已固定：两个 Ready TKE node、`replicas=2`、跨 node 分布、`PDB minAvailable=1`、CLB 80/443 作为公网入口、NodePort 只允许 CLB 到节点访问。
 - 当前 production-gated release loop 已固定为 CI -> Release Image -> manual production dry-run -> GitHub production approval -> production apply -> canary/smoke。
 - Release loop 的 helper smoke 覆盖 `/healthz`、`/readyz`、`/metricsz` 和首页；`010c2b9` 的 `/metricsz` production rollout evidence 仍 pending，`/metricsz` 尚未线上验证。
@@ -45,13 +46,13 @@
 
 - 还不是完整公网多用户 production ready SaaS。
 - 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
-- 还没有真实登录、队列、计费、object storage、OPL worker、真实 OPL execution 或生产运行证据。
+- 还没有真实登录、session/RBAC、队列、计费、object storage、OPL worker、真实 OPL execution 或本 slice 的生产运行证据。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进 HA/安全组收敛、监控和 auth。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
+下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进真实 auth/session、tenant-scoped persistence、usage/quota 和 GitHub update integration。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
 
 ## Next Priorities
 
-后续优先级按上线风险排序：发布自动化、云端执行 HA/安全组收敛、监控、auth、MedOPL API integration。每一项都需要先补 contract、eval 和回滚边界，再进入产品功能开发。
+后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth/session、tenant-scoped persistence、usage/quota、GitHub update integration、OPL execution allowlist。每一项都需要先补 contract、eval 和回滚边界。

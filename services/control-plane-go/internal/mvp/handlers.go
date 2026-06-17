@@ -10,6 +10,10 @@ import (
 )
 
 func HandleTask(response http.ResponseWriter, request *http.Request) {
+	handleTaskWithRunner(response, request, oplbridge.NewDefaultRunner())
+}
+
+func handleTaskWithRunner(response http.ResponseWriter, request *http.Request, runner oplbridge.Runner) {
 	if request.Method != http.MethodPost {
 		writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{
 			OK:        false,
@@ -36,7 +40,13 @@ func HandleTask(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	projection, err := CreateTaskResponseWithRoute(request.Context(), payload, oplbridge.NewDefaultRunner())
+	authorizedPayload, authErr := applyTaskAuthBoundary(request, payload)
+	if authErr != nil {
+		writeTaskAuthError(response, authErr)
+		return
+	}
+
+	projection, err := CreateTaskResponseWithRoute(request.Context(), authorizedPayload, runner)
 	if err != nil {
 		writeInvalid(response, err)
 		return
@@ -73,6 +83,12 @@ func HandleStoredTask(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	claims, authErr := authorizeTaskLookup(request, parts[0], parts[1])
+	if authErr != nil {
+		writeTaskAuthError(response, authErr)
+		return
+	}
+
 	projection, ok := defaultTaskStore.GetTaskProjection(parts[0], parts[1], parts[2])
 	if !ok {
 		writeJSON(response, http.StatusNotFound, ErrorResponse{
@@ -82,8 +98,20 @@ func HandleStoredTask(response http.ResponseWriter, request *http.Request) {
 		})
 		return
 	}
+	if claims != nil && projection.UserID != claims.UserID {
+		writeTaskAuthError(response, boundaryMismatch())
+		return
+	}
 
 	writeJSON(response, http.StatusOK, projection)
+}
+
+func writeTaskAuthError(response http.ResponseWriter, err *taskAuthError) {
+	writeJSON(response, err.StatusCode, ErrorResponse{
+		OK:        false,
+		ErrorCode: err.ErrorCode,
+		Message:   err.Message,
+	})
 }
 
 func writeInvalid(response http.ResponseWriter, err error) {

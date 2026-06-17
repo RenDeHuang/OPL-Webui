@@ -78,11 +78,11 @@ func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
 	if body["ready"] != false || body["ok"] != false {
 		t.Fatalf("metricsz should mirror runtime readiness: %#v", body)
 	}
-	if body["missingDependencyCount"] != float64(1) {
+	if body["missingDependencyCount"] != float64(2) {
 		t.Fatalf("missingDependencyCount mismatch: %#v", body["missingDependencyCount"])
 	}
 	missing, ok := body["missingDependencies"].([]any)
-	if !ok || len(missing) != 1 || missing[0] != "OPL_CLI_PATH" {
+	if !ok || len(missing) != 2 || missing[0] != "OPL_CLI_PATH" || missing[1] != "OPL_TENANT_AUTH_SECRET" {
 		t.Fatalf("missingDependencies mismatch: %#v", body["missingDependencies"])
 	}
 	encoded := response.Body.String()

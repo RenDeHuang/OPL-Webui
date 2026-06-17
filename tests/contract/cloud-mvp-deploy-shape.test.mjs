@@ -75,6 +75,18 @@ test('cloud MVP fixture references Postgres through a secret only', () => {
   assert.doesNotMatch(raw, /PGPASSWORD/i);
 });
 
+test('cloud MVP fixture injects launch token signing secret through a secret only', () => {
+  const { raw, items } = loadManifest();
+  const container = findKind(items, 'Deployment').spec.template.spec.containers[0];
+  const authSecretEnv = containerEnv(container, 'OPL_TENANT_AUTH_SECRET');
+
+  assert.deepEqual(authSecretEnv.valueFrom.secretKeyRef, {
+    name: 'opl-webui-auth',
+    key: 'OPL_TENANT_AUTH_SECRET',
+  });
+  assert.doesNotMatch(raw, /OPL_TENANT_AUTH_SECRET"\s*,\s*"value"/);
+});
+
 test('cloud MVP fixture is declarative and contains no live execution command', () => {
   const { raw } = loadManifest();
 
@@ -161,7 +173,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /\/home\/dev\/\.secrets\/opl-webui\/postgresql\/oplweb\.env/);
   assert.doesNotMatch(runbook, /postgres(?:ql)?:\/\/[^`\s]+/i);
   assert.doesNotMatch(runbook, /password\s*[:=]\s*[^<\s]+/i);
-  assert.doesNotMatch(runbook, /secret\s*[:=]\s*[^<\s]+/i);
+  assert.doesNotMatch(runbook, /secret\s*[:=]\s*(?!["']?\$|["']?<)[^`\s]+/i);
   assert.doesNotMatch(runbook, /qcloud_cert_id\s*[:=]\s*(?!["']?\$)[^`\s]+/i);
   assert.doesNotMatch(runbook, /AKID[A-Za-z0-9]+/);
 });

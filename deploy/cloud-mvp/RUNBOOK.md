@@ -5,7 +5,7 @@
 ## 前置条件
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
-- PostgreSQL 连接信息在外部文件：`/home/dev/.secrets/opl-webui/postgresql/oplweb.env`。
+- PostgreSQL 与 launch-token auth 配置由外部文件或云端注入，不进 git。
 - 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets；不要使用 `pull_request_target`。
 - TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
 - build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
@@ -17,7 +17,7 @@
 - `opl.medopl.cn` 指向 production Ingress。
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
 - DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
-- HTTPS 证书由 Kubernetes Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
+- HTTPS 证书由 Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
 
 ## 镜像构建与推送
 
@@ -136,14 +136,17 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout status \
 ```bash
 set -a
 . /home/dev/.secrets/opl-webui/postgresql/oplweb.env
+. /external/path/to/opl-webui-auth.env
 set +a
 
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-postgres \
-  --from-literal=OPL_DATABASE_URL="$OPL_DATABASE_URL" \
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-postgres --from-literal=OPL_DATABASE_URL="$OPL_DATABASE_URL" \
+  --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-auth \
+  --from-literal=OPL_TENANT_AUTH_SECRET="$OPL_TENANT_AUTH_SECRET" \
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 ```
 
-`opl-webui-postgres` 只包含 `OPL_DATABASE_URL`，不要把明文值写回仓库。
+`opl-webui-postgres` 只含 `OPL_DATABASE_URL`；`opl-webui-auth` 只含 `OPL_TENANT_AUTH_SECRET`。不要把明文值写回仓库。
 
 ## 配置 qcloud HTTPS 证书
 

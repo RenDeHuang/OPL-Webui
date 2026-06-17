@@ -159,3 +159,9 @@
 - summary: 固化 `010c2b9` production rollout evidence handoff；active truth 和 runbook 明确 `/metricsz` 尚未线上验证，云端/VPC runner 需用 `OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:010c2b9` 执行 dry-run/apply/canary/smoke 后才能标记 evidence。
 - verified: `node --test tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 已执行 `010c2b9` production rollout、线上 `/metricsz` 已通过、真实云监控/告警/SLO、完整 production ready SaaS、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 tenant-auth-boundary
+
+- summary: Go control plane 增加 `medopl_launch_token` HMAC Bearer 边界；cloud/production task intake 由 token 注入 tenant/workspace/user，body identity 冲突返回 `TENANT_BOUNDARY_MISMATCH`，stored lookup 校验 token 边界；Web 默认 task request 不再自报 tenant/workspace/user；cloud manifest 通过 `opl-webui-auth` SecretRef 注入 signing secret。
+- verified: `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./internal/runtimegate`, `node --test tests/contract/cloud-mvp-deploy-shape.test.mjs tests/contract/web-demo-data.test.mjs tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 真实登录、session/RBAC、线上 rollout、完整多租户 SaaS、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。

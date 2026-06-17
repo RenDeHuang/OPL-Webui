@@ -128,7 +128,10 @@ test('web demo data is derived from the MVP API endpoint', async () => {
   assert.equal(calls[0].url, '/api/mvp/task');
   assert.equal(calls[0].options.method, 'POST');
   assert.equal(calls[1].url, '/api/opl/snapshot');
-  assert.equal(JSON.parse(calls[0].options.body).tenantId, 'tenant_demo');
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    prompt: '生成一个医学研究项目的证据整理任务',
+    intent: 'research',
+  });
 });
 
 test('web demo data derives a Figma V3 view model from current projections', async () => {
