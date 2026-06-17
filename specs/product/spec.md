@@ -3,24 +3,21 @@
 - owner: product owner
 - purpose: 产品定位和 MVP 主链路 durable spec。
 - state: active
-- machine boundary: 非机器接口；contract 和验收在 `packages/contracts` 与 `tests/**`。
+- machine boundary: contract 和验收在 tests。
 
 ## Requirements
 
-- `product.mvp.chatbot`: OPL-Webui 是 ChatGPT-like OPL 前台入口；用户访问 `opl.medopl.cn` 登录后先使用普通 chatbot。
-- `product.mvp.api-key`: 用户需要填写自己的 API Key；base_url 固定为 sub2api，不允许用户自定义 base_url。
-- `product.mvp.hidden-isolation`: backend 可以保留 hidden default personal workspace，用于隔离、计费投影和未来扩展；UI 不展示 workspace、runtime、node pool、storage 概念。
-- `product.mvp.medopl-boundary`: MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
-- `product.mvp.opl-capability-gate`: 当用户调用需要 OPL runtime 的能力，例如 `@基金`、`@论文`、长任务或文件处理时，才提示去 `medopl.medopl.cn` 开通 runtime / storage / node pool。
-- `product.mvp.loop`: MVP 主链路是 chat -> optional @OPL capability gate -> task/run projection -> artifact projection。
-- `product.mvp.tenant`: 后端 API projection 必须带 `tenantId`、`workspaceId` 和 `userId`，但这些是 hidden isolation ID，不是用户可见 workspace 产品。
-- `product.mvp.style`: Genspark-like 只作为历史视觉参考；下一阶段交互目标是 ChatGPT-like base chatbot。
-- `product.mvp.opl-readonly`: WebUI 必须显示真实 OPL readiness、domain modules 和 admitted domains，但不能把只读 snapshot 写成真实任务执行。
-- `product.mvp.opl-route`: Task 卡片必须显示真实 OPL readonly route/handoff evidence，例如 routed domain 和 routing status。
-- `product.mvp.usage-quota`: usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api，不包含真实支付 provider 或复杂 plan 管理。
+- `product.web.identity`: OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot，是 Web 版 One Person Lab App。
+- `product.sources`: `one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables 的产品语义参考。
+- `product.low-friction`: 用户访问 `opl.medopl.cn` 后注册/登录；用户填写自己的 API Key，即可普通聊天。
+- `product.fixed-provider`: base_url 固定为 `https://gflabtoken.cn/v1`，不允许用户自定义 base_url；API Key 属于用户自带 credential。
+- `product.hidden-isolation`: backend 自动创建 hidden default personal workspace 和 personal tenant，用于隔离、计费投影和未来扩展；UI 不展示 workspace 产品。
+- `product.medopl-boundary`: MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
+- `product.opl-gate`: `@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 等能力需要 runtime/storage/node pool 时，只返回 MedOPL 开通提示，不伪造执行。
+- `product.readonly`: OPL readonly snapshot/canary 可以展示 framework readiness，但不能写成真实 execution。
+- `product.usage-quota`: usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
 
 ## Cannot Claim
 
-- 未部署前不能宣称云端可用。
-- 当前只接入真实 OPL readonly CLI snapshot 与 route/handoff evidence，不能宣称真实 OPL execution。
-- 当前 usage/quota 只是 Webui-side precheck/projection，不能宣称完整 billing、真实支付或 MedOPL/sub2api 计费完成。
+- 没有本次 rollout evidence 前，不能宣称 one-person-lab-web 已线上验证。
+- 当前不能宣称真实 OPL execution、完整 billing、真实支付 provider 或完整 production ready SaaS。

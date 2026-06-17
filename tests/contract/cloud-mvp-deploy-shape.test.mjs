@@ -54,7 +54,6 @@ test('cloud MVP fixture requires cloud_mvp runtime and readonly OPL CLI path', (
   assert.equal(container.ports[0].containerPort, 4173);
   assert.equal(containerEnv(container, 'OPL_WEBUI_ENV').value, 'cloud_mvp');
   assert.equal(containerEnv(container, 'OPL_CLI_PATH').value, '/opt/opl/bin/opl');
-  assert.equal(containerEnv(container, 'OPL_TENANT_AUTH_MODE').value, 'medopl_launch_token');
   assert.deepEqual(container.resources.requests, { cpu: '100m', memory: '128Mi' });
   assert.deepEqual(container.resources.limits, { cpu: '500m', memory: '512Mi' });
   assert.equal(container.readinessProbe.httpGet.path, '/readyz');
@@ -75,16 +74,24 @@ test('cloud MVP fixture references Postgres through a secret only', () => {
   assert.doesNotMatch(raw, /PGPASSWORD/i);
 });
 
-test('cloud MVP fixture injects launch token signing secret through a secret only', () => {
+test('cloud MVP fixture injects public account and API key secrets through secrets only', () => {
   const { raw, items } = loadManifest();
   const container = findKind(items, 'Deployment').spec.template.spec.containers[0];
-  const authSecretEnv = containerEnv(container, 'OPL_TENANT_AUTH_SECRET');
 
-  assert.deepEqual(authSecretEnv.valueFrom.secretKeyRef, {
+  assert.deepEqual(containerEnv(container, 'OPL_SESSION_SECRET').valueFrom.secretKeyRef, {
     name: 'opl-webui-auth',
-    key: 'OPL_TENANT_AUTH_SECRET',
+    key: 'OPL_SESSION_SECRET',
   });
-  assert.doesNotMatch(raw, /OPL_TENANT_AUTH_SECRET"\s*,\s*"value"/);
+  assert.deepEqual(containerEnv(container, 'OPL_API_KEY_ENCRYPTION_SECRET').valueFrom.secretKeyRef, {
+    name: 'opl-webui-auth',
+    key: 'OPL_API_KEY_ENCRYPTION_SECRET',
+  });
+  assert.deepEqual(containerEnv(container, 'OPL_CHAT_MODEL').valueFrom.secretKeyRef, {
+    name: 'opl-webui-auth',
+    key: 'OPL_CHAT_MODEL',
+  });
+  assert.doesNotMatch(raw, /OPL_(?:SESSION_SECRET|API_KEY_ENCRYPTION_SECRET|CHAT_MODEL)"\s*,\s*"value"/);
+  assert.doesNotMatch(raw, /OPL_TENANT_AUTH_MODE|OPL_TENANT_AUTH_SECRET/);
 });
 
 test('cloud MVP fixture is declarative and contains no live execution command', () => {
@@ -111,8 +118,11 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'short_commit',
     'Release Image',
     'Cloud Rollout',
-    '24ba41f',
-    'session/auth boundary',
+    'one-person-lab-web',
+    'OPL_SESSION_SECRET',
+    'OPL_API_KEY_ENCRYPTION_SECRET',
+    'OPL_CHAT_MODEL',
+    'https://gflabtoken.cn/v1',
     'no-public-staging production-gated release',
     'staging.opl.medopl.cn',
     'fake staging',
@@ -164,10 +174,9 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /apply.*false/is);
   assert.match(runbook, /apply.*true/is);
   assert.match(runbook, /production.*Environment approval/is);
-  assert.match(runbook, /Production 必需 Secret.*opl-webui-auth.*OPL_TENANT_AUTH_SECRET/is);
-  assert.match(runbook, /24ba41f[\s\S]{0,160}rollout revision 9/is);
-  assert.match(runbook, /opl-webui-auth[\s\S]{0,80}keys=1/is);
-  assert.match(runbook, /POST \/api\/session\/launch[\s\S]{0,80}401 AUTH_REQUIRED/is);
+  assert.match(runbook, /Production 必需 Secret.*opl-webui-auth.*OPL_SESSION_SECRET/is);
+  assert.match(runbook, /API Key[\s\S]{0,120}OPL_API_KEY_ENCRYPTION_SECRET/is);
+  assert.match(runbook, /POST \/api\/chat[\s\S]{0,80}401 AUTH_REQUIRED/is);
   assert.match(runbook, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/is);
   assert.match(runbook, /Release Image.*不执行 rollout/is);
   assert.match(runbook, /staging.*不是镜像存储/is);

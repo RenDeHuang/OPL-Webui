@@ -59,49 +59,24 @@ test('active truth links active change work instead of phase package docs', () =
 
   assert.doesNotMatch(readme, /release-automation-goal\.md/);
   assert.doesNotMatch(readme, /changes\/active\/release-automation/);
-  assert.match(readme, /changes\/active\/figma-v3-preview/);
+  assert.doesNotMatch(readme, /changes\/active\/figma-v3-preview/);
+  assert.match(readme, /one-person-lab-web/);
 });
 
-test('active truth records 24ba41f session auth production evidence', () => {
+test('archive keeps prior production evidence while active truth points to current webapp', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
+  const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
 
-  assert.match(readme, /24ba41f/);
-  assert.match(readme, /rollout revision `9`/);
-  assert.match(readme, /\/metricsz`? 200/);
-  assert.match(readme, /opl-webui-auth[\s\S]{0,80}keys=1/);
-  assert.match(readme, /POST \/api\/session\/launch[\s\S]{0,80}401 AUTH_REQUIRED/);
-  assert.match(readme, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/);
-  assert.match(readme, /还没有真实注册登录/);
-});
-
-test('active truth records fa3bcb7 tenant workspace production evidence', () => {
-  const readme = readFileSync('docs/active/README.md', 'utf8');
-
-  assert.match(readme, /hidden tenant\/workspace isolation projection v1/);
-  assert.match(readme, /fa3bcb7/);
-  assert.match(readme, /opl-webui:fa3bcb7/);
-  assert.match(readme, /GET \/api\/workspaces\/current[\s\S]{0,160}401 AUTH_REQUIRED/);
-  assert.match(readme, /GET \/api\/tasks[\s\S]{0,160}401 AUTH_REQUIRED/);
-  assert.match(readme, /POST \/api\/tasks[\s\S]{0,160}401 AUTH_REQUIRED/);
-  assert.match(readme, /GET \/api\/tasks\/example_task[\s\S]{0,160}401 AUTH_REQUIRED/);
-  assert.match(readme, /还没有真实注册登录/);
-  assert.match(readme, /workspace 不是用户可见产品概念/);
-});
-
-test('active truth records bc0403d usage quota production rollout evidence', () => {
-  const readme = readFileSync('docs/active/README.md', 'utf8');
-
-  assert.match(readme, /usage\/quota precheck\/projection v1/);
-  assert.match(readme, /bc0403d/);
-  assert.match(readme, /opl-webui:bc0403d/);
-  assert.match(readme, /AUTH_REQUIRED/);
-  assert.match(readme, /用户未提供 rollout revision/);
-  assert.match(readme, /不 claim `usageQuota` \/ `QUOTA_EXCEEDED` online behavior/);
+  assert.match(closeout, /24ba41f/);
+  assert.match(closeout, /fa3bcb7/);
+  assert.match(closeout, /bc0403d/);
+  assert.match(readme, /one-person-lab-web-local-verified/);
+  assert.match(readme, /还没有本次 one-person-lab-web 改造的 production rollout evidence/);
+  assert.match(readme, /POST \/api\/chat/);
   assert.match(readme, /最终计费归 MedOPL\/sub2api/);
-  assert.match(readme, /真实 OPL execution/);
 });
 
-test('product truth keeps OPL-Webui as chatbot front door instead of standalone SaaS backend', () => {
+test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone SaaS backend', () => {
   const active = readFileSync('docs/active/README.md', 'utf8');
   const product = readFileSync('specs/product/spec.md', 'utf8');
   const runtime = readFileSync('specs/runtime/spec.md', 'utf8');
@@ -109,13 +84,14 @@ test('product truth keeps OPL-Webui as chatbot front door instead of standalone 
   const combined = `${active}\n${product}\n${runtime}\n${runbook}`;
 
   for (const required of [
-    'ChatGPT-like OPL 前台入口',
+    'Genspark-like one-person-lab-web with ChatGPT-like base chatbot',
+    'Web 版 One Person Lab App',
     '用户填写自己的 API Key',
-    'base_url 固定为 sub2api',
+    'base_url 固定为 `https://gflabtoken.cn/v1`',
     '不允许用户自定义 base_url',
     'hidden default personal workspace',
-    'UI 不展示 workspace',
-    'runtime / storage / node pool',
+    'UI 不展示 workspace 产品',
+    'runtime/storage/node pool',
     'medopl.medopl.cn',
     'MedOPL 是充值、runtime、node pool、storage、账单和资源后台',
     'OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway',
@@ -128,9 +104,9 @@ test('product truth keeps OPL-Webui as chatbot front door instead of standalone 
   assert.doesNotMatch(active, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(product, /UI 是中文 AI workspace/);
   assert.doesNotMatch(product, /用户可见 workspace 系统/);
-  assert.doesNotMatch(product, /OPL formal deliverable workbench/);
+  assert.doesNotMatch(product, /纯 ChatGPT 页面/);
   assert.doesNotMatch(product, /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(active, /ChatGPT-like base chatbot[\s\S]{0,240}fixed sub2api base_url \+ user API key binding[\s\S]{0,240}@OPL capability gate/);
+  assert.match(active, /production rollout evidence[\s\S]{0,240}MedOPL runtime status bridge[\s\S]{0,240}@OPL run\/artifact projection/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {
@@ -166,7 +142,7 @@ test('post-Go cleanup removes retired Node adapter surfaces', () => {
   assert.equal(existsSync('packages/contracts/opl/command-policy.json'), false);
   assert.equal(existsSync('packages/contracts/opl/task-contract.schema.json'), false);
   assert.equal(existsSync('packages/contracts/opl/artifact-contract.schema.json'), false);
-  assert.equal(existsSync('packages/contracts/opl/mvp-task-http.schema.json'), true);
+  assert.equal(existsSync('packages/contracts/opl/mvp-task-http.schema.json'), false);
 });
 
 test('package does not introduce runtime or dev dependencies', () => {

@@ -3,70 +3,50 @@
 - owner: product-engineering owner
 - purpose: 当前阶段、可宣称范围和下一步唯一入口。
 - state: active
-- machine boundary: 非机器接口；机器判断来自 source、contracts、tests、scripts 和 Sentrux rules。
+- machine boundary: source、contracts、tests、scripts 和 Sentrux rules。
 
 ## Current Stage
 
-当前是 `product-positioning-calibrated`：`https://opl.medopl.cn` 的产品定位已重新校准为 ChatGPT-like OPL 前台入口。`24ba41f` 的 session/auth boundary 已在 production rollout revision 9 真实验证通过，`fa3bcb7` 的 hidden tenant/workspace isolation projection v1 已由云端 production rollout 验证通过，`bc0403d` usage/quota precheck/projection v1 已由云端 production rollout 验证通过。
+当前是 `one-person-lab-web-local-verified`：OPL-Webui 已重新校准为 Genspark-like one-person-lab-web with ChatGPT-like base chatbot。`one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是桌面端产品语义参考，包括 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables。
 
 ## Active Change Work
 
-- `changes/active/figma-v3-preview`: 历史 Genspark 风格 V3 preview work package；本地实现和本地 gate 已完成，但新定位下需重新收敛为 ChatGPT-like base chatbot，cloud rollout、online acceptance 和 closeout 仍 blocked。
+- 当前没有必须保留的 active preview blocker。历史 `figma-v3-preview` 已退役为 archive；当前主线是 one-person-lab-web。
 
 ## Can Claim
 
-- OPL-Webui 是 ChatGPT-like OPL 前台入口；用户访问 `opl.medopl.cn` 登录后使用普通 chatbot。
-- 用户填写自己的 API Key；base_url 固定为 sub2api，不允许用户自定义 base_url。
-- Web UI 只通过同源 Go control plane HTTP API 间接消费 sub2api 和 MedOPL 状态。
-- 默认 UI 不展示 workspace、runtime、node pool、storage 概念。
-- Web UI 创建 task 时不再自报 tenant/workspace/user；cloud/production 的 `medopl_launch_token` 模式由 Go control plane 验证 Bearer launch token 并注入身份边界。
-- Go control plane 支持 `POST /api/session/launch`，可用一次 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可通过同源 cookie 注入 tenant/workspace/user 边界。
-- Go control plane 支持 `GET /api/session/current`，返回当前认证的 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection，不返回 token 或 secret。
-- Go control plane 已支持并 production verified hidden default personal workspace isolation/projection v1：`users`、`tenants`、`tenant_memberships`、`workspaces`、`workspace_memberships` schema，以及 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/{taskId}`；这些 API 只从 bearer/session auth boundary 推导 tenant/workspace/user，但 workspace 不是用户可见产品概念。
-- Go control plane 本地已支持 usage/quota v1 Webui-side precheck/projection：`POST /api/tasks` 创建前按 hidden tenant/workspace 检查 task quota；未超额时 task projection 与 usage event 同边界写入，超额时返回 `QUOTA_EXCEEDED` 且不写 task projection 或 usage event；最终计费归 MedOPL/sub2api。
-- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、不拥有 billing source of truth、不拥有 API gateway。
-- 当用户调用需要 OPL runtime 的能力，例如 `@基金`、`@论文`、长任务或文件处理时，OPL-Webui 才提示去 `medopl.medopl.cn` 开通 runtime / storage / node pool。
-- `bc0403d` usage/quota enforcement v1 已完成 production rollout evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:bc0403d`，production rollout 成功；未认证 API guard 由云端验证为 `401 AUTH_REQUIRED`。本地 closeout 未执行 kubectl、未读取 kubeconfig，用户未提供 rollout revision、逐项 health/smoke/canary 数值、具体未认证 endpoint list 或安全测试 token 下的 quota online 行为证据，因此只 claim production rollout + unauth guard，不 claim `usageQuota` / `QUOTA_EXCEEDED` online behavior。
-- `fa3bcb7` tenant/workspace persistence v1 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:fa3bcb7`，production rollout 成功；`/healthz`、`/readyz`、`/metricsz` 和首页 smoke 通过；DB canary 与 OPL CLI canary 通过；未认证 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/example_task` 均返回 `401 AUTH_REQUIRED`。本地 closeout 未读取 kubeconfig 或 GitHub rollout log，因此不写未经本地证据确认的 revision 数字。
-- `24ba41f` session/auth boundary 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f`、rollout revision `9`、`/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass、`opl-webui-auth` Opaque Secret 存在且 keys=1、未带 Authorization 的 `POST /api/session/launch` 返回 `401 AUTH_REQUIRED`、无 cookie 的 `GET /api/session/current` 返回 `401 AUTH_REQUIRED`。
-- Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
-- Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
-- Runtime 已按 `OPL_DATABASE_URL` 选择 task store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
-- Runtime 支持 `OPL_WEBUI_ENV=cloud_mvp` 最小上线 profile：要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL`、`OPL_TENANT_AUTH_MODE` 和 launch-token signing secret，不把 queue、object store、billing、worker 误算进 MVP preview。
-- Control-plane binary 提供 `canary db`，授权后可在 VPC/TKE 内用环境变量里的 `OPL_DATABASE_URL` 验证 Postgres open/ping/schema/write/read/delete，报告不泄露连接串。
-- Control-plane binary 提供 `canary opl-cli`，验证无 Codex/API key 依赖的 OPL snapshot readonly allowlist surfaces，不执行 install、repair、module exec、task-route passthrough 或 mutation。
-- `deploy/cloud-mvp/opl-webui.k8s.json` 是 `opl.medopl.cn` 的声明式部署形状契约，固定 namespace、`uswccr` image、imagePullSecret、nodeSelector、resources、qcloud ingress class、TLS Secret `opl-webui-tls`、NodePort `32258`、4173、`/healthz`、`/readyz`、`cloud_mvp` env、Postgres SecretRef 和 auth SecretRef。
-- `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres/auth Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
-- HA 目标态设计已固定：两个 Ready TKE node、`replicas=2`、跨 node 分布、`PDB minAvailable=1`、CLB 80/443 作为公网入口、NodePort 只允许 CLB 到节点访问。
-- 当前 production-gated release loop 已固定为 CI -> Release Image -> manual production dry-run -> GitHub production approval -> production apply -> canary/smoke。
-- Release loop 的 helper smoke 覆盖 `/healthz`、`/readyz`、`/metricsz` 和首页；`24ba41f` 已有 `/metricsz` production rollout evidence。
-- 当前已验证 production release loop baseline commit/tag 是 `d0c4de5`；当前已验证 session/auth boundary commit/tag 是 `24ba41f`。
-- `https://opl.medopl.cn/healthz`、`https://opl.medopl.cn/readyz` 和 `https://opl.medopl.cn/` 已返回 HTTP/2 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
-- HTTP 80 当前不是稳定入口；`EnsureIngressWarning W1012` 的单节点后端风险是 HA 后续项。
-- Web UI 通过同源 `/api/opl/snapshot` 展示真实 OPL CLI 只读 snapshot。
-- OPL snapshot 聚合 `opl system initialize --json`、`opl connect modules --json`、`opl contract domains --json`。
-- Task intake 通过 `opl domain resolve-request --json` 和 `opl contract handoff-envelope --json` 生成只读路由证据。
-- Go control plane 可通过 Dockerfile 构建容器，容器内默认监听 `0.0.0.0:4173`。
-- 基础 Dockerfile 只声明 `OPL_CLI_PATH=/opt/opl/bin/opl`；`Dockerfile.cloud` 通过外部 OPL build context 把 `bin/opl`、当前 OPL framework contract root `contracts/opl-framework` 和 production `node_modules` materialize 到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，不把 `one-person-lab` 主仓提交进 WebUI 仓库。
-- `GET /healthz` 可用于云平台 HTTP health check。
-- `GET /readyz` 暴露生产依赖闸门；`OPL_WEBUI_ENV=production` 缺 auth、db、queue、object store、billing 或 worker 配置时会阻断 task intake。
-- `GET /metricsz` 暴露只读 monitoring projection，复用 runtime readiness truth，不泄露 secret，不连接 DB，不调用 OPL CLI。
-- Task/artifact 本体仍是 projection；OPL route/snapshot 是真实 CLI readonly，不 import OPL internals，不执行 mutation。
-- `npm run gate:review` 是默认 review gate。
+- Web UI 只调用同源 Go control plane HTTP API；Go control plane 是唯一后端业务入口。
+- OPL-Webui 是 Web 版 One Person Lab App 前台入口，不是 MedOPL runtime/node pool/storage/billing 后台，也不拥有 API gateway。
+- UI 是 Genspark-like one-person-lab-web，并提供低门槛 ChatGPT-like base chatbot 首屏；不再使用旧 `demoData.mjs`、旧 demo artifact、`demo://` 或用户可见 workspace preview。
+- 支持 public account 本地 contract：`POST /api/auth/register`、`POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/session/current`，使用 bcrypt password hash 和 HttpOnly `opl_session`。
+- 每个 public account 自动拥有 hidden default personal workspace 和 personal tenant，用于隔离、计费投影和未来扩展；UI 不展示 workspace 产品。
+- 支持用户 API Key binding 本地 contract：`GET/PUT /api/settings/model-provider`；base_url 固定为 `https://gflabtoken.cn/v1`，不允许客户端传入或覆盖 base_url；后端不返回 raw API Key。
+- API Key 持久化必须使用 `OPL_API_KEY_ENCRYPTION_SECRET` 加密；session 使用独立 `OPL_SESSION_SECRET`；`OPL_CHAT_MODEL` 是 server-side 默认模型配置。
+- 支持普通 chat 本地 contract：`POST /api/chat` 会用用户 API Key 调 OpenAI-compatible `https://gflabtoken.cn/v1/chat/completions`；未登录返回 `AUTH_REQUIRED`，未绑 Key 返回 `API_KEY_REQUIRED`，上游错误结构化返回。
+- 支持 `GET /api/chat/conversations` 与 `GET /api/chat/conversations/{conversationId}`；user A 不能读取 user B conversation。
+- 支持 @OPL capability gate 本地 contract：`@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 返回 `RUNTIME_REQUIRED` 和 `https://medopl.medopl.cn` deep link，不调用 sub2api，不伪造 OPL execution。
+- 保留 `/api/opl/snapshot`、`canary db`、`canary opl-cli` 的 OPL readonly/canary 能力；readonly route 不能写成真实 execution。
+- `deploy/cloud-mvp/opl-webui.k8s.json` 已引用 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL` 和 `OPL_DATABASE_URL` SecretRef；runbook 记录 cloud MVP handoff、daily rollout、canary、HTTPS smoke、HA/安全组和 rollback。
+- 既有线上 evidence 仍有效：`24ba41f` session/auth boundary rollout revision `9` 已验证 `/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass；`fa3bcb7` hidden tenant/workspace isolation projection v1 已 production verified；`bc0403d` usage/quota precheck/projection v1 已 production rollout + unauth guard verified。
+- usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
+- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
 
 ## Cannot Claim
 
-- 还没有完成 ChatGPT-like base chatbot、用户 API Key binding、fixed sub2api bridge、@OPL capability gate 或 MedOPL runtime status bridge。
-- 还不是完整公网生产服务。
-- 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
-- usage/quota enforcement v1 还没有安全测试 token 下的 online quota behavior evidence。
-- 还没有真实注册登录、API Key 加密绑定、session revocation、MedOPL API integration、runtime opening deep link、runtime status bridge、OPL worker 或真实 OPL execution。
-- 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
+- 还没有本次 one-person-lab-web 改造的 production rollout evidence。
+- 还不是完整公网 production ready SaaS。
+- 还没有真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage 或真实 OPL execution/mutation。
+- 还不能执行 OPL install、repair、module exec、family-runtime mutation。
+- 还不能 claim `@OPL` 能力已经真实运行；当前只是 runtime gate projection。
 
 ## Next Cursor
 
-下一步按新定位推进：A. ChatGPT-like base chatbot；B. fixed sub2api base_url + user API key binding；C. @OPL capability gate；D. MedOPL runtime opening deep link；E. runtime status bridge；F. OPL run/artifact projection。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
+下一步进入 production rollout handoff：构建新 short-commit image，补齐 `opl-webui-auth` 中 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`，dry-run/apply 后验证 `/healthz`、`/readyz`、`/metricsz`、首页、未认证 `POST /api/chat`、未认证 `GET /api/session/current`、DB canary 和 OPL CLI canary。
 
 ## Next Priorities
 
-后续优先级按产品主链路排序：ChatGPT-like base chatbot、fixed sub2api base_url + user API key binding、@OPL capability gate、MedOPL runtime opening deep link、runtime status bridge、OPL run/artifact projection。每一项都需要先补 contract、eval 和回滚边界。
+1. one-person-lab-web production rollout evidence。
+2. MedOPL runtime status bridge。
+3. @OPL run/artifact projection。
+4. API Key rotation/revocation 和 account hardening。
+5. HA/安全组收敛云端执行验证。

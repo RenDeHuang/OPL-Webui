@@ -13,6 +13,7 @@ import (
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/webapp"
 )
 
 func main() {
@@ -24,19 +25,17 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if err := webapp.ConfigureDefaultStoreFromEnv(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", handleHealthz)
 	mux.HandleFunc("/readyz", handleReadyz)
 	mux.HandleFunc("/metricsz", handleMetricsz)
 	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
-	mux.HandleFunc("/api/session/launch", mvp.HandleSessionLaunch)
-	mux.HandleFunc("/api/session/current", mvp.HandleSessionCurrent)
-	mux.HandleFunc("/api/workspaces/current", mvp.HandleWorkspaceCurrent)
-	mux.HandleFunc("/api/tasks/", mvp.HandleSaaSTask)
-	mux.HandleFunc("/api/tasks", mvp.HandleSaaSTasks)
-	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
-	mux.HandleFunc("/api/mvp/tasks/", mvp.HandleStoredTask)
+	webapp.RegisterRoutes(mux)
 	mux.Handle("/", http.FileServer(http.Dir("apps/web")))
 
 	addr := serverAddress()

@@ -3,149 +3,92 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OPL WebUI</title>
+    <title>One Person Lab Web</title>
     <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="./styles/v3.css">
-    <script type="module" src="./src/demoData.mjs"></script>
+    <script type="module" src="./src/onePersonLabWeb.mjs"></script>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="#home" aria-label="OPL WebUI 首页">OPL WebUI</a>
+      <a class="brand" href="#home" aria-label="One Person Lab Web 首页">One Person Lab Web</a>
       <nav aria-label="主导航">
-        <a href="#home">首页</a>
-        <a href="#workflows">工作流</a>
-        <a href="#drive">Drive</a>
-        <a href="#team">团队</a>
-        <a href="#pricing">定价</a>
+        <a href="#chat">普通聊天</a>
+        <a href="#capabilities">OPL 能力</a>
+        <a href="#settings">API Key</a>
       </nav>
       <div class="topbar-actions">
         <button class="ghost-button" type="button">登录</button>
-        <button class="primary-button" type="button">免费开始</button>
+        <button class="primary-button" type="button">注册</button>
       </div>
     </header>
 
     <main>
-      <section class="hero" id="home" aria-label="Genspark式首页">
-        <p class="eyebrow">OPL formal deliverable workbench</p>
-        <h1>你想让 OPL 产出什么</h1>
-        <div class="prompt-panel" role="search">
-          <p>为 NSCLC 综述生成证据包、汇报 PPT 和投稿清单</p>
-          <div class="prompt-controls" aria-label="Prompt controls">
-            <button type="button">附件</button>
-            <button type="button">工作区</button>
-            <button type="button">深度研究</button>
-            <button type="button">交付类型</button>
-            <button class="launch-button" type="button">启动</button>
+      <section class="hero" id="home" aria-label="Genspark-like one-person-lab-web">
+        <p class="eyebrow">Genspark-like one-person-lab-web</p>
+        <h1>One Person Lab Web</h1>
+        <p class="hero-copy">用普通聊天进入复杂知识工作，需要 OPL 资源时再跳转 MedOPL 开通。</p>
+        <div class="prompt-panel" id="chat" role="search">
+          <label for="chat-input">普通聊天</label>
+          <textarea id="chat-input" rows="4" placeholder="问一个普通问题，或输入 @基金 / @论文 / @长任务"></textarea>
+          <div class="prompt-controls" aria-label="聊天控制">
+            <span class="fixed-base">固定 base_url: https://gflabtoken.cn/v1</span>
+            <button class="launch-button" type="button">发送</button>
           </div>
         </div>
-        <div class="tool-capsules" id="workflows" aria-label="推荐工作流">
-          <button type="button">综述证据包</button>
-          <button type="button">国自然申请书</button>
-          <button type="button">汇报PPT</button>
-          <button type="button">修回回复</button>
-          <button type="button">论文初稿</button>
+        <div class="tool-capsules" id="capabilities" aria-label="推荐能力">
+          <button type="button">普通问答</button>
+          <button type="button">@论文</button>
+          <button type="button">@基金</button>
+          <button type="button">@综述</button>
+          <button type="button">PPT</button>
           <button type="button">数据分析</button>
         </div>
       </section>
 
-      <section class="home-grid" aria-label="最近交付与待处理">
+      <section class="home-grid" aria-label="账号和消息">
         <article class="recommendations">
           <div class="section-heading">
-            <p class="panel-kicker">Workspace memory</p>
-            <h2>最近交付与推荐工作流</h2>
+            <p class="panel-kicker">Public account</p>
+            <h2>注册 / 登录后绑定自己的 API Key</h2>
           </div>
-          <div class="delivery-list">
-            <article class="delivery-card">
-              <span>证据整理</span>
-              <h3>NSCLC 综述证据包</h3>
-              <p data-demo-summary>已生成 1 个交付物</p>
-            </article>
-            <article class="delivery-card">
-              <span>Grant</span>
-              <h3>国自然青年基金申请</h3>
-              <p data-demo-boundary>medautoscience / routed</p>
-            </article>
-            <article class="delivery-card">
-              <span>Presentation</span>
-              <h3>组会汇报 PPT</h3>
-              <p data-demo-artifact>1 个正式产物</p>
-            </article>
+          <div class="account-grid">
+            <form class="auth-panel" aria-label="注册登录">
+              <label>邮箱<input type="email" autocomplete="email" placeholder="you@example.com"></label>
+              <label>密码<input type="password" autocomplete="current-password" placeholder="至少 12 位"></label>
+              <div class="form-actions">
+                <button class="primary-button" type="button">注册</button>
+                <button class="ghost-button" type="button">登录</button>
+              </div>
+            </form>
+            <form class="auth-panel" id="settings" aria-label="API Key 设置">
+              <label>API Key<input type="password" autocomplete="off" placeholder="sk-..."></label>
+              <p class="fixed-base">base_url 固定展示：https://gflabtoken.cn/v1</p>
+              <button class="primary-button" type="button">保存 API Key</button>
+            </form>
           </div>
         </article>
 
-        <aside class="reminder-card" aria-label="今日待处理">
-          <p class="panel-kicker">Inbox</p>
-          <h2>今天需要你处理</h2>
-          <p data-opl-readiness>core ready / full degraded</p>
-          <dl>
-            <div>
-              <dt>模块状态</dt>
-              <dd data-opl-modules>0/3 default modules ready</dd>
-            </div>
-            <div>
-              <dt>Domain agents</dt>
-              <dd data-opl-domains>medautoscience / medautogrant</dd>
-            </div>
-          </dl>
+        <aside class="reminder-card" aria-label="@OPL capability gate">
+          <p class="panel-kicker">@OPL gate</p>
+          <h2>需要资源的能力会提示开通</h2>
+          <p>当输入 @基金、@论文、@综述、@长任务、@文件 时，当前返回 RUNTIME_REQUIRED，不伪造执行。</p>
+          <a class="primary-link" href="https://medopl.medopl.cn">开通 MedOPL Runtime / Storage / Node Pool</a>
         </aside>
       </section>
 
-      <section class="workspace" aria-label="轻量项目工作区">
-        <div class="workspace-header">
-          <div>
-            <p class="panel-kicker">轻量项目工作区</p>
-            <h2 data-v3-project-title>NSCLC 综述证据包</h2>
-            <p data-demo-title>医学研究证据整理</p>
-          </div>
-          <nav class="workspace-tabs" aria-label="项目导航">
-            <a href="#project">项目</a>
-            <a href="#tasks">任务</a>
-            <a href="#evidence">证据</a>
-            <a href="#deliverables">交付物</a>
-            <a href="#team">团队</a>
-          </nav>
+      <section class="chat-board" aria-label="消息列表">
+        <div class="section-heading">
+          <p class="panel-kicker">Messages</p>
+          <h2>消息列表</h2>
         </div>
-
-        <div class="workspace-grid">
-          <article class="next-step" id="project">
-            <span data-demo-status>completed / research</span>
-            <h3>下一步建议</h3>
-            <p data-v3-next-step>先确认证据范围，再进入交付物预览和人工审阅。</p>
-            <p class="boundary" data-v3-usage-quota>0/2 tasks used</p>
-          </article>
-
-          <article class="stage-flow" id="tasks">
-            <h3>交付流程</h3>
-            <ol>
-              <li>接收目标</li>
-              <li>OPL 只读路由</li>
-              <li>证据与来源</li>
-              <li>交付物预览</li>
-            </ol>
-          </article>
-
-          <article class="evidence-panel" id="evidence">
-            <h3>证据与来源</h3>
-            <p>来源绑定 task、artifact 和 readonly command policy。</p>
-            <p class="boundary" data-opl-bridge>readonly / opl.cli.readonly.snapshot</p>
-          </article>
-
-          <article class="activity-feed">
-            <h3>活动流</h3>
-            <p>domain resolve-request</p>
-            <p>contract handoff-envelope</p>
-          </article>
-
-          <article class="deliverable-preview" id="deliverables">
-            <h3>交付物预览</h3>
-            <p data-v3-deliverable-preview>analysis_package v1</p>
-          </article>
-
-          <article class="project-prompt">
-            <h3>项目内 Prompt</h3>
-            <p>继续基于当前证据包生成修回回复或汇报 PPT。</p>
-          </article>
-        </div>
+        <article class="message user-message">
+          <span>你</span>
+          <p>普通问答可以直接使用自己的 API Key。</p>
+        </article>
+        <article class="message assistant-message">
+          <span>OPL</span>
+          <p>需要 OPL runtime 的能力会给出 MedOPL 开通入口。</p>
+        </article>
       </section>
     </main>
   </body>

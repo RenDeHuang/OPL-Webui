@@ -1,0 +1,135 @@
+package webapp
+
+import (
+	"encoding/json"
+	"net/http"
+	"os"
+	"strings"
+)
+
+func (server Server) HandleConversations(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversations": server.Store.ListConversations(user.ID)})
+}
+
+func (server Server) HandleConversation(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	conversationID := strings.TrimPrefix(request.URL.Path, "/api/chat/conversations/")
+	if conversationID == "" || strings.Contains(conversationID, "/") {
+		writeError(response, http.StatusBadRequest, "INVALID_CONVERSATION_ID", "conversationId is required")
+		return
+	}
+	conversation, messages, ok := server.Store.GetConversation(user.ID, conversationID)
+	if !ok {
+		writeError(response, http.StatusNotFound, "CONVERSATION_NOT_FOUND", "conversation was not found")
+		return
+	}
+	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversation": conversation, "messages": messages})
+}
+
+func (server Server) currentUser(response http.ResponseWriter, request *http.Request) (User, bool) {
+	claims, err := parseSessionCookie(request)
+	if err != nil {
+		writeError(response, http.StatusUnauthorized, "AUTH_REQUIRED", "session cookie is required")
+		return User{}, false
+	}
+	user, ok := server.Store.FindUserByID(claims.UserID)
+	if !ok || user.TenantID != claims.TenantID || user.WorkspaceID != claims.WorkspaceID || user.Email != claims.Email {
+		writeError(response, http.StatusUnauthorized, "AUTH_REQUIRED", "session cookie is invalid")
+		return User{}, false
+	}
+	return user, true
+}
+
+func (server Server) writeSession(response http.ResponseWriter, status int, user User) {
+	token, err := signSession(claimsFromUser(user))
+	if err != nil {
+		writeError(response, http.StatusServiceUnavailable, "SESSION_SECRET_REQUIRED", "session secret is required")
+		return
+	}
+	setSessionCookie(response, token)
+	writeJSON(response, status, safeSession(user))
+}
+
+func (server Server) writeProvider(response http.ResponseWriter, userID string) {
+	body := map[string]any{
+		"ok": true, "provider": ProviderName, "baseUrl": FixedBaseURL,
+		"apiKeyConfigured": false, "maskedKey": "",
+	}
+	if binding, ok := server.Store.GetAPIKeyBinding(userID); ok {
+		body["apiKeyConfigured"] = true
+		body["maskedKey"] = binding.MaskedKey
+	}
+	writeJSON(response, http.StatusOK, body)
+}
+
+func (server Server) ensureConversation(userID string, conversationID string, message string) (Conversation, bool) {
+	if conversationID != "" {
+		conversation, _, ok := server.Store.GetConversation(userID, conversationID)
+		return conversation, ok
+	}
+	title := message
+	if len([]rune(title)) > 32 {
+		title = string([]rune(title)[:32])
+	}
+	conversation, err := server.Store.CreateConversation(userID, title)
+	return conversation, err == nil
+}
+
+func (server Server) writeRuntimeRequired(response http.ResponseWriter, userID string, conversationID string) {
+	content := "该能力需要 MedOPL Runtime / Storage / Node Pool"
+	_ = server.Store.AddMessage(ChatMessage{ConversationID: conversationID, UserID: userID, Role: "assistant", Content: content})
+	writeJSON(response, http.StatusConflict, map[string]any{
+		"ok": false, "errorCode": "RUNTIME_REQUIRED", "message": content,
+		"conversationId": conversationID, "medoplDeepLink": MedOPLURL + "/runtime/open?source=opl-webui",
+	})
+}
+
+func decodeStrict(response http.ResponseWriter, request *http.Request, target any) bool {
+	decoder := json.NewDecoder(request.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		writeError(response, http.StatusBadRequest, "INVALID_JSON", err.Error())
+		return false
+	}
+	return true
+}
+
+func writeJSON(response http.ResponseWriter, status int, body any) {
+	response.Header().Set("content-type", "application/json; charset=utf-8")
+	response.WriteHeader(status)
+	_ = json.NewEncoder(response).Encode(body)
+}
+
+func writeError(response http.ResponseWriter, status int, code string, message string) {
+	writeJSON(response, status, errorResponse{OK: false, ErrorCode: code, Message: message})
+}
+
+func safeSession(user User) map[string]any {
+	return map[string]any{
+		"ok": true, "email": user.Email, "userId": user.ID,
+		"tenantId": user.TenantID, "workspaceId": user.WorkspaceID, "authMode": AuthMode,
+	}
+}
+
+func claimsFromUser(user User) SessionClaims {
+	return SessionClaims{UserID: user.ID, TenantID: user.TenantID, WorkspaceID: user.WorkspaceID, Email: user.Email}
+}
+
+func osSecretMissing() bool {
+	return strings.TrimSpace(os.Getenv("OPL_API_KEY_ENCRYPTION_SECRET")) == ""
+}

@@ -231,3 +231,15 @@
 - summary: 重新校准 OPL-Webui 定位：`opl.medopl.cn` 是 ChatGPT-like OPL 前台入口；用户填写自己的 API Key，base_url 固定为 sub2api；workspace/runtime/node pool/storage 默认不在 UI 展示；tenant/workspace persistence 只作为 hidden isolation/projection；usage/quota v1 是 Webui-side precheck/projection；MedOPL/sub2api 持有充值、runtime、node pool、storage、账单、资源后台和 API gateway truth。
 - verified: red `node --test tests/contract/change-package-lifecycle.test.mjs` failed on missing product positioning truth；green `node --test tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`；final gates recorded in commit evidence。
 - cannot claim: ChatGPT-like base chatbot、user API key binding、fixed sub2api bridge、@OPL capability gate、MedOPL runtime opening deep link、runtime status bridge 或 OPL run/artifact projection 已实现。
+
+## 2026-06-18 - figma-v3-preview retired
+
+- summary: 退役历史 Genspark V3 preview active package；旧 preview 依赖用户可见 workspace、`demoData.mjs` 和 `/api/mvp/task`，已与 one-person-lab-web 当前 truth 冲突。保留其历史价值为视觉参考，不再作为 active blocker 或 unfinished mainline。
+- verified: compacted by lifecycle contract and replaced by `one-person-lab-web` tests.
+- cannot claim: 不能声明该历史 preview 已 cloud rollout 或 online accepted。
+
+## 2026-06-18 - one-person-lab-web
+
+- summary: 将 OPL-Webui 重新校准并实现为 Genspark-like one-person-lab-web with ChatGPT-like base chatbot；新增 public account register/login/logout/current session、HttpOnly `opl_session`、hidden personal tenant/workspace、API Key encrypted binding、fixed `https://gflabtoken.cn/v1` provider、普通 chat、conversation isolation 和 @OPL runtime gate。删除旧 `demoData.mjs`、旧 `/api/mvp/*` public route 和无 consumer `mvp-task-http` schema；Web shell 不再展示 workspace/Drive/team/pricing/demo artifact。
+- verified: `node --test tests/contract/go-control-plane-http.test.mjs tests/contract/one-person-lab-chat-upstream.test.mjs`; `node --test tests/contract/one-person-lab-web-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; `node --test tests/health/registry-coverage.test.mjs tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`; `cd services/control-plane-go && go test ./...`.
+- cannot claim: 还没有本次 production rollout evidence；没有真实邮箱验证、找回密码、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage 或真实 OPL execution/mutation。

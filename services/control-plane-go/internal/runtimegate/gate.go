@@ -12,18 +12,19 @@ type Status struct {
 }
 
 var productionRequiredEnv = []string{
-	"OPL_TENANT_AUTH_MODE",
 	"OPL_DATABASE_URL",
-	"OPL_QUEUE_URL",
-	"OPL_OBJECT_STORE_URL",
-	"OPL_BILLING_MODE",
-	"OPL_WORKER_MODE",
+	"OPL_SESSION_SECRET",
+	"OPL_API_KEY_ENCRYPTION_SECRET",
+	"OPL_CHAT_MODEL",
+	"OPL_CLI_PATH",
 }
 
 var cloudMVPRequiredEnv = []string{
 	"OPL_CLI_PATH",
 	"OPL_DATABASE_URL",
-	"OPL_TENANT_AUTH_MODE",
+	"OPL_SESSION_SECRET",
+	"OPL_API_KEY_ENCRYPTION_SECRET",
+	"OPL_CHAT_MODEL",
 }
 
 func CurrentStatus() Status {
@@ -47,15 +48,6 @@ func CurrentStatus() Status {
 			status.Missing = append(status.Missing, key)
 		}
 	}
-	if requiresTenantAuth(environment) {
-		authMode := os.Getenv("OPL_TENANT_AUTH_MODE")
-		if authMode != "" && authMode != "medopl_launch_token" {
-			status.Missing = append(status.Missing, "OPL_TENANT_AUTH_MODE_SUPPORTED")
-		}
-		if authMode == "medopl_launch_token" && os.Getenv("OPL_TENANT_AUTH_SECRET") == "" {
-			status.Missing = append(status.Missing, "OPL_TENANT_AUTH_SECRET")
-		}
-	}
 	slices.Sort(status.Missing)
 	status.OK = len(status.Missing) == 0
 	return status
@@ -70,8 +62,4 @@ func requiredEnvFor(environment string) []string {
 	default:
 		return nil
 	}
-}
-
-func requiresTenantAuth(environment string) bool {
-	return environment == "cloud_mvp" || environment == "production"
 }

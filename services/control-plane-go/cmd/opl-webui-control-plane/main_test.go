@@ -78,12 +78,23 @@ func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
 	if body["ready"] != false || body["ok"] != false {
 		t.Fatalf("metricsz should mirror runtime readiness: %#v", body)
 	}
-	if body["missingDependencyCount"] != float64(2) {
+	if body["missingDependencyCount"] != float64(4) {
 		t.Fatalf("missingDependencyCount mismatch: %#v", body["missingDependencyCount"])
 	}
 	missing, ok := body["missingDependencies"].([]any)
-	if !ok || len(missing) != 2 || missing[0] != "OPL_CLI_PATH" || missing[1] != "OPL_TENANT_AUTH_SECRET" {
+	expectedMissing := []any{
+		"OPL_API_KEY_ENCRYPTION_SECRET",
+		"OPL_CHAT_MODEL",
+		"OPL_CLI_PATH",
+		"OPL_SESSION_SECRET",
+	}
+	if !ok || len(missing) != len(expectedMissing) {
 		t.Fatalf("missingDependencies mismatch: %#v", body["missingDependencies"])
+	}
+	for index, expected := range expectedMissing {
+		if missing[index] != expected {
+			t.Fatalf("missingDependencies mismatch: %#v", body["missingDependencies"])
+		}
 	}
 	encoded := response.Body.String()
 	if strings.Contains(encoded, "secret") || strings.Contains(encoded, "postgres://") {
@@ -177,38 +188,6 @@ func TestCanaryReportErrorRedactsConnectionDetails(t *testing.T) {
 type readFailingCanaryStore struct {
 	projection mvp.TaskResponse
 	deleted    bool
-}
-
-func (store *readFailingCanaryStore) SaveTaskProjection(projection mvp.TaskResponse) error {
-	store.projection = projection
-	return nil
-}
-func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection mvp.TaskResponse) error {
-	return store.SaveTaskProjection(projection)
-}
-func (store *readFailingCanaryStore) GetUsageQuota(string, string) mvp.UsageQuotaProjection {
-	return mvp.UsageQuotaProjection{Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
-}
-func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (mvp.TaskResponse, bool) {
-	return mvp.TaskResponse{}, false
-}
-func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []mvp.TaskResponse {
-	return []mvp.TaskResponse{}
-}
-
-func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
-	if tenantID == store.projection.TenantID && workspaceID == store.projection.WorkspaceID && taskID == store.projection.Task.TaskID {
-		store.deleted = true
-	}
-	return nil
-}
-
-func (store *readFailingCanaryStore) EnsureWorkspaceMembership(mvp.LaunchTokenClaims) error {
-	return nil
-}
-
-func (store *readFailingCanaryStore) GetCurrentWorkspace(mvp.LaunchTokenClaims) (mvp.WorkspaceCurrentResponse, bool) {
-	return mvp.WorkspaceCurrentResponse{}, false
 }
 
 func TestRunDBCanaryCleansUpAfterReadFailure(t *testing.T) {

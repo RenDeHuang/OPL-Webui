@@ -42,7 +42,7 @@ export async function startGoServer() {
 export async function startGoServerWithEnv(extraEnv) {
   const port = String(45000 + Math.floor(Math.random() * 1000));
   const child = spawn(binaryPath, [], {
-    env: { ...process.env, ...extraEnv, PORT: port, OPL_CLI_PATH: fakeOplPath },
+    env: { ...process.env, OPL_DATABASE_URL: '', ...extraEnv, PORT: port, OPL_CLI_PATH: fakeOplPath },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const baseUrl = `http://127.0.0.1:${port}`;

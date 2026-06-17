@@ -1,30 +1,26 @@
 # OPL-Webui Cloud MVP Deploy Handoff
 
-本 runbook 只写云端/VPC runner 的上线步骤，不保存真实 kubeconfig、数据库密码、云 API key 或镜像凭据。
+本 runbook 只给云端/VPC runner 使用，不保存真实 kubeconfig、数据库密码、云 API key、镜像凭据或证书 ID。
 
 ## 前置条件
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
-- Production 必需 Secret：`opl-webui-postgres` 提供 `OPL_DATABASE_URL`，`opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`；明文值由外部文件或云端注入，不进 git。
-- 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets；不要使用 `pull_request_target`。
-- TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。仓库不保存 token、kubeconfig 或 OPL 主仓源码。
-- build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行，避免 GitHub-hosted runner 接触 TCR 和 OPL build context secrets。
-- Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`；其他输入 fail closed。
-- 腾讯云 VPC self-hosted runner 需要能访问 TKE API。
-- 当前阶段是 `no-public-staging production-gated release`：还没有真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB、Secret、TLS 或 DNS。
-- 不允许 fake staging 指向 production；如果没有独立 namespace、DB/Secret、TLS 和 DNS，就不能把 staging 作为发布门禁。
-- staging 不是镜像存储；TCR/CCR 才是版本存储，镜像 tag/digest 是 production dry-run 和 apply 的输入。
-- `opl.medopl.cn` 指向 production Ingress。
-- TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。
-- DNS 只更新 `opl.medopl.cn` 的 CNAME，指向 TKE qcloud Ingress 创建的 CLB 域名。
-- HTTPS 证书由 Opaque Secret `opl-webui-tls` 引用，key 为 `qcloud_cert_id`；真实证书 ID 由云端执行者注入，不进 git。
-- 产品边界：OPL-Webui 是 ChatGPT-like OPL 前台入口；用户 API Key 只能走固定 sub2api base_url，不允许用户自定义 base_url。
-- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway，只消费 sub2api 和 MedOPL 状态。
+- Production 必需 Secret：`opl-webui-postgres` 提供 `OPL_DATABASE_URL`；`opl-webui-auth` 提供 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`。
+- OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot；用户 API Key 只走固定 `https://gflabtoken.cn/v1`，不允许用户自定义 base_url。
+- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
+- 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets，不使用 `pull_request_target`。
+- TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。
+- build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行。
+- Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。
+- 当前是 `no-public-staging production-gated release`；还没有真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB/Secret/TLS/DNS。不要 fake staging；staging 不是镜像存储，TCR/CCR 才是版本存储。
+- TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。DNS 只改 `opl.medopl.cn` CNAME。
+- HTTPS 证书由 Opaque Secret `opl-webui-tls` 的 `qcloud_cert_id` 引用；不要直接在 CLB 控制台手工绑定证书。
 
 ## 镜像构建与推送
 
 ```bash
-export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<git-sha>"
+short_commit="$(git rev-parse --short HEAD)"
+export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_commit}"
 docker build \
   -f Dockerfile.cloud \
   --build-context opl=/external/path/to/one-person-lab \
@@ -32,106 +28,30 @@ docker build \
 docker push "$OPL_IMAGE"
 ```
 
-`Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl` 和当前 OPL CLI 解析的 framework contract root `contracts/opl-framework` 放到 `/opt/opl`，并在镜像构建期从 OPL `src` 重新生成 `/opt/opl/dist`，避免复制外部 stale build output。不能把 `one-person-lab` 主仓复制进本仓，也不能依赖旧版或未跟踪的 `contracts/opl-gateway`。
-
-当前 production-gated release loop 已验证：
-
-- commit/tag: `d0c4de5`
-- Release Image: green
-- Production Dry Run: passed
-- GitHub production approval: approved
-- Production Apply: passed
-- Cloud Rollout #5: green
-- canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke 通过
-- session/auth boundary: `24ba41f` image `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f` production rollout revision 9 通过；`opl-webui-auth` Opaque Secret 存在且 keys=1，未授权 `POST /api/session/launch` 和无 cookie `GET /api/session/current` 均返回 `401 AUTH_REQUIRED`
+`Dockerfile.cloud` 会把外部 OPL context 的 `bin/opl`、`contracts/opl-framework` 和重新生成的 `/opt/opl/dist` 放进镜像；不要把 `one-person-lab` 主仓复制进本仓。当前 stable baseline 仍记录为 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`，新发布用 `<short-commit>`。
 
 ## 日常更新发布流程
 
-当前 production baseline commit/tag 是 `d0c4de5`。后续每次更新都用短 commit 作为不可变 tag：
-
-```bash
-short_commit="$(git rev-parse --short HEAD)"
-export OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_commit}"
-```
-
-常规路径走 GitHub Actions；本地开发机只做开发和验证，不持有 kubeconfig，不直接发布 production。
+常规路径：
 
 ```text
-CI -> image -> manual production dry-run -> approval -> production apply -> canary/smoke
+CI -> Release Image -> manual production dry-run -> Environment approval -> production apply -> canary/smoke
 ```
 
-这条 no-public-staging production-gated release loop 已在 Cloud Rollout #5 真实跑通。当前仍没有真实 staging；不要把 production 当 staging，也不要让 Release Image 自动触发 staging rollout。
+1. 本地开发验证：`npm run verify`、`npm run gate:review`。
+2. push/merge 到 `main` 后，`Release Image` 在 self-hosted Tencent runner build/push TCR/CCR，记录 image digest；Release Image 不执行 rollout。
+3. 手动运行 `Cloud Rollout`：`image=$OPL_IMAGE`，`target_environment=production`，`apply=false`。dry-run 不读取 kubeconfig、不改集群，只打印 rollout、evidence、canary 和 HTTPS smoke 命令。
+4. dry-run 审计通过后，用同一 image 再运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。`apply=true` 必须通过 GitHub `production` Environment approval，并执行 `kubectl set image`。
+5. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
 
-### 1. 本地开发与验证
-
-```bash
-npm run verify
-npm run gate:review
-```
-
-### 2. 合并或 push 到 main
-
-`CI` 在 PR 和 `main` push 上运行 `npm run verify` 与 `npm run gate:review`；PR 不拿 secrets。`Release Image` 只接受同仓库 `main` push 的成功 CI，在腾讯云 self-hosted runner 构建并推送 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<short-commit>`。日志必须记录 image digest。build job 只使用 TCR 与 OPL build context secrets，不拿 kubeconfig，不执行 rollout。
-
-### 3. 手动 production dry-run
-
-镜像推送后，手动运行 `Cloud Rollout`：`image` 填 TCR tag/digest，`target_environment=production`，`apply=false`。dry-run 只打印 rollout、evidence、canary 和 HTTPS smoke 命令，不读取 `KUBECONFIG`，不修改集群；输出必须确认 namespace `opl-webui` 和 base URL `https://opl.medopl.cn`。
-
-### 4. 手动批准 production apply
-
-dry-run 审计通过后，再用同一 `image` 手动运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。`apply=true` 必须通过 GitHub `production` Environment approval。发布日志需要记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、canary 和 HTTPS smoke。
-
-### 5. 后续恢复 automatic staging rollout 的条件
-
-只有在创建真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB/Secret/TLS/DNS 后，才恢复 automatic staging rollout，并同步补 workflow contract、runbook、canary/smoke eval 和 rollback 边界。
-
-### 6. 手工 fallback：构建并推送 cloud 镜像
-
-```bash
-docker build \
-  -f Dockerfile.cloud \
-  --build-context opl=/external/path/to/one-person-lab \
-  -t "$OPL_IMAGE" .
-docker push "$OPL_IMAGE"
-```
-
-### 7. 手工 fallback：云端 dry-run 审计
-
-以下命令只由云端/VPC runner 执行，本地开发机不执行。先不带 `--apply` 跑 dry-run，确认输出的 image、namespace、Deployment、canary 和 HTTPS smoke 命令都符合预期：
+手工 fallback 由云端/VPC runner 执行：
 
 ```bash
 node scripts/cloud-rollout.mjs
-```
-
-### 8. 手工 fallback：云端更新镜像、rollout、canary 和 smoke
-
-dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli`、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke，并在日志中输出 closeout 需要记录的 rollout revision、Deployment image、Pod `-o wide` 状态和 Pod imageID。
-
-```bash
 node scripts/cloud-rollout.mjs --apply
 ```
 
-Cloud Rollout #4 出现过一次 false negative：production 实际已更新到 `uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27`，Running Ready Pod、DB canary、OPL CLI canary 和 HTTPS smoke 均通过，但 helper 在 canary exec 时按 `.items[0]` 误选了旧 Failed/Error Pod，GitHub job 因 `cannot exec into a container in a completed pod` 标红。当前 helper 的口径是：只从 selector 返回的 Pod JSON 中选择 `status.phase=Running`、Ready condition 为 `True`、`control-plane` container ready，且 container image 等于本次 `OPL_IMAGE` 的 Pod；如果没有匹配 Pod，必须打印 pod summary 并 fail closed。不要对 Failed、Succeeded 或 Error 历史 Pod 执行 canary。
-
-记录以下字段到 active change review 或 closeout：
-
-- rollout revision
-- Deployment image
-- Pod imageID
-- Pod `-o wide` 状态
-- `canary db` 和 `canary opl-cli` 输出
-- HTTPS smoke 输出
-
-### 9. Rollback
-
-如果 rollout、canary 或 HTTPS smoke 失败，先回滚 Deployment，再重新跑 canary 和 smoke：
-
-```bash
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout undo \
-  deployment/opl-webui-control-plane
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout status \
-  deployment/opl-webui-control-plane
-```
+helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
 
 ## 创建 Kubernetes Secret
 
@@ -141,18 +61,19 @@ set -a
 . /external/path/to/opl-webui-auth.env
 set +a
 
-kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-postgres --from-literal=OPL_DATABASE_URL="$OPL_DATABASE_URL" \
+kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-postgres \
+  --from-literal=OPL_DATABASE_URL="$OPL_DATABASE_URL" \
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-auth \
-  --from-literal=OPL_TENANT_AUTH_SECRET="$OPL_TENANT_AUTH_SECRET" \
+  --from-literal=OPL_SESSION_SECRET="$OPL_SESSION_SECRET" \
+  --from-literal=OPL_API_KEY_ENCRYPTION_SECRET="$OPL_API_KEY_ENCRYPTION_SECRET" \
+  --from-literal=OPL_CHAT_MODEL="$OPL_CHAT_MODEL" \
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 ```
 
-`opl-webui-postgres` 只含 `OPL_DATABASE_URL`；`opl-webui-auth` 只含 `OPL_TENANT_AUTH_SECRET`。不要把明文值写回仓库。
+`OPL_SESSION_SECRET` 签 HttpOnly `opl_session`；API Key 使用 `OPL_API_KEY_ENCRYPTION_SECRET` 加密保存，后端不返回 raw API Key；`OPL_CHAT_MODEL` 是 server-side 默认模型配置。
 
 ## 配置 qcloud HTTPS 证书
-
-qcloud Ingress 通过 Opaque Secret 读取腾讯云证书 ID。只创建 Secret，不要把真实 `qcloud_cert_id` 写入仓库，也不要直接在 CLB 控制台手工绑定证书；证书绑定应由 Ingress 声明驱动。
 
 ```bash
 kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-tls \
@@ -161,11 +82,9 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 ```
 
-`QCLOUD_CERT_ID` 由云端执行者从外部 secret manager 或运行环境注入。runbook 只固定 Secret 名 `opl-webui-tls` 和 key `qcloud_cert_id`。
+`QCLOUD_CERT_ID` 由外部 secret manager 或执行环境注入。runbook 只固定 Secret 名 `opl-webui-tls` 和 key `qcloud_cert_id`。
 
 ## 替换真实镜像地址
-
-`deploy/cloud-mvp/opl-webui.k8s.json` 当前固定已验证镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:30a3249`。如果发布新镜像，只替换 Deployment container image，不改 secret 或业务配置：
 
 ```bash
 tmp_manifest="$(mktemp)"
@@ -182,9 +101,7 @@ process.stdout.write(JSON.stringify(manifest, null, 2));
 
 ## 部署
 
-以下步骤由云端/VPC runner 执行 `kubectl apply`，本地开发机不执行。
-
-`deploy/cloud-mvp/opl-webui.k8s.json` 的 Service 必须保持 `NodePort`，当前已验证端口是 `4173:32258/TCP`；Ingress 必须保持 `ingressClassName: qcloud`，并通过 `tls.secretName: opl-webui-tls` 终止 `opl.medopl.cn` 的 HTTPS。
+以下步骤只由云端/VPC runner 执行 `kubectl apply`，本地开发机不执行。Service 保持 `NodePort`，当前端口 `4173:32258/TCP`；Ingress 保持 `ingressClassName: qcloud`，TLS Secret `opl-webui-tls` 终止 `opl.medopl.cn`。
 
 ```bash
 kubectl --kubeconfig "$KUBECONFIG" create namespace opl-webui --dry-run=client -o yaml \
@@ -208,41 +125,31 @@ curl --http2 -fsS https://opl.medopl.cn/healthz
 curl --http2 -fsS https://opl.medopl.cn/readyz
 curl --http2 -fsS https://opl.medopl.cn/metricsz
 curl --http2 -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
+curl --http2 -fsS -X POST https://opl.medopl.cn/api/chat
+curl --http2 -fsS https://opl.medopl.cn/api/session/current
 ```
 
-`/readyz` 必须返回 `ok: true` 后才能把本次部署视为 cloud MVP preview 可用。
-
-当前 HTTPS smoke 已通过：
-
-- `https://opl.medopl.cn/healthz` 返回 HTTP/2 200
-- `https://opl.medopl.cn/readyz` 返回 HTTP/2 200
-- `https://opl.medopl.cn/` 返回 HTTP/2 200
-- `canary db` 返回 `ok=true`，覆盖 open、ping、schema、write、read、delete
-- `canary opl-cli` 返回 `ok=true`，policyId 是 `opl.cli.readonly.task-route`
-
-HTTP 80 当前不是稳定入口，当前稳定入口以 `https://opl.medopl.cn` 为准。不要把当前状态表述为完整 production ready。
+未认证 `POST /api/chat` 与 `GET /api/session/current` 应返回 `401 AUTH_REQUIRED`。`/readyz` 必须 `ok: true`。当前 HTTPS smoke 已通过 `/healthz`、`/readyz`、首页 HTTP/2 200，`canary db` open/ping/schema/write/read/delete ok，`canary opl-cli` ok。HTTP 80 当前不是稳定入口。
 
 ## DNS
-
-TKE qcloud Ingress 创建 CLB 后，只修改 `opl.medopl.cn`：
 
 ```text
 opl.medopl.cn CNAME <qcloud-clb-hostname>
 ```
 
-当前已验证 CLB host 是 `lb-lhj3bgii-ms5ocrjz6hdaki2l.clb.usw-tencentclb.com`。
+当前已验证 CLB host：`lb-lhj3bgii-ms5ocrjz6hdaki2l.clb.usw-tencentclb.com`。
 
 ## HA / 安全组收敛设计
 
 当前风险是 `EnsureIngressWarning W1012`：只有一个后端节点。目标态是两个可调度 TKE node、两个 Ready Pod、CLB 至少两个健康 backend，公网入口只走 CLB `80,443`，NodePort `32258` 只接受 CLB 到节点访问。
 
 1. HA：`replicas=2`、跨 `kubernetes.io/hostname` 分布、`topologySpreadConstraints maxSkew: 1`、`DoNotSchedule`、软 `podAntiAffinity`、`PDB minAvailable: 1`、滚动更新 `maxUnavailable: 0`。
-2. TKE node：新增或复用第二个 Ready worker node，并带 `medopl.cn/workload=webui`，否则当前 nodeSelector 可能让第二 Pod 无法调度。
+2. TKE node：新增或复用第二个 Ready worker node，并带 `medopl.cn/workload=webui`。
 3. 安全组：qcloud Ingress/CLB 只允许公网 `80,443`；节点安全组只允许 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证后删除公网到 NodePort 的临时规则。
 4. 云端执行：确认第二 node -> 打 label -> 更新 replicas/rolling/拓扑约束/PDB -> rollout -> 确认 Ingress backend 节点数 -> 收敛安全组。
-5. 验证：`kubectl get pod -o wide` 两 Pod 在不同 node；`kubectl get ingress` 有 `80,443`；跑 `canary db`、`canary opl-cli`、`https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
+5. 验证：`kubectl get pod -o wide` 两 Pod 在不同 node；`kubectl get ingress` 有 `80,443`；跑 canary、`https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
 6. 回滚：Pod 不 Ready 或 HTTPS/canary 失败时 `rollout undo` 或恢复 `replicas: 1`；安全组导致 504 时先恢复上一条 NodePort 规则。
-7. 腾讯云控制台事项：新增/复用第二 CVM/TKE worker、确认节点/CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；证书仍由 `opl-webui-tls` Secret 驱动，不在 CLB 控制台手工改证书。
+7. 腾讯云控制台事项：新增/复用第二 CVM/TKE worker、确认节点/CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；证书仍由 `opl-webui-tls` Secret 驱动。
 
 ## Rollback
 

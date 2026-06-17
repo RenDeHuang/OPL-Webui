@@ -72,24 +72,38 @@
                     "value": "/opt/opl/bin/opl"
                   },
                   {
-                    "name": "OPL_TENANT_AUTH_MODE",
-                    "value": "medopl_launch_token"
-                  },
-                  {
-                    "name": "OPL_TENANT_AUTH_SECRET",
-                    "valueFrom": {
-                      "secretKeyRef": {
-                        "name": "opl-webui-auth",
-                        "key": "OPL_TENANT_AUTH_SECRET"
-                      }
-                    }
-                  },
-                  {
                     "name": "OPL_DATABASE_URL",
                     "valueFrom": {
                       "secretKeyRef": {
                         "name": "opl-webui-postgres",
                         "key": "OPL_DATABASE_URL"
+                      }
+                    }
+                  },
+                  {
+                    "name": "OPL_SESSION_SECRET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-auth",
+                        "key": "OPL_SESSION_SECRET"
+                      }
+                    }
+                  },
+                  {
+                    "name": "OPL_API_KEY_ENCRYPTION_SECRET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-auth",
+                        "key": "OPL_API_KEY_ENCRYPTION_SECRET"
+                      }
+                    }
+                  },
+                  {
+                    "name": "OPL_CHAT_MODEL",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-auth",
+                        "key": "OPL_CHAT_MODEL"
                       }
                     }
                   }

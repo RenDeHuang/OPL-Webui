@@ -36,7 +36,6 @@ func TestCurrentStatusRequiresProductionDependencies(t *testing.T) {
 func TestCurrentStatusRequiresCloudMVPDependencies(t *testing.T) {
 	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
-	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
 
 	status := CurrentStatus()
 	if status.OK {
@@ -54,13 +53,19 @@ func TestCurrentStatusRequiresCloudMVPDependencies(t *testing.T) {
 	if !slices.Contains(status.Missing, "OPL_CLI_PATH") {
 		t.Fatalf("cloud MVP should require OPL CLI path: %#v", status.Missing)
 	}
+	for _, key := range []string{"OPL_SESSION_SECRET", "OPL_API_KEY_ENCRYPTION_SECRET", "OPL_CHAT_MODEL"} {
+		if !slices.Contains(status.Missing, key) {
+			t.Fatalf("cloud MVP should require %s: %#v", key, status.Missing)
+		}
+	}
 }
 
 func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
 	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
-	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
-	t.Setenv("OPL_TENANT_AUTH_SECRET", "test-secret")
+	t.Setenv("OPL_SESSION_SECRET", "test-session-secret")
+	t.Setenv("OPL_API_KEY_ENCRYPTION_SECRET", "test-api-key-secret")
+	t.Setenv("OPL_CHAT_MODEL", "gpt-4o-mini")
 	t.Setenv("OPL_CLI_PATH", "/opt/opl/bin/opl")
 
 	status := CurrentStatus()
@@ -72,17 +77,19 @@ func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
 	}
 }
 
-func TestCurrentStatusRequiresLaunchTokenSecret(t *testing.T) {
+func TestCurrentStatusDoesNotRequireRetiredLaunchTokenSecret(t *testing.T) {
 	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
-	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
+	t.Setenv("OPL_SESSION_SECRET", "test-session-secret")
+	t.Setenv("OPL_API_KEY_ENCRYPTION_SECRET", "test-api-key-secret")
+	t.Setenv("OPL_CHAT_MODEL", "gpt-4o-mini")
 	t.Setenv("OPL_CLI_PATH", "/opt/opl/bin/opl")
 
 	status := CurrentStatus()
-	if status.OK {
-		t.Fatalf("expected cloud MVP launch token mode to require auth secret: %#v", status)
+	if !status.OK {
+		t.Fatalf("expected public account cloud MVP to be ready without retired launch token secret: %#v", status)
 	}
-	if !slices.Contains(status.Missing, "OPL_TENANT_AUTH_SECRET") {
-		t.Fatalf("expected missing launch token secret: %#v", status.Missing)
+	if slices.Contains(status.Missing, "OPL_TENANT_AUTH_SECRET") {
+		t.Fatalf("retired launch token secret should not be required: %#v", status.Missing)
 	}
 }

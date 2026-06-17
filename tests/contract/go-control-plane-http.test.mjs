@@ -1,227 +1,228 @@
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
 import test from 'node:test';
 
 import { startGoServer, startGoServerWithEnv, stopGoServer } from './go-control-plane-server-helper.mjs';
 
-test('Go control plane creates a tenant scoped task artifact projection', async () => {
-  const { child, baseUrl } = await startGoServer();
+const secureEnv = {
+  OPL_WEBUI_ENV: 'development',
+  OPL_SESSION_SECRET: 'test-session-secret-32-bytes-minimum',
+  OPL_API_KEY_ENCRYPTION_SECRET: 'test-api-key-secret-32-bytes-min',
+  OPL_CHAT_MODEL: 'gpt-4o-mini',
+};
+
+test('one-person-lab-web auth supports register login logout and safe current session', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const response = await fetch(`${baseUrl}/api/mvp/task`, {
+    const registered = await jsonFetch(`${baseUrl}/api/auth/register`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        tenantId: 'tenant_cloud_demo',
-        workspaceId: 'workspace_cloud_demo',
-        userId: 'user_demo',
-        prompt: '生成一个医学研究项目的证据整理任务',
-        intent: 'research',
-      }),
+      body: { email: 'user@example.com', password: 'correct horse battery staple' },
+    });
+    assert.equal(registered.response.status, 201);
+    assert.match(registered.cookie, /opl_session=/);
+    assert.equal(registered.body.email, 'user@example.com');
+    assert.ok(registered.body.tenantId);
+    assert.ok(registered.body.workspaceId);
+    assertNoSensitiveMaterial(registered.body);
+
+    const duplicate = await jsonFetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      body: { email: 'user@example.com', password: 'correct horse battery staple' },
+    });
+    assert.equal(duplicate.response.status, 409);
+    assert.equal(duplicate.body.errorCode, 'EMAIL_ALREADY_REGISTERED');
+
+    const wrong = await jsonFetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      body: { email: 'user@example.com', password: 'wrong password' },
+    });
+    assert.equal(wrong.response.status, 401);
+    assert.equal(wrong.body.errorCode, 'INVALID_CREDENTIALS');
+
+    const loggedIn = await jsonFetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      body: { email: 'user@example.com', password: 'correct horse battery staple' },
+    });
+    assert.equal(loggedIn.response.status, 200);
+    assert.match(loggedIn.cookie, /opl_session=/);
+
+    const current = await jsonFetch(`${baseUrl}/api/session/current`, {
+      headers: { cookie: loggedIn.cookieHeader },
+    });
+    assert.equal(current.response.status, 200);
+    assert.equal(current.body.email, 'user@example.com');
+    assert.equal(current.body.authMode, 'public_account');
+    assertNoSensitiveMaterial(current.body);
+
+    const logout = await fetch(`${baseUrl}/api/auth/logout`, {
+      method: 'POST',
+      headers: { cookie: loggedIn.cookieHeader },
+    });
+    assert.equal(logout.status, 204);
+    assert.match(logout.headers.get('set-cookie'), /Max-Age=0/);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('model provider binding stores user API key without returning raw secret', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  try {
+    const session = await register(baseUrl, 'key-user@example.com');
+
+    const putWithBaseURL = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: session.cookieHeader },
+      body: { apiKey: 'sk-user-secret', base_url: 'https://evil.example/v1' },
+    });
+    assert.equal(putWithBaseURL.response.status, 400);
+
+    const saved = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: session.cookieHeader },
+      body: { apiKey: 'sk-user-secret' },
+    });
+    assert.equal(saved.response.status, 200);
+    assert.equal(saved.body.provider, 'gflabtoken');
+    assert.equal(saved.body.baseUrl, 'https://gflabtoken.cn/v1');
+    assert.equal(saved.body.apiKeyConfigured, true);
+    assert.match(saved.body.maskedKey, /^sk-\*\*\*/);
+    assertNoSensitiveMaterial(saved.body);
+
+    const loaded = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(loaded.response.status, 200);
+    assert.equal(loaded.body.baseUrl, 'https://gflabtoken.cn/v1');
+    assert.equal(loaded.body.maskedKey, saved.body.maskedKey);
+    assertNoSensitiveMaterial(loaded.body);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('chat API requires auth and user API key, rejects client base_url override, and gates OPL runtime abilities', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  try {
+    const unauth = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      body: { message: 'hello' },
+    });
+    assert.equal(unauth.response.status, 401);
+    assert.equal(unauth.body.errorCode, 'AUTH_REQUIRED');
+
+    const session = await register(baseUrl, 'chat-user@example.com');
+    const noKey = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: 'hello' },
+    });
+    assert.equal(noKey.response.status, 400);
+    assert.equal(noKey.body.errorCode, 'API_KEY_REQUIRED');
+
+    const baseOverride = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: 'hello', base_url: 'https://evil.example/v1' },
+    });
+    assert.equal(baseOverride.response.status, 400);
+
+    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: session.cookieHeader },
+      body: { apiKey: 'sk-runtime-gate-secret' },
     });
 
-    assert.equal(response.status, 200);
-    assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
-
-    const body = await response.json();
-    assert.equal(body.ok, true);
-    assert.equal(body.tenantId, 'tenant_cloud_demo');
-    assert.equal(body.workspaceId, 'workspace_cloud_demo');
-    assert.equal(body.userId, 'user_demo');
-    assert.match(body.runId, /^run_/);
-    assert.equal(body.task.status, 'completed');
-    assert.equal(body.task.commandPolicyId, 'opl.cli.readonly.task-route');
-    assert.equal(body.artifacts.length, 1);
-    assert.equal(body.adapter.command.join(' '), 'opl contract handoff-envelope');
-    assert.equal(body.adapter.route.policyId, 'opl.cli.readonly.task-route');
-    assert.equal(body.adapter.route.resolution.resolution.domain_id, 'medautoscience');
-    assert.equal(body.adapter.route.handoffBundle.handoff_bundle.target_domain_id, 'medautoscience');
-    assert.deepEqual(body.adapter.route.commands.map((entry) => entry.args.slice(0, 2).join(' ')), [
-      'domain resolve-request',
-      'contract handoff-envelope',
-    ]);
-    assert.equal(body.adapter.route.commands.every((entry) => entry.mutating === false), true);
-
-    const storedResponse = await fetch(
-      `${baseUrl}/api/mvp/tasks/${body.tenantId}/${body.workspaceId}/${body.task.taskId}`,
-    );
-    assert.equal(storedResponse.status, 200);
-    const storedBody = await storedResponse.json();
-    assert.equal(storedBody.runId, body.runId);
-    assert.equal(storedBody.task.taskId, body.task.taskId);
-    assert.equal(storedBody.artifacts[0].artifactId, body.artifacts[0].artifactId);
-  } finally {
-    await stopGoServer(child);
-  }
-});
-
-test('Go control plane exposes a deployment health check', async () => {
-  const { child, baseUrl } = await startGoServer();
-  try {
-    const response = await fetch(`${baseUrl}/healthz`);
-
-    assert.equal(response.status, 200);
-    assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
-
-    const body = await response.json();
-    assert.equal(body.ok, true);
-    assert.equal(body.service, 'opl-webui-control-plane');
-  } finally {
-    await stopGoServer(child);
-  }
-});
-
-test('Go control plane applies preview identity when development body omits it', async () => {
-  const { child, baseUrl } = await startGoServer();
-  try {
-    const response = await fetch(`${baseUrl}/api/mvp/task`, {
+    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        prompt: '生成一个医学研究项目的证据整理任务',
-      }),
+      headers: { cookie: session.cookieHeader },
+      body: { message: '@基金 帮我写标书' },
     });
-
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.equal(body.ok, true);
-    assert.equal(body.tenantId, 'tenant_demo');
-    assert.equal(body.workspaceId, 'workspace_demo');
-    assert.equal(body.userId, 'user_demo');
+    assert.equal(gated.response.status, 409);
+    assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
+    assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
+    assertNoSensitiveMaterial(gated.body);
   } finally {
     await stopGoServer(child);
   }
 });
 
-test('Go control plane rejects MVP task payloads with unknown JSON fields', async () => {
-  const { child, baseUrl } = await startGoServer();
+test('chat conversations are isolated by public account session', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const response = await fetch(`${baseUrl}/api/mvp/task`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        tenantId: 'tenant_cloud_demo',
-        workspaceId: 'workspace_cloud_demo',
-        userId: 'user_demo',
-        prompt: '生成一个医学研究项目的证据整理任务',
-        intent: 'research',
-        unexpectedField: 'must be rejected',
-      }),
-    });
+    const userA = await register(baseUrl, 'a@example.com');
+    const userB = await register(baseUrl, 'b@example.com');
 
-    assert.equal(response.status, 400);
-    const body = await response.json();
-    assert.equal(body.ok, false);
-    assert.equal(body.errorCode, 'INVALID_MVP_TASK_REQUEST');
+    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: userA.cookieHeader },
+      body: { apiKey: 'sk-user-a-secret' },
+    });
+    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: userA.cookieHeader },
+      body: { message: '@论文 生成选题' },
+    });
+    assert.equal(gated.response.status, 409);
+    const conversationId = gated.body.conversationId;
+
+    const listA = await jsonFetch(`${baseUrl}/api/chat/conversations`, {
+      headers: { cookie: userA.cookieHeader },
+    });
+    assert.equal(listA.response.status, 200);
+    assert.equal(listA.body.conversations.length, 1);
+
+    const listB = await jsonFetch(`${baseUrl}/api/chat/conversations`, {
+      headers: { cookie: userB.cookieHeader },
+    });
+    assert.equal(listB.response.status, 200);
+    assert.deepEqual(listB.body.conversations, []);
+
+    const readB = await jsonFetch(`${baseUrl}/api/chat/conversations/${conversationId}`, {
+      headers: { cookie: userB.cookieHeader },
+    });
+    assert.equal(readB.response.status, 404);
   } finally {
     await stopGoServer(child);
   }
 });
 
-test('Go control plane defaults missing MVP task intent to general', async () => {
-  const { child, baseUrl } = await startGoServer();
+test('retired MVP task endpoints are not public routes', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const response = await fetch(`${baseUrl}/api/mvp/task`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        tenantId: 'tenant_cloud_demo',
-        workspaceId: 'workspace_cloud_demo',
-        userId: 'user_demo',
-        prompt: '生成一个医学研究项目的证据整理任务',
-      }),
-    });
+    const task = await fetch(`${baseUrl}/api/mvp/task`, { method: 'POST' });
+    assert.equal(task.status, 404);
 
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.equal(body.ok, true);
-    assert.equal(body.task.intent, 'general');
-    assert.deepEqual(body.adapter.route.commands[0].args.slice(0, 2), ['domain', 'resolve-request']);
-    assert.equal(body.adapter.route.commands[0].args.includes('--intent'), true);
-    assert.equal(body.adapter.route.commands[0].args[body.adapter.route.commands[0].args.indexOf('--intent') + 1], 'general');
+    const stored = await fetch(`${baseUrl}/api/mvp/tasks/tenant/workspace/task`);
+    assert.equal(stored.status, 404);
   } finally {
     await stopGoServer(child);
   }
 });
 
-test('production mode blocks task intake until required runtime dependencies are configured', async () => {
-  const { child, baseUrl } = await startGoServerWithEnv({
-    OPL_WEBUI_ENV: 'production',
+async function register(baseUrl, email) {
+  const result = await jsonFetch(`${baseUrl}/api/auth/register`, {
+    method: 'POST',
+    body: { email, password: 'correct horse battery staple' },
   });
-  try {
-    const readyResponse = await fetch(`${baseUrl}/readyz`);
-    assert.equal(readyResponse.status, 503);
-    const readyBody = await readyResponse.json();
-    assert.equal(readyBody.ok, false);
-    assert.equal(readyBody.environment, 'production');
-    assert.deepEqual(readyBody.missing.sort(), [
-      'OPL_BILLING_MODE',
-      'OPL_DATABASE_URL',
-      'OPL_OBJECT_STORE_URL',
-      'OPL_QUEUE_URL',
-      'OPL_TENANT_AUTH_MODE',
-      'OPL_WORKER_MODE',
-    ].sort());
+  assert.equal(result.response.status, 201);
+  return result;
+}
 
-    const taskResponse = await fetch(`${baseUrl}/api/mvp/task`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        tenantId: 'tenant_cloud_demo',
-        workspaceId: 'workspace_cloud_demo',
-        userId: 'user_demo',
-        prompt: '生成一个医学研究项目的证据整理任务',
-      }),
-    });
-
-    assert.equal(taskResponse.status, 503);
-    const taskBody = await taskResponse.json();
-    assert.equal(taskBody.ok, false);
-    assert.equal(taskBody.errorCode, 'PRODUCTION_RUNTIME_NOT_READY');
-  } finally {
-    await stopGoServer(child);
-  }
-});
-
-test('Go control plane exchanges launch token for browser session cookie', async () => {
-  const { child, baseUrl } = await startGoServerWithEnv({
-    OPL_WEBUI_ENV: 'cloud_mvp',
-    OPL_TENANT_AUTH_MODE: 'medopl_launch_token',
-    OPL_TENANT_AUTH_SECRET: 'test-secret',
+async function jsonFetch(url, options = {}) {
+  const headers = { ...(options.headers ?? {}) };
+  if (options.body) headers['content-type'] = 'application/json';
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
   });
-  try {
-    const sessionResponse = await fetch(`${baseUrl}/api/session/launch`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${signedToken('test-secret')}` },
-    });
-    assert.equal(sessionResponse.status, 204);
-    const cookie = sessionResponse.headers.get('set-cookie');
-    assert.match(cookie, /opl_session=/);
-    assert.match(cookie, /HttpOnly/);
-    assert.match(cookie, /SameSite=Lax/);
+  const text = await response.text();
+  const body = text ? JSON.parse(text) : {};
+  const cookie = response.headers.get('set-cookie') ?? '';
+  return { response, body, cookie, cookieHeader: cookie.split(';')[0] };
+}
 
-    const currentResponse = await fetch(`${baseUrl}/api/session/current`, {
-      headers: { cookie: cookie.split(';')[0] },
-    });
-    assert.equal(currentResponse.status, 200);
-    const current = await currentResponse.json();
-    assert.deepEqual(current, {
-      ok: true,
-      tenantId: 'tenant_token',
-      workspaceId: 'workspace_token',
-      userId: 'user_token',
-      authMode: 'medopl_launch_token',
-    });
-  } finally {
-    await stopGoServer(child);
-  }
-});
-
-function signedToken(secret) {
-  const claims = Buffer.from(JSON.stringify({
-    tenantId: 'tenant_token',
-    workspaceId: 'workspace_token',
-    userId: 'user_token',
-  })).toString('base64url');
-  const signature = createHmac('sha256', secret).update(`v1.${claims}`).digest('base64url');
-  return `v1.${claims}.${signature}`;
+function assertNoSensitiveMaterial(value) {
+  const encoded = JSON.stringify(value);
+  assert.doesNotMatch(encoded, /correct horse|sk-user-secret|sk-runtime-gate-secret|passwordHash|encryptedApiKey|rawApiKey/i);
 }

@@ -139,6 +139,9 @@ func setCloudMVPAuthEnv(t *testing.T) {
 	t.Setenv("OPL_TENANT_AUTH_SECRET", "test-secret")
 	t.Setenv("OPL_CLI_PATH", "/tmp/fake-opl")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
+	t.Setenv("OPL_SESSION_SECRET", "test-session-secret")
+	t.Setenv("OPL_API_KEY_ENCRYPTION_SECRET", "test-api-key-secret")
+	t.Setenv("OPL_CHAT_MODEL", "gpt-4o-mini")
 }
 
 func jsonBody(t *testing.T, payload any) *bytes.Reader {
