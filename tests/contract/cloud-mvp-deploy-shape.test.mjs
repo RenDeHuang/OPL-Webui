@@ -118,6 +118,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'canary opl-cli',
     '/healthz',
     '/readyz',
+    '/metricsz',
     'https://opl.medopl.cn',
     'qcloud',
     'qcloud_cert_id',

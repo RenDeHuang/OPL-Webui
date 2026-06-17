@@ -20,6 +20,7 @@ const podImageIdJsonpath = 'jsonpath={.status.containerStatuses[?(@.name=="contr
 
 const healthUrl = `${baseUrl}/healthz`;
 const readyUrl = `${baseUrl}/readyz`;
+const metricsUrl = `${baseUrl}/metricsz`;
 const homeUrl = `${baseUrl}/`;
 
 if (args.has('--help')) {
@@ -53,7 +54,7 @@ run('canary db', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'ca
 
 run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'opl-cli']));
 
-for (const url of [healthUrl, readyUrl, homeUrl]) {
+for (const url of [healthUrl, readyUrl, metricsUrl, homeUrl]) {
   run(`HTTPS smoke ${url}`, 'curl', ['--http2', '-fsS', url]);
 }
 
@@ -76,6 +77,7 @@ function printDryRun() {
   printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'opl-cli']);
   console.log(formatCommand('curl', ['--http2', '-fsS', healthUrl]));
   console.log(formatCommand('curl', ['--http2', '-fsS', readyUrl]));
+  console.log(formatCommand('curl', ['--http2', '-fsS', metricsUrl]));
   console.log(formatCommand('curl', ['--http2', '-fsS', homeUrl]));
 }
 

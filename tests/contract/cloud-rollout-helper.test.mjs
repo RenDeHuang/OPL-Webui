@@ -27,6 +27,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   const defaultDryRun = execFileSync(process.execPath, [helperPath], { encoding: 'utf8' });
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/readyz/);
+  assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/metricsz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\//);
 
   const configuredBaseUrlDryRun = execFileSync(process.execPath, [helperPath], {
@@ -40,6 +41,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(configuredBaseUrlDryRun, /-n opl-webui-preview/);
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/healthz/);
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/readyz/);
+  assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/metricsz/);
   assert.doesNotMatch(configuredBaseUrlDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
 });
 
@@ -84,6 +86,7 @@ test('cloud rollout helper execs the current Running Ready pod when old Error po
     const commands = readFileSync(commandLog, 'utf8');
     assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary db/);
     assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary opl-cli/);
+    assert.match(commands, /curl --http2 -fsS https:\/\/opl\.medopl\.cn\/metricsz/);
     assert.doesNotMatch(commands, /exec opl-webui-control-plane-old-error --/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
@@ -151,6 +154,7 @@ function pod(name, phase, ready) {
 
 function writeFakeCurl(tempDir) {
   writeFileSync(join(tempDir, 'curl'), `#!/usr/bin/env bash
+printf 'curl %s\\n' "$*" >> "$COMMAND_LOG"
 printf 'ok\\n'
 `, { mode: 0o755 });
 }

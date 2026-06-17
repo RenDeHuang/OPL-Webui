@@ -26,6 +26,7 @@
 - `deploy/cloud-mvp/RUNBOOK.md` 是云端/VPC runner 的 handoff runbook，覆盖 TCR/CCR build/push、Postgres Secret、qcloud HTTPS Secret、镜像替换、apply、canary、HTTPS smoke、DNS、HA/安全组收敛设计和 rollback，不保存真实 secret。
 - HA 目标态设计已固定：两个 Ready TKE node、`replicas=2`、跨 node 分布、`PDB minAvailable=1`、CLB 80/443 作为公网入口、NodePort 只允许 CLB 到节点访问。
 - 当前 production-gated release loop 已固定为 CI -> Release Image -> manual production dry-run -> GitHub production approval -> production apply -> canary/smoke。
+- Release loop 的 helper smoke 覆盖 `/healthz`、`/readyz`、`/metricsz` 和首页；`/metricsz` 目前只有本地 contract evidence，尚未线上验证。
 - 当前已验证 production release commit/tag 是 `d0c4de5`；Release Image green，Cloud Rollout #5 green，Production Dry Run 通过，Production Apply 通过，production approval 已通过。
 - `https://opl.medopl.cn/healthz`、`https://opl.medopl.cn/readyz` 和 `https://opl.medopl.cn/` 已返回 HTTP/2 200；VPC/TKE 内 `canary db` 和 `canary opl-cli` 已通过。
 - HTTP 80 当前不是稳定入口；`EnsureIngressWarning W1012` 的单节点后端风险是 HA 后续项。

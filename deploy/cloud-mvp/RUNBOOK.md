@@ -40,7 +40,7 @@ docker push "$OPL_IMAGE"
 - GitHub production approval: approved
 - Production Apply: passed
 - Cloud Rollout #5: green
-- canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz` 和首页 HTTPS smoke 通过
+- canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke 通过
 
 ## 日常更新发布流程
 
@@ -102,7 +102,7 @@ node scripts/cloud-rollout.mjs
 
 ### 8. 手工 fallback：云端更新镜像、rollout、canary 和 smoke
 
-dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli`、`/healthz`、`/readyz` 和首页 HTTPS smoke，并在日志中输出 closeout 需要记录的 rollout revision、Deployment image、Pod `-o wide` 状态和 Pod imageID。
+dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli`、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke，并在日志中输出 closeout 需要记录的 rollout revision、Deployment image、Pod `-o wide` 状态和 Pod imageID。
 
 ```bash
 node scripts/cloud-rollout.mjs --apply
@@ -200,6 +200,7 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui exec "$pod" -- /app/opl-webui-co
 ```bash
 curl --http2 -fsS https://opl.medopl.cn/healthz
 curl --http2 -fsS https://opl.medopl.cn/readyz
+curl --http2 -fsS https://opl.medopl.cn/metricsz
 curl --http2 -fsS https://opl.medopl.cn/ >/tmp/opl-webui-home.html
 ```
 
