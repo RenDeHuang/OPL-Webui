@@ -78,6 +78,10 @@ test('cloud MVP fixture injects public account and API key secrets through secre
   const { raw, items } = loadManifest();
   const container = findKind(items, 'Deployment').spec.template.spec.containers[0];
 
+  assert.deepEqual(containerEnv(container, 'OPL_TENANT_AUTH_SECRET').valueFrom.secretKeyRef, {
+    name: 'opl-webui-auth',
+    key: 'OPL_TENANT_AUTH_SECRET',
+  });
   assert.deepEqual(containerEnv(container, 'OPL_SESSION_SECRET').valueFrom.secretKeyRef, {
     name: 'opl-webui-auth',
     key: 'OPL_SESSION_SECRET',
@@ -90,8 +94,8 @@ test('cloud MVP fixture injects public account and API key secrets through secre
     name: 'opl-webui-auth',
     key: 'OPL_CHAT_MODEL',
   });
-  assert.doesNotMatch(raw, /OPL_(?:SESSION_SECRET|API_KEY_ENCRYPTION_SECRET|CHAT_MODEL)"\s*,\s*"value"/);
-  assert.doesNotMatch(raw, /OPL_TENANT_AUTH_MODE|OPL_TENANT_AUTH_SECRET/);
+  assert.doesNotMatch(raw, /OPL_(?:TENANT_AUTH_SECRET|SESSION_SECRET|API_KEY_ENCRYPTION_SECRET|CHAT_MODEL)"\s*,\s*"value"/);
+  assert.doesNotMatch(raw, /OPL_TENANT_AUTH_MODE/);
 });
 
 test('cloud MVP fixture is declarative and contains no live execution command', () => {
@@ -119,6 +123,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'Release Image',
     'Cloud Rollout',
     'one-person-lab-web',
+    'OPL_TENANT_AUTH_SECRET',
     'OPL_SESSION_SECRET',
     'OPL_API_KEY_ENCRYPTION_SECRET',
     'OPL_CHAT_MODEL',
@@ -174,7 +179,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /apply.*false/is);
   assert.match(runbook, /apply.*true/is);
   assert.match(runbook, /production.*Environment approval/is);
-  assert.match(runbook, /Production 必需 Secret.*opl-webui-auth.*OPL_SESSION_SECRET/is);
+  assert.match(runbook, /Production 必需 Secret.*opl-webui-auth.*OPL_TENANT_AUTH_SECRET.*OPL_SESSION_SECRET/is);
   assert.match(runbook, /API Key[\s\S]{0,120}OPL_API_KEY_ENCRYPTION_SECRET/is);
   assert.match(runbook, /POST \/api\/chat[\s\S]{0,80}401 AUTH_REQUIRED/is);
   assert.match(runbook, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/is);

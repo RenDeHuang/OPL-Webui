@@ -81,6 +81,15 @@
                     }
                   },
                   {
+                    "name": "OPL_TENANT_AUTH_SECRET",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "opl-webui-auth",
+                        "key": "OPL_TENANT_AUTH_SECRET"
+                      }
+                    }
+                  },
+                  {
                     "name": "OPL_SESSION_SECRET",
                     "valueFrom": {
                       "secretKeyRef": {

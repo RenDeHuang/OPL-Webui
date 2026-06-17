@@ -70,8 +70,8 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
-  assert.match(readme, /one-person-lab-web-local-verified/);
-  assert.match(readme, /还没有本次 one-person-lab-web 改造的 production rollout evidence/);
+  assert.match(readme, /one-person-lab-web-production-verified/);
+  assert.match(readme, /44dd574[\s\S]{0,120}production verified/);
   assert.match(readme, /POST \/api\/chat/);
   assert.match(readme, /最终计费归 MedOPL\/sub2api/);
 });
@@ -97,6 +97,10 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
     'OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway',
     'usage/quota v1 是 Webui-side precheck/projection',
     '最终计费归 MedOPL/sub2api',
+    'OPL_TENANT_AUTH_SECRET',
+    'OPL_SESSION_SECRET',
+    'OPL_API_KEY_ENCRYPTION_SECRET',
+    'OPL_CHAT_MODEL',
   ]) {
     assert.ok(combined.includes(required), `missing product positioning truth: ${required}`);
   }
@@ -106,7 +110,8 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
   assert.doesNotMatch(product, /用户可见 workspace 系统/);
   assert.doesNotMatch(product, /纯 ChatGPT 页面/);
   assert.doesNotMatch(product, /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(active, /production rollout evidence[\s\S]{0,240}MedOPL runtime status bridge[\s\S]{0,240}@OPL run\/artifact projection/);
+  assert.match(active, /44dd574[\s\S]{0,240}production verified/);
+  assert.match(active, /Next Cursor[\s\S]{0,240}MedOPL runtime status bridge[\s\S]{0,240}@OPL run\/artifact projection/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

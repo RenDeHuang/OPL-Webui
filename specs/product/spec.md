@@ -16,8 +16,9 @@
 - `product.opl-gate`: `@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 等能力需要 runtime/storage/node pool 时，只返回 MedOPL 开通提示，不伪造执行。
 - `product.readonly`: OPL readonly snapshot/canary 可以展示 framework readiness，但不能写成真实 execution。
 - `product.usage-quota`: usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
+- `product.production-required-env`: one-person-lab-web production rollout 需要 `opl-webui-postgres` 提供 `OPL_DATABASE_URL`，并需要 `opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；仓库只保存 key 名和 manifest 引用，不保存 secret value。
 
 ## Cannot Claim
 
-- 没有本次 rollout evidence 前，不能宣称 one-person-lab-web 已线上验证。
-- 当前不能宣称真实 OPL execution、完整 billing、真实支付 provider 或完整 production ready SaaS。
+- `44dd574` 已有 one-person-lab-web production rollout evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
+- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider 或完整 production ready SaaS。

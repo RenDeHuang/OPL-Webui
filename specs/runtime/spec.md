@@ -20,6 +20,7 @@
 - `runtime.webapp.retired`: `/api/mvp/*`、旧 demo workspace route 和 `demoData.mjs` 不再是公开主线接口；无 consumer contract 时删除。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.cloud-image`: `Dockerfile.cloud` 从外部 OPL build context 复制 `/opt/opl/bin/opl`、`contracts/opl-framework` 和 production OPL runtime assets。
+- `runtime.deploy.auth-secret`: production manifest 必须从 `opl-webui-auth` 注入 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；`OPL_TENANT_AUTH_SECRET` 保留给既有 launch-token/canary 边界，其他三项支撑 public account session、API Key 加密和 server-side chat model。
 - `runtime.deploy.readyz`: `OPL_WEBUI_ENV=cloud_mvp` 必须要求 `OPL_CLI_PATH`、`OPL_DATABASE_URL`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`。
 - `runtime.deploy.healthz`: `GET /healthz` 返回 JSON 健康状态。
 - `runtime.deploy.metricsz`: `GET /metricsz` 返回 service、environment、ready、missing dependency count 和 missing dependency keys，不泄露 secret。
@@ -30,3 +31,4 @@
 ## Cannot Claim
 
 - 当前 runtime 不包含真实 MedOPL runtime status bridge、OPL worker、object storage、完整 billing provider、多节点 HA/安全组执行证据或真实 OPL mutation。
+- 当前 production evidence 不包含真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。

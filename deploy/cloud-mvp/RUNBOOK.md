@@ -5,7 +5,7 @@
 ## 前置条件
 
 - `KUBECONFIG=/external/path/to/tke-kubeconfig`，由云端执行者注入，不进 git。
-- Production 必需 Secret：`opl-webui-postgres` 提供 `OPL_DATABASE_URL`；`opl-webui-auth` 提供 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`。
+- Production 必需 Secret：`opl-webui-postgres` 提供 `OPL_DATABASE_URL`；`opl-webui-auth` 必须包含 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`。
 - OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot；用户 API Key 只走固定 `https://gflabtoken.cn/v1`，不允许用户自定义 base_url。
 - MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
 - 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets，不使用 `pull_request_target`。
@@ -65,13 +65,27 @@ kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-
   --from-literal=OPL_DATABASE_URL="$OPL_DATABASE_URL" \
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 kubectl --kubeconfig "$KUBECONFIG" -n opl-webui create secret generic opl-webui-auth \
+  --from-literal=OPL_TENANT_AUTH_SECRET="$OPL_TENANT_AUTH_SECRET" \
   --from-literal=OPL_SESSION_SECRET="$OPL_SESSION_SECRET" \
   --from-literal=OPL_API_KEY_ENCRYPTION_SECRET="$OPL_API_KEY_ENCRYPTION_SECRET" \
   --from-literal=OPL_CHAT_MODEL="$OPL_CHAT_MODEL" \
   --dry-run=client -o yaml | kubectl --kubeconfig "$KUBECONFIG" apply -f -
 ```
 
-`OPL_SESSION_SECRET` 签 HttpOnly `opl_session`；API Key 使用 `OPL_API_KEY_ENCRYPTION_SECRET` 加密保存，后端不返回 raw API Key；`OPL_CHAT_MODEL` 是 server-side 默认模型配置。
+`OPL_TENANT_AUTH_SECRET` 继续保留给既有 launch-token/canary 边界；`OPL_SESSION_SECRET` 签 HttpOnly `opl_session`；API Key 使用 `OPL_API_KEY_ENCRYPTION_SECRET` 加密保存，后端不返回 raw API Key；`OPL_CHAT_MODEL` 是 server-side 默认模型配置。
+
+## 44dd574 生产验证记录
+
+- image: `uswccr.ccs.tencentyun.com/webopl/opl-webui:44dd574`
+- rollout revision: `13`
+- Pod: `opl-webui-control-plane-69c859465f-v9crb`，`1/1 Running`，restarts `0`，image tag `44dd574`
+- `/healthz` HTTP 200，`/readyz` HTTP 200 且 `missing=[]`，`/metricsz` HTTP 200 且 `missingDependencyCount=0`
+- `/` HTTP 200 返回 One Person Lab Web 首页 HTML
+- canary db pass: `open,ping,schema,write,read,delete`
+- canary opl-cli pass: `system.initialize,connect.modules,contract.domains`
+- unauth guard: `/api/auth/login` HTTP 401 `INVALID_CREDENTIALS`；`/api/chat` HTTP 401 `AUTH_REQUIRED`
+- public smoke: `https://opl.medopl.cn/healthz` HTTP/2 200；`https://opl.medopl.cn/readyz` HTTP/2 200 且 `missing=[]`
+- controlled fix: `opl-webui-auth` 保留 `OPL_TENANT_AUTH_SECRET`，并新增 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；Deployment 已声明这四个 `secretKeyRef`。本记录不包含 secret value。
 
 ## 配置 qcloud HTTPS 证书
 
