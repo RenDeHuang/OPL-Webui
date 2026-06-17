@@ -249,3 +249,9 @@
 - summary: 固化 `44dd574` one-person-lab-web production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:44dd574`，rollout revision `13`；Pod `opl-webui-control-plane-69c859465f-v9crb` `1/1 Running`、restarts `0`、image tag `44dd574`；`/healthz` 200、`/readyz` 200 `missing=[]`、`/metricsz` 200 `missingDependencyCount=0`、首页 200；DB canary `open,ping,schema,write,read,delete` pass；OPL CLI canary `system.initialize,connect.modules,contract.domains` pass；unauth guard `/api/auth/login` 401 `INVALID_CREDENTIALS`、`/api/chat` 401 `AUTH_REQUIRED`；public smoke `https://opl.medopl.cn/healthz` 和 `https://opl.medopl.cn/readyz` HTTP/2 200。同步云端受控修复：`opl-webui-auth` 保留 `OPL_TENANT_AUTH_SECRET` 并提供 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`，Deployment manifest 声明对应 `secretKeyRef`。
 - verified: user-provided production evidence；local contract/gate verification recorded in commit evidence。
 - cannot claim: 真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、MedOPL runtime status bridge、真实 OPL runtime/mutation。
+
+## 2026-06-18 - ui-productization-pass
+
+- summary: 将 One Person Lab Web 从技术预览 shell 产品化为本地可 dogfood 的 Genspark-like Web 入口：顶部导航包含 Chat、Capabilities、Settings、MedOPL；首屏改为大 prompt console、固定 Model gateway、能力 capsules；`#settings` 聚焦账号/API Key 设置；消息列表、设置表单、匿名/API_KEY_REQUIRED 引导和 `@基金/@论文/@综述/@长任务` runtime gate 产品化。未新增依赖、不恢复 `demoData.mjs`、不调用 `/api/mvp/task`、不让用户自定义 base_url。
+- verified: RED/GREEN `node --test tests/smoke/web-demo-shell.test.mjs tests/contract/one-person-lab-web-data.test.mjs`；browser dogfood local desktop `1280x720`、mobile `375x812`、`#settings` focus、`@基金` runtime gate，console errors none，critical network errors none；full gates recorded in commit evidence。
+- cannot claim: Figma MCP 精确实现，Genspark live site 对照验收，UI productization production rollout，真实 MedOPL runtime bridge，真实 OPL execution/mutation，文件/object storage，支付/RBAC/team。

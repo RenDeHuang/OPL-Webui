@@ -1,11 +1,13 @@
 export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
 
-export async function loadOnePersonLabWebState(fetchRef = fetch) {
-  const session = await readJSON(fetchRef, '/api/session/current');
+export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
+  const shouldProbeSession = options.probeSession !== false;
+  const shouldLoadSnapshot = options.loadSnapshot !== false;
+  const session = shouldProbeSession ? await readJSON(fetchRef, '/api/session/current') : { ok: false };
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
-  const oplSnapshot = await readJSON(fetchRef, '/api/opl/snapshot');
+  const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
   return createOnePersonLabViewModel({ session, provider, conversations, oplSnapshot });
 }
 
@@ -21,7 +23,8 @@ export async function logoutAccount(fetchRef) {
   return fetchRef('/api/auth/logout', { method: 'POST' });
 }
 
-export async function saveAPIKey(fetchRef, apiKey) {
+export async function saveAPIKey(fetchRef, apiKey, session = { ok: true }) {
+  if (!session?.ok) return { ok: false, errorCode: 'AUTH_REQUIRED', message: '请先登录后再绑定 API Key。' };
   return writeJSON(fetchRef, '/api/settings/model-provider', { apiKey }, 'PUT');
 }
 
@@ -29,12 +32,28 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
   return writeJSON(fetchRef, '/api/chat', { message, conversationId });
 }
 
+export function viewFromHash(hash) {
+  const normalized = String(hash || '').replace(/^#/, '');
+  if (['settings', 'capabilities'].includes(normalized)) return normalized;
+  return 'chat';
+}
+
+export function accountState(session, provider) {
+  if (!session?.ok) return 'anonymous';
+  if (!provider?.apiKeyConfigured) return 'authenticated_unbound';
+  return 'authenticated_bound';
+}
+
 export function createOnePersonLabViewModel(state) {
   const provider = state.provider?.ok ? state.provider : providerFallback();
+  const session = state.session ?? { ok: false };
+  const currentAccountState = accountState(session, provider);
   return {
     title: 'One Person Lab Web',
     subtitle: 'Genspark-like one-person-lab-web with ChatGPT-like base chatbot',
-    session: state.session ?? { ok: false },
+    session,
+    accountState: currentAccountState,
+    primaryCTA: ctaForState(currentAccountState),
     provider: {
       baseUrl: provider.baseUrl ?? FIXED_BASE_URL,
       baseUrlEditable: false,
@@ -43,16 +62,16 @@ export function createOnePersonLabViewModel(state) {
     },
     conversations: state.conversations?.conversations ?? [],
     capabilities: [
-      { label: '普通问答', prompt: '普通聊天：解释 OPL 如何帮助复杂知识工作' },
-      { label: '论文', prompt: '@论文 生成研究选题和证据计划' },
-      { label: '基金', prompt: '@基金 帮我拆解标书结构' },
-      { label: '综述', prompt: '@综述 规划文献综述证据包' },
-      { label: 'PPT', prompt: '生成一页汇报 PPT 大纲' },
-      { label: '数据分析', prompt: '解释这组数据可以如何分析' },
+      { label: '普通问答', prompt: '解释 OPL 如何帮助复杂知识工作', runtimeRequired: false },
+      { label: '论文/综述', prompt: '@论文 生成研究选题和证据计划', runtimeRequired: true },
+      { label: '基金', prompt: '@基金 帮我拆解标书结构', runtimeRequired: true },
+      { label: 'PPT', prompt: '生成一页汇报 PPT 大纲', runtimeRequired: false },
+      { label: '数据分析', prompt: '解释这组数据可以如何分析', runtimeRequired: false },
+      { label: '长任务', prompt: '@长任务 规划一项复杂任务', runtimeRequired: true },
     ],
     runtimeGate: {
-      title: '@OPL 能力需要资源开通',
-      message: 'MedOPL Runtime / Storage / Node Pool',
+      title: '需要 MedOPL Runtime',
+      message: '该能力需要托管运行环境、存储或 node pool',
       deepLink: MEDOPL_DEEP_LINK,
     },
     readonly: {
@@ -60,6 +79,12 @@ export function createOnePersonLabViewModel(state) {
       ok: Boolean(state.oplSnapshot?.ok),
     },
   };
+}
+
+function ctaForState(state) {
+  if (state === 'anonymous') return '登录/注册后开始';
+  if (state === 'authenticated_unbound') return '绑定 API Key';
+  return '发送';
 }
 
 async function writeJSON(fetchRef, url, body, method = 'POST') {
@@ -87,4 +112,139 @@ async function readResponse(response) {
 
 function providerFallback() {
   return { ok: false, provider: 'gflabtoken', baseUrl: FIXED_BASE_URL, apiKeyConfigured: false, maskedKey: '' };
+}
+
+if (typeof document !== 'undefined') {
+  initOnePersonLabWeb();
+}
+
+async function initOnePersonLabWeb() {
+  let view = createOnePersonLabViewModel({
+    session: { ok: false },
+    provider: providerFallback(),
+    conversations: { conversations: [] },
+    oplSnapshot: { ok: false },
+  });
+
+  syncHashView();
+  window.addEventListener('hashchange', syncHashView);
+  bindCapabilityButtons();
+  bindChatForm(() => view);
+  bindSettingsForms(() => view, (next) => {
+    view = next;
+    renderView(view);
+  });
+
+  view = await loadOnePersonLabWebState(fetch, { probeSession: false, loadSnapshot: false });
+  renderView(view);
+}
+
+function syncHashView() {
+  const view = viewFromHash(window.location.hash);
+  document.body.dataset.view = view;
+  if (view === 'settings') {
+    document.querySelector('[data-settings-panel]')?.setAttribute('tabindex', '-1');
+    document.querySelector('[data-settings-panel]')?.focus({ preventScroll: true });
+  }
+}
+
+function bindCapabilityButtons() {
+  for (const button of document.querySelectorAll('[data-prompt]')) {
+    button.addEventListener('click', () => {
+      const input = document.querySelector('#chat-input');
+      input.value = button.dataset.prompt;
+      input.focus();
+      if (button.dataset.prompt.includes('@')) showRuntimeGate();
+    });
+  }
+}
+
+function bindChatForm(getView) {
+  document.querySelector('[data-chat-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const view = getView();
+    const input = document.querySelector('#chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    appendMessage('你', message, 'user-message');
+    if (message.includes('@')) {
+      showRuntimeGate();
+      appendMessage('OPL', '需要 MedOPL Runtime。该能力需要托管运行环境、存储或 node pool。', 'assistant-message');
+      return;
+    }
+    if (view.accountState === 'anonymous') {
+      appendMessage('OPL', '请先登录/注册后开始聊天。', 'assistant-message');
+      window.location.hash = 'settings';
+      return;
+    }
+    if (view.accountState === 'authenticated_unbound') {
+      appendMessage('OPL', '请先在 Settings 绑定 API Key。', 'assistant-message');
+      window.location.hash = 'settings';
+      return;
+    }
+    const result = await sendChatMessage(fetch, message);
+    appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
+  });
+}
+
+function bindSettingsForms(getView, setView) {
+  document.querySelector('[data-register-button]')?.addEventListener('click', async () => authAction('register', setView));
+  document.querySelector('[data-login-button]')?.addEventListener('click', async () => authAction('login', setView));
+  document.querySelector('[data-logout-button]')?.addEventListener('click', async () => {
+    await logoutAccount(fetch);
+    setSettingsMessage('已退出登录。');
+    setView(await loadOnePersonLabWebState());
+  });
+  document.querySelector('[data-provider-form]')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const view = getView();
+    const apiKey = document.querySelector('#api-key').value.trim();
+    const result = await saveAPIKey(fetch, apiKey, view.session);
+    if (!result.ok) {
+      setSettingsMessage(result.message || result.errorCode || '保存失败。');
+      return;
+    }
+    document.querySelector('#api-key').value = '';
+    setSettingsMessage(`API Key 已更新：${result.maskedKey || '已绑定'}`);
+    setView(await loadOnePersonLabWebState());
+  });
+}
+
+async function authAction(kind, setView) {
+  const email = document.querySelector('#auth-email').value.trim();
+  const password = document.querySelector('#auth-password').value;
+  const result = kind === 'register'
+    ? await registerAccount(fetch, email, password)
+    : await loginAccount(fetch, email, password);
+  setSettingsMessage(result.ok ? '账号已就绪。' : result.message || result.errorCode || '认证失败。');
+  if (result.ok) setView(await loadOnePersonLabWebState());
+}
+
+function renderView(view) {
+  document.body.dataset.authState = view.accountState;
+  document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
+  document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
+  document.querySelector('[data-session-status]').textContent = view.session.ok ? `已登录：${view.session.email}` : '未登录';
+  const providerStatus = view.provider.apiKeyConfigured
+    ? `已绑定：${view.provider.maskedKey}`
+    : '未绑定';
+  document.querySelector('[data-provider-status]').textContent = providerStatus;
+}
+
+function appendMessage(sender, content, className) {
+  const log = document.querySelector('[data-chat-log]');
+  const message = document.createElement('article');
+  message.className = `message ${className}`;
+  message.innerHTML = `<span></span><p></p>`;
+  message.querySelector('span').textContent = sender;
+  message.querySelector('p').textContent = content;
+  log.append(message);
+}
+
+function showRuntimeGate() {
+  document.querySelector('[data-runtime-gate]')?.classList.add('is-visible');
+}
+
+function setSettingsMessage(message) {
+  document.querySelector('[data-settings-message]').textContent = message;
 }

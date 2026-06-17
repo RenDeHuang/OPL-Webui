@@ -38,6 +38,47 @@ test('web data module calls session provider and chat APIs only', async () => {
   assert.doesNotMatch(JSON.stringify(calls), /\/api\/mvp\/task|base_url|demo:\/\//);
 });
 
+test('web data module exposes hash view and account state machine', () => {
+  assert.equal(web.viewFromHash('#settings'), 'settings');
+  assert.equal(web.viewFromHash('#capabilities'), 'capabilities');
+  assert.equal(web.viewFromHash(''), 'chat');
+
+  assert.equal(web.accountState({ ok: false }, { apiKeyConfigured: false }), 'anonymous');
+  assert.equal(web.accountState({ ok: true }, { apiKeyConfigured: false }), 'authenticated_unbound');
+  assert.equal(web.accountState({ ok: true }, { apiKeyConfigured: true }), 'authenticated_bound');
+});
+
+test('anonymous users cannot save API keys from the web data module', async () => {
+  const calls = [];
+  const result = await web.saveAPIKey(async (url, options) => {
+    calls.push({ url, options });
+    return response({ ok: true });
+  }, 'sk-test', { ok: false });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.errorCode, 'AUTH_REQUIRED');
+  assert.deepEqual(calls, []);
+});
+
+test('model provider save never sends base_url or raw key back in view model', async () => {
+  const calls = [];
+  await web.saveAPIKey(async (url, options) => {
+    calls.push({ url, options });
+    return response({ ok: true, apiKeyConfigured: true, maskedKey: 'sk-...1234', baseUrl: web.FIXED_BASE_URL });
+  }, 'sk-secret-value', { ok: true });
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, '/api/settings/model-provider');
+  assert.equal(calls[0].options.method, 'PUT');
+  assert.doesNotMatch(calls[0].options.body, /base_url|baseUrl|https:\/\/gflabtoken\.cn\/v1/);
+  assert.doesNotMatch(JSON.stringify(web.createOnePersonLabViewModel({
+    session: { ok: true, email: 'user@example.com' },
+    provider: { ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true, maskedKey: 'sk-...1234' },
+    conversations: { conversations: [] },
+    oplSnapshot: { ok: true },
+  })), /sk-secret-value/);
+});
+
 test('web data module surfaces runtime gate with MedOPL deep link', async () => {
   const gated = await web.sendChatMessage(async () => response({
     ok: false,
@@ -66,9 +107,10 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.title, 'One Person Lab Web');
   assert.equal(view.provider.baseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(view.provider.baseUrlEditable, false);
-  assert.deepEqual(view.capabilities.map((item) => item.label), ['普通问答', '论文', '基金', '综述', 'PPT', '数据分析']);
+  assert.equal(view.accountState, 'authenticated_unbound');
+  assert.deepEqual(view.capabilities.map((item) => item.label), ['普通问答', '论文/综述', '基金', 'PPT', '数据分析', '长任务']);
   assert.equal(view.runtimeGate.deepLink, 'https://medopl.medopl.cn');
-  assert.doesNotMatch(JSON.stringify(view), /workspace|demo:\/\/|轻量项目工作区/i);
+  assert.doesNotMatch(JSON.stringify(view), /workspace|demo:\/\/|轻量项目工作区|真实执行|已完成执行/i);
 });
 
 function response(payload, status = 200) {

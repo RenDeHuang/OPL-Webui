@@ -8,88 +8,156 @@
     <link rel="stylesheet" href="./styles/v3.css">
     <script type="module" src="./src/onePersonLabWeb.mjs"></script>
   </head>
-  <body>
+  <body data-view="chat" data-auth-state="anonymous">
     <header class="topbar">
-      <a class="brand" href="#home" aria-label="One Person Lab Web 首页">One Person Lab Web</a>
-      <nav aria-label="主导航">
-        <a href="#chat">普通聊天</a>
-        <a href="#capabilities">OPL 能力</a>
-        <a href="#settings">API Key</a>
+      <a class="brand" href="#home" aria-label="One Person Lab Web 首页">
+        <span class="brand-mark">OPL</span>
+        <span>One Person Lab Web</span>
+      </a>
+      <nav class="main-nav" aria-label="主导航">
+        <a href="#chat">Chat</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#settings">Settings</a>
+        <a href="https://medopl.medopl.cn">MedOPL</a>
       </nav>
-      <div class="topbar-actions">
-        <button class="ghost-button" type="button">登录</button>
-        <button class="primary-button" type="button">注册</button>
+      <div class="topbar-actions" aria-label="账号入口">
+        <span class="account-pill" data-session-label>未登录</span>
+        <a class="ghost-button" href="#settings">登录/注册</a>
       </div>
     </header>
 
     <main>
-      <section class="hero" id="home" aria-label="Genspark-like one-person-lab-web">
-        <p class="eyebrow">Genspark-like one-person-lab-web</p>
-        <h1>One Person Lab Web</h1>
-        <p class="hero-copy">用普通聊天进入复杂知识工作，需要 OPL 资源时再跳转 MedOPL 开通。</p>
-        <div class="prompt-panel" id="chat" role="search">
-          <label for="chat-input">普通聊天</label>
-          <textarea id="chat-input" rows="4" placeholder="问一个普通问题，或输入 @基金 / @论文 / @长任务"></textarea>
-          <div class="prompt-controls" aria-label="聊天控制">
-            <span class="fixed-base">固定 base_url: https://gflabtoken.cn/v1</span>
-            <button class="launch-button" type="button">发送</button>
-          </div>
+      <section class="hero-shell" id="home" aria-label="Genspark-like one-person-lab-web">
+        <div class="hero-copy">
+          <p class="eyebrow">Research / Grant / Presentation Foundry</p>
+          <h1>One Person Lab Web</h1>
+          <p>用普通聊天进入复杂知识工作，需要 OPL 资源时再开通 MedOPL Runtime。</p>
         </div>
-        <div class="tool-capsules" id="capabilities" aria-label="推荐能力">
-          <button type="button">普通问答</button>
-          <button type="button">@论文</button>
-          <button type="button">@基金</button>
-          <button type="button">@综述</button>
-          <button type="button">PPT</button>
-          <button type="button">数据分析</button>
+
+        <form class="prompt-console" id="chat" data-chat-form aria-label="普通聊天">
+          <label for="chat-input">普通聊天</label>
+          <textarea id="chat-input" name="message" rows="4" placeholder="问一个普通问题，或输入 @基金、@论文、@综述、@长任务"></textarea>
+          <div class="prompt-footer">
+            <span class="gateway-pill">Model gateway: https://gflabtoken.cn/v1</span>
+            <button class="primary-button" type="submit" data-chat-submit>登录/注册后开始</button>
+          </div>
+        </form>
+
+        <div class="tool-strip" aria-label="快捷能力">
+          <button type="button" data-prompt="解释 OPL 如何帮助复杂知识工作">普通问答</button>
+          <button type="button" data-prompt="@论文 生成研究选题和证据计划">@论文</button>
+          <button type="button" data-prompt="@基金 帮我拆解标书结构">@基金</button>
+          <button type="button" data-prompt="@综述 规划文献综述证据包">@综述</button>
+          <button type="button" data-prompt="生成一页汇报 PPT 大纲">PPT</button>
+          <button type="button" data-prompt="@长任务 规划一项复杂任务">长任务</button>
         </div>
       </section>
 
-      <section class="home-grid" aria-label="账号和消息">
-        <article class="recommendations">
+      <section class="product-grid" aria-label="One Person Lab Web 工作台">
+        <section class="chat-panel" aria-labelledby="chat-title">
           <div class="section-heading">
-            <p class="panel-kicker">Public account</p>
-            <h2>注册 / 登录后绑定自己的 API Key</h2>
+            <p class="panel-kicker">Chat</p>
+            <h2 id="chat-title">从普通问题开始</h2>
           </div>
-          <div class="account-grid">
-            <form class="auth-panel" aria-label="注册登录">
-              <label>邮箱<input type="email" autocomplete="email" placeholder="you@example.com"></label>
-              <label>密码<input type="password" autocomplete="current-password" placeholder="至少 12 位"></label>
-              <div class="form-actions">
-                <button class="primary-button" type="button">注册</button>
-                <button class="ghost-button" type="button">登录</button>
-              </div>
-            </form>
-            <form class="auth-panel" id="settings" aria-label="API Key 设置">
-              <label>API Key<input type="password" autocomplete="off" placeholder="sk-..."></label>
-              <p class="fixed-base">base_url 固定展示：https://gflabtoken.cn/v1</p>
-              <button class="primary-button" type="button">保存 API Key</button>
-            </form>
+          <div class="chat-log" data-chat-log aria-live="polite">
+            <article class="message user-message">
+              <span>你</span>
+              <p>普通问答可以使用自己的 API Key。</p>
+            </article>
+            <article class="message assistant-message">
+              <span>OPL</span>
+              <p>输入 @基金、@论文、@综述、@长任务 时，会先检查 MedOPL 资源状态，不会伪造执行。</p>
+            </article>
           </div>
-        </article>
+        </section>
 
-        <aside class="reminder-card" aria-label="@OPL capability gate">
-          <p class="panel-kicker">@OPL gate</p>
-          <h2>需要资源的能力会提示开通</h2>
-          <p>当输入 @基金、@论文、@综述、@长任务、@文件 时，当前返回 RUNTIME_REQUIRED，不伪造执行。</p>
-          <a class="primary-link" href="https://medopl.medopl.cn">开通 MedOPL Runtime / Storage / Node Pool</a>
+        <aside class="settings-panel" id="settings" data-settings-panel aria-labelledby="settings-title">
+          <div class="section-heading compact">
+            <p class="panel-kicker">Settings</p>
+            <h2 id="settings-title">账号和 API Key</h2>
+          </div>
+          <dl class="status-list">
+            <div>
+              <dt>登录状态</dt>
+              <dd data-session-status>未登录</dd>
+            </div>
+            <div>
+              <dt>API Key 绑定状态</dt>
+              <dd data-provider-status>未绑定</dd>
+            </div>
+            <div>
+              <dt>fixed base_url</dt>
+              <dd>https://gflabtoken.cn/v1 <span>不可编辑</span></dd>
+            </div>
+          </dl>
+          <form class="form-stack" data-auth-form aria-label="注册登录">
+            <label for="auth-email">邮箱</label>
+            <input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com">
+            <label for="auth-password">密码</label>
+            <input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="至少 12 位">
+            <div class="form-actions">
+              <button class="primary-button" type="button" data-register-button>注册</button>
+              <button class="secondary-button" type="button" data-login-button>登录</button>
+            </div>
+          </form>
+          <form class="form-stack" data-provider-form aria-label="API Key 设置">
+            <label for="api-key">API Key</label>
+            <input id="api-key" name="apiKey" type="password" autocomplete="off" placeholder="sk-...">
+            <p class="form-hint">只保存到后端加密存储；页面只显示 masked key，不回显 raw API Key。</p>
+            <button class="primary-button" type="submit" data-save-key-button>保存/更新 API Key</button>
+            <button class="ghost-button full" type="button" data-logout-button>退出登录</button>
+            <p class="form-message" data-settings-message role="status"></p>
+          </form>
         </aside>
       </section>
 
-      <section class="chat-board" aria-label="消息列表">
+      <section class="capability-section" id="capabilities" aria-labelledby="capabilities-title">
         <div class="section-heading">
-          <p class="panel-kicker">Messages</p>
-          <h2>消息列表</h2>
+          <p class="panel-kicker">Capabilities</p>
+          <h2 id="capabilities-title">能力入口，不伪造交付</h2>
         </div>
-        <article class="message user-message">
-          <span>你</span>
-          <p>普通问答可以直接使用自己的 API Key。</p>
-        </article>
-        <article class="message assistant-message">
-          <span>OPL</span>
-          <p>需要 OPL runtime 的能力会给出 MedOPL 开通入口。</p>
-        </article>
+        <div class="capability-grid">
+          <article class="capability-card">
+            <span>01</span>
+            <h3>普通问答</h3>
+            <p>用自己的 API Key 进行低门槛聊天、解释和整理。</p>
+          </article>
+          <article class="capability-card">
+            <span>02</span>
+            <h3>论文/综述</h3>
+            <p>围绕选题、证据计划、综述结构进入复杂知识工作。</p>
+          </article>
+          <article class="capability-card">
+            <span>03</span>
+            <h3>基金</h3>
+            <p>拆解标书结构、研究目标和执行路径。</p>
+          </article>
+          <article class="capability-card">
+            <span>04</span>
+            <h3>PPT</h3>
+            <p>生成汇报叙事、页面顺序和交付物草稿。</p>
+          </article>
+          <article class="capability-card">
+            <span>05</span>
+            <h3>数据分析</h3>
+            <p>把数据问题转成分析计划和可验证步骤。</p>
+          </article>
+          <article class="capability-card">
+            <span>06</span>
+            <h3>长任务</h3>
+            <p>需要托管运行环境的任务会先进入 MedOPL 开通流程。</p>
+          </article>
+        </div>
       </section>
+
+      <aside class="runtime-gate" data-runtime-gate aria-label="MedOPL runtime gate">
+        <div>
+          <p class="panel-kicker">RUNTIME_REQUIRED</p>
+          <h2>需要 MedOPL Runtime</h2>
+          <p>该能力需要托管运行环境、存储或 node pool。当前只提供开通入口，不执行真实 OPL runtime。</p>
+        </div>
+        <a class="primary-button" href="https://medopl.medopl.cn">去 MedOPL 开通</a>
+      </aside>
     </main>
   </body>
 </html>
