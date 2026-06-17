@@ -74,6 +74,19 @@ func TestCreateTaskResponseRejectsInvalidIntent(t *testing.T) {
 	}
 }
 
+func TestCreateTaskResponseRejectsUnstableBoundaryID(t *testing.T) {
+	_, err := CreateTaskResponse(TaskRequest{
+		TenantID:    "tenant/demo",
+		WorkspaceID: "workspace_cloud_demo",
+		UserID:      "user_demo",
+		Prompt:      "生成一个医学研究项目的证据整理任务",
+		Intent:      "research",
+	})
+	if err == nil {
+		t.Fatal("expected invalid tenant boundary error")
+	}
+}
+
 func TestCreateTaskResponseSupportsSchemaIntentEnum(t *testing.T) {
 	tests := []struct {
 		intent       string

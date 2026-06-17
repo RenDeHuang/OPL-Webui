@@ -85,6 +85,25 @@ func TestLaunchTokenBoundaryRejectsBodyIdentityMismatch(t *testing.T) {
 	assertErrorResponse(t, response, http.StatusForbidden, "TENANT_BOUNDARY_MISMATCH")
 }
 
+func TestLaunchTokenBoundaryRejectsUnstableTokenIdentity(t *testing.T) {
+	setCloudMVPAuthEnv(t)
+
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/mvp/task", jsonBody(t, TaskRequest{
+		Prompt: "生成一个医学研究项目的证据整理任务",
+		Intent: "research",
+	}))
+	request.Header.Set("authorization", "Bearer "+signedLaunchToken(t, "test-secret", launchTokenClaims{
+		TenantID:    "tenant/token",
+		WorkspaceID: "workspace_token",
+		UserID:      "user_token",
+	}))
+
+	handleTaskWithRunner(response, request, authBoundaryRunner{})
+
+	assertErrorResponse(t, response, http.StatusUnauthorized, "INVALID_LAUNCH_TOKEN")
+}
+
 func TestLaunchTokenBoundaryDerivesIdentityFromToken(t *testing.T) {
 	setCloudMVPAuthEnv(t)
 

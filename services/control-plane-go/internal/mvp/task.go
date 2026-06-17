@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
@@ -70,6 +71,8 @@ var allowedTaskIntents = map[string]struct{}{
 	"presentation": {},
 	"general":      {},
 }
+
+var stableBoundaryIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_:-]{1,63}$`)
 
 func CreateTaskResponse(input TaskRequest) (TaskResponse, error) {
 	return CreateTaskResponseWithRoute(context.Background(), input, nil)
@@ -161,11 +164,24 @@ func validateRequest(input TaskRequest) (TaskRequest, error) {
 	case input.Prompt == "":
 		return TaskRequest{}, errors.New("prompt is required")
 	}
+	if !isStableBoundaryID(input.TenantID) {
+		return TaskRequest{}, errors.New("tenantId must be a stable boundary id")
+	}
+	if !isStableBoundaryID(input.WorkspaceID) {
+		return TaskRequest{}, errors.New("workspaceId must be a stable boundary id")
+	}
+	if !isStableBoundaryID(input.UserID) {
+		return TaskRequest{}, errors.New("userId must be a stable boundary id")
+	}
 	if _, ok := allowedTaskIntents[input.Intent]; !ok {
 		return TaskRequest{}, fmt.Errorf("intent must be one of research, grant, presentation, general")
 	}
 
 	return input, nil
+}
+
+func isStableBoundaryID(value string) bool {
+	return stableBoundaryIDPattern.MatchString(value)
 }
 
 func artifactKind(intent string) string {

@@ -131,7 +131,9 @@ func parseLaunchToken(token string) (launchTokenClaims, *taskAuthError) {
 	claims.TenantID = strings.TrimSpace(claims.TenantID)
 	claims.WorkspaceID = strings.TrimSpace(claims.WorkspaceID)
 	claims.UserID = strings.TrimSpace(claims.UserID)
-	if claims.TenantID == "" || claims.WorkspaceID == "" || claims.UserID == "" {
+	if !isStableBoundaryID(claims.TenantID) ||
+		!isStableBoundaryID(claims.WorkspaceID) ||
+		!isStableBoundaryID(claims.UserID) {
 		return launchTokenClaims{}, invalidLaunchToken()
 	}
 	return claims, nil
