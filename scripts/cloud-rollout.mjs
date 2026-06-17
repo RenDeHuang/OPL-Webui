@@ -35,81 +35,23 @@ if (dryRun) {
 requireEnv('KUBECONFIG');
 requireEnv('OPL_IMAGE');
 
-run('kubectl set image', 'kubectl', kubectlArgs([
-  'set',
-  'image',
-  deployment,
-  `${container}=${process.env.OPL_IMAGE}`,
-]));
+run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${process.env.OPL_IMAGE}`]));
 
-run('kubectl rollout status', 'kubectl', kubectlArgs([
-  'rollout',
-  'status',
-  deployment,
-]));
+run('kubectl rollout status', 'kubectl', kubectlArgs(['rollout', 'status', deployment]));
 
-capture('rollout revision', kubectlArgs([
-  'get',
-  deployment,
-  '-o',
-  rolloutRevisionJsonpath,
-]));
+capture('rollout revision', kubectlArgs(['get', deployment, '-o', rolloutRevisionJsonpath]));
 
-capture('deployment image', kubectlArgs([
-  'get',
-  deployment,
-  '-o',
-  deploymentImageJsonpath,
-]));
+capture('deployment image', kubectlArgs(['get', deployment, '-o', deploymentImageJsonpath]));
 
-const pod = execFileSync('kubectl', kubectlArgs([
-  'get',
-  'pod',
-  '-l',
-  podSelector,
-  '-o',
-  'jsonpath={.items[0].metadata.name}',
-]), { encoding: 'utf8' }).trim();
+const pod = selectReadyPod();
 
-if (!pod) {
-  console.error('No pod found for selector:', podSelector);
-  process.exit(1);
-}
+run('pod status', 'kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'wide']));
 
-run('pod status', 'kubectl', kubectlArgs([
-  'get',
-  'pod',
-  '-l',
-  podSelector,
-  '-o',
-  'wide',
-]));
+capture('pod imageID', kubectlArgs(['get', 'pod', pod, '-o', podImageIdJsonpath]));
 
-capture('pod imageID', kubectlArgs([
-  'get',
-  'pod',
-  pod,
-  '-o',
-  podImageIdJsonpath,
-]));
+run('canary db', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'db']));
 
-run('canary db', 'kubectl', kubectlArgs([
-  'exec',
-  pod,
-  '--',
-  controlPlaneBin,
-  'canary',
-  'db',
-]));
-
-run('canary opl-cli', 'kubectl', kubectlArgs([
-  'exec',
-  pod,
-  '--',
-  controlPlaneBin,
-  'canary',
-  'opl-cli',
-]));
+run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'opl-cli']));
 
 for (const url of [healthUrl, readyUrl, homeUrl]) {
   run(`HTTPS smoke ${url}`, 'curl', ['--http2', '-fsS', url]);
@@ -121,71 +63,24 @@ function kubectlArgs(commandArgs) {
 
 function printDryRun() {
   console.log('[cloud-rollout] dryRun=true; pass --apply to mutate the cluster.');
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'set',
-    'image',
-    deployment,
-    `${container}=${image}`,
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'rollout',
-    'status',
-    deployment,
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'get',
-    deployment,
-    '-o',
-    rolloutRevisionJsonpath,
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'get',
-    deployment,
-    '-o',
-    deploymentImageJsonpath,
-  ])));
-  console.log(`pod="$(${formatCommand('kubectl', kubectlArgs([
-    'get',
-    'pod',
-    '-l',
-    podSelector,
-    '-o',
-    'jsonpath={.items[0].metadata.name}',
-  ]))})"`);
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'get',
-    'pod',
-    '-l',
-    podSelector,
-    '-o',
-    'wide',
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'get',
-    'pod',
-    '$pod',
-    '-o',
-    podImageIdJsonpath,
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'exec',
-    '$pod',
-    '--',
-    controlPlaneBin,
-    'canary',
-    'db',
-  ])));
-  console.log(formatCommand('kubectl', kubectlArgs([
-    'exec',
-    '$pod',
-    '--',
-    controlPlaneBin,
-    'canary',
-    'opl-cli',
-  ])));
+  printKubectl(['set', 'image', deployment, `${container}=${image}`]);
+  printKubectl(['rollout', 'status', deployment]);
+  printKubectl(['get', deployment, '-o', rolloutRevisionJsonpath]);
+  printKubectl(['get', deployment, '-o', deploymentImageJsonpath]);
+  console.log(`# selected pod is resolved from Running + Ready pods on ${image}`);
+  printKubectl(['get', 'pod', '-l', podSelector, '-o', 'json']);
+  console.log('pod="<selected Running Ready pod matching OPL_IMAGE>"');
+  printKubectl(['get', 'pod', '-l', podSelector, '-o', 'wide']);
+  printKubectl(['get', 'pod', '$pod', '-o', podImageIdJsonpath]);
+  printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'db']);
+  printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'opl-cli']);
   console.log(formatCommand('curl', ['--http2', '-fsS', healthUrl]));
   console.log(formatCommand('curl', ['--http2', '-fsS', readyUrl]));
   console.log(formatCommand('curl', ['--http2', '-fsS', homeUrl]));
+}
+
+function printKubectl(commandArgs) {
+  console.log(formatCommand('kubectl', kubectlArgs(commandArgs)));
 }
 
 function run(label, command, commandArgs) {
@@ -201,6 +96,54 @@ function capture(label, commandArgs) {
   const value = execFileSync('kubectl', commandArgs, { encoding: 'utf8' }).trim();
   console.log(value || '(empty)');
   return value;
+}
+
+function selectReadyPod() {
+  const pods = JSON.parse(execFileSync('kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'json']), { encoding: 'utf8' }));
+
+  const expectedImage = process.env.OPL_IMAGE;
+  const candidates = (pods.items ?? [])
+    .filter((pod) => pod.status?.phase === 'Running')
+    .filter((pod) => hasReadyCondition(pod))
+    .filter((pod) => containerStatus(pod)?.ready === true)
+    .filter((pod) => !expectedImage || containerStatus(pod)?.image === expectedImage)
+    .sort((left, right) => (right.metadata?.creationTimestamp ?? '').localeCompare(left.metadata?.creationTimestamp ?? ''));
+
+  const selected = candidates[0]?.metadata?.name;
+  if (selected) {
+    console.log('[cloud-rollout] selected pod');
+    console.log(selected);
+    return selected;
+  }
+
+  console.error(`No Running Ready pod found for selector ${podSelector} and image ${expectedImage}.`);
+  console.error(formatPodSummary(pods.items ?? []));
+  process.exit(1);
+}
+
+function hasReadyCondition(pod) {
+  return (pod.status?.conditions ?? []).some((condition) => condition.type === 'Ready' && condition.status === 'True');
+}
+
+function containerStatus(pod) {
+  return (pod.status?.containerStatuses ?? []).find((status) => status.name === container);
+}
+
+function formatPodSummary(pods) {
+  if (pods.length === 0) {
+    return 'Pod summary: no pods returned.';
+  }
+  const lines = pods.map((pod) => {
+    const status = containerStatus(pod);
+    return [
+      pod.metadata?.name ?? '(unknown)',
+      `phase=${pod.status?.phase ?? '(unknown)'}`,
+      `ready=${hasReadyCondition(pod)}`,
+      `containerReady=${status?.ready === true}`,
+      `image=${status?.image ?? '(unknown)'}`,
+    ].join(' ');
+  });
+  return ['Pod summary:', ...lines].join('\n');
 }
 
 function requireEnv(name) {

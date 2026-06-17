@@ -101,6 +101,8 @@ dry-run 审计通过后，再显式加 `--apply`。helper 会执行 `kubectl set
 node scripts/cloud-rollout.mjs --apply
 ```
 
+Cloud Rollout #4 出现过一次 false negative：production 实际已更新到 `uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27`，Running Ready Pod、DB canary、OPL CLI canary 和 HTTPS smoke 均通过，但 helper 在 canary exec 时按 `.items[0]` 误选了旧 Failed/Error Pod，GitHub job 因 `cannot exec into a container in a completed pod` 标红。当前 helper 的口径是：只从 selector 返回的 Pod JSON 中选择 `status.phase=Running`、Ready condition 为 `True`、`control-plane` container ready，且 container image 等于本次 `OPL_IMAGE` 的 Pod；如果没有匹配 Pod，必须打印 pod summary 并 fail closed。不要对 Failed、Succeeded 或 Error 历史 Pod 执行 canary。
+
 记录以下字段到 active change review 或 closeout：
 
 - rollout revision
