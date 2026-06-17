@@ -62,6 +62,15 @@ test('active truth links active change work instead of phase package docs', () =
   assert.match(readme, /changes\/active\/figma-v3-preview/);
 });
 
+test('active truth keeps 010c2b9 metrics production evidence pending', () => {
+  const readme = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.match(readme, /010c2b9/);
+  assert.match(readme, /production rollout evidence/i);
+  assert.match(readme, /\/metricsz.*尚未线上验证/);
+  assert.doesNotMatch(readme, /010c2b9[\s\S]{0,160}\/metricsz[\s\S]{0,80}(?:已通过|HTTP\/2 200)/);
+});
+
 test('release automation is compacted after production-gated closeout', () => {
   assert.equal(existsSync('changes/active/release-automation'), false);
 

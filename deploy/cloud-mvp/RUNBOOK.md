@@ -41,6 +41,7 @@ docker push "$OPL_IMAGE"
 - Production Apply: passed
 - Cloud Rollout #5: green
 - canary/smoke: DB canary、OPL CLI canary、`/healthz`、`/readyz`、`/metricsz` 和首页 HTTPS smoke 通过
+- pending: `010c2b9` requires production rollout evidence；云端/VPC runner 需设置 `OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:010c2b9`，执行 dry-run/apply/canary，并记录 `/metricsz` production smoke evidence 后才能标记线上通过
 
 ## 日常更新发布流程
 

@@ -99,6 +99,8 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     'short_commit',
     'Release Image',
     'Cloud Rollout',
+    '010c2b9',
+    'production rollout evidence',
     'no-public-staging production-gated release',
     'staging.opl.medopl.cn',
     'fake staging',
@@ -150,6 +152,8 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /apply.*false/is);
   assert.match(runbook, /apply.*true/is);
   assert.match(runbook, /production.*Environment approval/is);
+  assert.match(runbook, /OPL_IMAGE=.*010c2b9/i);
+  assert.match(runbook, /\/metricsz.*production.*evidence/is);
   assert.match(runbook, /Release Image.*不执行 rollout/is);
   assert.match(runbook, /staging.*不是镜像存储/is);
   assert.match(runbook, /创建真实.*opl-webui-staging.*独立 staging DB\/Secret\/TLS\/DNS/is);

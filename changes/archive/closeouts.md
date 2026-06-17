@@ -153,3 +153,9 @@
 - summary: Cloud rollout helper dry-run 和 apply HTTPS smoke 纳入 `/metricsz`，runbook/spec/active truth 同步为 `/healthz`、`/readyz`、`/metricsz` 和首页 smoke。
 - verified: `node --test tests/contract/cloud-rollout-helper.test.mjs`, `node --test tests/contract/cloud-mvp-deploy-shape.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 已执行真实 cloud rollout、线上 `/metricsz` 已通过、真实云监控/告警/SLO、完整 production ready SaaS、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 production-metrics-evidence-handoff
+
+- summary: 固化 `010c2b9` production rollout evidence handoff；active truth 和 runbook 明确 `/metricsz` 尚未线上验证，云端/VPC runner 需用 `OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:010c2b9` 执行 dry-run/apply/canary/smoke 后才能标记 evidence。
+- verified: `node --test tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 已执行 `010c2b9` production rollout、线上 `/metricsz` 已通过、真实云监控/告警/SLO、完整 production ready SaaS、真实 OPL execution 或 OPL mutation。
