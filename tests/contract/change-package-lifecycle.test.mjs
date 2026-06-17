@@ -65,7 +65,6 @@ test('active truth links active change work instead of phase package docs', () =
 test('active truth records 24ba41f session auth production evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
 
-  assert.match(readme, /session-auth-boundary-production-verified/);
   assert.match(readme, /24ba41f/);
   assert.match(readme, /rollout revision `9`/);
   assert.match(readme, /\/metricsz`? 200/);
@@ -73,6 +72,20 @@ test('active truth records 24ba41f session auth production evidence', () => {
   assert.match(readme, /POST \/api\/session\/launch[\s\S]{0,80}401 AUTH_REQUIRED/);
   assert.match(readme, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/);
   assert.match(readme, /还没有真实注册登录/);
+});
+
+test('active truth records fa3bcb7 tenant workspace production evidence', () => {
+  const readme = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.match(readme, /tenant-workspace-persistence-production-verified/);
+  assert.match(readme, /fa3bcb7/);
+  assert.match(readme, /opl-webui:fa3bcb7/);
+  assert.match(readme, /GET \/api\/workspaces\/current[\s\S]{0,160}401 AUTH_REQUIRED/);
+  assert.match(readme, /GET \/api\/tasks[\s\S]{0,160}401 AUTH_REQUIRED/);
+  assert.match(readme, /POST \/api\/tasks[\s\S]{0,160}401 AUTH_REQUIRED/);
+  assert.match(readme, /GET \/api\/tasks\/example_task[\s\S]{0,160}401 AUTH_REQUIRED/);
+  assert.match(readme, /还没有真实注册登录/);
+  assert.match(readme, /workspace invitation/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

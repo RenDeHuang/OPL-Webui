@@ -207,3 +207,9 @@
 - summary: 建立商业 SaaS 数据骨架 v1：`users`、`tenants`、`tenant_memberships`、`workspaces`、`workspace_memberships` schema；新增 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/{taskId}`；API 只从 bearer/session auth boundary 推导 tenant/workspace/user，缺 membership fail closed，tenant A 不能读取 tenant B task，前端最小接入 workspace/task list。
 - verified: targeted `cd services/control-plane-go && go test ./...`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/health/registry-coverage.test.mjs`, plus final full gates recorded in commit evidence。
 - cannot claim: production rollout、真实注册登录、workspace invitation、复杂 RBAC、billing、worker、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 tenant-workspace-production-evidence
+
+- summary: 固化 `fa3bcb7` tenant/workspace persistence v1 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:fa3bcb7`，production rollout 成功；`/healthz`、`/readyz`、`/metricsz` 和首页 smoke 通过；DB canary 与 OPL CLI canary 通过；未认证 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/example_task` 均返回 `401 AUTH_REQUIRED`。本地 closeout 未执行 kubectl、未读取 kubeconfig，rollout revision 数字未在本地证据中确认。
+- verified: user-provided production evidence, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 完整商业 SaaS、真实注册登录、workspace invitation、复杂 RBAC、billing、worker、真实 OPL execution 或 OPL mutation。
