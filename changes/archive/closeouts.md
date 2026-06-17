@@ -141,3 +141,9 @@
 - summary: 在 `changes/README.md` 固化 Autonomous Commercial Development 合同，把 current truth、commercial SaaS goal、gap-driven phase、allowed/forbidden changes、contracts、tests、test-classification、evals、cannot claim、hard stops、closeout、commit and push、no compatibility layer 和 no bloat 写成后续自治开发模板，并用 lifecycle contract test 锁住。
 - verified: `node --test tests/contract/change-package-lifecycle.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实 production rollout、真实 staging、完整 SaaS、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 monitoring-surface
+
+- summary: Go control plane 增加 `GET /metricsz` 只读 monitoring projection，复用 runtimegate readiness truth，暴露 service、environment、ready 和缺失依赖 key 统计，不读取 secret、不连接 DB、不调用 OPL CLI。
+- verified: `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 已线上部署 `/metricsz`、真实云监控/告警/SLO、完整 production ready SaaS、真实 auth、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。

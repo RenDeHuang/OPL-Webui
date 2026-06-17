@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -46,6 +48,57 @@ func TestRunCLIHelpPrintsUsage(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "canary db") {
 		t.Fatalf("help should include canary db, got %q", stdout.String())
+	}
+}
+
+func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
+	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
+	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
+	t.Setenv("OPL_CLI_PATH", "")
+
+	request := httptest.NewRequest(http.MethodGet, "/metricsz", nil)
+	response := httptest.NewRecorder()
+
+	handleMetricsz(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("metricsz status = %d, body=%s", response.Code, response.Body.String())
+	}
+	var body map[string]any
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode metricsz: %v", err)
+	}
+	if body["service"] != "opl-webui-control-plane" {
+		t.Fatalf("service mismatch: %#v", body["service"])
+	}
+	if body["environment"] != "cloud_mvp" {
+		t.Fatalf("environment mismatch: %#v", body["environment"])
+	}
+	if body["ready"] != false || body["ok"] != false {
+		t.Fatalf("metricsz should mirror runtime readiness: %#v", body)
+	}
+	if body["missingDependencyCount"] != float64(1) {
+		t.Fatalf("missingDependencyCount mismatch: %#v", body["missingDependencyCount"])
+	}
+	missing, ok := body["missingDependencies"].([]any)
+	if !ok || len(missing) != 1 || missing[0] != "OPL_CLI_PATH" {
+		t.Fatalf("missingDependencies mismatch: %#v", body["missingDependencies"])
+	}
+	encoded := response.Body.String()
+	if strings.Contains(encoded, "secret") || strings.Contains(encoded, "postgres://") {
+		t.Fatalf("metricsz leaked sensitive values: %s", encoded)
+	}
+}
+
+func TestHandleMetricszRejectsNonGet(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "/metricsz", nil)
+	response := httptest.NewRecorder()
+
+	handleMetricsz(response, request)
+
+	if response.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("metricsz POST status = %d, want %d", response.Code, http.StatusMethodNotAllowed)
 	}
 }
 

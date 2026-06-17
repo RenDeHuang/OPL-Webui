@@ -28,6 +28,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", handleHealthz)
 	mux.HandleFunc("/readyz", handleReadyz)
+	mux.HandleFunc("/metricsz", handleMetricsz)
 	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
 	mux.HandleFunc("/api/mvp/task", mvp.HandleTask)
 	mux.HandleFunc("/api/mvp/tasks/", mvp.HandleStoredTask)
@@ -130,6 +131,25 @@ func handleReadyz(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json; charset=utf-8")
 	response.WriteHeader(httpStatus)
 	_ = json.NewEncoder(response).Encode(status)
+}
+
+func handleMetricsz(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		response.Header().Set("allow", http.MethodGet)
+		http.Error(response, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	status := runtimegate.CurrentStatus()
+	response.Header().Set("content-type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(response).Encode(map[string]any{
+		"ok":                     status.OK,
+		"service":                "opl-webui-control-plane",
+		"environment":            status.Environment,
+		"ready":                  status.OK,
+		"missingDependencyCount": len(status.Missing),
+		"missingDependencies":    status.Missing,
+	})
 }
 
 type CanaryReport struct {
