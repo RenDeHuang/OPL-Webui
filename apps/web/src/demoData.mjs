@@ -72,6 +72,16 @@ function routeDomain(route, fallback = 'medautoscience') {
     ?? fallback;
 }
 
+function usageQuotaView(usageQuota) {
+  const quota = usageQuota ?? { plan: 'mvp', taskQuota: 2, usagePeriod: 'monthly', usedCount: 0, remainingCount: 2 };
+  return {
+    label: quota.plan,
+    value: `${quota.usedCount}/${quota.taskQuota} tasks used`,
+    remaining: quota.remainingCount,
+    period: quota.usagePeriod,
+  };
+}
+
 export function createV3ViewModel(data) {
   const artifact = firstArtifact(data);
   const route = data.adapter.route ?? {};
@@ -125,6 +135,7 @@ export function createV3ViewModel(data) {
         title: '下一步建议',
         body: '先确认证据范围，再进入交付物预览和人工审阅。',
       },
+      usageQuota: usageQuotaView(data.workspaceCurrent?.usageQuota),
       stages: [
         { label: '接收目标', state: 'done' },
         { label: 'OPL 只读路由', state: route.ok === false ? 'attention' : 'done' },
@@ -234,6 +245,7 @@ export async function renderWebDemoData(documentRef = globalThis.document, fetch
   writeText(documentRef, '[data-opl-bridge]', data.oplCards[0].value);
   writeText(documentRef, '[data-v3-project-title]', viewModel.workspace.project.title);
   writeText(documentRef, '[data-v3-next-step]', viewModel.workspace.nextStep.body);
+  writeText(documentRef, '[data-v3-usage-quota]', viewModel.workspace.usageQuota.value);
   writeText(documentRef, '[data-v3-deliverable-preview]', viewModel.workspace.deliverablePreview.title);
 }
 

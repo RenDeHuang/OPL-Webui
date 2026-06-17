@@ -20,6 +20,7 @@
 - Go control plane 支持 `POST /api/session/launch`，可用一次 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可通过同源 cookie 注入 tenant/workspace/user 边界。
 - Go control plane 支持 `GET /api/session/current`，返回当前认证的 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection，不返回 token 或 secret。
 - Go control plane 已支持并 production verified tenant/workspace persistence v1：`users`、`tenants`、`tenant_memberships`、`workspaces`、`workspace_memberships` schema，以及 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/{taskId}`；这些 API 只从 bearer/session auth boundary 推导 tenant/workspace/user。
+- Go control plane 本地已支持 usage/quota enforcement v1：`POST /api/tasks` 创建前按 tenant/workspace 检查 task quota；未超额时 task projection 与 usage event 同边界写入，超额时返回 `QUOTA_EXCEEDED` 且不写 task projection 或 usage event；`GET /api/workspaces/current` 返回 plan、task quota、usage period、used count 和 remaining count。
 - `fa3bcb7` tenant/workspace persistence v1 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:fa3bcb7`，production rollout 成功；`/healthz`、`/readyz`、`/metricsz` 和首页 smoke 通过；DB canary 与 OPL CLI canary 通过；未认证 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/example_task` 均返回 `401 AUTH_REQUIRED`。本地 closeout 未读取 kubeconfig 或 GitHub rollout log，因此不写未经本地证据确认的 revision 数字。
 - `24ba41f` session/auth boundary 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f`、rollout revision `9`、`/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass、`opl-webui-auth` Opaque Secret 存在且 keys=1、未带 Authorization 的 `POST /api/session/launch` 返回 `401 AUTH_REQUIRED`、无 cookie 的 `GET /api/session/current` 返回 `401 AUTH_REQUIRED`。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
@@ -51,12 +52,13 @@
 
 - 还不是完整公网多用户 production ready SaaS。
 - 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
+- usage/quota enforcement v1 还没有 production rollout evidence。
 - 还没有真实注册登录、workspace invitation、复杂 RBAC、session revocation、队列、计费/billing、object storage、OPL worker 或真实 OPL execution。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。
 
 ## Next Cursor
 
-下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进真实注册登录、workspace membership、tenant-scoped persistence、usage/quota 和 GitHub update integration。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
+下一步处理 `changes/active/figma-v3-preview` 的 cloud rollout / online acceptance，并继续推进 usage/quota production rollout、真实注册登录、workspace membership、GitHub update integration。真实 staging 只有在 namespace、domain、DB、Secret、TLS 和 DNS 创建后才能恢复。
 
 ## Next Priorities
 

@@ -65,6 +65,44 @@ test('SaaS task APIs create, list and read only inside the authenticated workspa
   }
 });
 
+test('SaaS task APIs enforce tenant workspace task quota', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(saasEnv());
+  try {
+    const tenantA = await launchSession(baseUrl);
+    const first = await createTask(baseUrl, tenantA, 'first task inside quota');
+    assert.equal(first.status, 200);
+    const second = await createTask(baseUrl, tenantA, 'second task inside quota');
+    assert.equal(second.status, 200);
+
+    const quota = await fetch(`${baseUrl}/api/workspaces/current`, { headers: { cookie: tenantA } });
+    assert.equal(quota.status, 200);
+    const current = await quota.json();
+    assert.deepEqual(current.usageQuota, {
+      plan: 'mvp',
+      taskQuota: 2,
+      usagePeriod: 'monthly',
+      usedCount: 2,
+      remainingCount: 0,
+    });
+    assert.doesNotMatch(JSON.stringify(current.usageQuota), /secret|token|password/i);
+
+    const exceeded = await createTask(baseUrl, tenantA, 'third task should exceed quota');
+    assert.equal(exceeded.status, 429);
+    assert.equal((await exceeded.json()).errorCode, 'QUOTA_EXCEEDED');
+
+    const list = await fetch(`${baseUrl}/api/tasks`, { headers: { cookie: tenantA } });
+    assert.equal(list.status, 200);
+    const listed = await list.json();
+    assert.equal(listed.tasks.length, 2);
+
+    const tenantB = await launchSession(baseUrl, { tenantId: 'tenant_other', workspaceId: 'workspace_other', userId: 'user_other' });
+    const tenantBCreate = await createTask(baseUrl, tenantB, 'tenant B quota is independent');
+    assert.equal(tenantBCreate.status, 200);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
 function saasEnv() {
   return {
     OPL_WEBUI_ENV: 'cloud_mvp',
@@ -89,4 +127,12 @@ async function launchSession(baseUrl, claims = { tenantId: 'tenant_token', works
   });
   assert.equal(response.status, 204);
   return response.headers.get('set-cookie').split(';')[0];
+}
+
+async function createTask(baseUrl, cookie, prompt) {
+  return fetch(`${baseUrl}/api/tasks`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', cookie },
+    body: JSON.stringify({ prompt, intent: 'research' }),
+  });
 }

@@ -101,3 +101,58 @@ func TestMemoryTaskStoreDeletesProjection(t *testing.T) {
 		t.Fatal("projection should be deleted")
 	}
 }
+
+func TestMemoryTaskStoreEnforcesTaskQuotaWithoutWritingProjection(t *testing.T) {
+	store := NewMemoryTaskStore()
+	first := mustTaskProjection(t, "tenant_quota", "workspace_quota", "user_quota", "first")
+	second := mustTaskProjection(t, "tenant_quota", "workspace_quota", "user_quota", "second")
+	third := mustTaskProjection(t, "tenant_quota", "workspace_quota", "user_quota", "third")
+
+	if err := store.SaveTaskProjectionWithQuota(first); err != nil {
+		t.Fatalf("first SaveTaskProjectionWithQuota returned error: %v", err)
+	}
+	if err := store.SaveTaskProjectionWithQuota(second); err != nil {
+		t.Fatalf("second SaveTaskProjectionWithQuota returned error: %v", err)
+	}
+	err := store.SaveTaskProjectionWithQuota(third)
+	if !errors.Is(err, ErrQuotaExceeded) {
+		t.Fatalf("expected ErrQuotaExceeded, got %v", err)
+	}
+	if _, ok := store.GetTaskProjection("tenant_quota", "workspace_quota", third.Task.TaskID); ok {
+		t.Fatal("quota failure must not write task projection")
+	}
+	usage := store.GetUsageQuota("tenant_quota", "workspace_quota")
+	if usage.UsedCount != 2 || usage.RemainingCount != 0 {
+		t.Fatalf("usage should stay at quota after failed write: %#v", usage)
+	}
+}
+
+func TestMemoryTaskStoreScopesQuotaByTenant(t *testing.T) {
+	store := NewMemoryTaskStore()
+	for _, prompt := range []string{"first", "second"} {
+		if err := store.SaveTaskProjectionWithQuota(mustTaskProjection(t, "tenant_a", "workspace_shared", "user_a", prompt)); err != nil {
+			t.Fatalf("tenant A write returned error: %v", err)
+		}
+	}
+	err := store.SaveTaskProjectionWithQuota(mustTaskProjection(t, "tenant_b", "workspace_shared", "user_b", "tenant B first"))
+	if err != nil {
+		t.Fatalf("tenant B usage should not be affected by tenant A: %v", err)
+	}
+}
+
+func mustTaskProjection(t *testing.T, tenantID string, workspaceID string, userID string, prompt string) TaskResponse {
+	t.Helper()
+	projection, err := CreateTaskResponse(TaskRequest{
+		TenantID:    tenantID,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
+		Prompt:      prompt,
+		Intent:      "research",
+	})
+	if err != nil {
+		t.Fatalf("CreateTaskResponse returned error: %v", err)
+	}
+	projection.Task.TaskID = workspaceID + "_task_" + prompt
+	projection.RunID = "run_" + workspaceID + "_" + userID + "_" + prompt
+	return projection
+}

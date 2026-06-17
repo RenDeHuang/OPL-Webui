@@ -53,6 +53,7 @@ test('web demo shell exposes the Figma V3 lightweight project workspace', () => 
   assert.match(html, /项目内 Prompt/);
   assert.match(html, /data-v3-project-title/);
   assert.match(html, /data-v3-next-step/);
+  assert.match(html, /data-v3-usage-quota/);
   assert.match(html, /data-v3-deliverable-preview/);
 });
 

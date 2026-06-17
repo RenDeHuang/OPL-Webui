@@ -114,6 +114,7 @@ const workspaceProjection = Object.freeze({
   tenantRole: 'owner',
   workspaceRole: 'owner',
   workspace: { id: 'workspace_demo', name: 'workspace_demo' },
+  usageQuota: { plan: 'mvp', taskQuota: 2, usagePeriod: 'monthly', usedCount: 1, remainingCount: 1 },
 });
 
 const taskListProjection = Object.freeze({
@@ -167,8 +168,17 @@ test('web demo data uses SaaS workspace and task list APIs', async () => {
   const data = await getWebDemoData(fetchRef);
 
   assert.equal(data.workspaceCurrent.workspaceId, 'workspace_demo');
+  assert.deepEqual(data.workspaceCurrent.usageQuota, workspaceProjection.usageQuota);
   assert.equal(data.taskList.tasks.length, 1);
   assert.equal(data.task.taskId, apiProjection.task?.taskId);
+  const viewModel = demoData.createV3ViewModel(data);
+  assert.deepEqual(viewModel.workspace.usageQuota, {
+    label: 'mvp',
+    value: '1/2 tasks used',
+    remaining: 1,
+    period: 'monthly',
+  });
+  assert.doesNotMatch(JSON.stringify(viewModel.workspace.usageQuota), /secret|token|password/i);
   assert.deepEqual(calls.map((call) => call.url), ['/api/workspaces/current', '/api/tasks', '/api/opl/snapshot']);
   assert.equal(calls[1].options?.method, 'GET');
 });
@@ -204,15 +214,7 @@ test('web demo data derives a Figma V3 view model from current projections', asy
 
 test('web demo data renderer writes cards into DOM-like targets', async () => {
   const writes = new Map();
-  const documentLike = {
-    querySelector(selector) {
-      return {
-        set textContent(value) {
-          writes.set(selector, value);
-        },
-      };
-    },
-  };
+  const documentLike = { querySelector: (selector) => ({ set textContent(value) { writes.set(selector, value); } }) };
 
   await renderWebDemoData(documentLike, async (url) => createFetchResponse(url === '/api/opl/snapshot' ? oplSnapshot : apiProjection));
 

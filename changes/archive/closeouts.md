@@ -213,3 +213,9 @@
 - summary: 固化 `fa3bcb7` tenant/workspace persistence v1 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:fa3bcb7`，production rollout 成功；`/healthz`、`/readyz`、`/metricsz` 和首页 smoke 通过；DB canary 与 OPL CLI canary 通过；未认证 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/example_task` 均返回 `401 AUTH_REQUIRED`。本地 closeout 未执行 kubectl、未读取 kubeconfig，rollout revision 数字未在本地证据中确认。
 - verified: user-provided production evidence, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 完整商业 SaaS、真实注册登录、workspace invitation、复杂 RBAC、billing、worker、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 usage-quota-enforcement
+
+- summary: 建立 usage/quota enforcement v1：默认 `mvp` plan、task quota `2`、usage period `monthly`；`POST /api/tasks` 创建前按 auth-derived tenant/workspace 检查 quota，未超额时 task projection 与 usage event 继续同边界写入，超额时返回 `QUOTA_EXCEEDED` 且不写 task projection 或 usage event；`GET /api/workspaces/current` 返回 plan、task quota、usage period、used count 和 remaining count；前端只显示最小 usage/quota 状态。
+- verified: red `cd services/control-plane-go && go test ./internal/mvp` failed on missing quota API, red `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs` failed on missing `usageQuota`; targeted green `cd services/control-plane-go && go test ./internal/mvp`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; final gates recorded in commit evidence。
+- cannot claim: production rollout、真实支付、billing provider、复杂 plan 管理、workspace invitation、复杂 RBAC、worker、真实 OPL execution 或 OPL mutation。

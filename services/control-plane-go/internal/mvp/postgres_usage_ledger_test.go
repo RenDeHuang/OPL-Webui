@@ -132,3 +132,92 @@ func TestPostgresTaskStoreRollsBackWhenUsageWriteFails(t *testing.T) {
 		t.Fatal("failed write should not commit")
 	}
 }
+
+func TestPostgresTaskStoreChecksQuotaBeforeProjectionAndUsageWrites(t *testing.T) {
+	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
+		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 0, RemainingCount: 2,
+	}}
+	store := NewPostgresTaskStore(executor)
+	projection, err := CreateTaskResponse(TaskRequest{
+		TenantID:    "tenant_quota",
+		WorkspaceID: "workspace_quota",
+		UserID:      "user_quota",
+		Prompt:      "生成一个医学研究项目的证据整理任务",
+		Intent:      "research",
+	})
+	if err != nil {
+		t.Fatalf("CreateTaskResponse returned error: %v", err)
+	}
+
+	if err := store.SaveTaskProjectionWithQuota(projection); err != nil {
+		t.Fatalf("SaveTaskProjectionWithQuota returned error: %v", err)
+	}
+
+	if len(executor.execCalls) != 3 {
+		t.Fatalf("expected plan ensure, task write and usage write, got %#v", executor.execCalls)
+	}
+	if !strings.Contains(executor.execCalls[0].query, "insert into tenant_plans") {
+		t.Fatalf("expected tenant plan ensure before writes, got %q", executor.execCalls[0].query)
+	}
+	if executor.queryRowCalls != 2 {
+		t.Fatalf("expected plan lock query and usage count query, got %d", executor.queryRowCalls)
+	}
+	if !strings.Contains(executor.execCalls[1].query, "insert into task_projections") {
+		t.Fatalf("expected task projection write after quota check, got %q", executor.execCalls[1].query)
+	}
+	if !strings.Contains(executor.execCalls[2].query, "insert into usage_events") {
+		t.Fatalf("expected usage event write after task projection, got %q", executor.execCalls[2].query)
+	}
+	if !executor.committed {
+		t.Fatal("successful quota-enforced write should commit")
+	}
+}
+
+func TestPostgresTaskStoreQuotaFailureDoesNotWriteProjectionOrUsage(t *testing.T) {
+	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
+		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 2, RemainingCount: 0,
+	}}
+	store := NewPostgresTaskStore(executor)
+	projection, err := CreateTaskResponse(TaskRequest{
+		TenantID:    "tenant_quota",
+		WorkspaceID: "workspace_quota",
+		UserID:      "user_quota",
+		Prompt:      "生成一个医学研究项目的证据整理任务",
+		Intent:      "research",
+	})
+	if err != nil {
+		t.Fatalf("CreateTaskResponse returned error: %v", err)
+	}
+
+	err = store.SaveTaskProjectionWithQuota(projection)
+	if !errors.Is(err, ErrQuotaExceeded) {
+		t.Fatalf("expected ErrQuotaExceeded, got %v", err)
+	}
+	for _, call := range executor.execCalls {
+		if strings.Contains(call.query, "insert into task_projections") || strings.Contains(call.query, "insert into usage_events") {
+			t.Fatalf("quota failure must not write projection or usage, got %#v", executor.execCalls)
+		}
+	}
+	if !executor.rolledBack {
+		t.Fatal("quota failure should roll back")
+	}
+	if executor.committed {
+		t.Fatal("quota failure should not commit")
+	}
+}
+
+func TestPostgresTaskStoreUsageQuotaReadDoesNotLockPlanRow(t *testing.T) {
+	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
+		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 1, RemainingCount: 1,
+	}}
+	store := NewPostgresTaskStore(executor)
+
+	quota := store.GetUsageQuota("tenant_quota", "workspace_quota")
+
+	if quota.UsedCount != 1 || quota.RemainingCount != 1 {
+		t.Fatalf("quota mismatch: %#v", quota)
+	}
+	if strings.Contains(strings.ToLower(executor.queryCalls[0]), "for update") {
+		t.Fatalf("read-only quota projection must not lock plan row: %q", executor.queryCalls[0])
+	}
+}

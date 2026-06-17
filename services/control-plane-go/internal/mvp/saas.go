@@ -1,9 +1,8 @@
 package mvp
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -16,13 +15,14 @@ type WorkspaceRef struct {
 }
 
 type WorkspaceCurrentResponse struct {
-	OK            bool         `json:"ok"`
-	TenantID      string       `json:"tenantId"`
-	WorkspaceID   string       `json:"workspaceId"`
-	UserID        string       `json:"userId"`
-	TenantRole    string       `json:"tenantRole"`
-	WorkspaceRole string       `json:"workspaceRole"`
-	Workspace     WorkspaceRef `json:"workspace"`
+	OK            bool                 `json:"ok"`
+	TenantID      string               `json:"tenantId"`
+	WorkspaceID   string               `json:"workspaceId"`
+	UserID        string               `json:"userId"`
+	TenantRole    string               `json:"tenantRole"`
+	WorkspaceRole string               `json:"workspaceRole"`
+	Workspace     WorkspaceRef         `json:"workspace"`
+	UsageQuota    UsageQuotaProjection `json:"usageQuota"`
 }
 
 type TaskListResponse struct {
@@ -149,7 +149,11 @@ func handleSaaSTaskCreate(response http.ResponseWriter, request *http.Request, r
 		writeInvalid(response, err)
 		return
 	}
-	if err := defaultTaskStore.SaveTaskProjection(projection); err != nil {
+	if err := defaultTaskStore.SaveTaskProjectionWithQuota(projection); err != nil {
+		if errors.Is(err, ErrQuotaExceeded) {
+			writeJSON(response, http.StatusTooManyRequests, ErrorResponse{OK: false, ErrorCode: "QUOTA_EXCEEDED", Message: err.Error()})
+			return
+		}
 		writeJSON(response, http.StatusInternalServerError, ErrorResponse{OK: false, ErrorCode: "TASK_STORE_WRITE_FAILED", Message: err.Error()})
 		return
 	}
@@ -165,6 +169,7 @@ func currentWorkspaceFromRequest(request *http.Request) (WorkspaceCurrentRespons
 	if !ok {
 		return WorkspaceCurrentResponse{}, membershipRequired()
 	}
+	current.UsageQuota = defaultTaskStore.GetUsageQuota(current.TenantID, current.WorkspaceID)
 	return current, nil
 }
 
@@ -182,52 +187,6 @@ func (store *MemoryTaskStore) GetCurrentWorkspace(claims launchTokenClaims) (Wor
 	return current, ok
 }
 
-func (store PostgresTaskStore) EnsureWorkspaceMembership(claims launchTokenClaims) error {
-	transactor, ok := store.db.(SQLTransactor)
-	if !ok {
-		return sql.ErrTxDone
-	}
-	tx, err := transactor.BeginTx(context.Background(), nil)
-	if err != nil {
-		return err
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			_ = tx.Rollback()
-		}
-	}()
-	for _, statement := range workspaceMembershipStatements(claims) {
-		if _, err := tx.ExecContext(context.Background(), statement.query, statement.args...); err != nil {
-			return err
-		}
-	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-	committed = true
-	return nil
-}
-
-func (store PostgresTaskStore) GetCurrentWorkspace(claims launchTokenClaims) (WorkspaceCurrentResponse, bool) {
-	var tenantRole, workspaceRole, workspaceName string
-	err := store.db.QueryRowContext(context.Background(), `
-select tm.role, wm.role, w.name
-from tenant_memberships tm
-join workspace_memberships wm on wm.tenant_id = tm.tenant_id and wm.user_id = tm.user_id
-join workspaces w on w.tenant_id = wm.tenant_id and w.id = wm.workspace_id
-where tm.tenant_id = $1 and wm.workspace_id = $2 and tm.user_id = $3
-`, claims.TenantID, claims.WorkspaceID, claims.UserID).Scan(&tenantRole, &workspaceRole, &workspaceName)
-	if err != nil {
-		return WorkspaceCurrentResponse{}, false
-	}
-	current := workspaceCurrentFromClaims(claims)
-	current.TenantRole = tenantRole
-	current.WorkspaceRole = workspaceRole
-	current.Workspace.Name = workspaceName
-	return current, true
-}
-
 func membershipRequired() *taskAuthError {
 	return &taskAuthError{StatusCode: http.StatusForbidden, ErrorCode: "MEMBERSHIP_REQUIRED", Message: "workspace membership is required"}
 }
@@ -240,6 +199,7 @@ func workspaceCurrentFromClaims(claims launchTokenClaims) WorkspaceCurrentRespon
 	return WorkspaceCurrentResponse{
 		OK: true, TenantID: claims.TenantID, WorkspaceID: claims.WorkspaceID, UserID: claims.UserID,
 		TenantRole: "owner", WorkspaceRole: "owner", Workspace: WorkspaceRef{ID: claims.WorkspaceID, Name: claims.WorkspaceID},
+		UsageQuota: usageQuotaFromCount(0),
 	}
 }
 

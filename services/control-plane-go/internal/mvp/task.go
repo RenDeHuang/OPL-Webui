@@ -2,6 +2,8 @@ package mvp
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -95,7 +97,8 @@ func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner 
 		return TaskResponse{}, err
 	}
 
-	taskID := request.WorkspaceID + "_task_001"
+	taskSuffix := taskStableSuffix(request)
+	taskID := request.WorkspaceID + "_task_" + taskSuffix
 	artifactID := taskID + "_artifact_001"
 	policyID := oplbridge.TaskRoutePolicyID
 	route := (*oplbridge.TaskRoute)(nil)
@@ -110,7 +113,7 @@ func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner 
 
 	return TaskResponse{
 		OK:          true,
-		RunID:       fmt.Sprintf("run_%s_%s_001", request.WorkspaceID, request.UserID),
+		RunID:       fmt.Sprintf("run_%s_%s_%s", request.WorkspaceID, request.UserID, taskSuffix),
 		UserID:      request.UserID,
 		TenantID:    request.TenantID,
 		WorkspaceID: request.WorkspaceID,
@@ -142,6 +145,11 @@ func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner 
 			Route:    route,
 		},
 	}, nil
+}
+
+func taskStableSuffix(request TaskRequest) string {
+	hash := sha256.Sum256([]byte(request.UserID + "\n" + request.Intent + "\n" + request.Prompt))
+	return hex.EncodeToString(hash[:])[:8]
 }
 
 func validateRequest(input TaskRequest) (TaskRequest, error) {

@@ -129,6 +129,12 @@ func TestPostgresTaskStoreSchemaKeepsTenantScopedPrimaryKey(t *testing.T) {
 	if !strings.Contains(PostgresUsageLedgerSchema, "event_kind text not null") {
 		t.Fatal("schema must store usage event kind")
 	}
+	if !strings.Contains(PostgresPlanQuotaSchema, "create table if not exists tenant_plans") {
+		t.Fatal("schema must create tenant_plans")
+	}
+	if !strings.Contains(PostgresPlanQuotaSchema, "task_quota bigint not null") {
+		t.Fatal("schema must store task quota")
+	}
 	if !strings.Contains(PostgresTaskStoreSchema, "primary key (tenant_id, workspace_id, task_id)") {
 		t.Fatal("schema must be tenant and workspace scoped")
 	}
@@ -155,8 +161,8 @@ func TestOpenPostgresTaskStoreUsesPGXDriverAndInitializesSchema(t *testing.T) {
 	if !database.pinged {
 		t.Fatal("expected database ping before store is returned")
 	}
-	if len(database.execCalls) != 3 {
-		t.Fatalf("expected SaaS, task and usage schema initialization queries, got %#v", database.execCalls)
+	if len(database.execCalls) != 4 {
+		t.Fatalf("expected SaaS, task, usage and quota schema initialization queries, got %#v", database.execCalls)
 	}
 	if !strings.Contains(database.execCalls[0].query, "create table if not exists users") {
 		t.Fatalf("expected SaaS schema query, got %q", database.execCalls[0].query)
@@ -166,6 +172,9 @@ func TestOpenPostgresTaskStoreUsesPGXDriverAndInitializesSchema(t *testing.T) {
 	}
 	if !strings.Contains(database.execCalls[2].query, "create table if not exists usage_events") {
 		t.Fatalf("expected usage schema query, got %q", database.execCalls[2].query)
+	}
+	if !strings.Contains(database.execCalls[3].query, "create table if not exists tenant_plans") {
+		t.Fatalf("expected plan quota schema query, got %q", database.execCalls[3].query)
 	}
 	if database.closed {
 		t.Fatal("database should stay open when store is ready")

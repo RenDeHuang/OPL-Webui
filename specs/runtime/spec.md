@@ -19,7 +19,9 @@
 - `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.postgres-task-store`: Postgres adapter 只实现 `TaskStore` 边界和 schema 常量，不引入 ORM，不改变 HTTP task lifecycle。
 - `runtime.go.postgres-task-user`: Postgres `task_projections` 必须显式保存 `user_id`，为后续 usage/quota/audit 提供 user boundary。
-- `runtime.go.usage-ledger`: Postgres task write path 必须在 transaction 中写入 tenant/workspace/user scoped `usage_events`，当前只记录 deterministic `task.created` event，不做 quota enforcement。
+- `runtime.go.usage-ledger`: Postgres task write path 必须在 transaction 中写入 tenant/workspace/user scoped `usage_events`，记录 `task.created` event。
+- `runtime.go.usage-quota-v1`: `POST /api/tasks` 必须在保存 task projection 前执行 tenant/workspace task quota check；未超额时 task projection 和 usage event 同边界写入，超额时返回 `QUOTA_EXCEEDED` 且不写 task projection 或 usage event。
+- `runtime.go.workspace-usage-quota`: `GET /api/workspaces/current` 必须返回最小 usage/quota projection，包括 plan、task quota、usage period、used count 和 remaining count，不返回 secret、token 或 payment provider 数据。
 - `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
@@ -44,4 +46,4 @@
 
 ## Cannot Claim
 
-- 当前 runtime 不包含真实注册登录/RBAC、session revocation、已执行验证的 tenant/workspace persistence production rollout、多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、计费、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。
+- 当前 runtime 不包含真实注册登录/RBAC、session revocation、usage/quota production rollout、多节点 HA/安全组收敛、HTTP->HTTPS 强制跳转、队列、真实支付/计费 provider、object storage、worker、完整 production ready 运行证据或真实 OPL mutation。

@@ -133,7 +133,7 @@ func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 	if !strings.Contains(strings.Join(report.Checks, ","), "delete") {
 		t.Fatalf("canary should report delete check: %#v", report.Checks)
 	}
-	if _, ok := store.GetTaskProjection("tenant_cloud_canary", "workspace_cloud_canary", "workspace_cloud_canary_task_001"); ok {
+	if len(store.ListTaskProjections("tenant_cloud_canary", "workspace_cloud_canary", "user_cloud_canary")) != 0 {
 		t.Fatal("canary projection should be cleaned up")
 	}
 }
@@ -152,7 +152,6 @@ func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
 
 func TestRunDBCanaryPropagatesOpenError(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
-
 	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
 		return nil, errors.New("network timeout")
 	})
@@ -184,11 +183,15 @@ func (store *readFailingCanaryStore) SaveTaskProjection(projection mvp.TaskRespo
 	store.projection = projection
 	return nil
 }
-
+func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection mvp.TaskResponse) error {
+	return store.SaveTaskProjection(projection)
+}
+func (store *readFailingCanaryStore) GetUsageQuota(string, string) mvp.UsageQuotaProjection {
+	return mvp.UsageQuotaProjection{Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
+}
 func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (mvp.TaskResponse, bool) {
 	return mvp.TaskResponse{}, false
 }
-
 func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []mvp.TaskResponse {
 	return []mvp.TaskResponse{}
 }

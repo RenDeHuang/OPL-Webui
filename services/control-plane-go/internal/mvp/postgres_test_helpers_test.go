@@ -9,9 +9,12 @@ type fakeSQLExecutor struct {
 	execQuery     string
 	execArgs      []any
 	execCalls     []sqlCall
+	queryCalls    []string
 	row           fakeSQLRow
 	execErr       error
 	execErrAtCall map[int]error
+	usageQuota    UsageQuotaProjection
+	queryRowCalls int
 	began         bool
 	committed     bool
 	rolledBack    bool
@@ -37,6 +40,14 @@ func (executor *fakeSQLExecutor) ExecContext(_ context.Context, query string, ar
 func (executor *fakeSQLExecutor) QueryRowContext(_ context.Context, query string, args ...any) SQLRow {
 	executor.execQuery = query
 	executor.execArgs = args
+	executor.queryCalls = append(executor.queryCalls, query)
+	if executor.usageQuota.Plan != "" {
+		executor.queryRowCalls++
+		if executor.queryRowCalls == 1 {
+			return &fakePlanQuotaRow{quota: executor.usageQuota}
+		}
+		return &fakeUsageCountRow{usedCount: executor.usageQuota.UsedCount}
+	}
 	return &executor.row
 }
 
@@ -62,6 +73,26 @@ type fakeSQLRow struct {
 func (row *fakeSQLRow) Scan(dest ...any) error {
 	target := dest[0].(*string)
 	*target = row.value
+	return nil
+}
+
+type fakePlanQuotaRow struct {
+	quota UsageQuotaProjection
+}
+
+func (row *fakePlanQuotaRow) Scan(dest ...any) error {
+	*(dest[0].(*string)) = row.quota.Plan
+	*(dest[1].(*int)) = row.quota.TaskQuota
+	*(dest[2].(*string)) = row.quota.UsagePeriod
+	return nil
+}
+
+type fakeUsageCountRow struct {
+	usedCount int
+}
+
+func (row *fakeUsageCountRow) Scan(dest ...any) error {
+	*(dest[0].(*int)) = row.usedCount
 	return nil
 }
 

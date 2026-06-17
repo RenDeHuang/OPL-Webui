@@ -100,6 +100,10 @@ func openPostgresTaskStore(databaseURL string, openDatabase SQLDatabaseOpener) (
 		_ = db.Close()
 		return nil, fmt.Errorf("initialize postgres usage ledger schema: %w", err)
 	}
+	if _, err := db.ExecContext(context.Background(), PostgresPlanQuotaSchema); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("initialize postgres plan quota schema: %w", err)
+	}
 	return NewPostgresTaskStore(db), nil
 }
 
