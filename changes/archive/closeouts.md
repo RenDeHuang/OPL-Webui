@@ -135,3 +135,9 @@
 - summary: 将发布链路收敛为 no-public-staging production-gated release loop：CI test-only、Release Image self-hosted build/push、manual Production Dry Run、GitHub production approval、Production Apply、Running Ready Pod canary selection、DB/OPL CLI canary 和 HTTPS smoke。Cloud Rollout #5 对 commit/tag `d0c4de5` 真实通过并 green；Release Image green，production approval 已通过，dry-run/apply/canary/smoke 均通过。
 - verified: `npm run verify`, `npm run gate:review`, Release Image green, Cloud Rollout #5 green, Production Dry Run passed, Production Apply passed, DB canary passed, OPL CLI canary passed, HTTPS smoke 200。
 - cannot claim: 真实 staging、automatic staging rollout、完整 production ready SaaS、多节点 HA/安全组收敛、监控、auth、billing、object storage、OPL worker 或真实 OPL mutation。
+
+## 2026-06-17 autonomous-commercial-development
+
+- summary: 在 `changes/README.md` 固化 Autonomous Commercial Development 合同，把 current truth、commercial SaaS goal、gap-driven phase、allowed/forbidden changes、contracts、tests、test-classification、evals、cannot claim、hard stops、closeout、commit and push、no compatibility layer 和 no bloat 写成后续自治开发模板，并用 lifecycle contract test 锁住。
+- verified: `node --test tests/contract/change-package-lifecycle.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 真实 production rollout、真实 staging、完整 SaaS、真实 OPL execution 或 OPL mutation。

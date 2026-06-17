@@ -35,3 +35,23 @@ proposal -> spec-delta -> design -> tasks -> eval-plan -> review -> closeout -> 
 - `online smoke accepted`: 线上入口、主流程和必要截图已确认。
 
 不能适用的 gate 要写明原因。AI、OPL、runtime 或上线行为没有对应 eval/test 不能 claim 完成。
+
+## Autonomous Commercial Development
+
+长期自治开发使用固定 prompt contract，不靠外部复制临时 prompt。每个商业化推进 change 必须先写清：
+
+- `current truth`: 当前已由 source、contracts、tests、fixtures、scripts、specs、docs/active 和 closeouts 证明的事实。
+- `commercial SaaS goal`: 面向公网多租户 SaaS 的目标状态，不把愿景写成已完成事实。
+- `gap-driven phase`: 本 phase 只推进一个清晰 gap，并列出阶段 evals。
+- `allowed changes`: 本次允许修改的文件、contract、UI 或 Go control plane 行为。
+- `forbidden changes`: 禁止 OPL mutation、无授权 production action、无 consumer contract 和业务逻辑脚本化。
+- `contracts`: 行为变化必须有真实 consumer，且 Web UI 只通过 Go control plane HTTP API。
+- `tests`: 新增或修改行为先写 test，再改实现。
+- `test-classification`: 新增测试文件必须登记；修改既有测试需确认现有 registry 覆盖。
+- `evals`: targeted eval 先过，再跑 `npm run verify`、`npm run gate:review` 和结构检查。
+- `cannot claim`: 没有 production、staging、OPL execution 或 mutation evidence 时必须明说不能 claim。
+- `closeout conditions`: closeout 必须写完成内容、验证命令、cannot claim 和后续 gap。
+- `hard stops`: secrets、生产凭证、破坏性操作、付费外部动作和含糊产品取舍必须停下问人。
+- `commit and push`: 验证通过后只 add intentional files，commit，再 push 到 `origin/main`。
+
+默认工程约束：no compatibility layer unless a real consumer needs it；no bloat，文件和 CSS 接近预算时先拆分或收敛范围。

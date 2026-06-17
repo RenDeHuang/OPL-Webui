@@ -128,6 +128,32 @@ test('change lifecycle documents dynamic phase gates and compaction rules', () =
   assert.match(lifecycle, /closed .* compact/i);
 });
 
+test('change lifecycle codifies autonomous commercial development prompts', () => {
+  const lifecycle = readFileSync('changes/README.md', 'utf8');
+  const requiredPhrases = [
+    'Autonomous Commercial Development',
+    'current truth',
+    'commercial SaaS goal',
+    'gap-driven phase',
+    'allowed changes',
+    'forbidden changes',
+    'contracts',
+    'tests',
+    'test-classification',
+    'evals',
+    'cannot claim',
+    'closeout conditions',
+    'hard stops',
+    'commit and push',
+    'no compatibility layer',
+    'no bloat',
+  ];
+
+  for (const phrase of requiredPhrases) {
+    assert.ok(lifecycle.includes(phrase), `missing autonomous development contract phrase: ${phrase}`);
+  }
+});
+
 test('active change packages are complete and eval-backed', () => {
   const activeChanges = existsSync('changes/active') ? readdirSync('changes/active') : [];
   for (const changeId of activeChanges) {
