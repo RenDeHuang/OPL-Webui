@@ -171,3 +171,9 @@
 - summary: `tenantId`、`workspaceId`、`userId` 统一收敛为 stable boundary ID；body identity 和 launch-token claims 共用校验，禁止 `/`、空格、过短或过长值进入 task projection、store key 或 lookup path。
 - verified: `cd services/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实登录、session/RBAC、workspace membership、production rollout、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 task-user-persistence
+
+- summary: Postgres `task_projections` schema 和 insert/update path 增加 `user_id`；新表 schema 要求 `user_id text not null`，已有表通过 additive drift migration 增加列，后续 task writes 显式保存 `projection.UserID`。
+- verified: `cd services/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- cannot claim: 真实 DB migration 已执行、完整 commercial data model、usage/quota/billing、production rollout、OPL worker、真实 OPL execution 或 OPL mutation。

@@ -12,6 +12,7 @@
 - `runtime.go.boundary-stable-id`: `tenantId`、`workspaceId`、`userId` 必须是 stable boundary ID，禁止 path separator、空格和过长值进入 task projection 或 launch-token claims。
 - `runtime.go.task-store`: Task projection 必须通过 `TaskStore` 边界保存；当前默认是内存 store，后续 Postgres adapter 只能替换该接口。
 - `runtime.go.postgres-task-store`: Postgres adapter 只实现 `TaskStore` 边界和 schema 常量，不引入 ORM，不改变 HTTP task lifecycle。
+- `runtime.go.postgres-task-user`: Postgres `task_projections` 必须显式保存 `user_id`，为后续 usage/quota/audit 提供 user boundary。
 - `runtime.go.task-store-wiring`: runtime 启动时按 `OPL_DATABASE_URL` 选择 store；未配置时用 memory store，配置后用 pgx-backed Postgres store，打开、ping 或 schema 初始化失败时 fail closed。
 - `runtime.go.static`: Go control plane 同进程服务 `apps/web` 静态页面和 `/api/mvp/task`。
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。

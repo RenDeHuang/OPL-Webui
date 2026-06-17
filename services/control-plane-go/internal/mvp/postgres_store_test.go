@@ -91,7 +91,10 @@ func TestPostgresTaskStorePersistsProjectionThroughSQLBoundary(t *testing.T) {
 	if executor.execArgs[2] != projection.Task.TaskID {
 		t.Fatalf("task arg mismatch: %#v", executor.execArgs)
 	}
-	if !strings.Contains(executor.execArgs[4].(string), "\"runId\"") {
+	if executor.execArgs[3] != projection.UserID {
+		t.Fatalf("user arg mismatch: %#v", executor.execArgs)
+	}
+	if !strings.Contains(executor.execArgs[5].(string), "\"runId\"") {
 		t.Fatalf("payload should contain encoded projection: %#v", executor.execArgs)
 	}
 }
@@ -162,6 +165,12 @@ func TestPostgresTaskStoreSchemaKeepsTenantScopedPrimaryKey(t *testing.T) {
 	}
 	if !strings.Contains(PostgresTaskStoreSchema, "payload_json jsonb not null") {
 		t.Fatal("schema must store the projection payload as jsonb")
+	}
+	if !strings.Contains(PostgresTaskStoreSchema, "user_id text not null") {
+		t.Fatal("schema must store the projection user boundary")
+	}
+	if !strings.Contains(PostgresTaskStoreSchema, "add column if not exists user_id text") {
+		t.Fatal("schema must include user_id drift migration")
 	}
 	if !strings.Contains(PostgresTaskStoreSchema, "primary key (tenant_id, workspace_id, task_id)") {
 		t.Fatal("schema must be tenant and workspace scoped")
