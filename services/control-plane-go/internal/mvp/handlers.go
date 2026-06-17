@@ -33,6 +33,14 @@ func HandleSessionLaunch(response http.ResponseWriter, request *http.Request) {
 		writeTaskAuthError(response, authErr)
 		return
 	}
+	if err := defaultTaskStore.EnsureWorkspaceMembership(claims); err != nil {
+		writeJSON(response, http.StatusInternalServerError, ErrorResponse{
+			OK:        false,
+			ErrorCode: "MEMBERSHIP_WRITE_FAILED",
+			Message:   err.Error(),
+		})
+		return
+	}
 
 	http.SetCookie(response, &http.Cookie{
 		Name:     sessionCookieName,
@@ -174,6 +182,14 @@ func writeInvalid(response http.ResponseWriter, err error) {
 		OK:        false,
 		ErrorCode: "INVALID_MVP_TASK_REQUEST",
 		Message:   err.Error(),
+	})
+}
+
+func writeMethodNotAllowed(response http.ResponseWriter) {
+	writeJSON(response, http.StatusMethodNotAllowed, ErrorResponse{
+		OK:        false,
+		ErrorCode: "METHOD_NOT_ALLOWED",
+		Message:   "method not allowed",
 	})
 }
 

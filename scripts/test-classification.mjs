@@ -71,6 +71,7 @@ const TEST_ENTRIES = Object.freeze([
     contracts: Object.freeze(['services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'services/control-plane-go/internal/mvp/task.go', 'services/control-plane-go/internal/oplbridge/route.go', 'packages/contracts/opl/mvp-task-http.schema.json']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
+  Object.freeze({ file: 'tests/contract/saas-workspace-task-api.test.mjs', runner: 'node', lane: 'contract', ownerSurface: 'control-plane-go', lifecycleRole: 'current-owner', contracts: Object.freeze(['services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'services/control-plane-go/internal/mvp/handlers.go']), verifySuites: Object.freeze(['current', 'contract']) }),
   Object.freeze({
     file: 'tests/contract/opl-readonly-bridge.test.mjs',
     runner: 'node',

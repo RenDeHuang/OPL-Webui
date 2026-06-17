@@ -106,10 +106,29 @@ const oplSnapshot = Object.freeze({
   ],
 });
 
+const workspaceProjection = Object.freeze({
+  ok: true,
+  tenantId: 'tenant_demo',
+  workspaceId: 'workspace_demo',
+  userId: 'user_demo',
+  tenantRole: 'owner',
+  workspaceRole: 'owner',
+  workspace: { id: 'workspace_demo', name: 'workspace_demo' },
+});
+
+const taskListProjection = Object.freeze({
+  ok: true,
+  tenantId: 'tenant_demo',
+  workspaceId: 'workspace_demo',
+  userId: 'user_demo',
+  tasks: [apiProjection],
+});
+
 test('web demo data is derived from the MVP API endpoint', async () => {
   const calls = [];
   const fetchRef = async (url, options) => {
     calls.push({ url, options });
+    if (url === '/api/workspaces/current') return { ok: false, status: 401, async json() { return { ok: false }; } };
     return createFetchResponse(url === '/api/opl/snapshot' ? oplSnapshot : apiProjection);
   };
 
@@ -125,13 +144,33 @@ test('web demo data is derived from the MVP API endpoint', async () => {
   assert.equal(data.oplSnapshot.mode, 'readonly');
   assert.equal(data.oplCards[0].label, 'OPL 连接');
   assert.match(data.oplCards[1].value, /1\/3/);
-  assert.equal(calls[0].url, '/api/mvp/task');
-  assert.equal(calls[0].options.method, 'POST');
-  assert.equal(calls[1].url, '/api/opl/snapshot');
-  assert.deepEqual(JSON.parse(calls[0].options.body), {
+  assert.equal(calls[0].url, '/api/workspaces/current');
+  assert.equal(calls[1].url, '/api/mvp/task');
+  assert.equal(calls[1].options.method, 'POST');
+  assert.equal(calls[2].url, '/api/opl/snapshot');
+  assert.deepEqual(JSON.parse(calls[1].options.body), {
     prompt: '生成一个医学研究项目的证据整理任务',
     intent: 'research',
   });
+});
+
+test('web demo data uses SaaS workspace and task list APIs', async () => {
+  const calls = [];
+  const fetchRef = async (url, options) => {
+    calls.push({ url, options });
+    if (url === '/api/workspaces/current') return createFetchResponse(workspaceProjection);
+    if (url === '/api/tasks') return createFetchResponse(taskListProjection);
+    if (url === '/api/opl/snapshot') return createFetchResponse(oplSnapshot);
+    return createFetchResponse(apiProjection);
+  };
+
+  const data = await getWebDemoData(fetchRef);
+
+  assert.equal(data.workspaceCurrent.workspaceId, 'workspace_demo');
+  assert.equal(data.taskList.tasks.length, 1);
+  assert.equal(data.task.taskId, apiProjection.task?.taskId);
+  assert.deepEqual(calls.map((call) => call.url), ['/api/workspaces/current', '/api/tasks', '/api/opl/snapshot']);
+  assert.equal(calls[1].options?.method, 'GET');
 });
 
 test('web demo data derives a Figma V3 view model from current projections', async () => {

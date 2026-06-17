@@ -19,6 +19,8 @@
 - Web UI 创建 task 时不再自报 tenant/workspace/user；cloud/production 的 `medopl_launch_token` 模式由 Go control plane 验证 Bearer launch token 并注入身份边界。
 - Go control plane 支持 `POST /api/session/launch`，可用一次 `medopl_launch_token` 换取 HttpOnly `opl_session` cookie；后续 task create / lookup 可通过同源 cookie 注入 tenant/workspace/user 边界。
 - Go control plane 支持 `GET /api/session/current`，返回当前认证的 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection，不返回 token 或 secret。
+- Go control plane 本地已支持 tenant/workspace persistence v1：`users`、`tenants`、`tenant_memberships`、`workspaces`、`workspace_memberships` schema，以及 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/{taskId}`；这些 API 只从 bearer/session auth boundary 推导 tenant/workspace/user。
+- SaaS task API 本地 contract 已覆盖未认证拒绝、无 membership 拒绝、tenant A 不能读 tenant B task、valid session create/list/read，以及 usage event 与 task projection 共用 tenant/workspace/user 边界。
 - `24ba41f` session/auth boundary 已完成 production evidence：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:24ba41f`、rollout revision `9`、`/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass、`opl-webui-auth` Opaque Secret 存在且 keys=1、未带 Authorization 的 `POST /api/session/launch` 返回 `401 AUTH_REQUIRED`、无 cookie 的 `GET /api/session/current` 返回 `401 AUTH_REQUIRED`。
 - Go API 返回带 `tenantId`、`workspaceId`、`userId`、`runId` 和 OPL readonly route evidence 的 task/artifact projection。
 - Task projection 已通过 Go-side `TaskStore` 边界保存；当前默认实现是内存 store，不是生产数据库。
@@ -48,6 +50,7 @@
 ## Cannot Claim
 
 - 还不是完整公网多用户 production ready SaaS。
+- tenant/workspace persistence v1 还没有 production rollout evidence。
 - 多节点 HA 和安全组收敛尚未由云端执行验证；HTTP->HTTPS 强制跳转和 production hardening 仍是后续项。
 - 还没有真实注册登录、workspace membership、RBAC、session revocation、队列、计费/billing、object storage、OPL worker 或真实 OPL execution。
 - 还不能执行 OPL mutation、install、repair、module exec 或 family-runtime mutation。

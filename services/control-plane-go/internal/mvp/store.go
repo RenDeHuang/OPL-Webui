@@ -13,14 +13,25 @@ type TaskReader interface {
 	GetTaskProjection(tenantID string, workspaceID string, taskID string) (TaskResponse, bool)
 }
 
+type TaskLister interface {
+	ListTaskProjections(tenantID string, workspaceID string, userID string) []TaskResponse
+}
+
 type TaskDeleter interface {
 	DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error
+}
+
+type WorkspaceMembershipStore interface {
+	EnsureWorkspaceMembership(launchTokenClaims) error
+	GetCurrentWorkspace(launchTokenClaims) (WorkspaceCurrentResponse, bool)
 }
 
 type TaskProjectionStore interface {
 	TaskStore
 	TaskReader
+	TaskLister
 	TaskDeleter
+	WorkspaceMembershipStore
 }
 
 type TaskStoreConfig struct {
@@ -30,8 +41,9 @@ type TaskStoreConfig struct {
 type PostgresStoreOpener func(string) (TaskProjectionStore, error)
 
 type MemoryTaskStore struct {
-	mu    sync.RWMutex
-	items map[string]TaskResponse
+	mu          sync.RWMutex
+	items       map[string]TaskResponse
+	memberships map[string]WorkspaceCurrentResponse
 }
 
 func NewTaskStore(config TaskStoreConfig, openPostgres PostgresStoreOpener) (TaskProjectionStore, error) {
@@ -57,7 +69,10 @@ func configureDefaultTaskStoreFromEnv(openPostgres PostgresStoreOpener) error {
 }
 
 func NewMemoryTaskStore() *MemoryTaskStore {
-	return &MemoryTaskStore{items: map[string]TaskResponse{}}
+	return &MemoryTaskStore{
+		items:       map[string]TaskResponse{},
+		memberships: map[string]WorkspaceCurrentResponse{},
+	}
 }
 
 func (store *MemoryTaskStore) SaveTaskProjection(projection TaskResponse) error {
@@ -74,6 +89,19 @@ func (store *MemoryTaskStore) GetTaskProjection(tenantID string, workspaceID str
 
 	projection, ok := store.items[taskStoreKey(tenantID, workspaceID, taskID)]
 	return projection, ok
+}
+
+func (store *MemoryTaskStore) ListTaskProjections(tenantID string, workspaceID string, userID string) []TaskResponse {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+
+	tasks := []TaskResponse{}
+	for _, projection := range store.items {
+		if projection.TenantID == tenantID && projection.WorkspaceID == workspaceID && projection.UserID == userID {
+			tasks = append(tasks, projection)
+		}
+	}
+	return tasks
 }
 
 func (store *MemoryTaskStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {

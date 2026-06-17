@@ -106,6 +106,11 @@ func TestPostgresTaskStorePropagatesDeleteError(t *testing.T) {
 }
 
 func TestPostgresTaskStoreSchemaKeepsTenantScopedPrimaryKey(t *testing.T) {
+	for _, table := range []string{"users", "tenants", "tenant_memberships", "workspaces", "workspace_memberships"} {
+		if !strings.Contains(PostgresSaaSSchema, "create table if not exists "+table) {
+			t.Fatalf("schema must create %s", table)
+		}
+	}
 	if !strings.Contains(PostgresTaskStoreSchema, "task_projections") {
 		t.Fatal("schema must create task_projections")
 	}
@@ -150,14 +155,17 @@ func TestOpenPostgresTaskStoreUsesPGXDriverAndInitializesSchema(t *testing.T) {
 	if !database.pinged {
 		t.Fatal("expected database ping before store is returned")
 	}
-	if len(database.execCalls) != 2 {
-		t.Fatalf("expected task and usage schema initialization queries, got %#v", database.execCalls)
+	if len(database.execCalls) != 3 {
+		t.Fatalf("expected SaaS, task and usage schema initialization queries, got %#v", database.execCalls)
 	}
-	if !strings.Contains(database.execCalls[0].query, "create table if not exists task_projections") {
-		t.Fatalf("expected task schema query, got %q", database.execCalls[0].query)
+	if !strings.Contains(database.execCalls[0].query, "create table if not exists users") {
+		t.Fatalf("expected SaaS schema query, got %q", database.execCalls[0].query)
 	}
-	if !strings.Contains(database.execCalls[1].query, "create table if not exists usage_events") {
-		t.Fatalf("expected usage schema query, got %q", database.execCalls[1].query)
+	if !strings.Contains(database.execCalls[1].query, "create table if not exists task_projections") {
+		t.Fatalf("expected task schema query, got %q", database.execCalls[1].query)
+	}
+	if !strings.Contains(database.execCalls[2].query, "create table if not exists usage_events") {
+		t.Fatalf("expected usage schema query, got %q", database.execCalls[2].query)
 	}
 	if database.closed {
 		t.Fatal("database should stay open when store is ready")
@@ -192,7 +200,7 @@ func TestOpenPostgresTaskStoreClosesDatabaseWhenSchemaInitFails(t *testing.T) {
 		return database, nil
 	})
 
-	if err == nil || !strings.Contains(err.Error(), "initialize postgres task store schema") {
+	if err == nil || !strings.Contains(err.Error(), "initialize postgres saas schema") {
 		t.Fatalf("expected schema error, got %v", err)
 	}
 	if !database.closed {

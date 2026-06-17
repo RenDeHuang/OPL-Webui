@@ -20,6 +20,8 @@ type launchTokenClaims struct {
 	UserID      string `json:"userId"`
 }
 
+type LaunchTokenClaims = launchTokenClaims
+
 type taskAuthError struct {
 	StatusCode int
 	ErrorCode  string

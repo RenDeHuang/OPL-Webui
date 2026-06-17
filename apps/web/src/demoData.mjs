@@ -157,16 +157,30 @@ async function readJSON(response, label) {
   return response.json();
 }
 
+async function readOptionalJSON(request, label) {
+  try {
+    return await readJSON(await request(), label);
+  } catch {
+    return null;
+  }
+}
+
 export async function getWebDemoData(fetchRef = globalThis.fetch) {
   if (typeof fetchRef !== 'function') {
     throw new Error('fetch is required');
   }
 
-  const taskResponse = await fetchRef('/api/mvp/task', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(DEFAULT_DEMO_REQUEST),
-  });
+  const workspaceCurrent = await readOptionalJSON(() => fetchRef('/api/workspaces/current'), 'workspace current');
+  const taskList = workspaceCurrent
+    ? await readOptionalJSON(() => fetchRef('/api/tasks', { method: 'GET' }), 'task list')
+    : null;
+  const taskResponse = taskList?.tasks?.[0]
+    ? createStaticResponse(taskList.tasks[0])
+    : await fetchRef('/api/mvp/task', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(DEFAULT_DEMO_REQUEST),
+    });
   const snapshotResponse = await fetchRef('/api/opl/snapshot');
 
   const scenario = await readJSON(taskResponse, 'MVP API');
@@ -175,6 +189,8 @@ export async function getWebDemoData(fetchRef = globalThis.fetch) {
     title: '医学研究证据整理',
     summary: `已生成 ${scenario.artifacts.length} 个交付物`,
     ...scenario,
+    workspaceCurrent,
+    taskList,
     oplSnapshot,
     cards: createDemoCards(scenario),
     oplCards: createOplCards(oplSnapshot),
@@ -182,6 +198,16 @@ export async function getWebDemoData(fetchRef = globalThis.fetch) {
   return {
     ...data,
     v3: createV3ViewModel(data),
+  };
+}
+
+function createStaticResponse(payload) {
+  return {
+    ok: true,
+    status: 200,
+    async json() {
+      return payload;
+    },
   };
 }
 

@@ -189,11 +189,23 @@ func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (
 	return mvp.TaskResponse{}, false
 }
 
+func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []mvp.TaskResponse {
+	return []mvp.TaskResponse{}
+}
+
 func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
 	if tenantID == store.projection.TenantID && workspaceID == store.projection.WorkspaceID && taskID == store.projection.Task.TaskID {
 		store.deleted = true
 	}
 	return nil
+}
+
+func (store *readFailingCanaryStore) EnsureWorkspaceMembership(mvp.LaunchTokenClaims) error {
+	return nil
+}
+
+func (store *readFailingCanaryStore) GetCurrentWorkspace(mvp.LaunchTokenClaims) (mvp.WorkspaceCurrentResponse, bool) {
+	return mvp.WorkspaceCurrentResponse{}, false
 }
 
 func TestRunDBCanaryCleansUpAfterReadFailure(t *testing.T) {

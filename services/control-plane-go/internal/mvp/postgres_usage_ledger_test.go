@@ -53,6 +53,31 @@ func TestPostgresTaskStoreRecordsUsageEventForProjection(t *testing.T) {
 	}
 }
 
+func TestPostgresTaskStoreKeepsUsageAndProjectionBoundaryTogether(t *testing.T) {
+	executor := &fakeSQLExecutor{}
+	store := NewPostgresTaskStore(executor)
+	projection, err := CreateTaskResponse(TaskRequest{
+		TenantID:    "tenant_boundary",
+		WorkspaceID: "workspace_boundary",
+		UserID:      "user_boundary",
+		Prompt:      "生成一个医学研究项目的证据整理任务",
+		Intent:      "research",
+	})
+	if err != nil {
+		t.Fatalf("CreateTaskResponse returned error: %v", err)
+	}
+
+	if err := store.SaveTaskProjection(projection); err != nil {
+		t.Fatalf("SaveTaskProjection returned error: %v", err)
+	}
+
+	taskWrite := executor.execCalls[0]
+	usageWrite := executor.execCalls[1]
+	if taskWrite.args[0] != usageWrite.args[0] || taskWrite.args[1] != usageWrite.args[1] || taskWrite.args[3] != usageWrite.args[2] {
+		t.Fatalf("task and usage boundary diverged: task=%#v usage=%#v", taskWrite.args, usageWrite.args)
+	}
+}
+
 func TestPostgresTaskStoreWritesProjectionAndUsageInOneTransaction(t *testing.T) {
 	executor := &fakeSQLExecutor{}
 	store := NewPostgresTaskStore(executor)

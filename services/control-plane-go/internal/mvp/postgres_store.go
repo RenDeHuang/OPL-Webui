@@ -88,6 +88,10 @@ func openPostgresTaskStore(databaseURL string, openDatabase SQLDatabaseOpener) (
 		_ = db.Close()
 		return nil, fmt.Errorf("ping postgres task store: %w", err)
 	}
+	if _, err := db.ExecContext(context.Background(), PostgresSaaSSchema); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("initialize postgres saas schema: %w", err)
+	}
 	if _, err := db.ExecContext(context.Background(), PostgresTaskStoreSchema); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("initialize postgres task store schema: %w", err)
