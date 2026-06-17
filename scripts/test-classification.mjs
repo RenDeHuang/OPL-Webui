@@ -23,14 +23,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'workflow',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      '.github/workflows/ci.yml',
-      '.github/workflows/cloud-rollout.yml',
-      '.github/workflows/release-image.yml',
-      'package.json',
-      'scripts/verify.mjs',
-      'scripts/workflow-gate.mjs',
-    ]),
+    contracts: Object.freeze(['.github/workflows/ci.yml', '.github/workflows/cloud-rollout.yml', '.github/workflows/release-image.yml', 'package.json', 'scripts/verify.mjs', 'scripts/workflow-gate.mjs']),
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({
@@ -39,13 +32,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'deploy',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'Dockerfile',
-      'Dockerfile.cloud',
-      '.dockerignore',
-      '.dockerignore.cloud',
-      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
-    ]),
+    contracts: Object.freeze(['Dockerfile', 'Dockerfile.cloud', '.dockerignore', '.dockerignore.cloud', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
     verifySuites: Object.freeze(['current', 'health']),
   }),
   Object.freeze({
@@ -54,12 +41,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'change-lifecycle',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'changes/README.md',
-      'changes/archive/closeouts.md',
-      'docs/active/README.md',
-      'deploy/cloud-mvp/RUNBOOK.md',
-    ]),
+    contracts: Object.freeze(['changes/README.md', 'changes/archive/closeouts.md', 'docs/active/README.md', 'deploy/cloud-mvp/RUNBOOK.md']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -86,12 +68,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
-      'services/control-plane-go/internal/mvp/task.go',
-      'services/control-plane-go/internal/oplbridge/route.go',
-      'packages/contracts/opl/mvp-task-http.schema.json',
-    ]),
+    contracts: Object.freeze(['services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'services/control-plane-go/internal/mvp/task.go', 'services/control-plane-go/internal/oplbridge/route.go', 'packages/contracts/opl/mvp-task-http.schema.json']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -100,10 +77,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'opl-bridge',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze([
-      'services/control-plane-go/internal/oplbridge/snapshot.go',
-      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
-    ]),
+    contracts: Object.freeze(['services/control-plane-go/internal/oplbridge/snapshot.go', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -192,6 +166,30 @@ const TEST_ENTRIES = Object.freeze([
     contracts: Object.freeze([
       'services/control-plane-go/internal/mvp/postgres_store.go',
     ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/mvp/postgres_test_helpers_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/mvp',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze([
+      'services/control-plane-go/internal/mvp/postgres_store.go',
+    ]),
+    verifySuites: Object.freeze(['current', 'contract']),
+  }),
+  Object.freeze({
+    file: 'services/control-plane-go/internal/mvp/postgres_usage_ledger_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/mvp',
+    lane: 'contract',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: Object.freeze(['services/control-plane-go/internal/mvp/postgres_store.go']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

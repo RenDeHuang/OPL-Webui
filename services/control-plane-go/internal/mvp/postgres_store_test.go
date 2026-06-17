@@ -1,68 +1,10 @@
 package mvp
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"strings"
 	"testing"
 )
-
-type fakeSQLExecutor struct {
-	execQuery string
-	execArgs  []any
-	row       fakeSQLRow
-	execErr   error
-}
-
-func (executor *fakeSQLExecutor) ExecContext(_ context.Context, query string, args ...any) (sql.Result, error) {
-	executor.execQuery = query
-	executor.execArgs = args
-	return nil, executor.execErr
-}
-
-func (executor *fakeSQLExecutor) QueryRowContext(_ context.Context, query string, args ...any) SQLRow {
-	executor.execQuery = query
-	executor.execArgs = args
-	return &executor.row
-}
-
-type fakeSQLRow struct {
-	value string
-}
-
-func (row *fakeSQLRow) Scan(dest ...any) error {
-	target := dest[0].(*string)
-	*target = row.value
-	return nil
-}
-
-type fakeSQLDatabase struct {
-	fakeSQLExecutor
-	driverName  string
-	databaseURL string
-	pinged      bool
-	closed      bool
-	pingErr     error
-	execErr     error
-}
-
-func (db *fakeSQLDatabase) PingContext(context.Context) error {
-	db.pinged = true
-	return db.pingErr
-}
-
-func (db *fakeSQLDatabase) Close() error {
-	db.closed = true
-	return nil
-}
-
-func (db *fakeSQLDatabase) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	if db.execErr != nil {
-		return nil, db.execErr
-	}
-	return db.fakeSQLExecutor.ExecContext(ctx, query, args...)
-}
 
 func TestPostgresTaskStorePersistsProjectionThroughSQLBoundary(t *testing.T) {
 	executor := &fakeSQLExecutor{}
@@ -82,20 +24,24 @@ func TestPostgresTaskStorePersistsProjectionThroughSQLBoundary(t *testing.T) {
 		t.Fatalf("SaveTaskProjection returned error: %v", err)
 	}
 
-	if !strings.Contains(executor.execQuery, "insert into task_projections") {
-		t.Fatalf("expected task_projections insert, got %q", executor.execQuery)
+	if len(executor.execCalls) < 1 {
+		t.Fatalf("expected task projection write, got %#v", executor.execCalls)
 	}
-	if executor.execArgs[0] != "tenant_cloud_demo" {
-		t.Fatalf("tenant arg mismatch: %#v", executor.execArgs)
+	taskWrite := executor.execCalls[0]
+	if !strings.Contains(taskWrite.query, "insert into task_projections") {
+		t.Fatalf("expected task_projections insert, got %q", taskWrite.query)
 	}
-	if executor.execArgs[2] != projection.Task.TaskID {
-		t.Fatalf("task arg mismatch: %#v", executor.execArgs)
+	if taskWrite.args[0] != "tenant_cloud_demo" {
+		t.Fatalf("tenant arg mismatch: %#v", taskWrite.args)
 	}
-	if executor.execArgs[3] != projection.UserID {
-		t.Fatalf("user arg mismatch: %#v", executor.execArgs)
+	if taskWrite.args[2] != projection.Task.TaskID {
+		t.Fatalf("task arg mismatch: %#v", taskWrite.args)
 	}
-	if !strings.Contains(executor.execArgs[5].(string), "\"runId\"") {
-		t.Fatalf("payload should contain encoded projection: %#v", executor.execArgs)
+	if taskWrite.args[3] != projection.UserID {
+		t.Fatalf("user arg mismatch: %#v", taskWrite.args)
+	}
+	if !strings.Contains(taskWrite.args[5].(string), "\"runId\"") {
+		t.Fatalf("payload should contain encoded projection: %#v", taskWrite.args)
 	}
 }
 
@@ -172,6 +118,12 @@ func TestPostgresTaskStoreSchemaKeepsTenantScopedPrimaryKey(t *testing.T) {
 	if !strings.Contains(PostgresTaskStoreSchema, "add column if not exists user_id text") {
 		t.Fatal("schema must include user_id drift migration")
 	}
+	if !strings.Contains(PostgresUsageLedgerSchema, "create table if not exists usage_events") {
+		t.Fatal("schema must create usage_events")
+	}
+	if !strings.Contains(PostgresUsageLedgerSchema, "event_kind text not null") {
+		t.Fatal("schema must store usage event kind")
+	}
 	if !strings.Contains(PostgresTaskStoreSchema, "primary key (tenant_id, workspace_id, task_id)") {
 		t.Fatal("schema must be tenant and workspace scoped")
 	}
@@ -198,8 +150,14 @@ func TestOpenPostgresTaskStoreUsesPGXDriverAndInitializesSchema(t *testing.T) {
 	if !database.pinged {
 		t.Fatal("expected database ping before store is returned")
 	}
-	if !strings.Contains(database.execQuery, "create table if not exists task_projections") {
-		t.Fatalf("expected schema initialization query, got %q", database.execQuery)
+	if len(database.execCalls) != 2 {
+		t.Fatalf("expected task and usage schema initialization queries, got %#v", database.execCalls)
+	}
+	if !strings.Contains(database.execCalls[0].query, "create table if not exists task_projections") {
+		t.Fatalf("expected task schema query, got %q", database.execCalls[0].query)
+	}
+	if !strings.Contains(database.execCalls[1].query, "create table if not exists usage_events") {
+		t.Fatalf("expected usage schema query, got %q", database.execCalls[1].query)
 	}
 	if database.closed {
 		t.Fatal("database should stay open when store is ready")

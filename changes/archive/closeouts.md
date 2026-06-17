@@ -177,3 +177,9 @@
 - summary: Postgres `task_projections` schema 和 insert/update path 增加 `user_id`；新表 schema 要求 `user_id text not null`，已有表通过 additive drift migration 增加列，后续 task writes 显式保存 `projection.UserID`。
 - verified: `cd services/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实 DB migration 已执行、完整 commercial data model、usage/quota/billing、production rollout、OPL worker、真实 OPL execution 或 OPL mutation。
+
+## 2026-06-17 task-usage-ledger
+
+- summary: Postgres schema 增加 tenant/workspace/user scoped `usage_events`；`SaveTaskProjection` 在一个 transaction 内 upsert task projection 并写入 deterministic `task.created` event，`event_id=runId`、`quantity=1`、`source_ref=taskId`，重复 save 通过 conflict no-op 不重复计量。
+- verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
+- cannot claim: quota enforcement、billing/invoicing、usage dashboard、production DB migration 已执行、OPL worker、真实 OPL execution 或 OPL mutation。
