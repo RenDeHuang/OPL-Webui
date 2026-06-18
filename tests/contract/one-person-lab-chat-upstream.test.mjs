@@ -11,6 +11,88 @@ const secureEnv = {
   OPL_CHAT_MODEL: 'gpt-4o-mini',
 };
 
+test('dogfood e2e readiness covers auth key binding chat quota audit and runtime gate', async () => {
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+    OPL_CHAT_MONTHLY_QUOTA: '1',
+  });
+  try {
+    const registered = await register(baseUrl, 'dogfood-user@example.com');
+    const logout = await fetch(`${baseUrl}/api/auth/logout`, {
+      method: 'POST',
+      headers: { cookie: registered.cookieHeader },
+    });
+    assert.equal(logout.status, 204);
+
+    const loggedIn = await jsonFetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      body: { email: 'dogfood-user@example.com', password: 'correct horse battery staple' },
+    });
+    assert.equal(loggedIn.response.status, 200);
+    assert.match(loggedIn.cookieHeader, /^opl_session=/);
+
+    const current = await jsonFetch(`${baseUrl}/api/session/current`, {
+      headers: { cookie: loggedIn.cookieHeader },
+    });
+    assert.equal(current.response.status, 200);
+    assert.equal(current.body.email, 'dogfood-user@example.com');
+
+    const saved = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: loggedIn.cookieHeader },
+      body: { apiKey: 'sk-dogfood-secret' },
+    });
+    assert.equal(saved.response.status, 200);
+    assert.equal(saved.body.baseUrl, 'https://gflabtoken.cn/v1');
+    assert.equal(saved.body.apiKeyConfigured, true);
+    assert.doesNotMatch(JSON.stringify(saved.body), /sk-dogfood-secret/);
+
+    const firstChat = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: loggedIn.cookieHeader },
+      body: { message: '普通 dogfood 聊天' },
+    });
+    assert.equal(firstChat.response.status, 200);
+    assert.equal(firstChat.body.assistantMessage.content, '上游响应');
+    assert.equal(upstream.requests.length, 1);
+    assert.equal(upstream.requests[0].authorization, 'Bearer sk-dogfood-secret');
+
+    const overQuota = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: loggedIn.cookieHeader },
+      body: { message: '第二次普通 dogfood 聊天' },
+    });
+    assert.equal(overQuota.response.status, 429);
+    assert.equal(overQuota.body.errorCode, 'CHAT_QUOTA_EXCEEDED');
+    assert.equal(upstream.requests.length, 1);
+
+    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: loggedIn.cookieHeader },
+      body: { message: '@基金 检查 MedOPL runtime gate' },
+    });
+    assert.equal(gated.response.status, 409);
+    assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
+    assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
+    assert.equal(upstream.requests.length, 1);
+
+    const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
+      headers: { cookie: loggedIn.cookieHeader },
+    });
+    assert.equal(audit.response.status, 200);
+    assert.deepEqual(new Set(audit.body.events.map((event) => event.eventKind)), new Set([
+      'account.registered', 'account.login', 'api_key.saved',
+      'chat.completed', 'chat.quota_exceeded', 'runtime_gate.required',
+    ]));
+    assertNoSensitiveMaterial(audit.body);
+  } finally {
+    await stopGoServer(child);
+    await upstream.close();
+  }
+});
+
 test('ordinary chat calls OpenAI-compatible upstream with the user API key', async () => {
   const upstream = await startFakeUpstream();
   const { child, baseUrl } = await startGoServerWithEnv({
@@ -148,4 +230,8 @@ async function jsonFetch(url, options = {}) {
   const body = text ? JSON.parse(text) : {};
   const cookie = response.headers.get('set-cookie') ?? '';
   return { response, body, cookieHeader: cookie.split(';')[0] };
+}
+
+function assertNoSensitiveMaterial(value) {
+  assert.doesNotMatch(JSON.stringify(value), /sk-dogfood-secret|correct horse|password|secret|postgres:\/\//i);
 }

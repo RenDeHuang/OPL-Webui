@@ -28,6 +28,8 @@
 - `runtime.deploy.metricsz`: `GET /metricsz` 返回 service、environment、ready、missing dependency count 和 missing dependency keys，不泄露 secret。
 - `runtime.deploy.canary`: binary 提供 `canary db` 和 `canary opl-cli`；只验证 Postgres open/ping/schema/write/read/delete 和 OPL readonly surfaces。
 - `runtime.opl.snapshot`: `GET /api/opl/snapshot` 聚合真实 OPL CLI 只读 JSON surfaces。
+- `runtime.opl.task-projection`: 未来 `GET /api/opl/tasks/projection` 只能返回 current owner delta、task/project counts、next step、owner、artifact/blocker refs 和 MedOPL gate/status；不得返回 artifact body、memory body、OPL private state path、domain verdict 或 fake execution。
+- `runtime.opl.projection-source`: projection 来源只能是白名单 OPL CLI JSON surface 或 MedOPL status projection；不得 import `one-person-lab` 内部模块、不得读取 OPL state/SQLite sidecar、不得直接连接 runtime/private DB。
 - `runtime.opl.no-mutation`: OPL install、repair、module exec、family-runtime mutation 默认禁止，除非新增 Go-side contract、eval、allowlist 和人工授权边界。
 
 ## Cannot Claim

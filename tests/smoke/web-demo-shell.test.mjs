@@ -51,6 +51,7 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
 
   assert.doesNotMatch(html, /workspace|runtime tab|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(dataBridge, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
+  assert.ok((dataBridge.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(dataBridge, /\/api\/chat/);
   assert.match(dataBridge, /\/api\/settings\/model-provider/);
 });

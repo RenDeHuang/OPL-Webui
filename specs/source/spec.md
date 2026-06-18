@@ -20,3 +20,5 @@
 源码不能 import `one-person-lab` 内部模块，不能读取 OPL 私有 state；OPL 连接只能通过白名单 CLI JSON 命令。
 
 OPL-Webui 不能拥有 node pool 生命周期、billing source of truth 或 API gateway；这些 source of truth 属于 MedOPL/sub2api。
+
+one-person-lab-app parity v1 是产品语义映射，不是源码依赖；Web 只能通过 Go control plane contract 接收 progress/files/deliverables refs projection。projection 来源只能是白名单 OPL CLI JSON surface 或 MedOPL status projection，不能复制上游源码、不能读取 artifact body/memory body/domain verdict。

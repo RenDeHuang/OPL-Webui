@@ -99,8 +99,9 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
   const active = readFileSync('docs/active/README.md', 'utf8');
   const product = readFileSync('specs/product/spec.md', 'utf8');
   const runtime = readFileSync('specs/runtime/spec.md', 'utf8');
+  const source = readFileSync('specs/source/spec.md', 'utf8');
   const runbook = readFileSync('deploy/cloud-mvp/RUNBOOK.md', 'utf8');
-  const combined = `${active}\n${product}\n${runtime}\n${runbook}`;
+  const combined = `${active}\n${product}\n${runtime}\n${source}\n${runbook}`;
 
   for (const required of [
     'Genspark-like one-person-lab-web with ChatGPT-like base chatbot',
@@ -129,6 +130,12 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
     'OPL_SESSION_SECRET',
     'OPL_API_KEY_ENCRYPTION_SECRET',
     'OPL_CHAT_MODEL',
+    'dogfood e2e harness',
+    'mock upstream',
+    'one-person-lab-app parity v1',
+    'progress/files/deliverables refs',
+    'artifact body',
+    'projection 来源只能是白名单 OPL CLI JSON surface 或 MedOPL status projection',
   ]) {
     assert.ok(combined.includes(required), `missing product positioning truth: ${required}`);
   }

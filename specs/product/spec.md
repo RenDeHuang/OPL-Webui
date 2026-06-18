@@ -9,6 +9,7 @@
 
 - `product.web.identity`: OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot，是 Web 版 One Person Lab App。
 - `product.sources`: `one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables 的产品语义参考。
+- `product.desktop-parity-v1`: one-person-lab-app parity v1 只承接 chat-first、purpose routing、progress/files/deliverables refs 和 runtime gate 产品语义；不承接 desktop packaging、Electron IPC、local CLI mutation、native install/update、artifact body、memory body 或 domain verdict。
 - `product.capability-source`: Web capability view model 必须暴露 source-path pinned manifest，指向 `one-person-lab-app/contracts/app-product-profile.json` 和 `one-person-lab/contracts/opl-framework/domains.json`；没有上游 commit SHA 时必须声明 blocker，不能伪造 dynamic sync。
 - `product.low-friction`: 用户访问 `opl.medopl.cn` 后注册/登录；用户填写自己的 API Key，即可普通聊天。
 - `product.ui-shell`: 顶部导航必须暴露 One Person Lab Web、Chat、Capabilities、Settings、MedOPL；首屏是 Genspark-like hero prompt 和能力入口，主张必须表达“严肃工作的 AI 工作台”，不能退回普通后台表单。
@@ -23,6 +24,7 @@
 - `product.usage-quota`: usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
 - `product.chat-guardrails`: 普通 chat 必须有 Webui-side quota/abuse guardrail；超额停止在 `CHAT_QUOTA_EXCEEDED`，不能调用上游模型；该 guardrail 不等同于 billing，最终计费仍归 MedOPL/sub2api。
 - `product.audit`: 注册、登录、API Key binding、普通 chat、runtime gate、quota exceeded 和 upstream failure 必须写 sanitized audit projection；audit 不能包含 password、raw API Key、session secret、DB URL 或真实 secret value。
+- `product.dogfood-e2e`: dogfood e2e harness 必须可重复、只使用 mock upstream 和测试 credential，覆盖注册、登录、current session、API Key binding、raw key 不回显、fixed gateway、普通 chat、`CHAT_QUOTA_EXCEEDED`、sanitized audit 与 MedOPL runtime gate；不得连接真实 upstream、真实 PostgreSQL 或真实 MedOPL production。
 - `product.production-required-env`: one-person-lab-web production rollout 需要 `opl-webui-postgres` 提供 `OPL_DATABASE_URL`，并需要 `opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；仓库只保存 key 名和 manifest 引用，不保存 secret value。
 - `product.production-evidence`: `1fc361d Figma workbench UI 已 production verified`，生产页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”、fixed gateway `https://gflabtoken.cn/v1` 和 MedOPL runtime gate 边界；生产 guard 已验证 unauth chat `401 AUTH_REQUIRED`、GET chat `405 METHOD_NOT_ALLOWED`、wrong credentials `401 INVALID_CREDENTIALS`。
 - `product.production-evidence-9cbb4a3`: `9cbb4a3 dogfood guardrails + capability source-path manifest 已 production verified`；image `uswccr.ccs.tencentyun.com/webopl/opl-webui:9cbb4a3`，rollout revision `15`，Running Ready Pod `opl-webui-control-plane-6c6f59bf5f-vpmvk`；`/healthz` 200、`/readyz` 200 `missing=[]`、`/metricsz` 200、`/` 200；public JS exposes capability `syncMode: 'source_path_pinned_manifest'` and `dynamicSync=false`；fixed gateway `https://gflabtoken.cn/v1`；`@基金` / MedOPL Runtime gate appends `需要 MedOPL Runtime`；guardrail contracts protect `CHAT_QUOTA_EXCEEDED` and sanitized audit；No real OPL runtime was executed or created；unauth chat 401 `AUTH_REQUIRED`、wrong credentials 401 `INVALID_CREDENTIALS`。

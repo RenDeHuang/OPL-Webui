@@ -204,7 +204,7 @@ function bindSettingsForms(getView, setView) {
   document.querySelector('[data-logout-button]')?.addEventListener('click', async () => {
     await logoutAccount(fetch);
     setSettingsMessage('已退出登录。');
-    setView(await loadOnePersonLabWebState());
+    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
   });
   document.querySelector('[data-provider-form]')?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -217,7 +217,7 @@ function bindSettingsForms(getView, setView) {
     }
     document.querySelector('#api-key').value = '';
     setSettingsMessage(`API Key 已更新：${result.maskedKey || '已绑定'}`);
-    setView(await loadOnePersonLabWebState());
+    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
   });
 }
 
@@ -228,7 +228,7 @@ async function authAction(kind, setView) {
     ? await registerAccount(fetch, email, password)
     : await loginAccount(fetch, email, password);
   setSettingsMessage(result.ok ? '账号已就绪。' : result.message || result.errorCode || '认证失败。');
-  if (result.ok) setView(await loadOnePersonLabWebState());
+  if (result.ok) setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
 }
 
 function renderView(view) {
