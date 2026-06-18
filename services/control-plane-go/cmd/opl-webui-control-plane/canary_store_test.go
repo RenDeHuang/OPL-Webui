@@ -1,26 +1,26 @@
 package main
 
-import "github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
+import "github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/controlplane"
 
-func (store *readFailingCanaryStore) SaveTaskProjection(projection mvp.TaskResponse) error {
+func (store *readFailingCanaryStore) SaveTaskProjection(projection controlplane.TaskResponse) error {
 	store.projection = projection
 	return nil
 }
 
-func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection mvp.TaskResponse) error {
+func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection controlplane.TaskResponse) error {
 	return store.SaveTaskProjection(projection)
 }
 
-func (store *readFailingCanaryStore) GetUsageQuota(string, string) mvp.UsageQuotaProjection {
-	return mvp.UsageQuotaProjection{Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
+func (store *readFailingCanaryStore) GetUsageQuota(string, string) controlplane.UsageQuotaProjection {
+	return controlplane.UsageQuotaProjection{Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
 }
 
-func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (mvp.TaskResponse, bool) {
-	return mvp.TaskResponse{}, false
+func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (controlplane.TaskResponse, bool) {
+	return controlplane.TaskResponse{}, false
 }
 
-func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []mvp.TaskResponse {
-	return []mvp.TaskResponse{}
+func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []controlplane.TaskResponse {
+	return []controlplane.TaskResponse{}
 }
 
 func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
@@ -28,12 +28,4 @@ func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, works
 		store.deleted = true
 	}
 	return nil
-}
-
-func (store *readFailingCanaryStore) EnsureWorkspaceMembership(mvp.LaunchTokenClaims) error {
-	return nil
-}
-
-func (store *readFailingCanaryStore) GetCurrentWorkspace(mvp.LaunchTokenClaims) (mvp.WorkspaceCurrentResponse, bool) {
-	return mvp.WorkspaceCurrentResponse{}, false
 }

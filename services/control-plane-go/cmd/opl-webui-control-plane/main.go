@@ -10,7 +10,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/controlplane"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/webapp"
@@ -21,7 +21,7 @@ func main() {
 		os.Exit(code)
 	}
 
-	if err := mvp.ConfigureDefaultTaskStoreFromEnv(); err != nil {
+	if err := controlplane.ConfigureDefaultTaskStoreFromEnv(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -63,7 +63,7 @@ func runCLI(args []string, stdout io.Writer, stderr io.Writer) (bool, int) {
 	var err error
 	switch args[1] {
 	case "db":
-		report, err = runDBCanary(mvp.OpenPostgresTaskStore)
+		report, err = runDBCanary(controlplane.OpenPostgresTaskStore)
 	case "opl-cli":
 		report = runOPLCLICanary(oplbridge.NewDefaultRunner())
 	default:
@@ -174,7 +174,7 @@ func canaryErrorReport(kind string, err error) CanaryReport {
 	}
 }
 
-func runDBCanary(openPostgres mvp.PostgresStoreOpener) (CanaryReport, error) {
+func runDBCanary(openPostgres controlplane.PostgresStoreOpener) (CanaryReport, error) {
 	databaseURL := os.Getenv("OPL_DATABASE_URL")
 	if databaseURL == "" {
 		return CanaryReport{}, fmt.Errorf("OPL_DATABASE_URL is required")
@@ -184,7 +184,7 @@ func runDBCanary(openPostgres mvp.PostgresStoreOpener) (CanaryReport, error) {
 		return CanaryReport{}, fmt.Errorf("open postgres canary: %w", err)
 	}
 
-	projection, err := mvp.CreateAndStoreTaskResponse(mvp.TaskRequest{
+	projection, err := controlplane.CreateAndStoreTaskResponse(controlplane.TaskRequest{
 		TenantID:    "tenant_cloud_canary",
 		WorkspaceID: "workspace_cloud_canary",
 		UserID:      "user_cloud_canary",

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/mvp"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/controlplane"
 )
 
 func TestServerAddressUsesHostAndPort(t *testing.T) {
@@ -116,9 +116,9 @@ func TestHandleMetricszRejectsNonGet(t *testing.T) {
 func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
 	called := false
-	store := mvp.NewMemoryTaskStore()
+	store := controlplane.NewMemoryTaskStore()
 
-	report, err := runDBCanary(func(databaseURL string) (mvp.TaskProjectionStore, error) {
+	report, err := runDBCanary(func(databaseURL string) (controlplane.TaskProjectionStore, error) {
 		called = true
 		if databaseURL != "postgres://user:secret@example/oplweb" {
 			t.Fatalf("database URL mismatch: %s", databaseURL)
@@ -152,7 +152,7 @@ func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "")
 
-	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
 		t.Fatal("opener should not run without database URL")
 		return nil, nil
 	})
@@ -163,7 +163,7 @@ func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
 
 func TestRunDBCanaryPropagatesOpenError(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
-	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
 		return nil, errors.New("network timeout")
 	})
 	if err == nil || !strings.Contains(err.Error(), "open postgres canary") {
@@ -186,7 +186,7 @@ func TestCanaryReportErrorRedactsConnectionDetails(t *testing.T) {
 }
 
 type readFailingCanaryStore struct {
-	projection mvp.TaskResponse
+	projection controlplane.TaskResponse
 	deleted    bool
 }
 
@@ -194,7 +194,7 @@ func TestRunDBCanaryCleansUpAfterReadFailure(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
 	store := &readFailingCanaryStore{}
 
-	_, err := runDBCanary(func(string) (mvp.TaskProjectionStore, error) {
+	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
 		return store, nil
 	})
 

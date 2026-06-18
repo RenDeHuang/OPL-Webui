@@ -1,4 +1,4 @@
-package mvp
+package controlplane
 
 import (
 	"context"
@@ -88,9 +88,9 @@ func openPostgresTaskStore(databaseURL string, openDatabase SQLDatabaseOpener) (
 		_ = db.Close()
 		return nil, fmt.Errorf("ping postgres task store: %w", err)
 	}
-	if _, err := db.ExecContext(context.Background(), PostgresSaaSSchema); err != nil {
+	if _, err := db.ExecContext(context.Background(), PostgresControlPlaneSchema); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("initialize postgres saas schema: %w", err)
+		return nil, fmt.Errorf("initialize postgres control plane schema: %w", err)
 	}
 	if _, err := db.ExecContext(context.Background(), PostgresTaskStoreSchema); err != nil {
 		_ = db.Close()

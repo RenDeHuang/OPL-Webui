@@ -1,6 +1,9 @@
-package mvp
+package controlplane
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCreateTaskResponseCreatesTenantScopedProjection(t *testing.T) {
 	result, err := CreateTaskResponse(TaskRequest{
@@ -25,6 +28,9 @@ func TestCreateTaskResponseCreatesTenantScopedProjection(t *testing.T) {
 	}
 	if result.Artifacts[0].Kind != "analysis_package" {
 		t.Fatalf("artifact kind mismatch: %s", result.Artifacts[0].Kind)
+	}
+	if !strings.HasPrefix(result.Artifacts[0].DownloadRef, "artifact-ref:") {
+		t.Fatalf("artifact ref must be an explicit projection ref, got %s", result.Artifacts[0].DownloadRef)
 	}
 	if result.Adapter.Command[0] != "opl" {
 		t.Fatalf("adapter command mismatch: %#v", result.Adapter.Command)

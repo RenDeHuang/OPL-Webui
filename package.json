@@ -15,7 +15,6 @@
     "repo:bloat": "node scripts/repo-bloat-audit.mjs",
     "check:diff": "git diff --check",
     "start": "go run ./services/control-plane-go/cmd/opl-webui-control-plane",
-    "start:mvp": "go run ./services/control-plane-go/cmd/opl-webui-control-plane",
     "test:go": "cd services/control-plane-go && go test ./..."
   }
 }

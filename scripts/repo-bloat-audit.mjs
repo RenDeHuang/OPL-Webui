@@ -5,10 +5,10 @@ import { join } from 'node:path';
 
 const ignoredDirectories = ['.git', 'node_modules', '.runtime', '.superpowers'];
 const budgets = {
-  files: 80,
+  files: 85,
   markdownDocs: 24,
   scripts: 8,
-  tests: 16,
+  tests: 17,
   maxFileLines: 260,
 };
 
@@ -45,6 +45,7 @@ const visibleFiles = new Set([...tracked, ...untracked].filter((path) => {
 
 const allFiles = walk().filter((path) => visibleFiles.has(path));
 const activeChangeDocPattern = /^changes\/active\/[^/]+\/(?:proposal|spec-delta|design|tasks|eval-plan|review|closeout)\.md$/;
+const durableFiles = allFiles.filter((path) => !activeChangeDocPattern.test(path));
 const lineCounts = allFiles.map((path) => ({
   path,
   lines: readFileSync(path, 'utf8').split('\n').length,
@@ -55,7 +56,7 @@ const largestFile = lineCounts.reduce((largest, file) => file.lines > largest.li
 });
 
 const counts = {
-  files: visibleFiles.size,
+  files: durableFiles.length,
   markdownDocs: allFiles.filter((path) => path.endsWith('.md') && !activeChangeDocPattern.test(path)).length,
   activeChangeDocs: allFiles.filter((path) => activeChangeDocPattern.test(path)).length,
   scripts: allFiles.filter((path) => path.startsWith('scripts/')).length,

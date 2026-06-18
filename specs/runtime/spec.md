@@ -19,7 +19,7 @@
 - `runtime.webapp.audit`: `GET /api/account/audit-events` 只返回当前 session 用户的 sanitized audit events；register/login/API Key/chat/runtime gate/quota exceeded/upstream failure 都必须写 audit projection，且不得保存或返回 password、raw API Key、session secret、encryption secret 或 DB URL。
 - `runtime.webapp.conversations`: `GET /api/chat/conversations` 和 `GET /api/chat/conversations/{conversationId}` 必须按 user boundary fail closed；user A 不能读取 user B conversation。
 - `runtime.webapp.opl-gate`: `@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 返回 `RUNTIME_REQUIRED` 和 MedOPL deep link，不调用 sub2api，不伪造 OPL execution。
-- `runtime.webapp.retired`: `/api/mvp/*`、旧 demo workspace route 和 `demoData.mjs` 不再是公开主线接口；无 consumer contract 时删除。
+- `runtime.webapp.retired`: `/api/mvp/*` 和旧 demo workspace route 不再是公开主线接口；无 consumer contract 时删除。Retired demo data modules must not re-enter active UI or API surfaces.
 - `runtime.deploy.container`: Dockerfile 构建 Go control plane 容器，并复制 `apps/web`。
 - `runtime.deploy.cloud-image`: `Dockerfile.cloud` 从外部 OPL build context 复制 `/opt/opl/bin/opl`、`contracts/opl-framework` 和 production OPL runtime assets。
 - `runtime.deploy.auth-secret`: production manifest 必须从 `opl-webui-auth` 注入 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；`OPL_TENANT_AUTH_SECRET` 保留给既有 launch-token/canary 边界，其他三项支撑 public account session、API Key 加密和 server-side chat model。

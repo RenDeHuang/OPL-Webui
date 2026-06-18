@@ -1,4 +1,4 @@
-package mvp
+package controlplane
 
 import (
 	"context"
@@ -135,7 +135,7 @@ func CreateTaskResponseWithRoute(ctx context.Context, input TaskRequest, runner 
 				Kind:        artifactKind(request.Intent),
 				Version:     1,
 				SourceRefs:  []string{policyID, taskID},
-				DownloadRef: fmt.Sprintf("demo://%s/%s", request.WorkspaceID, artifactID),
+				DownloadRef: fmt.Sprintf("artifact-ref:%s/%s", request.WorkspaceID, artifactID),
 			},
 		},
 		Adapter: AdapterProjection{

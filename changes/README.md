@@ -10,6 +10,13 @@ proposal -> spec-delta -> design -> tasks -> eval-plan -> review -> closeout -> 
 
 关闭后只把精简摘要追加到 `changes/archive/closeouts.md`；删除 `changes/active/<change-id>/`。Closed change is compact; do not keep per-change archive directories.
 
+每个 active change 必须执行四个工作面：
+
+- 文档生命周期：确认长期 truth 的 owner、purpose、state 和 machine boundary。
+- 代码清退：同步删除或迁移被替代的 route、schema、mock、测试、文档入口和命名。
+- 测试登记：新增或移动测试必须登记在 `scripts/test-classification.mjs`。
+- 机器 gate：targeted eval 后跑 `npm run verify`、`npm run gate:review`、`npm run repo:bloat` 和 `sentrux check .`。
+
 ## Fixed Template
 
 每个 active package 固定包含：
@@ -18,6 +25,7 @@ proposal -> spec-delta -> design -> tasks -> eval-plan -> review -> closeout -> 
 - `spec-delta.md`: 相对现有 truth 的变化。
 - `design.md`: 实现方案和边界。
 - `tasks.md`: 可勾选任务。
+- `tasks.md` 必须包含 cleanup / retirement 项。
 - `eval-plan.md`: 阶段验收、命令和 cannot claim。
 - `review.md`: 审阅结论和阻塞项。
 - `closeout.md`: 完成摘要、验证证据和后续。

@@ -1,4 +1,4 @@
-package mvp
+package controlplane
 
 import (
 	"os"
@@ -26,18 +26,12 @@ type TaskDeleter interface {
 	DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error
 }
 
-type WorkspaceMembershipStore interface {
-	EnsureWorkspaceMembership(launchTokenClaims) error
-	GetCurrentWorkspace(launchTokenClaims) (WorkspaceCurrentResponse, bool)
-}
-
 type TaskProjectionStore interface {
 	TaskStore
 	QuotaTaskStore
 	TaskReader
 	TaskLister
 	TaskDeleter
-	WorkspaceMembershipStore
 }
 
 type TaskStoreConfig struct {
@@ -47,10 +41,9 @@ type TaskStoreConfig struct {
 type PostgresStoreOpener func(string) (TaskProjectionStore, error)
 
 type MemoryTaskStore struct {
-	mu          sync.RWMutex
-	items       map[string]TaskResponse
-	memberships map[string]WorkspaceCurrentResponse
-	usage       map[string]int
+	mu    sync.RWMutex
+	items map[string]TaskResponse
+	usage map[string]int
 }
 
 func NewTaskStore(config TaskStoreConfig, openPostgres PostgresStoreOpener) (TaskProjectionStore, error) {
@@ -77,9 +70,8 @@ func configureDefaultTaskStoreFromEnv(openPostgres PostgresStoreOpener) error {
 
 func NewMemoryTaskStore() *MemoryTaskStore {
 	return &MemoryTaskStore{
-		items:       map[string]TaskResponse{},
-		memberships: map[string]WorkspaceCurrentResponse{},
-		usage:       map[string]int{},
+		items: map[string]TaskResponse{},
+		usage: map[string]int{},
 	}
 }
 

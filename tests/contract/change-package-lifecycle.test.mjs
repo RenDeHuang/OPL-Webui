@@ -7,28 +7,20 @@ import pkg from '../../package.json' with { type: 'json' };
 const lifecycleFiles = ['proposal.md', 'spec-delta.md', 'design.md', 'tasks.md', 'eval-plan.md', 'review.md', 'closeout.md'];
 
 test('package lifecycle exposes verification-only commands', () => {
-  const requiredScripts = [
-    'verify',
-    'verify:health',
-    'verify:smoke',
-    'verify:contract',
-    'test:health',
-    'test:smoke',
-    'test:contract',
-    'test:regression',
-    'gate:review',
-    'repo:bloat',
-    'check:diff',
-  ];
-
-  for (const scriptName of requiredScripts) {
+  for (const scriptName of [
+    'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
+    'test:contract', 'test:regression', 'gate:review', 'repo:bloat', 'check:diff',
+  ]) {
     assert.ok(pkg.scripts[scriptName], `missing package script: ${scriptName}`);
   }
 });
 
 test('repo exposes active truth, durable specs, and structural rules', () => {
   const requiredTruthFiles = [
-    'changes/archive/closeouts.md', 'changes/README.md', 'docs/active/README.md', 'specs/product/spec.md',
+    'TASTE.md', 'changes/archive/closeouts.md', 'changes/README.md', 'docs/active/README.md',
+    'docs/project.md', 'docs/status.md', 'docs/architecture.md', 'docs/invariants.md',
+    'docs/decisions.md', 'docs/docs_portfolio_consolidation.md', 'docs/history/README.md',
+    'specs/product/spec.md',
     'specs/runtime/spec.md', 'specs/source/spec.md', '.sentrux/rules.toml', 'services/control-plane-go/go.mod',
   ];
 
@@ -175,7 +167,8 @@ test('Go control plane replaces the Node API backend', () => {
   assert.equal(existsSync('services/control-plane-go/cmd/opl-webui-control-plane/main.go'), true);
   assert.equal(existsSync('apps/api/src/server.mjs'), false);
   assert.equal(existsSync('apps/api/src/mvpTaskHandler.mjs'), false);
-  assert.match(pkg.scripts['start:mvp'], /^go run \.\/services\/control-plane-go\/cmd\/opl-webui-control-plane/);
+  assert.equal(pkg.scripts.start, 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
+  assert.equal(pkg.scripts['start:mvp'], undefined);
 });
 
 test('post-Go cleanup removes retired Node adapter surfaces', () => {
@@ -200,8 +193,7 @@ test('archived change packages keep only compact closeout summaries', () => {
   assert.match(closeout, /production-runtime-gate/);
   assert.match(closeout, /release-automation/);
   assert.match(closeout, /cannot claim/);
-
-  assert.equal(existsSync('docs/history/README.md'), false);
+  assert.equal(existsSync('docs/history/README.md'), true);
 });
 
 test('change lifecycle documents dynamic phase gates and compaction rules', () => {

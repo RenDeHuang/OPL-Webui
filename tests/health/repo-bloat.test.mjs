@@ -16,9 +16,13 @@ test('repo bloat audit reports JSON and stays within budget', () => {
   assert.ok(report.budgets.files >= report.counts.files);
   assert.equal(report.counts.activeChangeDocs, activeChangeDocs.length);
   assert.equal(report.counts.markdownDocs, durableMarkdownDocs.length);
+  assert.equal(
+    report.counts.files,
+    report.files.filter((file) => !activeChangeDocPattern.test(file)).length,
+  );
   assert.ok(Array.isArray(report.ignoredDirectories));
   assert.equal(existsSync(report.largestFile.path), true);
-  assert.equal(report.counts.files, report.files.length);
+  assert.equal(report.counts.files, report.files.length - report.counts.activeChangeDocs);
   for (const file of report.files) {
     assert.equal(existsSync(file), true, `bloat audit counted missing file: ${file}`);
   }
