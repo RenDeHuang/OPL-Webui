@@ -10,7 +10,8 @@
 - `product.web.identity`: OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot，是 Web 版 One Person Lab App。
 - `product.sources`: `one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables 的产品语义参考。
 - `product.low-friction`: 用户访问 `opl.medopl.cn` 后注册/登录；用户填写自己的 API Key，即可普通聊天。
-- `product.ui-shell`: 顶部导航必须暴露 One Person Lab Web、Chat、Capabilities、Settings、MedOPL；首屏是 Genspark-like hero prompt 和能力入口，不能退回普通后台表单。
+- `product.ui-shell`: 顶部导航必须暴露 One Person Lab Web、Chat、Capabilities、Settings、MedOPL；首屏是 Genspark-like hero prompt 和能力入口，主张必须表达“严肃工作的 AI 工作台”，不能退回普通后台表单。
+- `product.figma-2-21-alignment`: 首页必须显著展示 Figma `2:21` 的五件事：选择专业工作、绑定真实材料、推进长任务、沉淀交付物、管理运行时；Capabilities 必须更像 Foundry 启动中心，而不是普通后台卡片网格。
 - `product.settings`: `#settings` 必须聚焦账号/API Key 设置；展示登录状态、API Key 绑定状态、固定 `https://gflabtoken.cn/v1` 且不可编辑、masked key、保存/更新和退出登录。
 - `product.chat-state`: anonymous 可看首页和能力但发送提示登录；authenticated_unbound 可绑定 API Key，普通 chat 提示绑定；authenticated_bound 可发送普通 chat。
 - `product.fixed-provider`: base_url 固定为 `https://gflabtoken.cn/v1`，不允许用户自定义 base_url；API Key 属于用户自带 credential。
@@ -24,5 +25,5 @@
 ## Cannot Claim
 
 - `44dd574` 已有 one-person-lab-web production rollout evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
-- UI productization 只有本地 dogfood/browser evidence，未 rollout 前不能宣称线上页面已更新。
+- Figma `2:21` UI alignment 只有本地 dogfood/browser evidence，未 rollout 前不能宣称线上页面已更新。
 - 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider 或完整 production ready SaaS。

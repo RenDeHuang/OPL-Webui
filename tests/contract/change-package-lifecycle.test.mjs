@@ -70,9 +70,9 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
-  assert.match(readme, /one-person-lab-web-ui-dogfood-local/);
+  assert.match(readme, /figma-2-21-ui-alignment-local/);
   assert.match(readme, /44dd574[\s\S]{0,120}production verified/);
-  assert.match(readme, /UI productization[\s\S]{0,160}本地可 dogfood/);
+  assert.match(readme, /UI alignment[\s\S]{0,220}Figma `2:21`/);
   assert.match(readme, /POST \/api\/chat/);
   assert.match(readme, /最终计费归 MedOPL\/sub2api/);
 });

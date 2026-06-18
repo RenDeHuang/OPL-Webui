@@ -49,8 +49,8 @@ export function createOnePersonLabViewModel(state) {
   const session = state.session ?? { ok: false };
   const currentAccountState = accountState(session, provider);
   return {
-    title: 'One Person Lab Web',
-    subtitle: 'Genspark-like one-person-lab-web with ChatGPT-like base chatbot',
+    title: '严肃工作的 AI 工作台',
+    subtitle: '从普通聊天进入 Research、Grant、Presentation 等专业工作流',
     session,
     accountState: currentAccountState,
     primaryCTA: ctaForState(currentAccountState),
@@ -68,6 +68,13 @@ export function createOnePersonLabViewModel(state) {
       { label: 'PPT', prompt: '生成一页汇报 PPT 大纲', runtimeRequired: false },
       { label: '数据分析', prompt: '解释这组数据可以如何分析', runtimeRequired: false },
       { label: '长任务', prompt: '@长任务 规划一项复杂任务', runtimeRequired: true },
+    ],
+    workbenchSteps: [
+      { title: '选择专业工作', description: 'Foundry 启动中心，不是泛 Agent 列表。' },
+      { title: '绑定真实材料', description: '围绕材料、引用和版本组织输入，不伪造文件能力。' },
+      { title: '推进长任务', description: '展示阶段、进度和人工确认，不假装后台已经执行。' },
+      { title: '沉淀交付物', description: '面向证据包、申请书、PPT 和修回材料的交付闭环。' },
+      { title: '管理运行时', description: '只展示 readiness 与 MedOPL 开通入口。' },
     ],
     runtimeGate: {
       title: '需要 MedOPL Runtime',

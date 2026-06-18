@@ -104,13 +104,21 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
     oplSnapshot: { ok: true, mode: 'readonly' },
   });
 
-  assert.equal(view.title, 'One Person Lab Web');
+  assert.equal(view.title, '严肃工作的 AI 工作台');
+  assert.match(view.subtitle, /Research、Grant、Presentation/);
   assert.equal(view.provider.baseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(view.provider.baseUrlEditable, false);
   assert.equal(view.accountState, 'authenticated_unbound');
   assert.deepEqual(view.capabilities.map((item) => item.label), ['普通问答', '论文/综述', '基金', 'PPT', '数据分析', '长任务']);
   assert.equal(view.runtimeGate.deepLink, 'https://medopl.medopl.cn');
-  assert.doesNotMatch(JSON.stringify(view), /workspace|demo:\/\/|轻量项目工作区|真实执行|已完成执行/i);
+  assert.deepEqual(view.workbenchSteps.map((item) => item.title), [
+    '选择专业工作',
+    '绑定真实材料',
+    '推进长任务',
+    '沉淀交付物',
+    '管理运行时',
+  ]);
+  assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
 });
 
 function response(payload, status = 200) {

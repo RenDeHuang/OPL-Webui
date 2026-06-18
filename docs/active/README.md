@@ -7,18 +7,18 @@
 
 ## Current Stage
 
-当前是 `one-person-lab-web-ui-dogfood-local`：OPL-Webui 已重新校准为 Genspark-like one-person-lab-web with ChatGPT-like base chatbot，并已有 `44dd574` 生产 rollout evidence；本轮 UI productization 只完成本地 dogfood readiness，尚未 production rollout。`one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是桌面端产品语义参考，包括 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables。
+当前是 `figma-2-21-ui-alignment-local`：OPL-Webui 已在 `44dd574` 生产 rollout evidence 基础上继续做本地 UI alignment，把 b9af47a 的 one-person-lab-web 从“聊天页 + 设置侧栏”推进为“严肃工作的 AI 工作台”入口。本轮设计源只采用 Figma node `2:21`「产品结构示意」，尚未 production rollout。`one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是桌面端产品语义参考，包括 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables。
 
 ## Active Change Work
 
-- 当前没有必须保留的 active preview blocker。历史 `figma-v3-preview` 已退役为 archive；当前主线是 one-person-lab-web。
+- 当前没有必须保留的 active preview blocker。历史 `figma-v3-preview` 已退役为 archive；当前主线是 one-person-lab-web，最近 UI alignment source 是 Figma `2:21`。
 
 ## Can Claim
 
 - Web UI 只调用同源 Go control plane HTTP API；Go control plane 是唯一后端业务入口。
 - OPL-Webui 是 Web 版 One Person Lab App 前台入口，不是 MedOPL runtime/node pool/storage/billing 后台，也不拥有 API gateway。
-- UI 是 Genspark-like one-person-lab-web，并提供低门槛 ChatGPT-like base chatbot 首屏；不再使用旧 `demoData.mjs`、旧 demo artifact、`demo://` 或用户可见 workspace preview。
-- UI productization 本地可 dogfood：顶部导航包含 Chat、Capabilities、Settings、MedOPL；首屏是大 prompt console 和能力 capsules；`#settings` 聚焦账号/API Key 设置区；消息列表、设置表单和 runtime gate 已产品化。Figma MCP 本环境不可用，Genspark live audit 被 403 拦截，本轮按 repo conventions 和浏览器截图 best-effort。
+- UI 是 Genspark-like one-person-lab-web，并提供低门槛 ChatGPT-like base chatbot 首屏；首屏主张是“严肃工作的 AI 工作台”；不再使用旧 `demoData.mjs`、旧 demo artifact、`demo://` 或用户可见 workspace preview。
+- UI alignment 本地可 dogfood：顶部导航包含 Chat、Capabilities、Settings、MedOPL；首屏保留大 prompt console 和能力 capsules，并显著展示 Figma `2:21` 的五件事：选择专业工作、绑定真实材料、推进长任务、沉淀交付物、管理运行时；Capabilities 是 Foundry 启动中心；`#settings` 聚焦账号与凭据状态区；消息列表、设置表单和 runtime gate 已产品化。
 - 支持 public account 本地 contract：`POST /api/auth/register`、`POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/session/current`，使用 bcrypt password hash 和 HttpOnly `opl_session`。
 - 每个 public account 自动拥有 hidden default personal workspace 和 personal tenant，用于隔离、计费投影和未来扩展；UI 不展示 workspace 产品。
 - 支持用户 API Key binding 本地 contract：`GET/PUT /api/settings/model-provider`；base_url 固定为 `https://gflabtoken.cn/v1`，不允许客户端传入或覆盖 base_url；后端不返回 raw API Key。
@@ -37,7 +37,7 @@
 ## Cannot Claim
 
 - 还不是完整公网 production ready SaaS。
-- 还没有本次 UI productization 的 production rollout evidence。
+- 还没有本次 Figma `2:21` UI alignment 的 production rollout evidence。
 - 还不能 claim Figma 精确还原或真实 Genspark 线上对照验收。
 - 还没有真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage 或真实 OPL execution/mutation。
 - 还不能执行 OPL install、repair、module exec、family-runtime mutation。

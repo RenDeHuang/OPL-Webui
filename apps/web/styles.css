@@ -1,6 +1,6 @@
 :root {
-  color: #16171d;
-  background: #f7f4ee;
+  color: #0e131a;
+  background: #f6f8fa;
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
@@ -15,10 +15,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(135deg, rgba(255, 232, 181, 0.68), transparent 36%),
-    linear-gradient(225deg, rgba(165, 203, 255, 0.46), transparent 34%),
-    #f7f4ee;
+  background: #f6f8fa;
 }
 
 body[data-view="settings"] .settings-panel {
@@ -67,7 +64,7 @@ p {
 
 p,
 dd {
-  color: #454b57;
+  color: #626d7c;
   line-height: 1.62;
 }
 
