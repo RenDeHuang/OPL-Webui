@@ -25,9 +25,10 @@
 - `product.audit`: 注册、登录、API Key binding、普通 chat、runtime gate、quota exceeded 和 upstream failure 必须写 sanitized audit projection；audit 不能包含 password、raw API Key、session secret、DB URL 或真实 secret value。
 - `product.production-required-env`: one-person-lab-web production rollout 需要 `opl-webui-postgres` 提供 `OPL_DATABASE_URL`，并需要 `opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；仓库只保存 key 名和 manifest 引用，不保存 secret value。
 - `product.production-evidence`: `1fc361d Figma workbench UI 已 production verified`，生产页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”、fixed gateway `https://gflabtoken.cn/v1` 和 MedOPL runtime gate 边界；生产 guard 已验证 unauth chat `401 AUTH_REQUIRED`、GET chat `405 METHOD_NOT_ALLOWED`、wrong credentials `401 INVALID_CREDENTIALS`。
+- `product.production-evidence-9cbb4a3`: `9cbb4a3 dogfood guardrails + capability source-path manifest 已 production verified`；image `uswccr.ccs.tencentyun.com/webopl/opl-webui:9cbb4a3`，rollout revision `15`，Running Ready Pod `opl-webui-control-plane-6c6f59bf5f-vpmvk`；`/healthz` 200、`/readyz` 200 `missing=[]`、`/metricsz` 200、`/` 200；public JS exposes capability `syncMode: 'source_path_pinned_manifest'` and `dynamicSync=false`；fixed gateway `https://gflabtoken.cn/v1`；`@基金` / MedOPL Runtime gate appends `需要 MedOPL Runtime`；guardrail contracts protect `CHAT_QUOTA_EXCEEDED` and sanitized audit；No real OPL runtime was executed or created；unauth chat 401 `AUTH_REQUIRED`、wrong credentials 401 `INVALID_CREDENTIALS`。
 
 ## Cannot Claim
 
 - `44dd574` 已有 one-person-lab-web production rollout evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
 - `1fc361d` 已有 Figma `2:21` UI alignment production evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
-- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider、真实线上 chat quota/audit evidence、上游 commit-SHA pinned dynamic sync 或完整 production ready SaaS。
+- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider、真实 authenticated chat quota/audit write-path online evidence、上游 commit-SHA pinned dynamic sync 或完整 production ready SaaS。

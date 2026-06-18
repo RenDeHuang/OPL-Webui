@@ -4,15 +4,7 @@ import test from 'node:test';
 
 import pkg from '../../package.json' with { type: 'json' };
 
-const lifecycleFiles = [
-  'proposal.md',
-  'spec-delta.md',
-  'design.md',
-  'tasks.md',
-  'eval-plan.md',
-  'review.md',
-  'closeout.md',
-];
+const lifecycleFiles = ['proposal.md', 'spec-delta.md', 'design.md', 'tasks.md', 'eval-plan.md', 'review.md', 'closeout.md'];
 
 test('package lifecycle exposes verification-only commands', () => {
   const requiredScripts = [
@@ -36,14 +28,8 @@ test('package lifecycle exposes verification-only commands', () => {
 
 test('repo exposes active truth, durable specs, and structural rules', () => {
   const requiredTruthFiles = [
-    'changes/archive/closeouts.md',
-    'changes/README.md',
-    'docs/active/README.md',
-    'specs/product/spec.md',
-    'specs/runtime/spec.md',
-    'specs/source/spec.md',
-    '.sentrux/rules.toml',
-    'services/control-plane-go/go.mod',
+    'changes/archive/closeouts.md', 'changes/README.md', 'docs/active/README.md', 'specs/product/spec.md',
+    'specs/runtime/spec.md', 'specs/source/spec.md', '.sentrux/rules.toml', 'services/control-plane-go/go.mod',
   ];
 
   for (const file of requiredTruthFiles) {
@@ -80,21 +66,27 @@ test('archive keeps prior production evidence while active truth points to curre
 test('active truth records 1fc361d Figma workbench production evidence', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
   const product = readFileSync('specs/product/spec.md', 'utf8');
-  const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
-  const combined = `${readme}\n${product}\n${closeout}`;
+  const combined = `${readme}\n${product}\n${readFileSync('changes/archive/closeouts.md', 'utf8')}`;
 
   for (const required of [
     '1fc361d Figma workbench UI 已 production verified',
     'uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d',
-    'rollout revision `14`',
-    'opl-webui-control-plane-54546f5bff-h8xcq',
-    '`/#settings` 200',
-    '严肃工作的 AI 工作台',
-    'OPL WebUI 应承接的五件事',
-    'https://gflabtoken.cn/v1',
-    '401 AUTH_REQUIRED',
-    '405 METHOD_NOT_ALLOWED',
-    '401 INVALID_CREDENTIALS',
+    'rollout revision `14`', 'opl-webui-control-plane-54546f5bff-h8xcq', '`/#settings` 200',
+    '严肃工作的 AI 工作台', 'OPL WebUI 应承接的五件事', 'https://gflabtoken.cn/v1',
+    '401 AUTH_REQUIRED', '405 METHOD_NOT_ALLOWED', '401 INVALID_CREDENTIALS',
+    '9cbb4a3 dogfood guardrails + capability source-path manifest 已 production verified',
+    'uswccr.ccs.tencentyun.com/webopl/opl-webui:9cbb4a3',
+    'rollout revision `15`',
+    'opl-webui-control-plane-6c6f59bf5f-vpmvk',
+    '`/readyz` 200 `missing=[]`',
+    'CHAT_QUOTA_EXCEEDED',
+    'sanitized audit',
+    "syncMode: 'source_path_pinned_manifest'",
+    'dynamicSync=false',
+    '@基金',
+    'MedOPL Runtime',
+    '需要 MedOPL Runtime',
+    'No real OPL runtime was executed or created',
   ]) {
     assert.ok(combined.includes(required), `missing production evidence: ${required}`);
   }
