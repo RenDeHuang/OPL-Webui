@@ -104,7 +104,7 @@ func setSessionCookie(response http.ResponseWriter, token string) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		Secure:   os.Getenv("OPL_WEBUI_ENV") == "production" || os.Getenv("OPL_WEBUI_ENV") == "cloud_mvp",
+		Secure:   os.Getenv("OPL_WEBUI_ENV") == "production" || os.Getenv("OPL_WEBUI_ENV") == "web_cloud",
 	})
 }
 

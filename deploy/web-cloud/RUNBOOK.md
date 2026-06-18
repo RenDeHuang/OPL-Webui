@@ -1,4 +1,4 @@
-# OPL-Webui Cloud MVP Deploy Handoff
+# OPL-Webui Web cloud Deploy Handoff
 
 本 runbook 只给云端/VPC runner 使用，不保存真实 kubeconfig、数据库密码、云 API key、镜像凭据或证书 ID。
 
@@ -125,7 +125,7 @@ tmp_manifest="$(mktemp)"
 node -e '
 const fs = require("fs");
 const image = process.env.OPL_IMAGE;
-const manifest = JSON.parse(fs.readFileSync("deploy/cloud-mvp/opl-webui.k8s.json", "utf8"));
+const manifest = JSON.parse(fs.readFileSync("deploy/web-cloud/opl-webui.k8s.json", "utf8"));
 for (const item of manifest.items) {
   if (item.kind === "Deployment") item.spec.template.spec.containers[0].image = image;
 }

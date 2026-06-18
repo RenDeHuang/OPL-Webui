@@ -65,7 +65,7 @@
                   },
                   {
                     "name": "OPL_WEBUI_ENV",
-                    "value": "cloud_mvp"
+                    "value": "web_cloud"
                   },
                   {
                     "name": "OPL_CLI_PATH",

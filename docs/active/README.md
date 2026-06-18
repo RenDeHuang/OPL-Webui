@@ -31,7 +31,7 @@ No active change is open. 正式开发开始前必须创建 `changes/active/<cha
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
 - Runtime, node pool, storage, billing, API gateway, OPL execution, artifact body authority, and MAS/MAG/RCA domain judgment are not owned by this repo.
 - Runtime-requiring markers such as `@基金` and `@论文` stop at a MedOPL Runtime gate unless future Go-side contract, eval, whitelist, and authorization boundaries admit more.
-- Prior production evidence remains archived in `changes/archive/closeouts.md` and `deploy/cloud-mvp/RUNBOOK.md`; active truth does not duplicate one-off rollout prose.
+- Prior production evidence remains archived in `changes/archive/closeouts.md` and `deploy/web-cloud/RUNBOOK.md`; active truth does not duplicate one-off rollout prose.
 
 ## Cannot Claim
 

@@ -13,7 +13,7 @@
 - No compatibility by default: do not keep old routes, schemas, tests, docs, aliases, or fake data unless a real consumer and retirement plan exist.
 - No fake capability: runtime, billing, storage, OPL execution, and production claims require contracts and evals.
 - Machine truth wins: source, API behavior, contracts, fixtures, scripts, and tests outrank prose.
-- Small files stay small: line count is a structural signal, not a default hard blocker. Around 260 lines prompts review, 400 lines needs an explicit reason to keep growing, and 600 lines should split in strict structure work unless generated, fixture, or schema material.
+- Small files stay purposeful: line count is only a hard hygiene boundary at 1000 lines unless generated, fixture, or schema material. Below that boundary, split files because responsibilities are clearer, not because an arbitrary small number was crossed.
 
 ## Default Development Loop
 

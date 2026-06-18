@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const fixturePath = 'deploy/cloud-mvp/opl-webui.k8s.json';
-const runbookPath = 'deploy/cloud-mvp/RUNBOOK.md';
+const fixturePath = 'deploy/web-cloud/opl-webui.k8s.json';
+const runbookPath = 'deploy/web-cloud/RUNBOOK.md';
 
 function loadManifest() {
   const raw = readFileSync(fixturePath, 'utf8');
@@ -19,7 +19,7 @@ function containerEnv(container, name) {
   return (container.env ?? []).find((entry) => entry.name === name);
 }
 
-test('cloud MVP fixture exposes opl.medopl.cn through the Go control plane service', () => {
+test('web cloud fixture exposes opl.medopl.cn through the Go control plane service', () => {
   const { items } = loadManifest();
   const namespace = findKind(items, 'Namespace');
   const service = findKind(items, 'Service');
@@ -42,7 +42,7 @@ test('cloud MVP fixture exposes opl.medopl.cn through the Go control plane servi
   assert.equal(ingress.spec.rules[0].http.paths[0].backend.service.port.number, 4173);
 });
 
-test('cloud MVP fixture requires cloud_mvp runtime and readonly OPL CLI path', () => {
+test('web cloud fixture requires web_cloud runtime and readonly OPL CLI path', () => {
   const { items } = loadManifest();
   const deployment = findKind(items, 'Deployment');
   const podSpec = deployment.spec.template.spec;
@@ -52,7 +52,7 @@ test('cloud MVP fixture requires cloud_mvp runtime and readonly OPL CLI path', (
   assert.deepEqual(podSpec.imagePullSecrets, [{ name: 'tcr-pull-secret' }]);
   assert.deepEqual(podSpec.nodeSelector, { 'medopl.cn/workload': 'webui' });
   assert.equal(container.ports[0].containerPort, 4173);
-  assert.equal(containerEnv(container, 'OPL_WEBUI_ENV').value, 'cloud_mvp');
+  assert.equal(containerEnv(container, 'OPL_WEBUI_ENV').value, 'web_cloud');
   assert.equal(containerEnv(container, 'OPL_CLI_PATH').value, '/opt/opl/bin/opl');
   assert.deepEqual(container.resources.requests, { cpu: '100m', memory: '128Mi' });
   assert.deepEqual(container.resources.limits, { cpu: '500m', memory: '512Mi' });
@@ -60,7 +60,7 @@ test('cloud MVP fixture requires cloud_mvp runtime and readonly OPL CLI path', (
   assert.equal(container.livenessProbe.httpGet.path, '/healthz');
 });
 
-test('cloud MVP fixture references Postgres through a secret only', () => {
+test('web cloud fixture references Postgres through a secret only', () => {
   const { raw, items } = loadManifest();
   const container = findKind(items, 'Deployment').spec.template.spec.containers[0];
   const databaseEnv = containerEnv(container, 'OPL_DATABASE_URL');
@@ -74,7 +74,7 @@ test('cloud MVP fixture references Postgres through a secret only', () => {
   assert.doesNotMatch(raw, /PGPASSWORD/i);
 });
 
-test('cloud MVP fixture injects public account and API key secrets through secrets only', () => {
+test('web cloud fixture injects public account and API key secrets through secrets only', () => {
   const { raw, items } = loadManifest();
   const container = findKind(items, 'Deployment').spec.template.spec.containers[0];
 
@@ -98,14 +98,14 @@ test('cloud MVP fixture injects public account and API key secrets through secre
   assert.doesNotMatch(raw, /OPL_TENANT_AUTH_MODE/);
 });
 
-test('cloud MVP fixture is declarative and contains no live execution command', () => {
+test('web cloud fixture is declarative and contains no live execution command', () => {
   const { raw } = loadManifest();
 
   assert.doesNotMatch(raw, /kubectl|docker\s+(?:build|push)|buildx|helm|terraform|pulumi/i);
   assert.doesNotMatch(raw, /\bapply\b/i);
 });
 
-test('cloud MVP runbook covers handoff steps without storing secrets', () => {
+test('web cloud runbook covers handoff steps without storing secrets', () => {
   assert.equal(existsSync(runbookPath), true);
   const runbook = readFileSync(runbookPath, 'utf8');
 
@@ -204,7 +204,7 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.doesNotMatch(runbook, /AKID[A-Za-z0-9]+/);
 });
 
-test('cloud MVP runbook routes daily rollout through the dry-run helper', () => {
+test('web cloud runbook routes daily rollout through the dry-run helper', () => {
   const runbook = readFileSync(runbookPath, 'utf8');
 
   assert.match(runbook, /scripts\/cloud-rollout\.mjs/);

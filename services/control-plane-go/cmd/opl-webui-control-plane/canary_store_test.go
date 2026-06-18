@@ -12,7 +12,7 @@ func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection cont
 }
 
 func (store *readFailingCanaryStore) GetUsageQuota(string, string) controlplane.UsageQuotaProjection {
-	return controlplane.UsageQuotaProjection{Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
+	return controlplane.UsageQuotaProjection{Plan: "starter", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
 }
 
 func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (controlplane.TaskResponse, bool) {

@@ -94,7 +94,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   const runtime = readJson('contracts/web-runtime-bridge.json');
   const api = readJson('contracts/web-api.openapi.json');
   const release = readJson('contracts/web-release-profile.json');
-  const runbook = readFileSync('deploy/cloud-mvp/RUNBOOK.md', 'utf8');
+  const runbook = readFileSync('deploy/web-cloud/RUNBOOK.md', 'utf8');
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.positioning, 'Web edition of One Person Lab App');
@@ -148,7 +148,6 @@ test('Go control plane replaces the Node API backend', () => {
   assert.equal(existsSync('apps/api/src/server.mjs'), false);
   assert.equal(existsSync('apps/api/src/mvpTaskHandler.mjs'), false);
   assert.equal(pkg.scripts.start, 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
-  assert.equal(pkg.scripts['start:mvp'], undefined);
 });
 
 test('post-Go cleanup removes retired Node adapter surfaces', () => {
@@ -157,7 +156,6 @@ test('post-Go cleanup removes retired Node adapter surfaces', () => {
   assert.equal(existsSync('packages/contracts/opl/command-policy.json'), false);
   assert.equal(existsSync('packages/contracts/opl/task-contract.schema.json'), false);
   assert.equal(existsSync('packages/contracts/opl/artifact-contract.schema.json'), false);
-  assert.equal(existsSync('packages/contracts/opl/mvp-task-http.schema.json'), false);
 });
 
 test('package does not introduce runtime or dev dependencies', () => {

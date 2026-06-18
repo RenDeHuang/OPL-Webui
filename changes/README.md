@@ -2,7 +2,7 @@
 
 Change package 是正式开发的短期工作台。Active change keeps detailed context; closed change keeps compact history.
 
-长期 truth 只放在 `AGENTS.md`、`docs/active/README.md`、`contracts/*.json`、`deploy/cloud-mvp/RUNBOOK.md`、source、tests、fixtures 和 scripts。不要新增散落 README 或永久叙事文档。
+长期 truth 只放在 `AGENTS.md`、`docs/active/README.md`、`contracts/*.json`、`deploy/web-cloud/RUNBOOK.md`、source、tests、fixtures 和 scripts。不要新增散落 README 或永久叙事文档。
 
 ## Lifecycle
 
@@ -63,4 +63,4 @@ proposal -> spec-delta -> design -> tasks -> eval-plan -> review -> closeout -> 
 - `hard stops`: secrets、生产凭证、破坏性操作、付费外部动作和含糊产品取舍必须停下问人。
 - `commit and push`: 验证通过后只 add intentional files，commit，再 push 到 `origin/main`。
 
-默认工程约束：no compatibility layer unless a real consumer needs it；no bloat。文件、CSS 或文档接近结构预算时先拆分或收敛范围；行数默认作为 advisory 结构信号，显式 strict 入口才阻断。
+默认工程约束：no compatibility layer unless a real consumer needs it；no bloat。文件、CSS 或文档接近结构预算时先拆分或收敛范围；单文件行数只保留 `1000` 行 hard cap，低于 hard cap 时按职责边界拆分，不按任意行数阈值拆分。

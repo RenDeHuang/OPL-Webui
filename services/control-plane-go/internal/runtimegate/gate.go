@@ -19,7 +19,7 @@ var productionRequiredEnv = []string{
 	"OPL_CLI_PATH",
 }
 
-var cloudMVPRequiredEnv = []string{
+var webCloudRequiredEnv = []string{
 	"OPL_CLI_PATH",
 	"OPL_DATABASE_URL",
 	"OPL_SESSION_SECRET",
@@ -57,8 +57,8 @@ func requiredEnvFor(environment string) []string {
 	switch environment {
 	case "production":
 		return productionRequiredEnv
-	case "cloud_mvp":
-		return cloudMVPRequiredEnv
+	case "web_cloud":
+		return webCloudRequiredEnv
 	default:
 		return nil
 	}

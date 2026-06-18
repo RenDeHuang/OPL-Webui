@@ -135,7 +135,7 @@ func TestPostgresTaskStoreRollsBackWhenUsageWriteFails(t *testing.T) {
 
 func TestPostgresTaskStoreChecksQuotaBeforeProjectionAndUsageWrites(t *testing.T) {
 	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
-		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 0, RemainingCount: 2,
+		Plan: "starter", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 0, RemainingCount: 2,
 	}}
 	store := NewPostgresTaskStore(executor)
 	projection, err := CreateTaskResponse(TaskRequest{
@@ -175,7 +175,7 @@ func TestPostgresTaskStoreChecksQuotaBeforeProjectionAndUsageWrites(t *testing.T
 
 func TestPostgresTaskStoreQuotaFailureDoesNotWriteProjectionOrUsage(t *testing.T) {
 	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
-		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 2, RemainingCount: 0,
+		Plan: "starter", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 2, RemainingCount: 0,
 	}}
 	store := NewPostgresTaskStore(executor)
 	projection, err := CreateTaskResponse(TaskRequest{
@@ -208,7 +208,7 @@ func TestPostgresTaskStoreQuotaFailureDoesNotWriteProjectionOrUsage(t *testing.T
 
 func TestPostgresTaskStoreUsageQuotaReadDoesNotLockPlanRow(t *testing.T) {
 	executor := &fakeSQLExecutor{usageQuota: UsageQuotaProjection{
-		Plan: "mvp", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 1, RemainingCount: 1,
+		Plan: "starter", TaskQuota: 2, UsagePeriod: "monthly", UsedCount: 1, RemainingCount: 1,
 	}}
 	store := NewPostgresTaskStore(executor)
 

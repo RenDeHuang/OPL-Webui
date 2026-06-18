@@ -188,7 +188,7 @@ func runDBCanary(openPostgres controlplane.PostgresStoreOpener) (CanaryReport, e
 		TenantID:    "tenant_cloud_canary",
 		WorkspaceID: "workspace_cloud_canary",
 		UserID:      "user_cloud_canary",
-		Prompt:      "OPL-Webui cloud MVP database canary",
+		Prompt:      "OPL-Webui web cloud database canary",
 		Intent:      "general",
 	}, store)
 	if err != nil {

@@ -52,7 +52,7 @@ func TestRunCLIHelpPrintsUsage(t *testing.T) {
 }
 
 func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
-	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+	t.Setenv("OPL_WEBUI_ENV", "web_cloud")
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
 	t.Setenv("OPL_TENANT_AUTH_MODE", "medopl_launch_token")
 	t.Setenv("OPL_CLI_PATH", "")
@@ -72,7 +72,7 @@ func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
 	if body["service"] != "opl-webui-control-plane" {
 		t.Fatalf("service mismatch: %#v", body["service"])
 	}
-	if body["environment"] != "cloud_mvp" {
+	if body["environment"] != "web_cloud" {
 		t.Fatalf("environment mismatch: %#v", body["environment"])
 	}
 	if body["ready"] != false || body["ok"] != false {

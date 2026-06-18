@@ -60,7 +60,7 @@
 - 不得保留无 consumer 的兼容层。
 - 不做“先兼容以后再删”的默认实现；若确有迁移桥，必须写明 consumer、合同、退役条件和对应测试。
 - 被当前 owner surface 替代的模块、alias、facade、mock data、route 和聚合测试默认直接退役。
-- 旧 `mvp`、`demo://`、`demoData`、fake storage、fake billing、fake runtime execution 等词只能出现在历史、归档或 fail-closed guard 中，不能成为新主线实现。
+- 旧过渡产品命名、demo data、fake storage、fake billing、fake runtime execution 等词只能出现在历史、归档或 fail-closed guard 中，不能成为新主线实现。
 
 ## 测试登记
 
@@ -81,7 +81,7 @@
 - 没有 eval/test 的 AI、OPL 或 control-plane 行为不算完成。
 - `scripts/` 只放 runner、classifier、gate；不要把业务逻辑塞进脚本。
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
-- 单文件行数是结构信号，不是长期日常硬标准：`260` 行提示 review，`400` 行需要说明为什么暂不拆，`600` 行在显式 strict line gate 下默认必须拆；生成文件、fixture 和 schema 可豁免。
+- 单文件行数只作为硬 hygiene 边界：默认上限为 `1000` 行；生成文件、fixture 和 schema 可豁免。不到上限时按职责边界和可维护性判断是否拆分，不为任意小阈值拆文件。
 - 仓库接近或达到 bloat 预算时，新增业务能力前必须先清退、拆分或收敛现有 surface。
 
 ## worktree / subagent

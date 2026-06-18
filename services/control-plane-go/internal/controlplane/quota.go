@@ -3,7 +3,7 @@ package controlplane
 import "errors"
 
 const (
-	defaultPlan        = "mvp"
+	defaultPlan        = "starter"
 	defaultTaskQuota   = 2
 	defaultUsagePeriod = "monthly"
 )

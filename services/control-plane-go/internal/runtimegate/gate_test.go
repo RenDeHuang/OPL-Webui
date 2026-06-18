@@ -33,35 +33,35 @@ func TestCurrentStatusRequiresProductionDependencies(t *testing.T) {
 	}
 }
 
-func TestCurrentStatusRequiresCloudMVPDependencies(t *testing.T) {
-	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+func TestCurrentStatusRequiresWebCloudDependencies(t *testing.T) {
+	t.Setenv("OPL_WEBUI_ENV", "web_cloud")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
 
 	status := CurrentStatus()
 	if status.OK {
-		t.Fatalf("expected cloud MVP to require OPL CLI path: %#v", status)
+		t.Fatalf("expected web cloud to require OPL CLI path: %#v", status)
 	}
 	if slices.Contains(status.Missing, "OPL_QUEUE_URL") {
-		t.Fatalf("cloud MVP should not require queue yet: %#v", status.Missing)
+		t.Fatalf("web cloud should not require queue yet: %#v", status.Missing)
 	}
 	if slices.Contains(status.Missing, "OPL_OBJECT_STORE_URL") {
-		t.Fatalf("cloud MVP should not require object store yet: %#v", status.Missing)
+		t.Fatalf("web cloud should not require object store yet: %#v", status.Missing)
 	}
 	if slices.Contains(status.Missing, "OPL_BILLING_MODE") {
-		t.Fatalf("cloud MVP should not require billing yet: %#v", status.Missing)
+		t.Fatalf("web cloud should not require billing yet: %#v", status.Missing)
 	}
 	if !slices.Contains(status.Missing, "OPL_CLI_PATH") {
-		t.Fatalf("cloud MVP should require OPL CLI path: %#v", status.Missing)
+		t.Fatalf("web cloud should require OPL CLI path: %#v", status.Missing)
 	}
 	for _, key := range []string{"OPL_SESSION_SECRET", "OPL_API_KEY_ENCRYPTION_SECRET", "OPL_CHAT_MODEL"} {
 		if !slices.Contains(status.Missing, key) {
-			t.Fatalf("cloud MVP should require %s: %#v", key, status.Missing)
+			t.Fatalf("web cloud should require %s: %#v", key, status.Missing)
 		}
 	}
 }
 
-func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
-	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+func TestCurrentStatusAcceptsWebCloudMinimumDependencies(t *testing.T) {
+	t.Setenv("OPL_WEBUI_ENV", "web_cloud")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
 	t.Setenv("OPL_SESSION_SECRET", "test-session-secret")
 	t.Setenv("OPL_API_KEY_ENCRYPTION_SECRET", "test-api-key-secret")
@@ -70,15 +70,15 @@ func TestCurrentStatusAcceptsCloudMVPMinimumDependencies(t *testing.T) {
 
 	status := CurrentStatus()
 	if !status.OK {
-		t.Fatalf("expected cloud MVP to be ready with minimum dependencies: %#v", status)
+		t.Fatalf("expected web cloud to be ready with minimum dependencies: %#v", status)
 	}
-	if status.Environment != "cloud_mvp" {
+	if status.Environment != "web_cloud" {
 		t.Fatalf("environment mismatch: %s", status.Environment)
 	}
 }
 
 func TestCurrentStatusDoesNotRequireRetiredLaunchTokenSecret(t *testing.T) {
-	t.Setenv("OPL_WEBUI_ENV", "cloud_mvp")
+	t.Setenv("OPL_WEBUI_ENV", "web_cloud")
 	t.Setenv("OPL_DATABASE_URL", "postgres://example")
 	t.Setenv("OPL_SESSION_SECRET", "test-session-secret")
 	t.Setenv("OPL_API_KEY_ENCRYPTION_SECRET", "test-api-key-secret")
@@ -87,7 +87,7 @@ func TestCurrentStatusDoesNotRequireRetiredLaunchTokenSecret(t *testing.T) {
 
 	status := CurrentStatus()
 	if !status.OK {
-		t.Fatalf("expected public account cloud MVP to be ready without retired launch token secret: %#v", status)
+		t.Fatalf("expected public account web cloud to be ready without retired launch token secret: %#v", status)
 	}
 	if slices.Contains(status.Missing, "OPL_TENANT_AUTH_SECRET") {
 		t.Fatalf("retired launch token secret should not be required: %#v", status.Missing)
