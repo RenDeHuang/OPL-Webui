@@ -1,5 +1,6 @@
 export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
+export const FIGMA_MAKE_SOURCE = 'E8nYfNFc2D9P01FYZ8UwBW';
 export const OPL_CAPABILITY_MANIFEST = {
   source: { syncMode: 'source_path_pinned_manifest', dynamicSync: false, commitPin: 'blocked_by_github_tls_timeout',
     appContract: 'github.com/gaofeng21cn/one-person-lab-app/contracts/app-product-profile.json',
@@ -63,6 +64,15 @@ export function createOnePersonLabViewModel(state) {
   return {
     title: '严肃工作的 AI 工作台',
     subtitle: '从普通聊天进入 Research、Grant、Presentation 等专业工作流',
+    figmaMakeSource: FIGMA_MAKE_SOURCE,
+    shell: { leftSidebar: true, accountDock: true, promptCommandCenter: true },
+    navItems: [
+      { label: '首页', href: '#home' },
+      { label: 'Skills', href: '#capabilities' },
+      { label: 'Foundry', href: '#capabilities' },
+      { label: '工作流', href: '#chat' },
+      { label: 'MedOPL', href: MEDOPL_DEEP_LINK },
+    ],
     session,
     accountState: currentAccountState,
     primaryCTA: ctaForState(currentAccountState),
@@ -77,6 +87,13 @@ export function createOnePersonLabViewModel(state) {
     capabilities: OPL_CAPABILITY_MANIFEST.capabilities.map(([label, prompt, runtimeRequired, sourceAssistant]) => ({
       label, prompt, runtimeRequired, sourceAssistant,
     })),
+    skillGroups: [
+      { title: 'OPL', skills: [{ label: 'MAS 论文' }, { label: 'MAG 基金' }, { label: 'RCA 可视化' }] },
+      { title: '办公套件', skills: [{ label: 'AI 幻灯片' }, { label: 'AI 表格' }, { label: 'AI 文档' }] },
+      { title: '设计与代码', skills: [{ label: '设计' }, { label: '代码' }, { label: '仪表盘与 CRM' }] },
+      { title: '内容创作', skills: [{ label: 'AI 聊天' }, { label: 'AI 图片' }, { label: 'AI 视频' }] },
+      { title: '工具', skills: [{ label: '会议纪要' }, { label: '所有 Skills' }] },
+    ],
     workbenchSteps: [
       { title: '选择专业工作', description: 'Foundry 启动中心，不是泛 Agent 列表。' },
       { title: '绑定真实材料', description: '围绕材料、引用和版本组织输入，不伪造文件能力。' },
@@ -140,6 +157,7 @@ async function initOnePersonLabWeb() {
   syncHashView();
   window.addEventListener('hashchange', syncHashView);
   bindCapabilityButtons();
+  bindAccountPopover();
   bindChatForm(() => view);
   bindSettingsForms(() => view, (next) => {
     view = next;
@@ -168,6 +186,17 @@ function bindCapabilityButtons() {
       if (button.dataset.prompt.includes('@')) showRuntimeGate();
     });
   }
+}
+
+function bindAccountPopover() {
+  const button = document.querySelector('[data-account-toggle]');
+  const popover = document.querySelector('[data-account-popover]');
+  if (!button || !popover) return;
+  button.addEventListener('click', () => {
+    const nextExpanded = popover.hidden;
+    popover.hidden = !nextExpanded;
+    button.setAttribute('aria-expanded', String(nextExpanded));
+  });
 }
 
 function bindChatForm(getView) {
@@ -235,9 +264,14 @@ function renderView(view) {
   document.body.dataset.authState = view.accountState;
   document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
   document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
-  document.querySelector('[data-session-status]').textContent = view.session.ok ? `已登录：${view.session.email}` : '未登录';
+  setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
-  document.querySelector('[data-provider-status]').textContent = providerStatus;
+  setTextAll('[data-provider-status]', providerStatus);
+  document.querySelector('[data-account-hint]').textContent = view.primaryCTA;
+}
+
+function setTextAll(selector, text) {
+  for (const node of document.querySelectorAll(selector)) node.textContent = text;
 }
 
 function appendMessage(sender, content, className) {

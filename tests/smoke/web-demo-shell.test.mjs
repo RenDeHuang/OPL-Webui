@@ -6,13 +6,21 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /One Person Lab Web/);
-  assert.match(html, /Chat/);
-  assert.match(html, /Capabilities/);
-  assert.match(html, /Settings/);
+  assert.match(html, /figma-make-webui-alignment/);
+  assert.match(html, /app-shell/);
+  assert.match(html, /sidebar-shell/);
+  assert.match(html, /New Chat/);
+  assert.match(html, /Skills/);
+  assert.match(html, /Foundry/);
+  assert.match(html, /工作流/);
+  assert.match(html, /account-dock/);
+  assert.match(html, /account-popover/);
+  assert.match(html, /prompt-command-center/);
+  assert.match(html, /skill-launcher/);
   assert.match(html, /MedOPL/);
   assert.match(html, /hero-shell/);
   assert.match(html, /prompt-console/);
-  assert.match(html, /严肃工作的 AI 工作台/);
+  assert.match(html, /问一个问题，启动一个 OPL 工作流/);
   assert.match(html, /OPL WebUI 应承接的五件事/);
   assert.match(html, /选择专业工作/);
   assert.match(html, /绑定真实材料/);
@@ -21,6 +29,18 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
   assert.match(html, /管理运行时/);
   assert.match(html, /Foundry 启动中心/);
   assert.match(html, /账号与凭据状态/);
+  assert.match(html, /OPL/);
+  assert.match(html, /办公套件/);
+  assert.match(html, /设计与代码/);
+  assert.match(html, /内容创作/);
+  assert.match(html, /工具/);
+  assert.match(html, /MAS 论文/);
+  assert.match(html, /MAG 基金/);
+  assert.match(html, /RCA 可视化/);
+  assert.match(html, /AI 幻灯片/);
+  assert.match(html, /AI 表格/);
+  assert.match(html, /AI 文档/);
+  assert.match(html, /仪表盘与 CRM/);
   assert.match(html, /注册/);
   assert.match(html, /登录/);
   assert.match(html, /API Key/);
@@ -42,14 +62,14 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
   assert.match(html, /chat-log/);
   assert.match(html, /settings-panel/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
-  assert.doesNotMatch(html, /轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|团队|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution/);
+  assert.doesNotMatch(html, /轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|团队|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution/);
 });
 
 test('one-person-lab-web shell keeps internal workspace concepts hidden', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
   const dataBridge = readFileSync('apps/web/src/onePersonLabWeb.mjs', 'utf8');
 
-  assert.doesNotMatch(html, /workspace|runtime tab|fake storage|fake billing|fake runtime execution/i);
+  assert.doesNotMatch(html, /workspace|runtime tab|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(dataBridge, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((dataBridge.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(dataBridge, /\/api\/chat/);
@@ -62,6 +82,8 @@ test('settings hash has a dedicated productized settings surface', () => {
   assert.match(html, /href="#settings"/);
   assert.match(html, /id="settings"/);
   assert.match(html, /data-settings-panel/);
+  assert.match(html, /data-account-settings-link/);
+  assert.match(html, /data-account-popover/);
   assert.match(html, /登录状态/);
   assert.match(html, /API Key 绑定状态/);
   assert.match(html, /不可编辑/);
