@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `figma-2-21-ui-alignment-local`：OPL-Webui 已在 `44dd574` 生产 rollout evidence 基础上继续做本地 UI alignment，把 b9af47a 的 one-person-lab-web 从“聊天页 + 设置侧栏”推进为“严肃工作的 AI 工作台”入口。本轮设计源只采用 Figma node `2:21`「产品结构示意」，尚未 production rollout。`one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是桌面端产品语义参考，包括 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables。
+当前是 `figma-2-21-ui-alignment-production`：OPL-Webui 已在 `44dd574` 生产 rollout evidence 基础上继续完成 `1fc361d` Figma workbench UI production closeout，把 b9af47a 的 one-person-lab-web 从“聊天页 + 设置侧栏”推进为“严肃工作的 AI 工作台”入口并生产验证。本轮设计源只采用 Figma node `2:21`「产品结构示意」。`one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是桌面端产品语义参考，包括 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables。
 
 ## Active Change Work
 
@@ -30,6 +30,7 @@
 - `deploy/cloud-mvp/opl-webui.k8s.json` 已引用 `OPL_DATABASE_URL`、`OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL` SecretRef；runbook 记录 cloud MVP handoff、daily rollout、canary、HTTPS smoke、HA/安全组和 rollback。
 - 既有线上 evidence 仍有效：`24ba41f` session/auth boundary rollout revision `9` 已验证 `/healthz` 200、`/readyz` 200、`/metricsz` 200、首页 200、DB canary pass、OPL CLI canary pass；`fa3bcb7` hidden tenant/workspace isolation projection v1 已 production verified；`bc0403d` usage/quota precheck/projection v1 已 production rollout + unauth guard verified。
 - `44dd574` one-person-lab-web 已 production verified：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:44dd574`，rollout revision `13`；Pod `opl-webui-control-plane-69c859465f-v9crb` `1/1 Running`、restarts `0`、image tag `44dd574`；`/healthz` 200、`/readyz` 200 `missing=[]`、`/metricsz` 200 `missingDependencyCount=0`、首页 200；DB canary `open,ping,schema,write,read,delete` pass；OPL CLI canary `system.initialize,connect.modules,contract.domains` pass；unauth guard：`/api/auth/login` 401 `INVALID_CREDENTIALS`、`/api/chat` 401 `AUTH_REQUIRED`；public smoke：`https://opl.medopl.cn/healthz` HTTP/2 200、`https://opl.medopl.cn/readyz` HTTP/2 200 `missing=[]`。
+- `1fc361d Figma workbench UI 已 production verified`：镜像 `uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d`，rollout revision `14`；Running Ready Pod `opl-webui-control-plane-54546f5bff-h8xcq` `1/1 Running`；Error/Failed Pod none；`/healthz` 200、`/readyz` 200 `missing=[]`、`/metricsz` 200、`/` 200、`/#settings` 200 且返回新版 One Person Lab Web HTML；页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”和 fixed gateway `https://gflabtoken.cn/v1`；unauth guard：`POST /api/chat` no cookie 401 `AUTH_REQUIRED`、`GET /api/chat` 405 `METHOD_NOT_ALLOWED`、wrong credentials `POST /api/auth/login` 401 `INVALID_CREDENTIALS`。
 - 云端受控修复已同步回 truth：`opl-webui-auth` 保留 `OPL_TENANT_AUTH_SECRET`，并新增 `OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；Deployment manifest 声明这些 `secretKeyRef`，不保存 secret value。
 - usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
 - MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
@@ -37,7 +38,7 @@
 ## Cannot Claim
 
 - 还不是完整公网 production ready SaaS。
-- 还没有本次 Figma `2:21` UI alignment 的 production rollout evidence。
+- 还没有 Figma 精确还原、Genspark 线上对照验收或真实用户端到端业务写路径证据。
 - 还不能 claim Figma 精确还原或真实 Genspark 线上对照验收。
 - 还没有真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage 或真实 OPL execution/mutation。
 - 还不能执行 OPL install、repair、module exec、family-runtime mutation。
@@ -45,12 +46,11 @@
 
 ## Next Cursor
 
-下一步先做 UI productization production rollout handoff，然后进入 MedOPL runtime status bridge：`@OPL` 能力仍只能返回 `RUNTIME_REQUIRED`，需要先接入 MedOPL runtime/storage/node pool 状态 projection，再推进 OPL run/artifact projection。
+下一步进入 MedOPL runtime status bridge：`@OPL` 能力仍只能返回 `RUNTIME_REQUIRED`，需要先接入 MedOPL runtime/storage/node pool 状态 projection，再推进 OPL run/artifact projection。
 
 ## Next Priorities
 
-1. UI productization production rollout handoff。
-2. MedOPL runtime status bridge。
-3. @OPL run/artifact projection。
-4. API Key rotation/revocation 和 account hardening。
-5. 真实注册/login write-path online e2e、API Key binding online e2e 和 chat completion online e2e。
+1. MedOPL runtime status bridge。
+2. @OPL run/artifact projection。
+3. API Key rotation/revocation 和 account hardening。
+4. 真实注册/login write-path online e2e、API Key binding online e2e 和 chat completion online e2e。

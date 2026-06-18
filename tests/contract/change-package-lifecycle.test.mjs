@@ -70,11 +70,37 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
-  assert.match(readme, /figma-2-21-ui-alignment-local/);
+  assert.match(readme, /figma-2-21-ui-alignment-production/);
   assert.match(readme, /44dd574[\s\S]{0,120}production verified/);
-  assert.match(readme, /UI alignment[\s\S]{0,220}Figma `2:21`/);
+  assert.match(readme, /1fc361d Figma workbench UI[\s\S]{0,120}production verified/);
   assert.match(readme, /POST \/api\/chat/);
   assert.match(readme, /最终计费归 MedOPL\/sub2api/);
+});
+
+test('active truth records 1fc361d Figma workbench production evidence', () => {
+  const readme = readFileSync('docs/active/README.md', 'utf8');
+  const product = readFileSync('specs/product/spec.md', 'utf8');
+  const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
+  const combined = `${readme}\n${product}\n${closeout}`;
+
+  for (const required of [
+    '1fc361d Figma workbench UI 已 production verified',
+    'uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d',
+    'rollout revision `14`',
+    'opl-webui-control-plane-54546f5bff-h8xcq',
+    '`/#settings` 200',
+    '严肃工作的 AI 工作台',
+    'OPL WebUI 应承接的五件事',
+    'https://gflabtoken.cn/v1',
+    '401 AUTH_REQUIRED',
+    '405 METHOD_NOT_ALLOWED',
+    '401 INVALID_CREDENTIALS',
+  ]) {
+    assert.ok(combined.includes(required), `missing production evidence: ${required}`);
+  }
+
+  assert.match(readme, /figma-2-21-ui-alignment-production/);
+  assert.doesNotMatch(product, /Figma `2:21` UI alignment 只有本地 dogfood\/browser evidence/);
 });
 
 test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone SaaS backend', () => {
