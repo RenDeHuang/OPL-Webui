@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -43,6 +44,39 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/readyz/);
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/metricsz/);
   assert.doesNotMatch(configuredBaseUrlDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
+});
+
+test('cloud rollout helper has a secret-gated production authenticated dogfood harness', async () => {
+  const helper = readFileSync(helperPath, 'utf8');
+  for (const required of [
+    '--dogfood-e2e', 'OPL_PRODUCTION_DOGFOOD_E2E', 'OPL_PRODUCTION_DOGFOOD_REAL_CHAT',
+    'OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY',
+    'https://gflabtoken.cn/v1', '@基金', 'RUNTIME_REQUIRED',
+  ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
+  assert.match(execFileSync(process.execPath, [helperPath, '--dogfood-e2e'], { encoding: 'utf8', timeout: 5000 }), /skipped/i);
+  const dogfoodCode = helper.slice(helper.indexOf('async function runDogfoodE2E'), helper.indexOf('function kubectlArgs'));
+  assert.doesNotMatch(dogfoodCode, /OPL_DATABASE_URL|PGPASSWORD|KUBECONFIG_CONTENT|kubectl|console\.log\(`::add-mask::/);
+
+  const fake = await startFakeProduction();
+  try {
+    const output = await runHelper({
+      env: {
+        ...process.env,
+        OPL_BASE_URL: fake.baseUrl,
+        OPL_PRODUCTION_DOGFOOD_E2E: '1',
+        OPL_PRODUCTION_DOGFOOD_REAL_CHAT: '1',
+        OPL_DOGFOOD_EMAIL: 'dogfood@example.test',
+        OPL_DOGFOOD_PASSWORD: 'dogfood-password',
+        OPL_DOGFOOD_API_KEY: 'sk-dogfood-production-secret',
+      },
+    });
+    assert.match(output, /register|login|current session|API Key binding|ordinary chat|runtime gate|audit events/i);
+    assert.doesNotMatch(output, /sk-dogfood-production-secret|dogfood-password|opl_session=secret-session/i);
+    assert.equal(fake.requests.find((request) => request.path === '/api/settings/model-provider').body.apiKey, 'sk-dogfood-production-secret');
+    assert.equal(fake.requests.some((request) => request.path === '/api/chat' && request.body.message.includes('@基金')), true);
+  } finally {
+    await fake.close();
+  }
 });
 
 test('cloud rollout helper captures rollout state evidence for closeout', () => {
@@ -157,4 +191,50 @@ function writeFakeCurl(tempDir) {
 printf 'curl %s\\n' "$*" >> "$COMMAND_LOG"
 printf 'ok\\n'
 `, { mode: 0o755 });
+}
+
+function runHelper(options) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [helperPath, '--dogfood-e2e'], options);
+    let output = '';
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error('dogfood helper timed out'));
+    }, 5000);
+    child.stdout.on('data', (chunk) => { output += chunk; });
+    child.stderr.on('data', (chunk) => { output += chunk; });
+    child.on('exit', (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve(output);
+      else reject(new Error(output || `dogfood helper exited ${code}`));
+    });
+  });
+}
+
+async function startFakeProduction() {
+  const requests = [];
+  const server = http.createServer(async (request, response) => {
+    let raw = '';
+    for await (const chunk of request) raw += chunk;
+    const body = raw ? JSON.parse(raw) : {};
+    requests.push({ path: request.url, body });
+    const send = (status, payload, cookie = false) => {
+      const headers = { 'content-type': 'application/json' };
+      if (cookie) headers['set-cookie'] = 'opl_session=secret-session; HttpOnly';
+      response.writeHead(status, headers);
+      response.end(JSON.stringify(payload));
+    };
+    if (request.url === '/') return send(200, { html: '严肃工作的 AI 工作台 https://gflabtoken.cn/v1' });
+    if (request.url === '/api/auth/register') return send(409, { errorCode: 'EMAIL_ALREADY_REGISTERED' });
+    if (request.url === '/api/auth/login') return send(200, { email: body.email }, true);
+    if (request.url === '/api/session/current') return send(200, { email: 'dogfood@example.test' });
+    if (request.url === '/api/settings/model-provider') return send(200, { baseUrl: 'https://gflabtoken.cn/v1', apiKeyConfigured: true, maskedKey: 'sk-***ret' });
+    if (request.url === '/api/chat' && body.message.includes('@基金')) return send(409, { errorCode: 'RUNTIME_REQUIRED', medoplDeepLink: 'https://medopl.medopl.cn/runtime' });
+    if (request.url === '/api/chat') return send(200, { assistantMessage: { content: 'pong' } });
+    if (request.url === '/api/account/audit-events') return send(200, { events: [{ eventKind: 'chat.completed' }, { eventKind: 'runtime_gate.required' }] });
+    send(404, { errorCode: 'NOT_FOUND' });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  return { baseUrl: `http://127.0.0.1:${port}`, requests, close: () => new Promise((resolve) => server.close(resolve)) };
 }

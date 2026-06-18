@@ -7,7 +7,7 @@
 
 ## Current Stage
 
-当前是 `dogfood-e2e-readiness-parity-map-local`：`9cbb4a3` 已 production verified，`95ec6ee` 是 closeout 文档提交；本阶段在 `figma-2-21-ui-alignment-production` 后不 rollout，只做本地连续开发。Slice A 建立 dogfood e2e harness，用 mock upstream 串联 register/login/current session/API Key binding/raw key 不回显/fixed gateway/普通 chat/quota/sanitized audit/@基金 MedOPL gate。Slice B 固化 one-person-lab-app parity v1：Web 承接 chat-first、purpose routing、progress/files/deliverables refs 和 runtime gate 产品语义，不承接 desktop packaging、local CLI mutation、artifact body、runtime 生命周期、storage 或 billing。
+当前是 `production-authenticated-dogfood-e2e-readiness`：`9cbb4a3` 已 production verified，`c8850c9` 已完成本地 dogfood e2e readiness/parity map 且本轮不 rollout。当前优先证明 OPL-Webui 自己的 production authenticated 用户路径可 dogfood：新增安全的 production dogfood harness/workflow/runbook，默认跳过、GitHub `production` Environment gated、只注入 dogfood test account/API Key secrets；真实普通 chat 需要 `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1` 二次开关。
 
 ## Active Change Work
 
@@ -27,6 +27,7 @@
 - 支持普通 chat 本地 contract：`POST /api/chat` 会用用户 API Key 调 OpenAI-compatible `https://gflabtoken.cn/v1/chat/completions`；未登录返回 `AUTH_REQUIRED`，未绑 Key 返回 `API_KEY_REQUIRED`，上游错误结构化返回。
 - 支持 Webui-side dogfood guardrail 本地 contract：普通 chat 在 upstream 前执行 per-user monthly quota/abuse precheck，超额返回 `429 CHAT_QUOTA_EXCEEDED` 且不调用 upstream；`GET /api/account/audit-events` 只返回当前用户 sanitized audit events，覆盖 `account.registered`、`account.login`、`api_key.saved`、`runtime_gate.required`、`chat.completed`、`chat.quota_exceeded`、`chat.upstream_failed`，不记录 password、raw API Key、session secret 或 DB URL。
 - 支持本地 dogfood e2e readiness contract：只用 fake/mock upstream，不连接真实 gflabtoken、MedOPL production、PostgreSQL 或真实 API Key；`@OPL` runtime gate 不消耗普通 chat quota，也不触发 upstream。
+- 支持 production authenticated dogfood e2e plan/harness：`node scripts/cloud-rollout.mjs --dogfood-e2e` 只在 `OPL_PRODUCTION_DOGFOOD_E2E=1` 时运行，覆盖 register/login fallback、current session、API Key binding、raw key 不回显、fixed gateway、可选普通 chat completion、`@基金` MedOPL Runtime gate 和 audit events；GitHub `Cloud Rollout` 的 `authenticated_dogfood_e2e` input 默认 false，job 不注入 `KUBECONFIG`、DB secret、MedOPL token 或 TCR 凭据。
 - 支持 `GET /api/chat/conversations` 与 `GET /api/chat/conversations/{conversationId}`；user A 不能读取 user B conversation。
 - 支持 @OPL capability gate 本地 contract：`@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 返回 `RUNTIME_REQUIRED` 和 `https://medopl.medopl.cn` deep link，不调用 sub2api，不伪造 OPL execution。
 - 保留 `/api/opl/snapshot`、`canary db`、`canary opl-cli` 的 OPL readonly/canary 能力；readonly route 不能写成真实 execution。
@@ -46,18 +47,19 @@
 - 还没有 Figma 精确还原、Genspark 线上对照验收或真实用户端到端业务写路径证据。
 - 还不能 claim Figma 精确还原或真实 Genspark 线上对照验收。
 - 还没有真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、真实 authenticated quota/audit write-path online evidence、真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage、完整 billing、上游 commit-SHA pinned dynamic sync 或真实 OPL execution/mutation。
+- 还没有执行 production authenticated dogfood e2e 的线上 evidence；当前只固化可安全执行的 plan/harness。真实普通 chat completion 只有在人工提供 test API Key 并显式打开 `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1` 后才可 claim。
 - 还没有 OPL task/progress/artifact refs projection endpoint；任何 projection 只能是 refs-only，不能返回 artifact body、memory body、domain verdict 或私有 state path。
 - 还不能执行 OPL install、repair、module exec、family-runtime mutation。
 - 还不能 claim `@OPL` 能力已经真实运行；当前只是 runtime gate projection。
 
 ## Next Cursor
 
-下一步进入 refs-only OPL task/progress/artifact projection 或 MedOPL runtime status bridge：projection 来源只能是白名单 OPL CLI JSON surface 或 MedOPL status projection，`@OPL` 仍只能返回 `RUNTIME_REQUIRED`，不能伪造 runtime ready 或 execution。
+下一步先用 GitHub production Environment secrets 手动执行 production authenticated dogfood e2e，收集 register/login/current/API Key/fixed gateway/可选普通 chat/@基金 gate/audit evidence；通过前仍不要切到 MedOPL runtime bridge。
 
 ## Next Priorities
 
-1. MedOPL runtime status bridge。
-2. 上游 capability manifest commit-SHA pin。
-3. @OPL run/artifact projection。
-4. API Key rotation/revocation 和 account hardening。
-5. 真实注册/login write-path online e2e、API Key binding online e2e 和 chat completion online e2e。
+1. Production authenticated dogfood e2e 手动执行与 evidence closeout。
+2. API Key rotation/revocation 和 account hardening。
+3. 上游 capability manifest commit-SHA pin。
+4. refs-only @OPL task/progress/artifact projection。
+5. MedOPL runtime status bridge。

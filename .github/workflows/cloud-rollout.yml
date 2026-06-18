@@ -18,6 +18,11 @@ on:
         required: true
         default: false
         type: boolean
+      authenticated_dogfood_e2e:
+        description: Run production authenticated dogfood e2e after approval.
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -84,3 +89,28 @@ jobs:
       - name: Rollout apply
         shell: bash
         run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --apply
+
+  production-dogfood-e2e:
+    name: Production Authenticated Dogfood E2E
+    if: ${{ inputs.authenticated_dogfood_e2e }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    environment: production
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+      OPL_PRODUCTION_DOGFOOD_E2E: 1
+      OPL_PRODUCTION_DOGFOOD_REAL_CHAT: ${{ vars.OPL_PRODUCTION_DOGFOOD_REAL_CHAT }}
+      OPL_DOGFOOD_EMAIL: ${{ secrets.OPL_DOGFOOD_EMAIL }}
+      OPL_DOGFOOD_PASSWORD: ${{ secrets.OPL_DOGFOOD_PASSWORD }}
+      OPL_DOGFOOD_API_KEY: ${{ secrets.OPL_DOGFOOD_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mask dogfood secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${OPL_DOGFOOD_API_KEY}"
+          echo "::add-mask::${OPL_DOGFOOD_PASSWORD}"
+
+      - name: Run authenticated dogfood e2e
+        run: node scripts/cloud-rollout.mjs --dogfood-e2e

@@ -53,6 +53,26 @@ node scripts/cloud-rollout.mjs --apply
 
 helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
 
+## Production authenticated dogfood e2e
+
+该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout apply。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须通过 `production` Environment approval。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。
+
+执行边界：
+
+```bash
+OPL_PRODUCTION_DOGFOOD_E2E=1 \
+OPL_DOGFOOD_EMAIL=<test-account> \
+OPL_DOGFOOD_PASSWORD=<test-password> \
+OPL_DOGFOOD_API_KEY=<test-api-key> \
+node scripts/cloud-rollout.mjs --dogfood-e2e
+```
+
+- 默认不执行真实普通 chat；只有显式设置 `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1` 才会发起一次 `POST /api/chat`，使用测试账号绑定的测试 API Key 经固定 gateway `https://gflabtoken.cn/v1` 完成普通 chat completion。
+- 覆盖 register 或 login fallback、current session、API Key binding、raw API Key 不回显、fixed gateway、`@基金` MedOPL Runtime gate、audit events；`CHAT_QUOTA_EXCEEDED` 仍由本地 mock upstream contract 覆盖，不在 production 故意耗尽 quota。
+- GitHub step 必须先 `::add-mask::` dogfood API Key 和密码；脚本不打印 raw API Key、request body、password、完整 response body 或 `opl_session`，只打印步骤名、HTTP status、errorCode 和 audit kind 汇总。
+- 当前没有 delete user API，因此生产 dogfood 数据采用专用 test account / hidden personal tenant/workspace 隔离，不 claim 自动清理。
+- 该 harness 不执行 kubectl，不读取 kubeconfig，不连接真实 PostgreSQL，不连接 MedOPL production，不执行真实 OPL，不创建 runtime、storage、billing 或 node pool 生命周期。
+
 ## 创建 Kubernetes Secret
 
 ```bash

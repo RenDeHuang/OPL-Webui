@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { startGoServer, startGoServerWithEnv, stopGoServer } from './go-control-plane-server-helper.mjs';
+import { startGoServerWithEnv, stopGoServer } from './go-control-plane-server-helper.mjs';
 
 const secureEnv = {
   OPL_WEBUI_ENV: 'development',
@@ -13,10 +13,7 @@ const secureEnv = {
 test('one-person-lab-web auth supports register login logout and safe current session', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const registered = await jsonFetch(`${baseUrl}/api/auth/register`, {
-      method: 'POST',
-      body: { email: 'user@example.com', password: 'correct horse battery staple' },
-    });
+    const registered = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'correct horse battery staple' });
     assert.equal(registered.response.status, 201);
     assert.match(registered.cookie, /opl_session=/);
     assert.equal(registered.body.email, 'user@example.com');
@@ -24,24 +21,15 @@ test('one-person-lab-web auth supports register login logout and safe current se
     assert.ok(registered.body.workspaceId);
     assertNoSensitiveMaterial(registered.body);
 
-    const duplicate = await jsonFetch(`${baseUrl}/api/auth/register`, {
-      method: 'POST',
-      body: { email: 'user@example.com', password: 'correct horse battery staple' },
-    });
+    const duplicate = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'correct horse battery staple' });
     assert.equal(duplicate.response.status, 409);
     assert.equal(duplicate.body.errorCode, 'EMAIL_ALREADY_REGISTERED');
 
-    const wrong = await jsonFetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      body: { email: 'user@example.com', password: 'wrong password' },
-    });
+    const wrong = await postJSON(baseUrl, '/api/auth/login', { email: 'user@example.com', password: 'wrong password' });
     assert.equal(wrong.response.status, 401);
     assert.equal(wrong.body.errorCode, 'INVALID_CREDENTIALS');
 
-    const loggedIn = await jsonFetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      body: { email: 'user@example.com', password: 'correct horse battery staple' },
-    });
+    const loggedIn = await postJSON(baseUrl, '/api/auth/login', { email: 'user@example.com', password: 'correct horse battery staple' });
     assert.equal(loggedIn.response.status, 200);
     assert.match(loggedIn.cookie, /opl_session=/);
 
@@ -69,18 +57,10 @@ test('model provider binding stores user API key without returning raw secret', 
   try {
     const session = await register(baseUrl, 'key-user@example.com');
 
-    const putWithBaseURL = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
-      method: 'PUT',
-      headers: { cookie: session.cookieHeader },
-      body: { apiKey: 'sk-user-secret', base_url: 'https://evil.example/v1' },
-    });
+    const putWithBaseURL = await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-user-secret', base_url: 'https://evil.example/v1' });
     assert.equal(putWithBaseURL.response.status, 400);
 
-    const saved = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
-      method: 'PUT',
-      headers: { cookie: session.cookieHeader },
-      body: { apiKey: 'sk-user-secret' },
-    });
+    const saved = await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-user-secret' });
     assert.equal(saved.response.status, 200);
     assert.equal(saved.body.provider, 'gflabtoken');
     assert.equal(saved.body.baseUrl, 'https://gflabtoken.cn/v1');
@@ -103,40 +83,21 @@ test('model provider binding stores user API key without returning raw secret', 
 test('chat API requires auth and user API key, rejects client base_url override, and gates OPL runtime abilities', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const unauth = await jsonFetch(`${baseUrl}/api/chat`, {
-      method: 'POST',
-      body: { message: 'hello' },
-    });
+    const unauth = await postJSON(baseUrl, '/api/chat', { message: 'hello' });
     assert.equal(unauth.response.status, 401);
     assert.equal(unauth.body.errorCode, 'AUTH_REQUIRED');
 
     const session = await register(baseUrl, 'chat-user@example.com');
-    const noKey = await jsonFetch(`${baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { cookie: session.cookieHeader },
-      body: { message: 'hello' },
-    });
+    const noKey = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: 'hello' });
     assert.equal(noKey.response.status, 400);
     assert.equal(noKey.body.errorCode, 'API_KEY_REQUIRED');
 
-    const baseOverride = await jsonFetch(`${baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { cookie: session.cookieHeader },
-      body: { message: 'hello', base_url: 'https://evil.example/v1' },
-    });
+    const baseOverride = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: 'hello', base_url: 'https://evil.example/v1' });
     assert.equal(baseOverride.response.status, 400);
 
-    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
-      method: 'PUT',
-      headers: { cookie: session.cookieHeader },
-      body: { apiKey: 'sk-runtime-gate-secret' },
-    });
+    await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-runtime-gate-secret' });
 
-    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { cookie: session.cookieHeader },
-      body: { message: '@基金 帮我写标书' },
-    });
+    const gated = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@基金 帮我写标书' });
     assert.equal(gated.response.status, 409);
     assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
     assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
@@ -152,16 +113,8 @@ test('chat conversations are isolated by public account session', async () => {
     const userA = await register(baseUrl, 'a@example.com');
     const userB = await register(baseUrl, 'b@example.com');
 
-    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
-      method: 'PUT',
-      headers: { cookie: userA.cookieHeader },
-      body: { apiKey: 'sk-user-a-secret' },
-    });
-    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { cookie: userA.cookieHeader },
-      body: { message: '@论文 生成选题' },
-    });
+    await putJSON(baseUrl, '/api/settings/model-provider', userA.cookieHeader, { apiKey: 'sk-user-a-secret' });
+    const gated = await authedPost(baseUrl, '/api/chat', userA.cookieHeader, { message: '@论文 生成选题' });
     assert.equal(gated.response.status, 409);
     const conversationId = gated.body.conversationId;
 
@@ -200,12 +153,21 @@ test('retired MVP task endpoints are not public routes', async () => {
 });
 
 async function register(baseUrl, email) {
-  const result = await jsonFetch(`${baseUrl}/api/auth/register`, {
-    method: 'POST',
-    body: { email, password: 'correct horse battery staple' },
-  });
+  const result = await postJSON(baseUrl, '/api/auth/register', { email, password: 'correct horse battery staple' });
   assert.equal(result.response.status, 201);
   return result;
+}
+
+async function authedPost(baseUrl, path, cookie, body) {
+  return jsonFetch(`${baseUrl}${path}`, { method: 'POST', headers: { cookie }, body });
+}
+
+async function postJSON(baseUrl, path, body) {
+  return jsonFetch(`${baseUrl}${path}`, { method: 'POST', body });
+}
+
+async function putJSON(baseUrl, path, cookie, body) {
+  return jsonFetch(`${baseUrl}${path}`, { method: 'PUT', headers: { cookie }, body });
 }
 
 async function jsonFetch(url, options = {}) {

@@ -56,7 +56,7 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
-  assert.match(readme, /figma-2-21-ui-alignment-production/);
+  assert.match(readme, /production-authenticated-dogfood-e2e-readiness/);
   assert.match(readme, /44dd574[\s\S]{0,120}production verified/);
   assert.match(readme, /1fc361d Figma workbench UI[\s\S]{0,120}production verified/);
   assert.match(readme, /POST \/api\/chat/);
@@ -91,7 +91,7 @@ test('active truth records 1fc361d Figma workbench production evidence', () => {
     assert.ok(combined.includes(required), `missing production evidence: ${required}`);
   }
 
-  assert.match(readme, /figma-2-21-ui-alignment-production/);
+  assert.match(readme, /production-authenticated-dogfood-e2e-readiness/);
   assert.doesNotMatch(product, /Figma `2:21` UI alignment 只有本地 dogfood\/browser evidence/);
 });
 
@@ -131,6 +131,8 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
     'OPL_API_KEY_ENCRYPTION_SECRET',
     'OPL_CHAT_MODEL',
     'dogfood e2e harness',
+    'production authenticated dogfood e2e',
+    'OPL_DOGFOOD_API_KEY', 'OPL_PRODUCTION_DOGFOOD_REAL_CHAT', 'authenticated_dogfood_e2e',
     'mock upstream',
     'one-person-lab-app parity v1',
     'progress/files/deliverables refs',
@@ -146,7 +148,7 @@ test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone 
   assert.doesNotMatch(product, /纯 ChatGPT 页面/);
   assert.doesNotMatch(product, /拥有完整 billing|billing source of truth 是 OPL-Webui/);
   assert.match(active, /44dd574[\s\S]{0,240}production verified/);
-  assert.match(active, /Next Cursor[\s\S]{0,240}MedOPL runtime status bridge[\s\S]{0,240}@OPL run\/artifact projection/);
+  assert.match(active, /Next Cursor[\s\S]{0,240}production authenticated dogfood e2e/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

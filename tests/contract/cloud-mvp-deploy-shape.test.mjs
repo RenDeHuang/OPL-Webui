@@ -168,6 +168,12 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
     '32258',
     '腾讯云控制台',
     'rollback',
+    'Production authenticated dogfood e2e',
+    'OPL_PRODUCTION_DOGFOOD_E2E',
+    'OPL_PRODUCTION_DOGFOOD_REAL_CHAT',
+    'OPL_DOGFOOD_API_KEY',
+    '默认跳过',
+    '不打印 raw API Key',
   ]) {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));
   }
@@ -183,6 +189,9 @@ test('cloud MVP runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /API Key[\s\S]{0,120}OPL_API_KEY_ENCRYPTION_SECRET/is);
   assert.match(runbook, /POST \/api\/chat[\s\S]{0,80}401 AUTH_REQUIRED/is);
   assert.match(runbook, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/is);
+  assert.match(runbook, /node scripts\/cloud-rollout\.mjs --dogfood-e2e/is);
+  assert.match(runbook, /不连接 MedOPL production/is);
+  assert.match(runbook, /不执行真实 OPL/is);
   assert.match(runbook, /Release Image.*不执行 rollout/is);
   assert.match(runbook, /staging.*不是镜像存储/is);
   assert.match(runbook, /创建真实.*opl-webui-staging.*独立 staging DB\/Secret\/TLS\/DNS/is);

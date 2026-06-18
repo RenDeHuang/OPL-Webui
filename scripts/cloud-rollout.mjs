@@ -28,6 +28,11 @@ if (args.has('--help')) {
   process.exit(0);
 }
 
+if (args.has('--dogfood-e2e')) {
+  await runDogfoodE2E();
+  process.exit(0);
+}
+
 if (dryRun) {
   printDryRun();
   process.exit(0);
@@ -56,6 +61,71 @@ run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin
 
 for (const url of [healthUrl, readyUrl, metricsUrl, homeUrl]) {
   run(`HTTPS smoke ${url}`, 'curl', ['--http2', '-fsS', url]);
+}
+
+async function runDogfoodE2E() {
+  if (process.env.OPL_PRODUCTION_DOGFOOD_E2E !== '1') {
+    console.log('[cloud-rollout] production authenticated dogfood e2e skipped; set OPL_PRODUCTION_DOGFOOD_E2E=1 to run.');
+    return;
+  }
+  for (const name of ['OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY']) {
+    requireEnv(name);
+  }
+  const session = await dogfoodSession();
+  const current = await dogfoodFetch('/api/session/current', { cookie: session.cookie }, 'current session');
+  assertEqual(current.body.email, process.env.OPL_DOGFOOD_EMAIL, 'current session email');
+  const saved = await dogfoodFetch('/api/settings/model-provider', {
+    method: 'PUT', cookie: session.cookie, body: { apiKey: process.env.OPL_DOGFOOD_API_KEY },
+  }, 'API Key binding');
+  assertEqual(saved.body.baseUrl, 'https://gflabtoken.cn/v1', 'fixed gateway');
+  assertEqual(saved.body.apiKeyConfigured, true, 'api key configured');
+  assertNoSensitive(saved.body);
+  if (process.env.OPL_PRODUCTION_DOGFOOD_REAL_CHAT === '1') {
+    const chat = await dogfoodFetch('/api/chat', {
+      method: 'POST', cookie: session.cookie, body: { message: 'OPL-Webui production dogfood ping' },
+    }, 'ordinary chat');
+    if (!chat.body.assistantMessage?.content) throw new Error('ordinary chat did not return assistant content');
+  } else {
+    console.log('[cloud-rollout] ordinary chat skipped; set OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1 to spend test API quota.');
+  }
+  const gated = await dogfoodFetch('/api/chat', {
+    method: 'POST', cookie: session.cookie, body: { message: '@基金 production dogfood gate' },
+  }, 'runtime gate', 409);
+  assertEqual(gated.body.errorCode, 'RUNTIME_REQUIRED', 'MedOPL runtime gate');
+  const audit = await dogfoodFetch('/api/account/audit-events', { cookie: session.cookie }, 'audit events');
+  const kinds = (audit.body.events ?? []).map((event) => event.eventKind);
+  if (!kinds.includes('runtime_gate.required')) throw new Error(`missing runtime gate audit event: ${kinds.join(',')}`);
+  if (process.env.OPL_PRODUCTION_DOGFOOD_REAL_CHAT === '1' && !kinds.includes('chat.completed')) {
+    throw new Error(`missing chat completed audit event: ${kinds.join(',')}`);
+  }
+  assertNoSensitive({ current: current.body, saved: saved.body, gated: gated.body, audit: audit.body });
+  console.log(`[cloud-rollout] production authenticated dogfood e2e passed; audit kinds=${[...new Set(kinds)].join(',')}`);
+}
+
+async function dogfoodSession() {
+  const credentials = { email: process.env.OPL_DOGFOOD_EMAIL, password: process.env.OPL_DOGFOOD_PASSWORD };
+  const registered = await dogfoodFetch('/api/auth/register', { method: 'POST', body: credentials }, 'register', [201, 409]);
+  if (registered.response.status === 201) return registered;
+  return dogfoodFetch('/api/auth/login', { method: 'POST', body: credentials }, 'login');
+}
+
+async function dogfoodFetch(path, options, label, expected = 200) {
+  const headers = { connection: 'close' };
+  if (options?.body) headers['content-type'] = 'application/json';
+  if (options?.cookie) headers.cookie = options.cookie;
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: options?.method ?? 'GET',
+    headers,
+    body: options?.body ? JSON.stringify(options.body) : undefined,
+  });
+  const text = await response.text();
+  const body = text ? JSON.parse(text) : {};
+  const allowed = Array.isArray(expected) ? expected : [expected];
+  console.log(`[cloud-rollout] dogfood ${label}: ${response.status}${body.errorCode ? ` ${body.errorCode}` : ''}`);
+  assertNoSensitive(body);
+  if (!allowed.includes(response.status)) throw new Error(`${label} expected ${allowed.join('/')} but got ${response.status}`);
+  const cookie = response.headers.get('set-cookie')?.split(';')[0] ?? options?.cookie ?? '';
+  return { response, body, cookie };
 }
 
 function kubectlArgs(commandArgs) {
@@ -150,9 +220,21 @@ function formatPodSummary(pods) {
 
 function requireEnv(name) {
   if (!process.env[name]) {
-    console.error(`Missing required ${name}. Run without --apply for dry-run output.`);
+    console.error(`Missing required ${name}. Run without --apply or --dogfood-e2e for dry-run output.`);
     process.exit(2);
   }
+}
+
+function assertEqual(actual, expected, label) {
+  if (actual !== expected) throw new Error(`${label} mismatch`);
+}
+
+function assertNoSensitive(value) {
+  const text = JSON.stringify(value);
+  for (const sensitive of [process.env.OPL_DOGFOOD_API_KEY, process.env.OPL_DOGFOOD_PASSWORD]) {
+    if (sensitive && text.includes(sensitive)) throw new Error('dogfood response contains sensitive material');
+  }
+  if (/rawApiKey|encryptedApiKey|password|postgres:\/\//i.test(text)) throw new Error('dogfood response contains unsafe fields');
 }
 
 function formatCommand(command, commandArgs) {
@@ -170,6 +252,7 @@ function printUsage() {
   console.log(`Usage:
   node scripts/cloud-rollout.mjs
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
+  OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
 
-Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks.`);
+Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl.`);
 }

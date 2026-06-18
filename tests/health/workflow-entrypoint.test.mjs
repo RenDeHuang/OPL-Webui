@@ -78,6 +78,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /image:/);
   assert.match(workflow, /target_environment:/);
+  assert.match(workflow, /authenticated_dogfood_e2e:/);
   assert.match(workflow, /production/);
   assert.match(workflow, /options:\s*\n\s*- production/);
   assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
@@ -87,10 +88,17 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-apply:/);
   assert.match(workflow, /name:\s*Production Apply/);
   assert.match(workflow, /if:\s*\$\{\{\s*inputs\.apply\s*\}\}/);
+  assert.match(workflow, /production-dogfood-e2e:/);
+  assert.match(workflow, /if:\s*\$\{\{\s*inputs\.authenticated_dogfood_e2e\s*\}\}/);
   assert.match(workflow, /environment:\s*production/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
   assert.match(workflow, /--apply/);
   assert.match(workflow, /KUBECONFIG/);
+  assert.match(workflow, /OPL_PRODUCTION_DOGFOOD_E2E:\s*1/);
+  assert.match(workflow, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
+  assert.match(workflow, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
+  assert.match(workflow, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --dogfood-e2e/);
   assert.match(workflow, /RUNNER_TEMP\/kubeconfig/);
   assert.match(workflow, /chmod 600 "\$RUNNER_TEMP\/kubeconfig"/);
   assert.match(workflow, /printf '%s' "\$KUBECONFIG_CONTENT" > "\$RUNNER_TEMP\/kubeconfig"/);
@@ -105,7 +113,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
 
   assert.doesNotMatch(workflow, /staging\.opl\.medopl\.cn/);
   assert.doesNotMatch(workflow, /opl-webui-staging/);
-  assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action/i);
+  assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action|OPL_DATABASE_URL|PGPASSWORD/i);
   assert.doesNotMatch(workflow, /KUBECONFIG:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
 
   const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('production-apply:'));
@@ -115,6 +123,11 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   const applyJob = workflow.slice(workflow.indexOf('production-apply:'));
   assert.match(applyJob, /KUBECONFIG_CONTENT:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
   assert.match(applyJob, /KUBECONFIG="\$RUNNER_TEMP\/kubeconfig" node scripts\/cloud-rollout\.mjs --apply/);
+
+  const dogfoodJob = workflow.slice(workflow.indexOf('production-dogfood-e2e:'));
+  assert.match(dogfoodJob, /environment:\s*production/);
+  assert.match(dogfoodJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
+  assert.doesNotMatch(dogfoodJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
 });
 
 test('review gate includes diff hygiene, bloat, and current verify', async () => {
