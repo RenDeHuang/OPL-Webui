@@ -14,6 +14,20 @@ test('repo bloat audit reports JSON and stays within budget', () => {
 
   assert.equal(report.ok, true, JSON.stringify(report.violations, null, 2));
   assert.ok(report.budgets.files >= report.counts.files);
+  assert.equal(report.budgets.maxFileLines, undefined);
+  assert.equal(report.lineBudgetPolicy.warning, 260);
+  assert.equal(report.lineBudgetPolicy.reviewRequired, 400);
+  assert.equal(report.lineBudgetPolicy.splitRequired, 600);
+  assert.equal(report.lineBudgetPolicy.defaultMode, 'advisory');
+  assert.equal(report.lineBudgetPolicy.strictMode, false);
+  assert.equal(
+    report.lineBudgetPolicy.exemptions.join(','),
+    'generated,fixture,schema',
+  );
+  assert.equal(
+    report.violations.some((violation) => violation.name === 'maxFileLines'),
+    false,
+  );
   assert.equal(report.counts.activeChangeDocs, activeChangeDocs.length);
   assert.equal(report.counts.markdownDocs, durableMarkdownDocs.length);
   assert.equal(

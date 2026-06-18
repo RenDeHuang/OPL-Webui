@@ -67,5 +67,5 @@
 - 没有 eval/test 的 AI、OPL 或 control-plane 行为不算完成。
 - `scripts/` 只放 runner、classifier、gate；不要把业务逻辑塞进脚本。
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
-- 单文件超过约 `260` 行会触发当前 repo bloat gate；需要先拆分或调整明确预算。
+- 单文件行数是结构信号，不是长期日常硬标准：`260` 行提示 review，`400` 行需要说明为什么暂不拆，`600` 行在显式 strict line gate 下默认必须拆；生成文件、fixture 和 schema 可豁免。
 - 仓库接近或达到 bloat 预算时，新增业务能力前必须先清退、拆分或收敛现有 surface。

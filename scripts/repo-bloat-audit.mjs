@@ -9,7 +9,15 @@ const budgets = {
   markdownDocs: 24,
   scripts: 8,
   tests: 17,
-  maxFileLines: 260,
+};
+const strictLineMode = process.argv.includes('--strict-lines') || process.env.OPL_WEBUI_LINE_BUDGET_STRICT === '1';
+const lineBudgetPolicy = {
+  warning: 260,
+  reviewRequired: 400,
+  splitRequired: 600,
+  defaultMode: 'advisory',
+  strictMode: strictLineMode,
+  exemptions: ['generated', 'fixture', 'schema'],
 };
 
 function gitFiles(args) {
@@ -70,12 +78,34 @@ for (const [name, budget] of Object.entries(budgets)) {
     violations.push({ name, count: counts[name], budget });
   }
 }
+const lineBudgetFindings = lineCounts
+  .map((file) => ({
+    ...file,
+    severity: lineSeverity(file.lines),
+    exempt: isLineBudgetExempt(file.path),
+  }))
+  .filter((file) => file.severity !== 'ok');
+
+if (strictLineMode) {
+  for (const file of lineBudgetFindings) {
+    if (file.severity === 'split-required' && !file.exempt) {
+      violations.push({
+        name: 'lineBudget',
+        path: file.path,
+        count: file.lines,
+        budget: lineBudgetPolicy.splitRequired,
+      });
+    }
+  }
+}
 
 const report = {
   ok: violations.length === 0,
   budgets,
+  lineBudgetPolicy,
   counts,
   largestFile,
+  lineBudgetFindings,
   violations,
   ignoredDirectories,
   files: allFiles,
@@ -83,3 +113,16 @@ const report = {
 
 console.log(JSON.stringify(report, null, 2));
 process.exit(report.ok ? 0 : 1);
+
+function lineSeverity(lines) {
+  if (lines > lineBudgetPolicy.splitRequired) return 'split-required';
+  if (lines > lineBudgetPolicy.reviewRequired) return 'review-required';
+  if (lines > lineBudgetPolicy.warning) return 'warning';
+  return 'ok';
+}
+
+function isLineBudgetExempt(path) {
+  return /(^|\/)(fixtures?|generated|schema)(\/|$)/i.test(path)
+    || /\.(schema|fixture)\./i.test(path)
+    || path.endsWith('.schema.json');
+}

@@ -13,6 +13,7 @@
     "test:regression": "node scripts/verify.mjs suite regression",
     "gate:review": "node scripts/workflow-gate.mjs",
     "repo:bloat": "node scripts/repo-bloat-audit.mjs",
+    "repo:bloat:strict": "node scripts/repo-bloat-audit.mjs --strict-lines",
     "check:diff": "git diff --check",
     "start": "go run ./services/control-plane-go/cmd/opl-webui-control-plane",
     "test:go": "cd services/control-plane-go && go test ./..."

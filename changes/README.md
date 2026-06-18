@@ -62,4 +62,4 @@ proposal -> spec-delta -> design -> tasks -> eval-plan -> review -> closeout -> 
 - `hard stops`: secrets、生产凭证、破坏性操作、付费外部动作和含糊产品取舍必须停下问人。
 - `commit and push`: 验证通过后只 add intentional files，commit，再 push 到 `origin/main`。
 
-默认工程约束：no compatibility layer unless a real consumer needs it；no bloat，文件和 CSS 接近预算时先拆分或收敛范围。
+默认工程约束：no compatibility layer unless a real consumer needs it；no bloat。文件、CSS 或文档接近结构预算时先拆分或收敛范围；行数默认作为 advisory 结构信号，显式 strict 入口才阻断。
