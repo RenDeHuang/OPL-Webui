@@ -30,7 +30,7 @@ test('repo exposes active truth, durable contracts, and structural rules', () =>
   const requiredTruthFiles = [
     'TASTE.md', 'changes/archive/closeouts.md', 'changes/README.md', 'docs/active/README.md',
     'docs/project.md', 'docs/architecture.md', 'docs/invariants.md',
-    'docs/docs_portfolio_consolidation.md', 'docs/history/README.md',
+    'docs/docs_portfolio_consolidation.md',
     ...contractFiles, '.sentrux/rules.toml', 'services/control-plane-go/go.mod',
   ];
 
@@ -39,6 +39,11 @@ test('repo exposes active truth, durable contracts, and structural rules', () =>
   }
 
   assert.equal(existsSync('docs/README.md'), false);
+  assert.equal(existsSync('docs/history/README.md'), false);
+  assert.equal(existsSync('tests/README.md'), false);
+  assert.equal(existsSync('apps/web/styles/v3.css'), false);
+  assert.equal(existsSync('tests/smoke/web-demo-shell.test.mjs'), false);
+  assert.equal(existsSync('tests/smoke/web-shell.test.mjs'), true);
   assert.equal(existsSync('docs/active/release-automation-goal.md'), false);
   for (const retired of [
     'docs/status.md',
@@ -57,6 +62,11 @@ test('active truth links active change work instead of phase package docs', () =
   assert.doesNotMatch(readme, /release-automation-goal\.md/);
   assert.doesNotMatch(readme, /changes\/active\/release-automation/);
   assert.doesNotMatch(readme, /changes\/active\/figma-v3-preview/);
+  assert.doesNotMatch(readme, /changes\/active\/one-person-lab-web-truth-reset/);
+  assert.doesNotMatch(readme, /changes\/active\/repo-slimming-and-stale-name-retirement/);
+  assert.doesNotMatch(readme, /one-person-lab-web-truth-reset/);
+  assert.doesNotMatch(readme, /repo-slimming-and-stale-name-retirement/);
+  assert.match(readme, /No active change|没有 active change/);
   assert.match(readme, /one-person-lab-web/);
 });
 
@@ -68,10 +78,14 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
+  assert.match(closeout, /one-person-lab-web-truth-reset/);
+  assert.match(closeout, /repo-slimming-and-stale-name-retirement/);
   assert.equal(release.currentStage, 'one-person-lab-web-contract-truth');
   assert.equal(release.historicalEvidenceRefs.includes('changes/archive/closeouts.md'), true);
   assert.match(readme, /contracts\/web-product-profile\.json/);
   assert.match(readme, /contracts\/web-api\.openapi\.json/);
+  assert.doesNotMatch(readme, /one-person-lab-web-truth-reset/);
+  assert.doesNotMatch(readme, /repo-slimming-and-stale-name-retirement/);
 });
 
 test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalone SaaS backend', () => {
@@ -105,7 +119,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(active, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(active, /one-person-lab-web-truth-reset/);
+  assert.match(active, /No active change|没有 active change/);
   assert.match(active, /Next Priorities[\s\S]{0,240}API contract implementation/);
 });
 
@@ -159,7 +173,7 @@ test('archived change packages keep only compact closeout summaries', () => {
   assert.match(closeout, /production-runtime-gate/);
   assert.match(closeout, /release-automation/);
   assert.match(closeout, /cannot claim/);
-  assert.equal(existsSync('docs/history/README.md'), true);
+  assert.equal(existsSync('docs/history/README.md'), false);
 });
 
 test('change lifecycle documents dynamic phase gates and compaction rules', () => {
@@ -203,6 +217,10 @@ test('change lifecycle codifies autonomous commercial development prompts', () =
 
 test('active change packages are complete and eval-backed', () => {
   const activeChanges = existsSync('changes/active') ? readdirSync('changes/active') : [];
+  if (activeChanges.length === 0) {
+    assert.match(readFileSync('docs/active/README.md', 'utf8'), /No active change|没有 active change/);
+  }
+
   for (const changeId of activeChanges) {
     const root = `changes/active/${changeId}`;
     for (const file of lifecycleFiles) {

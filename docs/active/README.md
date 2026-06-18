@@ -7,11 +7,12 @@
 
 ## Current Stage
 
-当前是 `one-person-lab-web-truth-reset`：本阶段把仓库 canonical 叙事收敛为 One Person Lab Web，并把 durable machine truth 从 Markdown specs/status/decisions 迁到 contracts。现阶段不新增产品行为、不 rollout、不实现 MedOPL runtime bridge。
+当前是 One Person Lab Web contract-truth baseline。仓库 canonical 叙事已经收敛为 One Person Lab Web，durable machine truth 由 contracts、source、tests、scripts 和 closeouts 持有。
 
 ## Machine Truth
 
 - Product boundary: `contracts/web-product-profile.json`
+- Product ID: `one-person-lab-web`
 - Page state: `contracts/web-page-state-matrix.json`
 - HTTP API: `contracts/web-api.openapi.json`
 - Runtime gate and refs-only projection: `contracts/web-runtime-bridge.json`
@@ -21,7 +22,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, contracts
 
 ## Active Change Work
 
-- `changes/active/one-person-lab-web-truth-reset/`: contract-first truth reset, stale prose truth retirement, and governance test update.
+No active change is open. 正式开发开始前必须创建 `changes/active/<change-id>/`，关闭时 compact archive 并删除 active package。
 
 ## Can Claim
 

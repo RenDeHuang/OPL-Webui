@@ -13,7 +13,7 @@ const scannedRoots = [
 
 const allowedFiles = new Set([
   'tests/health/stale-retirement-guard.test.mjs',
-  'tests/smoke/web-demo-shell.test.mjs',
+  'tests/smoke/web-shell.test.mjs',
   'tests/contract/go-control-plane-http.test.mjs',
   'tests/contract/one-person-lab-web-data.test.mjs',
 ]);

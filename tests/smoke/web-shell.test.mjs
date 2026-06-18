@@ -62,6 +62,7 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
   assert.match(html, /chat-log/);
   assert.match(html, /settings-panel/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
+  assert.doesNotMatch(html, /styles\/v3\.css/);
   assert.doesNotMatch(html, /轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|团队|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution/);
 });
 
