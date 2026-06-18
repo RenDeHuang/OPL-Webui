@@ -5,10 +5,8 @@ import test from 'node:test';
 const coreDocs = [
   'TASTE.md',
   'docs/project.md',
-  'docs/status.md',
   'docs/architecture.md',
   'docs/invariants.md',
-  'docs/decisions.md',
   'docs/docs_portfolio_consolidation.md',
 ];
 
@@ -30,7 +28,10 @@ test('repository governance exposes OPL-style lifecycle surfaces', () => {
     '理想态优先',
     '旧实现只能作为迁移输入',
     '不保留兼容污染',
-    '进入 code、docs、contracts、tests、scripts、deploy、specs 或 API 行为变更',
+    '进入 code、docs、contracts、tests、scripts、deploy 或 API 行为变更',
+    'contract-first',
+    'page-state-first',
+    'browser-e2e-first',
     '独立 worktree',
     'subagent',
     'Plan Completion Audit',
@@ -49,7 +50,7 @@ test('documentation portfolio defines lightweight OPL-inspired taxonomy', () => 
     'docs/policies/',
     'contracts/',
     '不要复制 one-person-lab 的目录体量',
-    '只在出现稳定 machine-readable API、DTO、allowlist 或 schema 时新增',
+    'contracts/ 是 One Person Lab Web 的 durable machine truth',
   ]) {
     assert.match(portfolio, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }

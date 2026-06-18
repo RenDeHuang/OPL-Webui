@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "routes": [
+    {
+      "id": "chat",
+      "hash": "",
+      "surface": "primary_workbench",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "sending", "runtime_required", "upstream_failed", "quota_exceeded"]
+    },
+    {
+      "id": "settings",
+      "hash": "#settings",
+      "surface": "account_and_provider",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound"]
+    },
+    {
+      "id": "capabilities",
+      "hash": "#capabilities",
+      "surface": "foundry_catalog",
+      "states": ["readonly_catalog", "runtime_required"]
+    },
+    {
+      "id": "medopl",
+      "hash": "#medopl",
+      "surface": "runtime_gate_deeplink",
+      "states": ["runtime_required", "external_handoff"]
+    }
+  ],
+  "accountStates": ["anonymous", "authenticated_unbound", "authenticated_bound"],
+  "chatStates": [
+    "idle",
+    "sending",
+    "runtime_required",
+    "upstream_failed",
+    "quota_exceeded"
+  ],
+  "pageStateRules": [
+    {
+      "when": "anonymous",
+      "requiredApi": ["/api/session/current"],
+      "allowedAction": "show_login_register"
+    },
+    {
+      "when": "authenticated_unbound",
+      "requiredApi": ["/api/session/current", "/api/settings/model-provider"],
+      "allowedAction": "show_provider_binding"
+    },
+    {
+      "when": "authenticated_bound",
+      "requiredApi": ["/api/session/current", "/api/settings/model-provider", "/api/chat/conversations"],
+      "allowedAction": "allow_ordinary_chat"
+    },
+    {
+      "when": "runtime_required",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "show_medopl_runtime_gate"
+    }
+  ]
+}

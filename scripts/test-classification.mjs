@@ -35,7 +35,7 @@ const TEST_ENTRIES = Object.freeze([
     contracts: Object.freeze(['Dockerfile', 'Dockerfile.cloud', '.dockerignore', '.dockerignore.cloud', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
     verifySuites: Object.freeze(['current', 'health']),
   }),
-  Object.freeze({ file: 'tests/health/governance-hardening.test.mjs', runner: 'node', lane: 'health', ownerSurface: 'repo-governance', lifecycleRole: 'current-owner', contracts: Object.freeze(['AGENTS.md', 'TASTE.md', 'docs/docs_portfolio_consolidation.md', 'changes/README.md']), verifySuites: Object.freeze(['current', 'health']) }),
+  Object.freeze({ file: 'tests/health/governance-hardening.test.mjs', runner: 'node', lane: 'health', ownerSurface: 'repo-governance', lifecycleRole: 'current-owner', contracts: Object.freeze(['AGENTS.md', 'TASTE.md', 'docs/docs_portfolio_consolidation.md', 'changes/README.md', 'contracts/web-product-profile.json']), verifySuites: Object.freeze(['current', 'health']) }),
   Object.freeze({ file: 'tests/health/stale-retirement-guard.test.mjs', runner: 'node', lane: 'health', ownerSurface: 'repo-governance', lifecycleRole: 'current-owner', contracts: Object.freeze(['AGENTS.md', 'TASTE.md', 'docs/invariants.md', 'changes/README.md']), verifySuites: Object.freeze(['current', 'health']) }),
   Object.freeze({
     file: 'tests/contract/change-package-lifecycle.test.mjs',
@@ -43,7 +43,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'change-lifecycle',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['changes/README.md', 'changes/archive/closeouts.md', 'docs/active/README.md', 'deploy/cloud-mvp/RUNBOOK.md']),
+    contracts: Object.freeze(['changes/README.md', 'changes/archive/closeouts.md', 'docs/active/README.md', 'deploy/cloud-mvp/RUNBOOK.md', 'contracts/web-product-profile.json', 'contracts/web-api.openapi.json', 'contracts/web-release-profile.json']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({
@@ -101,7 +101,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['apps/web/src/onePersonLabWeb.mjs', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
+    contracts: Object.freeze(['apps/web/src/onePersonLabWeb.mjs', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-api.openapi.json', 'contracts/web-runtime-bridge.json', 'contracts/web-release-profile.json']),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

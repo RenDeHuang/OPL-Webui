@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "owner": "MedOPL",
+  "mode": "gate_and_readonly_projection_v1",
+  "webuiRuntimeExecution": "forbidden",
+  "medoplDeepLink": "https://medopl.medopl.cn",
+  "runtimeRequiredMarkers": ["@基金", "@论文", "@综述", "@长任务", "@文件"],
+  "forbiddenActions": [
+    "opl_install",
+    "opl_repair",
+    "opl_module_exec",
+    "family_runtime_mutation",
+    "engine_install",
+    "engine_update",
+    "engine_remove",
+    "private_state_read",
+    "runtime_mutation"
+  ],
+  "projectionPolicy": {
+    "allowedPayload": [
+      "refs",
+      "status",
+      "counts",
+      "progress_refs",
+      "deliverable_refs"
+    ],
+    "forbiddenPayload": [
+      "artifact_body",
+      "memory_body",
+      "domain_verdict",
+      "private_state_path",
+      "mutation_result",
+      "raw_provider_secret"
+    ]
+  },
+  "authorizationBoundary": {
+    "requiresGoSideContract": true,
+    "requiresEval": true,
+    "requiresWhitelist": true,
+    "requiresHumanAuthorization": true
+  }
+}

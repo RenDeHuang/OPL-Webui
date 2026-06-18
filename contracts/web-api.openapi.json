@@ -1,0 +1,179 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "One Person Lab Web API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a public Web account.",
+        "responses": {
+          "200": {
+            "description": "Registered and session cookie set."
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login and set an HttpOnly session cookie.",
+        "responses": {
+          "200": {
+            "description": "Authenticated."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Clear the current session.",
+        "responses": {
+          "200": {
+            "description": "Logged out."
+          }
+        }
+      }
+    },
+    "/api/session/current": {
+      "get": {
+        "summary": "Return current user session state.",
+        "responses": {
+          "200": {
+            "description": "Current session or anonymous state."
+          }
+        }
+      }
+    },
+    "/api/settings/model-provider": {
+      "get": {
+        "summary": "Return fixed provider state without raw API key.",
+        "responses": {
+          "200": {
+            "description": "Provider state with fixed baseUrl and masked key."
+          }
+        }
+      },
+      "put": {
+        "summary": "Save user API key for the fixed provider.",
+        "responses": {
+          "200": {
+            "description": "Provider key saved without returning raw key."
+          },
+          "401": {
+            "description": "Authentication required."
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Send ordinary chat through the fixed provider or return runtime gate.",
+        "responses": {
+          "200": {
+            "description": "Assistant response."
+          },
+          "401": {
+            "description": "Authentication or provider key required."
+          },
+          "409": {
+            "description": "Runtime required for OPL capability."
+          },
+          "429": {
+            "description": "Quota exceeded before upstream call."
+          }
+        }
+      }
+    },
+    "/api/chat/conversations": {
+      "get": {
+        "summary": "List current user's conversations.",
+        "responses": {
+          "200": {
+            "description": "Conversation list."
+          }
+        }
+      }
+    },
+    "/api/chat/conversations/{conversationId}": {
+      "get": {
+        "summary": "Read one current-user conversation.",
+        "parameters": [
+          {
+            "name": "conversationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation detail."
+          },
+          "404": {
+            "description": "Conversation not found for current user."
+          }
+        }
+      }
+    },
+    "/api/account/audit-events": {
+      "get": {
+        "summary": "List current user's sanitized audit events.",
+        "responses": {
+          "200": {
+            "description": "Sanitized user audit events."
+          }
+        }
+      }
+    },
+    "/api/opl/snapshot": {
+      "get": {
+        "summary": "Read OPL readonly snapshot projection.",
+        "responses": {
+          "200": {
+            "description": "Readonly snapshot projection."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChatErrorCode": {
+        "type": "string",
+        "enum": [
+          "AUTH_REQUIRED",
+          "API_KEY_REQUIRED",
+          "RUNTIME_REQUIRED",
+          "CHAT_QUOTA_EXCEEDED",
+          "UPSTREAM_FAILED"
+        ]
+      },
+      "SanitizedAuditEvent": {
+        "type": "object",
+        "required": ["type", "createdAt"],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

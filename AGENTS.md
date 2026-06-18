@@ -1,4 +1,4 @@
-# OPL-WebUI 仓库协作规范
+# One Person Lab Web 仓库协作规范
 
 ## 适用范围
 
@@ -12,15 +12,15 @@
 ## 定位
 
 - `AGENTS.md` 只约束工作方式、稳定边界和工程纪律，不承载完整项目知识。
-- 项目知识默认从 `TASTE.md`、`docs/project.md`、`docs/status.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/decisions.md`、`docs/active/README.md` 和 `specs/*` 读取。
+- 项目知识默认从 `TASTE.md`、`docs/project.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/active/README.md` 和 `contracts/*.json` 读取。
 - 每次正式开发必须先确认当前 truth，再进入一个明确的 gap-driven phase。
 
 ## 产品边界
 
-- 本仓是公网 OPL 前台 WebUI：用户访问 `opl.medopl.cn` 登录后使用 ChatGPT-like OPL 前台入口。
+- 本仓是 One Person Lab Web 产品仓：用户访问 `opl.medopl.cn` 登录后使用 Web 版 One Person Lab App 入口。
 - 用户填写自己的 API Key；base_url 固定为我们的 sub2api base_url，不允许用户自定义。
 - Web UI 默认不展示 workspace、runtime、node pool、storage 概念；Go control plane 可保留 hidden default personal workspace 用于隔离、计费投影和未来扩展。
-- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
+- MedOPL 是充值、runtime、node pool、storage、账单和资源后台；One Person Lab Web 不拥有 node pool 生命周期、billing source of truth 或 API gateway。
 - Web UI 只调用 Go control plane HTTP API；Go control plane 消费 sub2api 和 MedOPL 状态。
 - Go control plane 是当前唯一后端业务入口；真实 OPL CLI 集成必须先新增 Go-side contract、eval、白名单和人工授权边界。
 - 不 import `one-person-lab` 内部模块，不读取 OPL state 文件，不直接调用 MAS/MAG/RCA 私有 runtime。
@@ -28,17 +28,20 @@
 
 ## 工程闭环
 
-- 进入 code、docs、contracts、tests、scripts、deploy、specs 或 API 行为变更时，即视为正式开发；除非用户明确要求只读分析，否则必须走本节闭环。
+- 进入 code、docs、contracts、tests、scripts、deploy 或 API 行为变更时，即视为正式开发；除非用户明确要求只读分析，否则必须走本节闭环。
 - 正式变更必须先有 `changes/active/<change-id>/`，并包含 proposal、spec-delta、design、tasks、eval-plan、review、closeout。
 - 每次正式变更必须执行四个工作面：文档生命周期、代码清退、测试登记、机器 gate。
 - 每次正式变更必须同步清退被替代的旧代码、旧 route、旧 schema、旧测试、旧文档入口和旧命名；不能把清退留给未来。
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
 - 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts 和 verifySuites。
 - 默认验证入口是 `npm run verify`；review gate 是 `npm run gate:review`；正式完成前还必须跑 `npm run repo:bloat` 和 `sentrux check .`。
+- contract-first：新增或修改用户可见功能、API、runtime gate、release claim 前，必须先更新对应 `contracts/*.json`。
+- page-state-first：新增或修改页面/交互前，必须先更新 `contracts/web-page-state-matrix.json`。
+- browser-e2e-first：商业主路径变化必须有浏览器级或等价 smoke/e2e 计划；不能只靠文案声明。
 
 ## 理想态与清退
 
-- 理想态优先：先按 OPL-WebUI 的目标产品边界和 Go control plane owner 设计，再判断现有实现如何迁移或删除。
+- 理想态优先：先按 One Person Lab Web 的目标产品边界和 Go control plane owner 设计，再判断现有实现如何迁移或删除。
 - 旧实现只能作为迁移输入，不能反过来定义长期架构、命名、route、测试或文档入口。
 - 一旦目标 topology 明确，新增投入默认服务目标形态；不继续深磨旧路线。
 - 不保留兼容污染；已被当前 owner surface 替代的模块、alias、facade、schema、route、测试和文档入口默认退役。
@@ -49,7 +52,7 @@
 
 - `docs/docs_portfolio_consolidation.md` 是文档组合治理入口。
 - 每份长期文档都必须说明 `owner`、`purpose`、`state` 和 `machine boundary`。
-- 新文档先判断角色，再落到 `docs/` core、`docs/active/`、`docs/history/`、`specs/` 或 `changes/active/`。
+- 新文档先判断角色，再落到 `docs/` core、`docs/active/`、`docs/history/`、`contracts/` 或 `changes/active/`。
 - 退役路线、历史定位和 tombstone 只能放在 archive/history 语境；active truth 提到旧路线时必须指向当前 owner。
 
 ## 代码清退

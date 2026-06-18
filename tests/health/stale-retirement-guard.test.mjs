@@ -7,7 +7,7 @@ const scannedRoots = [
   'apps/web',
   'services/control-plane-go',
   'scripts',
-  'specs',
+  'contracts',
   'tests',
 ];
 

@@ -1,4 +1,4 @@
-# OPL-WebUI Engineering Taste
+# One Person Lab Web Engineering Taste
 
 - owner: product-engineering owner
 - purpose: durable engineering taste for AI-assisted development in this repo.
@@ -17,7 +17,7 @@
 
 ## Default Development Loop
 
-1. Read `AGENTS.md`, this file, `docs/active/README.md`, and relevant `specs/*`.
+1. Read `AGENTS.md`, this file, `docs/active/README.md`, and relevant `contracts/*.json`.
 2. Create or update one `changes/active/<change-id>/` package.
 3. Write or update tests first and register them.
 4. Implement the smallest behavior.

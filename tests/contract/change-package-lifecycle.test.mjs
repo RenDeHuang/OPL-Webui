@@ -5,6 +5,17 @@ import test from 'node:test';
 import pkg from '../../package.json' with { type: 'json' };
 
 const lifecycleFiles = ['proposal.md', 'spec-delta.md', 'design.md', 'tasks.md', 'eval-plan.md', 'review.md', 'closeout.md'];
+const contractFiles = [
+  'contracts/web-product-profile.json',
+  'contracts/web-page-state-matrix.json',
+  'contracts/web-api.openapi.json',
+  'contracts/web-runtime-bridge.json',
+  'contracts/web-release-profile.json',
+];
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
 
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
@@ -15,13 +26,12 @@ test('package lifecycle exposes verification-only commands', () => {
   }
 });
 
-test('repo exposes active truth, durable specs, and structural rules', () => {
+test('repo exposes active truth, durable contracts, and structural rules', () => {
   const requiredTruthFiles = [
     'TASTE.md', 'changes/archive/closeouts.md', 'changes/README.md', 'docs/active/README.md',
-    'docs/project.md', 'docs/status.md', 'docs/architecture.md', 'docs/invariants.md',
-    'docs/decisions.md', 'docs/docs_portfolio_consolidation.md', 'docs/history/README.md',
-    'specs/product/spec.md',
-    'specs/runtime/spec.md', 'specs/source/spec.md', '.sentrux/rules.toml', 'services/control-plane-go/go.mod',
+    'docs/project.md', 'docs/architecture.md', 'docs/invariants.md',
+    'docs/docs_portfolio_consolidation.md', 'docs/history/README.md',
+    ...contractFiles, '.sentrux/rules.toml', 'services/control-plane-go/go.mod',
   ];
 
   for (const file of requiredTruthFiles) {
@@ -30,6 +40,15 @@ test('repo exposes active truth, durable specs, and structural rules', () => {
 
   assert.equal(existsSync('docs/README.md'), false);
   assert.equal(existsSync('docs/active/release-automation-goal.md'), false);
+  for (const retired of [
+    'docs/status.md',
+    'docs/decisions.md',
+    'specs/product/spec.md',
+    'specs/runtime/spec.md',
+    'specs/source/spec.md',
+  ]) {
+    assert.equal(existsSync(retired), false, `retired prose truth must not remain active: ${retired}`);
+  }
 });
 
 test('active truth links active change work instead of phase package docs', () => {
@@ -41,106 +60,53 @@ test('active truth links active change work instead of phase package docs', () =
   assert.match(readme, /one-person-lab-web/);
 });
 
-test('archive keeps prior production evidence while active truth points to current webapp', () => {
+test('archive keeps prior production evidence while active truth points to current contracts', () => {
   const readme = readFileSync('docs/active/README.md', 'utf8');
   const closeout = readFileSync('changes/archive/closeouts.md', 'utf8');
+  const release = readJson('contracts/web-release-profile.json');
 
   assert.match(closeout, /24ba41f/);
   assert.match(closeout, /fa3bcb7/);
   assert.match(closeout, /bc0403d/);
-  assert.match(readme, /production-authenticated-dogfood-e2e-readiness/);
-  assert.match(readme, /44dd574[\s\S]{0,120}production verified/);
-  assert.match(readme, /1fc361d Figma workbench UI[\s\S]{0,120}production verified/);
-  assert.match(readme, /POST \/api\/chat/);
-  assert.match(readme, /最终计费归 MedOPL\/sub2api/);
+  assert.equal(release.currentStage, 'one-person-lab-web-contract-truth');
+  assert.equal(release.historicalEvidenceRefs.includes('changes/archive/closeouts.md'), true);
+  assert.match(readme, /contracts\/web-product-profile\.json/);
+  assert.match(readme, /contracts\/web-api\.openapi\.json/);
 });
 
-test('active truth records 1fc361d Figma workbench production evidence', () => {
-  const readme = readFileSync('docs/active/README.md', 'utf8');
-  const product = readFileSync('specs/product/spec.md', 'utf8');
-  const combined = `${readme}\n${product}\n${readFileSync('changes/archive/closeouts.md', 'utf8')}`;
-
-  for (const required of [
-    '1fc361d Figma workbench UI 已 production verified',
-    'uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d',
-    'rollout revision `14`', 'opl-webui-control-plane-54546f5bff-h8xcq', '`/#settings` 200',
-    '严肃工作的 AI 工作台', 'OPL WebUI 应承接的五件事', 'https://gflabtoken.cn/v1',
-    '401 AUTH_REQUIRED', '405 METHOD_NOT_ALLOWED', '401 INVALID_CREDENTIALS',
-    '9cbb4a3 dogfood guardrails + capability source-path manifest 已 production verified',
-    'uswccr.ccs.tencentyun.com/webopl/opl-webui:9cbb4a3',
-    'rollout revision `15`',
-    'opl-webui-control-plane-6c6f59bf5f-vpmvk',
-    '`/readyz` 200 `missing=[]`',
-    'CHAT_QUOTA_EXCEEDED',
-    'sanitized audit',
-    "syncMode: 'source_path_pinned_manifest'",
-    'dynamicSync=false',
-    '@基金',
-    'MedOPL Runtime',
-    '需要 MedOPL Runtime',
-    'No real OPL runtime was executed or created',
-  ]) {
-    assert.ok(combined.includes(required), `missing production evidence: ${required}`);
-  }
-
-  assert.match(readme, /production-authenticated-dogfood-e2e-readiness/);
-  assert.doesNotMatch(product, /Figma `2:21` UI alignment 只有本地 dogfood\/browser evidence/);
-});
-
-test('product truth keeps OPL-Webui as one-person-lab-web instead of standalone SaaS backend', () => {
+test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalone SaaS backend', () => {
   const active = readFileSync('docs/active/README.md', 'utf8');
-  const product = readFileSync('specs/product/spec.md', 'utf8');
-  const runtime = readFileSync('specs/runtime/spec.md', 'utf8');
-  const source = readFileSync('specs/source/spec.md', 'utf8');
+  const product = readJson('contracts/web-product-profile.json');
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const api = readJson('contracts/web-api.openapi.json');
+  const release = readJson('contracts/web-release-profile.json');
   const runbook = readFileSync('deploy/cloud-mvp/RUNBOOK.md', 'utf8');
-  const combined = `${active}\n${product}\n${runtime}\n${source}\n${runbook}`;
 
-  for (const required of [
-    'Genspark-like one-person-lab-web with ChatGPT-like base chatbot',
-    'Web 版 One Person Lab App',
-    '用户填写自己的 API Key',
-    'base_url 固定为 `https://gflabtoken.cn/v1`',
-    '不允许用户自定义 base_url',
-    'hidden default personal workspace',
-    'UI 不展示 workspace 产品',
-    'runtime/storage/node pool',
-    'medopl.medopl.cn',
-    'MedOPL 是充值、runtime、node pool、storage、账单和资源后台',
-    'OPL-Webui 不拥有 node pool 生命周期、billing source of truth 或 API gateway',
-    'usage/quota v1 是 Webui-side precheck/projection',
-    'source-path pinned manifest',
-    'one-person-lab-app/contracts/app-product-profile.json',
-    'one-person-lab/contracts/opl-framework/domains.json',
-    'dynamic sync',
-    'CHAT_QUOTA_EXCEEDED',
-    '/api/account/audit-events',
-    'sanitized audit',
-    'password、raw API Key、session secret',
-    'chat quota/audit guardrail 是 Webui-side abuse protection',
-    '最终计费归 MedOPL/sub2api',
-    'OPL_TENANT_AUTH_SECRET',
-    'OPL_SESSION_SECRET',
-    'OPL_API_KEY_ENCRYPTION_SECRET',
-    'OPL_CHAT_MODEL',
-    'dogfood e2e harness',
-    'production authenticated dogfood e2e',
-    'OPL_DOGFOOD_API_KEY', 'OPL_PRODUCTION_DOGFOOD_REAL_CHAT', 'authenticated_dogfood_e2e',
-    'mock upstream',
-    'one-person-lab-app parity v1',
-    'progress/files/deliverables refs',
-    'artifact body',
-    'projection 来源只能是白名单 OPL CLI JSON surface 或 MedOPL status projection',
-  ]) {
-    assert.ok(combined.includes(required), `missing product positioning truth: ${required}`);
-  }
+  assert.equal(product.productId, 'one-person-lab-web');
+  assert.equal(product.positioning, 'Web edition of One Person Lab App');
+  assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
+  assert.equal(product.provider.userEditableBaseUrl, false);
+  assert.equal(product.ownedSurfaces.includes('web_product_surface'), true);
+  assert.equal(product.ownedSurfaces.includes('page_state'), true);
+  assert.equal(product.nonOwnedTruth.includes('billing_source_of_truth'), true);
+  assert.equal(product.nonOwnedTruth.includes('runtime_truth'), true);
+  assert.equal(product.consumedAuthorities.includes('one-person-lab-app/contracts/app-product-profile.json'), true);
+  assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
+
+  assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
+  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+  assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
+  assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
+  assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
+  assert.equal(release.requiredEnvKeys.includes('OPL_SESSION_SECRET'), true);
+  assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
+  assert.match(runbook, /OPL_SESSION_SECRET/);
 
   assert.doesNotMatch(active, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
-  assert.doesNotMatch(product, /UI 是中文 AI workspace/);
-  assert.doesNotMatch(product, /用户可见 workspace 系统/);
-  assert.doesNotMatch(product, /纯 ChatGPT 页面/);
-  assert.doesNotMatch(product, /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(active, /44dd574[\s\S]{0,240}production verified/);
-  assert.match(active, /Next Cursor[\s\S]{0,240}production authenticated dogfood e2e/);
+  assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
+  assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
+  assert.match(active, /one-person-lab-web-truth-reset/);
+  assert.match(active, /Next Priorities[\s\S]{0,240}API contract implementation/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

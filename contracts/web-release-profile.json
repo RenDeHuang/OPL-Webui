@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "currentStage": "one-person-lab-web-contract-truth",
+  "productionHost": "opl.medopl.cn",
+  "requiredEnvKeys": [
+    "OPL_DATABASE_URL",
+    "OPL_TENANT_AUTH_SECRET",
+    "OPL_SESSION_SECRET",
+    "OPL_API_KEY_ENCRYPTION_SECRET",
+    "OPL_CHAT_MODEL"
+  ],
+  "requiredGates": [
+    "npm run verify",
+    "npm run gate:review",
+    "npm run repo:bloat",
+    "sentrux check ."
+  ],
+  "dogfood": {
+    "defaultEnabled": false,
+    "rawApiKeyPrinted": false,
+    "switches": [
+      "OPL_PRODUCTION_DOGFOOD_E2E",
+      "OPL_DOGFOOD_EMAIL",
+      "OPL_DOGFOOD_PASSWORD",
+      "OPL_DOGFOOD_API_KEY",
+      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
+    ]
+  },
+  "historicalEvidenceRefs": [
+    "changes/archive/closeouts.md",
+    "deploy/cloud-mvp/RUNBOOK.md"
+  ],
+  "cannotClaim": [
+    "complete production-ready SaaS",
+    "production authenticated dogfood e2e executed in this phase",
+    "real OPL runtime execution",
+    "MedOPL runtime bridge implementation",
+    "billing source of truth"
+  ]
+}

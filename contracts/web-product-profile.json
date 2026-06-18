@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "canonicalProductName": "One Person Lab Web",
+  "legacyNames": ["OPL-WebUI", "OPL-Webui"],
+  "repoRole": "product_repo",
+  "positioning": "Web edition of One Person Lab App",
+  "publicHost": "opl.medopl.cn",
+  "sourceApp": "one-person-lab-app",
+  "ownedSurfaces": [
+    "web_product_surface",
+    "public_account_session",
+    "byok_model_provider_binding",
+    "ordinary_chat_entry",
+    "page_state",
+    "web_release_deploy",
+    "sanitized_audit_projection",
+    "runtime_gate_projection"
+  ],
+  "consumedAuthorities": [
+    "one-person-lab-app/contracts/app-product-profile.json",
+    "one-person-lab/contracts/opl-framework/domains.json",
+    "MedOPL runtime status projection",
+    "MedOPL billing status projection",
+    "MAS/MAG/RCA domain authority"
+  ],
+  "nonOwnedTruth": [
+    "runtime_truth",
+    "node_pool_lifecycle",
+    "storage_truth",
+    "billing_source_of_truth",
+    "api_gateway_truth",
+    "opl_execution_truth",
+    "domain_judgment_truth",
+    "artifact_body_authority"
+  ],
+  "provider": {
+    "id": "gflabtoken",
+    "fixedBaseUrl": "https://gflabtoken.cn/v1",
+    "userEditableBaseUrl": false,
+    "clientMaySendBaseUrl": false
+  },
+  "credential": {
+    "rawKeyReturnedToBrowser": false,
+    "rawKeyLogged": false,
+    "storageRequirement": "encrypted_server_side"
+  },
+  "publicUi": {
+    "primarySurface": "chat_first_workbench",
+    "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
+    "visibleRoutes": ["chat", "settings", "capabilities", "medopl"]
+  },
+  "claims": {
+    "canClaim": [
+      "Web UI calls the same-origin Go control plane HTTP API.",
+      "Users bind their own provider key while base_url remains fixed.",
+      "Runtime-requiring OPL work stops at a MedOPL gate.",
+      "WebUI owns product surface, page state, account/session, and sanitized projections only."
+    ],
+    "cannotClaim": [
+      "complete production-ready SaaS",
+      "billing source of truth",
+      "runtime execution owner",
+      "node pool lifecycle owner",
+      "storage owner",
+      "real OPL mutation or artifact body authority"
+    ]
+  }
+}

@@ -1,7 +1,60 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import * as web from '../../apps/web/src/onePersonLabWeb.mjs';
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+test('one-person-lab-web contracts define product truth instead of prose specs', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const pageStates = readJson('contracts/web-page-state-matrix.json');
+  const api = readJson('contracts/web-api.openapi.json');
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const release = readJson('contracts/web-release-profile.json');
+
+  assert.equal(product.productId, 'one-person-lab-web');
+  assert.equal(product.canonicalProductName, 'One Person Lab Web');
+  assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
+  assert.equal(product.provider.userEditableBaseUrl, false);
+  assert.equal(product.credential.rawKeyReturnedToBrowser, false);
+  for (const hidden of ['workspace', 'runtime', 'nodePool', 'storage', 'billing']) {
+    assert.equal(product.publicUi.hiddenConcepts.includes(hidden), true, `${hidden} must stay hidden`);
+  }
+  for (const nonOwned of ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth']) {
+    assert.equal(product.nonOwnedTruth.includes(nonOwned), true, `missing non-owned truth: ${nonOwned}`);
+  }
+
+  assert.deepEqual(pageStates.routes.map((route) => route.id), ['chat', 'settings', 'capabilities', 'medopl']);
+  assert.deepEqual(pageStates.accountStates, ['anonymous', 'authenticated_unbound', 'authenticated_bound']);
+  assert.equal(pageStates.chatStates.includes('runtime_required'), true);
+
+  for (const path of [
+    '/api/session/current',
+    '/api/settings/model-provider',
+    '/api/chat',
+    '/api/chat/conversations',
+    '/api/account/audit-events',
+  ]) {
+    assert.ok(api.paths[path], `missing API path: ${path}`);
+  }
+  assert.equal(api.paths['/api/mvp/task'], undefined);
+  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('RUNTIME_REQUIRED'), true);
+  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+
+  assert.equal(runtime.owner, 'MedOPL');
+  assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
+  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@基金', '@论文', '@综述', '@长任务', '@文件']);
+  assert.equal(runtime.medoplDeepLink, 'https://medopl.medopl.cn');
+  assert.equal(runtime.projectionPolicy.allowedPayload.includes('refs'), true);
+  assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
+
+  assert.equal(release.productionHost, 'opl.medopl.cn');
+  assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
+  assert.equal(release.dogfood.rawApiKeyPrinted, false);
+});
 
 test('web data module calls session provider and chat APIs only', async () => {
   const calls = [];

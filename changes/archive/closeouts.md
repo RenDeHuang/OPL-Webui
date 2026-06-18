@@ -222,3 +222,23 @@
 - summary: 将 OPL-style 开发纪律写入仓库规则：`AGENTS.md` 固定文档生命周期、代码清退、测试登记和机器 gate 四个工作面；新增 `TASTE.md` 与核心 docs portfolio，把项目叙事从 agent instructions 拆出；新增 governance hardening 和 stale retirement guard 测试；bloat audit 将 active change 七件套按短期工作台单独计数。
 - verified: RED `node --test tests/health/governance-hardening.test.mjs` failed on missing governance surfaces；GREEN targeted governance/retirement/bloat/registry/workflow/lifecycle tests passed；`npm run verify` passed；`npm run gate:review` passed；`npm run repo:bloat` passed with 90 files, 17 tests, 17 durable markdown docs, 7 active change docs, largest file 260 lines；`sentrux check .` passed 9 rules with quality 7362。
 - cannot claim: business gaps complete, internal MVP cleanup complete, production rollout, MedOPL runtime bridge, real OPL execution/mutation, object storage, billing/payment provider or complete production-ready SaaS。
+
+## 2026-06-18 - opl-style-development-discipline-hardening
+- summary: 将 formal development trigger、ideal-state-first、no compatibility pollution、worktree/subagent discipline 和 Plan Completion Audit 写入 `AGENTS.md` 与 docs taxonomy。
+- verified: RED/GREEN governance-hardening lifecycle tests；`git diff --check`；`npm run verify`；`npm run gate:review`；`npm run repo:bloat`；`sentrux check .`。
+- cannot claim: product behavior changed, frontend/Go source refactored, OPL runtime execution added, or every future cleanup automatically machine-detected。
+
+## 2026-06-18 - line-budget-policy-calibration
+- summary: 将单文件行数从长期硬标准改为 advisory policy：260 review signal、400 explicit explanation、600 strict split threshold；默认 bloat gate 不再用 `maxFileLines` 阻断，显式 strict entry 才阻断。
+- verified: RED/GREEN repo-bloat and workflow-entrypoint tests；`npm run repo:bloat:strict`；`git diff --check`；`npm run verify`；`npm run gate:review`；`npm run repo:bloat`；`sentrux check .`。
+- cannot claim: frontend split completed, UI behavior changed, API behavior changed, production dogfood complete, MedOPL integration complete, billing complete, or real OPL execution complete。
+
+## 2026-06-18 - controlplane-mvp-retirement
+- summary: Retired `services/control-plane-go/internal/mvp` from active source, migrated surviving implementation to `internal/controlplane`, removed no-consumer compatibility surfaces, updated imports/canary/registry/stale guard, split Postgres schema, and ratcheted durable file budget to 85.
+- verified: RED stale-retirement guard; targeted Go and lifecycle/bloat tests; `npm run verify`; `npm run gate:review`; `npm run repo:bloat`; `sentrux check .`。
+- cannot claim: business behavior changed, production rollout, MedOPL runtime bridge, billing, storage, OPL worker, or real OPL execution/mutation。
+
+## 2026-06-18 - figma-make-webui-alignment
+- summary: Aligned the static Web shell with the Figma Make left-sidebar workbench direction while preserving fixed provider, Go control-plane API, and runtime gate boundaries; added smoke guards against fake storage/billing/runtime claims.
+- verified: RED/GREEN `tests/smoke/web-demo-shell.test.mjs` and `tests/contract/one-person-lab-web-data.test.mjs`; `npm run verify`; `npm run gate:review`; `npm run repo:bloat`; `sentrux check .`; `git diff --check`。
+- cannot claim: production rollout, Figma pixel-perfect QA, valid local HTTP listener evidence, real OPL execution, runtime creation, storage, billing, node pool lifecycle, or MedOPL bridge。
