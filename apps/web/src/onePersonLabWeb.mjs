@@ -1,5 +1,18 @@
 export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
+export const OPL_CAPABILITY_MANIFEST = {
+  source: { syncMode: 'source_path_pinned_manifest', dynamicSync: false, commitPin: 'blocked_by_github_tls_timeout',
+    appContract: 'github.com/gaofeng21cn/one-person-lab-app/contracts/app-product-profile.json',
+    frameworkContract: 'github.com/gaofeng21cn/one-person-lab/contracts/opl-framework/domains.json' },
+  capabilities: [
+    ['普通问答', '解释 OPL 如何帮助复杂知识工作', false, 'chat'],
+    ['论文/综述', '@论文 生成研究选题和证据计划', true, 'mas'],
+    ['基金', '@基金 帮我拆解标书结构', true, 'mag'],
+    ['PPT', '生成一页汇报 PPT 大纲', false, 'rca'],
+    ['数据分析', '解释这组数据可以如何分析', false, 'chat'],
+    ['长任务', '@长任务 规划一项复杂任务', true, 'mas'],
+  ],
+};
 
 export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const shouldProbeSession = options.probeSession !== false;
@@ -34,8 +47,7 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
 
 export function viewFromHash(hash) {
   const normalized = String(hash || '').replace(/^#/, '');
-  if (['settings', 'capabilities'].includes(normalized)) return normalized;
-  return 'chat';
+  return ['settings', 'capabilities'].includes(normalized) ? normalized : 'chat';
 }
 
 export function accountState(session, provider) {
@@ -61,14 +73,10 @@ export function createOnePersonLabViewModel(state) {
       maskedKey: provider.maskedKey ?? '',
     },
     conversations: state.conversations?.conversations ?? [],
-    capabilities: [
-      { label: '普通问答', prompt: '解释 OPL 如何帮助复杂知识工作', runtimeRequired: false },
-      { label: '论文/综述', prompt: '@论文 生成研究选题和证据计划', runtimeRequired: true },
-      { label: '基金', prompt: '@基金 帮我拆解标书结构', runtimeRequired: true },
-      { label: 'PPT', prompt: '生成一页汇报 PPT 大纲', runtimeRequired: false },
-      { label: '数据分析', prompt: '解释这组数据可以如何分析', runtimeRequired: false },
-      { label: '长任务', prompt: '@长任务 规划一项复杂任务', runtimeRequired: true },
-    ],
+    capabilitySource: OPL_CAPABILITY_MANIFEST.source,
+    capabilities: OPL_CAPABILITY_MANIFEST.capabilities.map(([label, prompt, runtimeRequired, sourceAssistant]) => ({
+      label, prompt, runtimeRequired, sourceAssistant,
+    })),
     workbenchSteps: [
       { title: '选择专业工作', description: 'Foundry 启动中心，不是泛 Agent 列表。' },
       { title: '绑定真实材料', description: '围绕材料、引用和版本组织输入，不伪造文件能力。' },
@@ -90,8 +98,7 @@ export function createOnePersonLabViewModel(state) {
 
 function ctaForState(state) {
   if (state === 'anonymous') return '登录/注册后开始';
-  if (state === 'authenticated_unbound') return '绑定 API Key';
-  return '发送';
+  return state === 'authenticated_unbound' ? '绑定 API Key' : '发送';
 }
 
 async function writeJSON(fetchRef, url, body, method = 'POST') {
@@ -127,10 +134,7 @@ if (typeof document !== 'undefined') {
 
 async function initOnePersonLabWeb() {
   let view = createOnePersonLabViewModel({
-    session: { ok: false },
-    provider: providerFallback(),
-    conversations: { conversations: [] },
-    oplSnapshot: { ok: false },
+    session: { ok: false }, provider: providerFallback(), conversations: { conversations: [] }, oplSnapshot: { ok: false },
   });
 
   syncHashView();
@@ -232,9 +236,7 @@ function renderView(view) {
   document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
   document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
   document.querySelector('[data-session-status]').textContent = view.session.ok ? `已登录：${view.session.email}` : '未登录';
-  const providerStatus = view.provider.apiKeyConfigured
-    ? `已绑定：${view.provider.maskedKey}`
-    : '未绑定';
+  const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
   document.querySelector('[data-provider-status]').textContent = providerStatus;
 }
 

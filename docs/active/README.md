@@ -19,6 +19,7 @@
 - OPL-Webui 是 Web 版 One Person Lab App 前台入口，不是 MedOPL runtime/node pool/storage/billing 后台，也不拥有 API gateway。
 - UI 是 Genspark-like one-person-lab-web，并提供低门槛 ChatGPT-like base chatbot 首屏；首屏主张是“严肃工作的 AI 工作台”；不再使用旧 `demoData.mjs`、旧 demo artifact、`demo://` 或用户可见 workspace preview。
 - UI alignment 本地可 dogfood：顶部导航包含 Chat、Capabilities、Settings、MedOPL；首屏保留大 prompt console 和能力 capsules，并显著展示 Figma `2:21` 的五件事：选择专业工作、绑定真实材料、推进长任务、沉淀交付物、管理运行时；Capabilities 是 Foundry 启动中心；`#settings` 聚焦账号与凭据状态区；消息列表、设置表单和 runtime gate 已产品化。
+- Capability view model 已从纯手写数组推进为 source-path pinned manifest：source 指向 `one-person-lab-app/contracts/app-product-profile.json` 和 `one-person-lab/contracts/opl-framework/domains.json`；暴露 MAS/MAG/RCA 对应的 Research/Grant/Presentation parity，并声明 `dynamicSync=false`。GitHub `ls-remote` 本轮 TLS/连接失败，因此还不能 claim commit-SHA pinned dynamic sync。
 - 支持 public account 本地 contract：`POST /api/auth/register`、`POST /api/auth/login`、`POST /api/auth/logout`、`GET /api/session/current`，使用 bcrypt password hash 和 HttpOnly `opl_session`。
 - 每个 public account 自动拥有 hidden default personal workspace 和 personal tenant，用于隔离、计费投影和未来扩展；UI 不展示 workspace 产品。
 - 支持用户 API Key binding 本地 contract：`GET/PUT /api/settings/model-provider`；base_url 固定为 `https://gflabtoken.cn/v1`，不允许客户端传入或覆盖 base_url；后端不返回 raw API Key。
@@ -42,18 +43,18 @@
 - 还不是完整公网 production ready SaaS。
 - 还没有 Figma 精确还原、Genspark 线上对照验收或真实用户端到端业务写路径证据。
 - 还不能 claim Figma 精确还原或真实 Genspark 线上对照验收。
-- 还没有真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage、完整 billing 或真实 OPL execution/mutation。
+- 还没有真实用户注册/login write-path online e2e、真实 API Key binding online e2e、真实 chat completion online e2e、真实邮箱验证、找回密码、workspace invitation、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage、完整 billing、上游 commit-SHA pinned dynamic sync 或真实 OPL execution/mutation。
 - 还不能执行 OPL install、repair、module exec、family-runtime mutation。
 - 还不能 claim `@OPL` 能力已经真实运行；当前只是 runtime gate projection。
 
 ## Next Cursor
 
-下一步进入 one-person-lab framework capability pinned sync：当前 Web capabilities 仍主要是手写 view model，需先落 contract-backed manifest，再进入 MedOPL runtime status bridge。
+下一步进入 MedOPL runtime status bridge：当前 Web capabilities 已有 source-path pinned manifest，但 `@OPL` 仍只能返回 `RUNTIME_REQUIRED`，需要先接入 MedOPL runtime/storage/node pool 状态 projection。
 
 ## Next Priorities
 
-1. one-person-lab framework capability pinned sync。
-2. MedOPL runtime status bridge。
+1. MedOPL runtime status bridge。
+2. 上游 capability manifest commit-SHA pin。
 3. @OPL run/artifact projection。
 4. API Key rotation/revocation 和 account hardening。
 5. 真实注册/login write-path online e2e、API Key binding online e2e 和 chat completion online e2e。

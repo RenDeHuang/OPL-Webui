@@ -109,7 +109,12 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.provider.baseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(view.provider.baseUrlEditable, false);
   assert.equal(view.accountState, 'authenticated_unbound');
+  assert.equal(view.capabilitySource.syncMode, 'source_path_pinned_manifest');
+  assert.equal(view.capabilitySource.dynamicSync, false);
+  assert.match(view.capabilitySource.appContract, /one-person-lab-app\/contracts\/app-product-profile\.json/);
+  assert.match(view.capabilitySource.frameworkContract, /one-person-lab\/contracts\/opl-framework\/domains\.json/);
   assert.deepEqual(view.capabilities.map((item) => item.label), ['普通问答', '论文/综述', '基金', 'PPT', '数据分析', '长任务']);
+  assert.deepEqual(view.capabilities.filter((item) => item.runtimeRequired).map((item) => item.sourceAssistant), ['mas', 'mag', 'mas']);
   assert.equal(view.runtimeGate.deepLink, 'https://medopl.medopl.cn');
   assert.deepEqual(view.workbenchSteps.map((item) => item.title), [
     '选择专业工作',

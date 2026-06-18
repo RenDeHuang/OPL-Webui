@@ -9,6 +9,7 @@
 
 - `product.web.identity`: OPL-Webui 是 Genspark-like one-person-lab-web with ChatGPT-like base chatbot，是 Web 版 One Person Lab App。
 - `product.sources`: `one-person-lab` 是 framework/runtime/contract truth；`one-person-lab-app` 是 chat-first、complex knowledge work、research/grant/presentation foundry、progress/files/deliverables 的产品语义参考。
+- `product.capability-source`: Web capability view model 必须暴露 source-path pinned manifest，指向 `one-person-lab-app/contracts/app-product-profile.json` 和 `one-person-lab/contracts/opl-framework/domains.json`；没有上游 commit SHA 时必须声明 blocker，不能伪造 dynamic sync。
 - `product.low-friction`: 用户访问 `opl.medopl.cn` 后注册/登录；用户填写自己的 API Key，即可普通聊天。
 - `product.ui-shell`: 顶部导航必须暴露 One Person Lab Web、Chat、Capabilities、Settings、MedOPL；首屏是 Genspark-like hero prompt 和能力入口，主张必须表达“严肃工作的 AI 工作台”，不能退回普通后台表单。
 - `product.figma-2-21-alignment`: 首页必须显著展示 Figma `2:21` 的五件事：选择专业工作、绑定真实材料、推进长任务、沉淀交付物、管理运行时；Capabilities 必须更像 Foundry 启动中心，而不是普通后台卡片网格。
@@ -29,4 +30,4 @@
 
 - `44dd574` 已有 one-person-lab-web production rollout evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
 - `1fc361d` 已有 Figma `2:21` UI alignment production evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
-- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider、真实线上 chat quota/audit evidence 或完整 production ready SaaS。
+- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider、真实线上 chat quota/audit evidence、上游 commit-SHA pinned dynamic sync 或完整 production ready SaaS。
