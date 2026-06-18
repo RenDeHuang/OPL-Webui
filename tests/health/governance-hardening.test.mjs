@@ -27,8 +27,31 @@ test('repository governance exposes OPL-style lifecycle surfaces', () => {
     '机器 gate',
     '不得保留无 consumer 的兼容层',
     '每次正式变更必须同步清退',
+    '理想态优先',
+    '旧实现只能作为迁移输入',
+    '不保留兼容污染',
+    '进入 code、docs、contracts、tests、scripts、deploy、specs 或 API 行为变更',
+    '独立 worktree',
+    'subagent',
+    'Plan Completion Audit',
   ]) {
     assert.match(agents, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+});
+
+test('documentation portfolio defines lightweight OPL-inspired taxonomy', () => {
+  const portfolio = readFileSync('docs/docs_portfolio_consolidation.md', 'utf8');
+
+  for (const required of [
+    'Lightweight OPL-Inspired Taxonomy',
+    'docs/product/',
+    'docs/runtime/',
+    'docs/policies/',
+    'contracts/',
+    '不要复制 one-person-lab 的目录体量',
+    '只在出现稳定 machine-readable API、DTO、allowlist 或 schema 时新增',
+  ]) {
+    assert.match(portfolio, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 });
 

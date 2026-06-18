@@ -28,12 +28,22 @@
 
 ## 工程闭环
 
+- 进入 code、docs、contracts、tests、scripts、deploy、specs 或 API 行为变更时，即视为正式开发；除非用户明确要求只读分析，否则必须走本节闭环。
 - 正式变更必须先有 `changes/active/<change-id>/`，并包含 proposal、spec-delta、design、tasks、eval-plan、review、closeout。
 - 每次正式变更必须执行四个工作面：文档生命周期、代码清退、测试登记、机器 gate。
 - 每次正式变更必须同步清退被替代的旧代码、旧 route、旧 schema、旧测试、旧文档入口和旧命名；不能把清退留给未来。
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
 - 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts 和 verifySuites。
 - 默认验证入口是 `npm run verify`；review gate 是 `npm run gate:review`；正式完成前还必须跑 `npm run repo:bloat` 和 `sentrux check .`。
+
+## 理想态与清退
+
+- 理想态优先：先按 OPL-WebUI 的目标产品边界和 Go control plane owner 设计，再判断现有实现如何迁移或删除。
+- 旧实现只能作为迁移输入，不能反过来定义长期架构、命名、route、测试或文档入口。
+- 一旦目标 topology 明确，新增投入默认服务目标形态；不继续深磨旧路线。
+- 不保留兼容污染；已被当前 owner surface 替代的模块、alias、facade、schema、route、测试和文档入口默认退役。
+- 如确需迁移桥，必须写明真实 consumer、合同、退役条件、对应测试和 closeout 证据。
+- 不做降级处理、兜底补丁、启发式修补或“先糊住再说”式实现。
 
 ## 文档生命周期
 
@@ -60,6 +70,7 @@
 - 完成声明必须有新鲜验证证据；不能用“应该通过”代替命令输出。
 - 默认完成 gate：targeted tests、`npm run verify`、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
 - 修改 AI、OPL、runtime、billing、storage、deploy 或 public API 行为时，必须有对应 contract/eval；没有 eval/test 不算完成。
+- 当用户要求“彻底落地 / 全部落地 / 一步到位 / 完善后立刻吸收 / 持续推进直到完成 / 能做的都做掉”时，最终声明完成前必须执行 Plan Completion Audit：逐项列出 done / partial / not_started / blocked、证据、缺口和后续动作。
 
 ## 防膨胀规则
 
@@ -69,3 +80,10 @@
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
 - 单文件行数是结构信号，不是长期日常硬标准：`260` 行提示 review，`400` 行需要说明为什么暂不拆，`600` 行在显式 strict line gate 下默认必须拆；生成文件、fixture 和 schema 可豁免。
 - 仓库接近或达到 bloat 预算时，新增业务能力前必须先清退、拆分或收敛现有 surface。
+
+## worktree / subagent
+
+- 根 checkout 默认固定在 `main`；非 `main` 长链路开发、并行开发或高风险重构应使用独立 worktree。
+- 大改动或互不冲突的多 lane 工作，优先用 subagent 在独立 worktree 中并行推进。
+- subagent 只能处理 source of truth 清楚、写集可隔离的任务；主会话必须核查 diff、运行验证、吸收变更并清理 worktree / branch / 临时状态。
+- 共享根 checkout 只用于轻量阅读、评审、吸收验证后提交和 push，不承载长期并行实现。
