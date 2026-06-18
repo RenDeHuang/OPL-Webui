@@ -14,7 +14,9 @@
 - `runtime.webapp.provider`: `GET/PUT /api/settings/model-provider` 只支持 provider `gflabtoken` 和固定 base_url `https://gflabtoken.cn/v1`；JSON decoder 必须 DisallowUnknownFields，body 中出现 `base_url` 必须失败。
 - `runtime.webapp.api-key`: raw API Key 不返回、不打印、不写日志；持久化必须用 `OPL_API_KEY_ENCRYPTION_SECRET` 加密，并只返回 masked key。
 - `runtime.webapp.chat`: `POST /api/chat` 从 session 推导 user/tenant/workspace，未登录返回 `AUTH_REQUIRED`，未绑定 API Key 返回 `API_KEY_REQUIRED`，普通消息调用 `https://gflabtoken.cn/v1/chat/completions`。
+- `runtime.webapp.chat-quota`: 普通 chat 在调用 upstream 前执行 per-user monthly quota/abuse precheck；超额返回 `429 CHAT_QUOTA_EXCEEDED`，不得调用 sub2api/gflabtoken；`@OPL` runtime gate 不消耗普通 chat quota。
 - `runtime.webapp.chat-errors`: upstream timeout/error 结构化返回，不把 raw API Key、session secret、encryption secret 或 DB URL 写入 response。
+- `runtime.webapp.audit`: `GET /api/account/audit-events` 只返回当前 session 用户的 sanitized audit events；register/login/API Key/chat/runtime gate/quota exceeded/upstream failure 都必须写 audit projection，且不得保存或返回 password、raw API Key、session secret、encryption secret 或 DB URL。
 - `runtime.webapp.conversations`: `GET /api/chat/conversations` 和 `GET /api/chat/conversations/{conversationId}` 必须按 user boundary fail closed；user A 不能读取 user B conversation。
 - `runtime.webapp.opl-gate`: `@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 返回 `RUNTIME_REQUIRED` 和 MedOPL deep link，不调用 sub2api，不伪造 OPL execution。
 - `runtime.webapp.retired`: `/api/mvp/*`、旧 demo workspace route 和 `demoData.mjs` 不再是公开主线接口；无 consumer contract 时删除。
@@ -30,5 +32,5 @@
 
 ## Cannot Claim
 
-- 当前 runtime 不包含真实 MedOPL runtime status bridge、OPL worker、object storage、完整 billing provider、多节点 HA/安全组执行证据或真实 OPL mutation。
+- 当前 runtime 不包含真实 MedOPL runtime status bridge、OPL worker、object storage、完整 billing provider、多节点 HA/安全组执行证据、线上 audit/quota rollout evidence 或真实 OPL mutation。
 - 当前 production evidence 不包含真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。

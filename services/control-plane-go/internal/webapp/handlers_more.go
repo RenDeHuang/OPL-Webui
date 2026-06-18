@@ -4,8 +4,23 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
+
+const defaultChatMonthlyQuota = 100
+
+func (server Server) HandleAuditEvents(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "events": server.Store.ListAuditEvents(user.ID)})
+}
 
 func (server Server) HandleConversations(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
@@ -93,6 +108,7 @@ func (server Server) ensureConversation(userID string, conversationID string, me
 func (server Server) writeRuntimeRequired(response http.ResponseWriter, userID string, conversationID string) {
 	content := "该能力需要 MedOPL Runtime / Storage / Node Pool"
 	_ = server.Store.AddMessage(ChatMessage{ConversationID: conversationID, UserID: userID, Role: "assistant", Content: content})
+	server.recordAudit(userID, "runtime_gate.required", map[string]string{"conversationId": conversationID})
 	writeJSON(response, http.StatusConflict, map[string]any{
 		"ok": false, "errorCode": "RUNTIME_REQUIRED", "message": content,
 		"conversationId": conversationID, "medoplDeepLink": MedOPLURL + "/runtime/open?source=opl-webui",
@@ -132,4 +148,20 @@ func claimsFromUser(user User) SessionClaims {
 
 func osSecretMissing() bool {
 	return strings.TrimSpace(os.Getenv("OPL_API_KEY_ENCRYPTION_SECRET")) == ""
+}
+
+func (server Server) recordAudit(userID string, eventKind string, metadata map[string]string) {
+	_ = server.Store.RecordAuditEvent(AuditEvent{UserID: userID, EventKind: eventKind, Metadata: metadata})
+}
+
+func chatMonthlyQuota() int {
+	value := strings.TrimSpace(os.Getenv("OPL_CHAT_MONTHLY_QUOTA"))
+	if value == "" {
+		return defaultChatMonthlyQuota
+	}
+	quota, err := strconv.Atoi(value)
+	if err != nil || quota < 1 {
+		return defaultChatMonthlyQuota
+	}
+	return quota
 }

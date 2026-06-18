@@ -4,71 +4,11 @@
 - purpose: 单文件归档已关闭变更，避免每个切片继续增加 markdown 文件。
 - state: active
 
-## 2026-06-14 foundation-loop-contracts
+## 2026-06-14 foundation-to-task-store-baseline
 
-- summary: 建立 repo governance、change lifecycle、test registry、review gate、bloat gate、OPL command policy、task/artifact contract 和 mock adapter。
-- verified: `npm run gate:review`
-- cannot claim: 真实 WebUI、SaaS API、数据库、多租户鉴权、真实 OPL execution。
-
-## 2026-06-14 mvp-task-artifact-loop
-
-- summary: 建立本地 demo vertical slice：task -> mock OPL adapter -> artifact projection。
-- verified: `npm run gate:review`
-- cannot claim: 真实 OPL execution、生产 API、WebUI、多租户鉴权、数据库或队列。
-
-## 2026-06-14 web-demo-workspace-shell
-
-- summary: 建立静态中文 AI workspace shell，展示 demo task/artifact projection。
-- verified: `npm run gate:review`
-- cannot claim: 完整 Genspark 复刻、真实登录、多租户数据库、真实 OPL execution 或生产部署。
-
-## 2026-06-14 cloud-mvp-service-slice
-
-- summary: 建立最小同源 MVP API 和 Web data bridge，返回 tenant-scoped task/artifact projection。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
-- cannot claim: 真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。
-
-## 2026-06-14 go-control-plane-replacement
-
-- summary: 用 Go control plane 替换 Node MVP API，删除旧 Node backend 和旧 API tests。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
-- cannot claim: 真实生产部署、真实登录、多租户数据库、队列、计费或真实 OPL execution。
-
-## 2026-06-14 post-go-cleanup
-
-- summary: 清退 Go control plane 不再消费的 Node-era packages、旧 OPL contracts 和旧 tests。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
-- cannot claim: 真实 OPL execution、真实登录、多租户数据库、队列、计费或生产部署。
-
-## 2026-06-14 deploy-container-readiness
-
-- summary: 增加 Go control plane 容器入口、`HOST`/`PORT` 配置和 `/healthz`。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`
-- cannot claim: 真实 OPL execution、真实登录、多租户数据库、队列、计费或生产运行证据。
-
-## 2026-06-14 opl-readonly-bridge
-
-- summary: Go control plane 通过白名单连接真实 OPL CLI readonly snapshot，并在 WebUI 展示 OPL 状态。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/opl/snapshot`
-- cannot claim: 真实 OPL mutation、真实 task execution、登录、多租户数据库、队列、计费或生产部署。
-
-## 2026-06-14 opl-task-route-bridge
-
-- summary: `/api/mvp/task` 调用真实 OPL CLI readonly domain resolve 与 handoff envelope，并展示 routed domain。
-- verified: `npm run gate:review`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task`
-- cannot claim: domain runtime、module exec、install、repair、登录、多租户数据库、队列、计费或生产部署。
-
-## 2026-06-14 production-runtime-gate
-
-- summary: 增加 `/readyz` 和 production runtime gate；生产依赖未配置时阻断 task intake。
-- verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
-- cannot claim: 真实登录、多租户数据库、队列、计费、object storage、OPL worker 或公网生产部署。
-
-## 2026-06-14 task-store-boundary
-
-- summary: 增加 Go-side `TaskStore` 边界、内存实现和 task projection lookup endpoint，为 Postgres adapter 留接口。
-- verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`
-- cannot claim: 生产数据库、队列、计费、object storage、OPL worker 或公网生产部署。
+- summary: 合并归档早期 baseline：`foundation-loop-contracts`、`mvp-task-artifact-loop`、`web-demo-workspace-shell`、`cloud-mvp-service-slice`、`go-control-plane-replacement`、`post-go-cleanup`、`deploy-container-readiness`、`opl-readonly-bridge`、`opl-task-route-bridge`、`production-runtime-gate`、`task-store-boundary`。建立 repo governance、Go control plane、container health、OPL readonly snapshot、旧 `/api/mvp/task` bridge 和 task store 边界。
+- verified: `npm run gate:review`, `npm run repo:bloat`, `sentrux check /home/dev/projects/ui`, local `curl /api/mvp/task` during retired MVP era。
+- cannot claim: 真实登录、多租户数据库、队列、计费、object storage、OPL worker、公网生产部署或真实 OPL execution/mutation。
 
 ## 2026-06-14 postgres-task-store-adapter
 
@@ -257,3 +197,7 @@
 ## 2026-06-18 - figma-2-21-ui-alignment
 - summary: 采用 Figma node `2:21` 将首页推进为“严肃工作的 AI 工作台”：大输入框、能力 capsules、五件事、Foundry 启动中心、账号凭据区、冷灰白卡和蓝色编号；保留 fixed base_url、auth/API Key binding 和 @OPL MedOPL Runtime gate。verified: RED/GREEN web smoke+contract；browser desktop/mobile/#settings/@基金 gate。cannot claim: production rollout、真实 OPL execution/mutation、object storage、billing、node pool 生命周期。
 ## 2026-06-18 - figma-2-21-production-closeout: 固化 `1fc361d Figma workbench UI 已 production verified`；image `uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d`，rollout revision `14`，Running Ready Pod `opl-webui-control-plane-54546f5bff-h8xcq`，Error/Failed Pod none；`/healthz`、`/readyz missing=[]`、`/metricsz`、`/`、`/#settings` 均 200，页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”和 `https://gflabtoken.cn/v1`；guards: `POST /api/chat` no cookie 401 `AUTH_REQUIRED`、`GET /api/chat` 405 `METHOD_NOT_ALLOWED`、wrong login 401 `INVALID_CREDENTIALS`。cannot claim: 真实 OPL execution/mutation、object storage、billing、node pool 生命周期或完整 production ready SaaS。
+## 2026-06-18 - saas-dogfood-guardrails
+- summary: A1 Gap Audit 后补齐 one-person-lab-web 主路径最小 dogfood guardrails：普通 chat 在 upstream 前执行 per-user monthly quota/abuse precheck，超额返回 `429 CHAT_QUOTA_EXCEEDED` 且不调用 gflabtoken；新增 `GET /api/account/audit-events` 只返回当前用户 sanitized audit events，覆盖 register/login/API Key/runtime gate/chat/quota/upstream failure，不记录 password、raw API Key、session secret 或 DB URL。Postgres schema 增加 `webapp_audit_events` 与 `webapp_chat_usage`；Webui-side guardrail 不等同 billing，最终计费仍归 MedOPL/sub2api。
+- verified: RED `node --test tests/contract/one-person-lab-chat-upstream.test.mjs` failed on missing 429 quota guard；GREEN targeted Node contracts/smoke and `cd services/control-plane-go && go test ./...` passed；final gates recorded in commit evidence。
+- cannot claim: production rollout、真实线上 quota/audit behavior、真实 MedOPL runtime bridge、object storage、billing/payment provider、真实 OPL execution/mutation 或完整 production ready SaaS。

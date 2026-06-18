@@ -37,6 +37,7 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/auth/logout", server.HandleLogout)
 	mux.HandleFunc("/api/session/current", server.HandleCurrentSession)
 	mux.HandleFunc("/api/settings/model-provider", server.HandleModelProvider)
+	mux.HandleFunc("/api/account/audit-events", server.HandleAuditEvents)
 	mux.HandleFunc("/api/chat/conversations/", server.HandleConversation)
 	mux.HandleFunc("/api/chat/conversations", server.HandleConversations)
 	mux.HandleFunc("/api/chat", server.HandleChat)
@@ -68,6 +69,7 @@ func (server Server) HandleRegister(response http.ResponseWriter, request *http.
 		writeError(response, http.StatusInternalServerError, "ACCOUNT_CREATE_FAILED", "account could not be created")
 		return
 	}
+	server.recordAudit(user.ID, "account.registered", map[string]string{"authMode": AuthMode})
 	server.writeSession(response, http.StatusCreated, user)
 }
 
@@ -88,6 +90,7 @@ func (server Server) HandleLogin(response http.ResponseWriter, request *http.Req
 		writeError(response, http.StatusUnauthorized, "INVALID_CREDENTIALS", "email or password is invalid")
 		return
 	}
+	server.recordAudit(user.ID, "account.login", map[string]string{"authMode": AuthMode})
 	server.writeSession(response, http.StatusOK, user)
 }
 
@@ -144,6 +147,7 @@ func (server Server) HandleModelProvider(response http.ResponseWriter, request *
 			writeError(response, http.StatusInternalServerError, "API_KEY_SAVE_FAILED", "api key could not be saved")
 			return
 		}
+		server.recordAudit(user.ID, "api_key.saved", map[string]string{"provider": ProviderName, "baseUrl": FixedBaseURL})
 		server.writeProvider(response, user.ID)
 	default:
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
@@ -191,6 +195,15 @@ func (server Server) HandleChat(response http.ResponseWriter, request *http.Requ
 		writeError(response, http.StatusServiceUnavailable, "API_KEY_DECRYPT_FAILED", "api key binding is unavailable")
 		return
 	}
+	status, allowed := server.Store.ConsumeChatQuota(user.ID, chatMonthlyQuota())
+	if !allowed {
+		server.recordAudit(user.ID, "chat.quota_exceeded", map[string]string{"conversationId": conversation.ID})
+		writeJSON(response, http.StatusTooManyRequests, map[string]any{
+			"ok": false, "errorCode": "CHAT_QUOTA_EXCEEDED", "message": "monthly chat quota exceeded",
+			"conversationId": conversation.ID, "quota": status,
+		})
+		return
+	}
 	ctx, cancel := context.WithTimeout(request.Context(), 25*time.Second)
 	defer cancel()
 	content, err := server.ChatClient.Complete(ctx, apiKey, payload.Message)
@@ -199,11 +212,13 @@ func (server Server) HandleChat(response http.ResponseWriter, request *http.Requ
 		if errors.Is(err, context.DeadlineExceeded) {
 			status = http.StatusGatewayTimeout
 		}
+		server.recordAudit(user.ID, "chat.upstream_failed", map[string]string{"conversationId": conversation.ID})
 		writeError(response, status, "UPSTREAM_CHAT_FAILED", "chat upstream returned an error")
 		return
 	}
 	assistant := ChatMessage{ConversationID: conversation.ID, UserID: user.ID, Role: "assistant", Content: content}
 	_ = server.Store.AddMessage(assistant)
+	server.recordAudit(user.ID, "chat.completed", map[string]string{"conversationId": conversation.ID, "model": modelName()})
 	writeJSON(response, http.StatusOK, map[string]any{
 		"ok": true, "conversationId": conversation.ID, "model": modelName(),
 		"assistantMessage": map[string]string{"role": "assistant", "content": content},

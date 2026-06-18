@@ -45,6 +45,66 @@ test('ordinary chat calls OpenAI-compatible upstream with the user API key', asy
   }
 });
 
+test('ordinary chat quota guard fails closed and writes sanitized audit events', async () => {
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+    OPL_CHAT_MONTHLY_QUOTA: '1',
+  });
+  try {
+    const session = await register(baseUrl, 'guard-user@example.com');
+    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: session.cookieHeader },
+      body: { apiKey: 'sk-user-upstream-secret' },
+    });
+
+    const gated = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: '@基金 先检查运行时' },
+    });
+    assert.equal(gated.response.status, 409);
+    assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
+
+    const firstChat = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: '普通聊天应该还能发送' },
+    });
+    assert.equal(firstChat.response.status, 200);
+
+    const overQuota = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: '第二次普通聊天应被最小 abuse guard 拦截' },
+    });
+    assert.equal(overQuota.response.status, 429);
+    assert.equal(overQuota.body.errorCode, 'CHAT_QUOTA_EXCEEDED');
+    assert.equal(upstream.requests.length, 1);
+
+    const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(audit.response.status, 200);
+    const eventKinds = audit.body.events.map((event) => event.eventKind);
+    for (const eventKind of [
+      'account.registered',
+      'api_key.saved',
+      'runtime_gate.required',
+      'chat.completed',
+      'chat.quota_exceeded',
+    ]) {
+      assert.ok(eventKinds.includes(eventKind), `missing audit event ${eventKind}: ${eventKinds.join(',')}`);
+    }
+    assert.doesNotMatch(JSON.stringify(audit.body), /sk-user-upstream-secret|correct horse|password|secret|postgres:\/\//i);
+  } finally {
+    await stopGoServer(child);
+    await upstream.close();
+  }
+});
+
 async function startFakeUpstream() {
   const requests = [];
   const server = http.createServer(async (request, response) => {
@@ -67,10 +127,10 @@ async function startFakeUpstream() {
   };
 }
 
-async function register(baseUrl) {
+async function register(baseUrl, email = 'upstream-user@example.com') {
   const result = await jsonFetch(`${baseUrl}/api/auth/register`, {
     method: 'POST',
-    body: { email: 'upstream-user@example.com', password: 'correct horse battery staple' },
+    body: { email, password: 'correct horse battery staple' },
   });
   assert.equal(result.response.status, 201);
   return result;

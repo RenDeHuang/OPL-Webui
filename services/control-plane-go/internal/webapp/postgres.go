@@ -64,6 +64,20 @@ create table if not exists chat_messages (
   role text not null,
   content text not null,
   created_at timestamptz not null default now()
+);
+create table if not exists webapp_audit_events (
+  id text primary key,
+  user_id text not null references users(id),
+  event_kind text not null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+create table if not exists webapp_chat_usage (
+  user_id text not null references users(id),
+  period text not null,
+  used_count bigint not null default 0,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, period)
 );`
 
 type PostgresStore struct {

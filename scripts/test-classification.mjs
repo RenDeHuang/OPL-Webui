@@ -77,7 +77,11 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'contract',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
-    contracts: Object.freeze(['services/control-plane-go/cmd/opl-webui-control-plane/main.go']),
+    contracts: Object.freeze([
+      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+      'services/control-plane-go/internal/webapp/handlers.go',
+      'services/control-plane-go/internal/webapp/store_guardrails.go',
+    ]),
     verifySuites: Object.freeze(['current', 'contract']),
   }),
   Object.freeze({

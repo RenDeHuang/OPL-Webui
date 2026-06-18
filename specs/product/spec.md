@@ -20,6 +20,8 @@
 - `product.opl-gate`: `@基金`、`@论文`、`@综述`、`@长任务`、`@文件` 等能力需要 runtime/storage/node pool 时，只返回 MedOPL 开通提示，不伪造执行。
 - `product.readonly`: OPL readonly snapshot/canary 可以展示 framework readiness，但不能写成真实 execution。
 - `product.usage-quota`: usage/quota v1 是 Webui-side precheck/projection；最终计费归 MedOPL/sub2api。
+- `product.chat-guardrails`: 普通 chat 必须有 Webui-side quota/abuse guardrail；超额停止在 `CHAT_QUOTA_EXCEEDED`，不能调用上游模型；该 guardrail 不等同于 billing，最终计费仍归 MedOPL/sub2api。
+- `product.audit`: 注册、登录、API Key binding、普通 chat、runtime gate、quota exceeded 和 upstream failure 必须写 sanitized audit projection；audit 不能包含 password、raw API Key、session secret、DB URL 或真实 secret value。
 - `product.production-required-env`: one-person-lab-web production rollout 需要 `opl-webui-postgres` 提供 `OPL_DATABASE_URL`，并需要 `opl-webui-auth` 提供 `OPL_TENANT_AUTH_SECRET`、`OPL_SESSION_SECRET`、`OPL_API_KEY_ENCRYPTION_SECRET`、`OPL_CHAT_MODEL`；仓库只保存 key 名和 manifest 引用，不保存 secret value。
 - `product.production-evidence`: `1fc361d Figma workbench UI 已 production verified`，生产页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”、fixed gateway `https://gflabtoken.cn/v1` 和 MedOPL runtime gate 边界；生产 guard 已验证 unauth chat `401 AUTH_REQUIRED`、GET chat `405 METHOD_NOT_ALLOWED`、wrong credentials `401 INVALID_CREDENTIALS`。
 
@@ -27,4 +29,4 @@
 
 - `44dd574` 已有 one-person-lab-web production rollout evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
 - `1fc361d` 已有 Figma `2:21` UI alignment production evidence，但还不能宣称真实用户注册/login write-path online e2e、真实 API Key binding online e2e 或真实 chat completion online e2e。
-- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider 或完整 production ready SaaS。
+- 当前不能宣称真实 OPL execution、MedOPL runtime status bridge、完整 billing、真实支付 provider、真实线上 chat quota/audit evidence 或完整 production ready SaaS。

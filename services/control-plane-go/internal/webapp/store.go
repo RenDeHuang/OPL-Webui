@@ -51,6 +51,20 @@ type ChatMessage struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
+type AuditEvent struct {
+	ID        string            `json:"eventId"`
+	UserID    string            `json:"-"`
+	EventKind string            `json:"eventKind"`
+	Metadata  map[string]string `json:"metadata"`
+	CreatedAt time.Time         `json:"createdAt"`
+}
+
+type ChatQuotaStatus struct {
+	Limit     int `json:"limit"`
+	Used      int `json:"used"`
+	Remaining int `json:"remaining"`
+}
+
 type Store interface {
 	CreateUser(email string, passwordHash string) (User, error)
 	FindUserByEmail(email string) (User, bool)
@@ -61,6 +75,9 @@ type Store interface {
 	ListConversations(userID string) []Conversation
 	GetConversation(userID string, conversationID string) (Conversation, []ChatMessage, bool)
 	AddMessage(ChatMessage) error
+	RecordAuditEvent(AuditEvent) error
+	ListAuditEvents(userID string) []AuditEvent
+	ConsumeChatQuota(userID string, limit int) (ChatQuotaStatus, bool)
 }
 
 type MemoryStore struct {
@@ -70,6 +87,8 @@ type MemoryStore struct {
 	apiKeys       map[string]APIKeyBinding
 	conversations map[string]Conversation
 	messages      map[string][]ChatMessage
+	auditEvents   []AuditEvent
+	chatUsage     map[string]int
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -79,6 +98,8 @@ func NewMemoryStore() *MemoryStore {
 		apiKeys:       map[string]APIKeyBinding{},
 		conversations: map[string]Conversation{},
 		messages:      map[string][]ChatMessage{},
+		auditEvents:   []AuditEvent{},
+		chatUsage:     map[string]int{},
 	}
 }
 
