@@ -35,27 +35,30 @@ docker push "$OPL_IMAGE"
 常规路径：
 
 ```text
-CI -> Release Image -> manual production dry-run -> Environment approval -> production apply -> canary/smoke
+CI -> Release Image -> manual production dry-run -> Environment approval -> production apply -> canary/smoke -> optional production authenticated dogfood
 ```
 
 1. 本地开发验证：`npm run verify`、`npm run gate:review`。
 2. push/merge 到 `main` 后，`Release Image` 在 self-hosted Tencent runner build/push TCR/CCR，记录 image digest；Release Image 不执行 rollout。
 3. 手动运行 `Cloud Rollout`：`image=$OPL_IMAGE`，`target_environment=production`，`apply=false`。dry-run 不读取 kubeconfig、不改集群，只打印 rollout、evidence、canary 和 HTTPS smoke 命令。
-4. dry-run 审计通过后，用同一 image 再运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。`apply=true` 必须通过 GitHub `production` Environment approval，并执行 `kubectl set image`。
-5. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
+4. dry-run 审计通过后，用同一 image 再运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。同一次 workflow 会先执行 `production-dry-run`，再通过 GitHub `production` Environment approval 进入 `production-apply`，执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli` 和 HTTPS smoke。
+5. `authenticated_dogfood_e2e=true` 只能和 `apply=true` 一起使用；dogfood job 依赖 `production-apply`，因此只能在该 image 的 apply、canary、smoke 成功后运行。`apply=false` 时请求 dogfood 会 fail-closed。
+6. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
 
 手工 fallback 由云端/VPC runner 执行：
 
 ```bash
-node scripts/cloud-rollout.mjs
+OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag-or-digest>" node scripts/cloud-rollout.mjs
+KUBECONFIG=/external/path/to/tke-kubeconfig \
+OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag-or-digest>" \
 node scripts/cloud-rollout.mjs --apply
 ```
 
-helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
+helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
 
 ## Production authenticated dogfood e2e
 
-该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout apply。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须通过 `production` Environment approval。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。
+该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout mutation。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须同时设置 `apply=true`，并且只能在该 workflow 的 `production-apply`、canary、smoke 成功后运行。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。
 
 执行边界：
 

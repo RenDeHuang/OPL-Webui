@@ -179,9 +179,24 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
   assert.equal(release.requiredEnvKeys.includes('OPL_SESSION_SECRET'), true);
   assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
+  assert.equal(release.rolloutPipeline.mode, 'dry_run_first_apply_canary_smoke_then_dogfood');
+  assert.deepEqual(release.rolloutPipeline.orderedStages, [
+    'production_dry_run',
+    'production_apply',
+    'canary_smoke',
+    'production_authenticated_dogfood',
+  ]);
+  assert.equal(release.rolloutPipeline.dryRun.requiresImage, true);
+  assert.equal(release.rolloutPipeline.dryRun.requiresKubeconfig, false);
+  assert.equal(release.rolloutPipeline.apply.requiresImage, true);
+  assert.equal(release.rolloutPipeline.apply.requiresKubeconfig, true);
+  assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
+  assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
   assert.equal(release.productionDogfoodReadiness.defaultEnabled, false);
   assert.equal(release.productionDogfoodReadiness.requiresProductionSecrets, true);
+  assert.equal(release.productionDogfoodReadiness.requiresSuccessfulRolloutEvidence, true);
+  assert.equal(release.productionDogfoodReadiness.afterStage, 'production_apply_canary_smoke');
   assert.equal(release.productionDogfoodReadiness.browserAutomation, false);
   assert.deepEqual(release.productionDogfoodReadiness.requiredSecrets, [
     'OPL_DOGFOOD_EMAIL',

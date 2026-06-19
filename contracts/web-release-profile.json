@@ -27,11 +27,50 @@
       "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
     ]
   },
+  "rolloutPipeline": {
+    "mode": "dry_run_first_apply_canary_smoke_then_dogfood",
+    "orderedStages": [
+      "production_dry_run",
+      "production_apply",
+      "canary_smoke",
+      "production_authenticated_dogfood"
+    ],
+    "dryRun": {
+      "entrypoint": "node scripts/cloud-rollout.mjs",
+      "requiresImage": true,
+      "requiresKubeconfig": false,
+      "mutatesCluster": false
+    },
+    "apply": {
+      "entrypoint": "node scripts/cloud-rollout.mjs --apply",
+      "requiresImage": true,
+      "requiresKubeconfig": true,
+      "requiresEnvironmentApproval": true,
+      "mutatesCluster": true
+    },
+    "canarySmoke": {
+      "runsInsideApply": true,
+      "checks": [
+        "canary db",
+        "canary opl-cli",
+        "HTTPS /healthz",
+        "HTTPS /readyz",
+        "HTTPS /metricsz",
+        "HTTPS /"
+      ],
+      "semanticJsonChecks": [
+        "/readyz ok=true missing=[]",
+        "/metricsz ok=true missingDependencyCount=0"
+      ]
+    }
+  },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
     "state": "configured_not_executed_in_this_phase",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
+    "requiresSuccessfulRolloutEvidence": true,
+    "afterStage": "production_apply_canary_smoke",
     "browserAutomation": false,
     "entrypoint": "node scripts/cloud-rollout.mjs --dogfood-e2e",
     "workflow": ".github/workflows/cloud-rollout.yml",

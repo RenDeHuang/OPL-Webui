@@ -25,7 +25,13 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(helper, /dryRun/);
   assert.doesNotMatch(helper, /OPL_DATABASE_URL|PGPASSWORD|qcloud_cert_id|AKID[A-Za-z0-9]+/);
 
-  const defaultDryRun = execFileSync(process.execPath, [helperPath], { encoding: 'utf8' });
+  const defaultDryRun = execFileSync(process.execPath, [helperPath], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27',
+    },
+  });
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/readyz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/metricsz/);
@@ -36,6 +42,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
     env: {
       ...process.env,
       OPL_BASE_URL: 'https://preview.example.test/path/',
+      OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       OPL_NAMESPACE: 'opl-webui-preview',
     },
   });
@@ -44,6 +51,14 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/readyz/);
   assert.match(configuredBaseUrlDryRun, /https:\/\/preview\.example\.test\/path\/metricsz/);
   assert.doesNotMatch(configuredBaseUrlDryRun, /https:\/\/opl\.medopl\.cn\/healthz/);
+
+  assert.throws(
+    () => execFileSync(process.execPath, [helperPath], {
+      encoding: 'utf8',
+      env: { ...process.env, OPL_IMAGE: 'docker.io/library/opl-webui:latest' },
+    }),
+    /outside the allowed OPL-Webui image registry/,
+  );
 });
 
 test('cloud rollout helper has a secret-gated production authenticated dogfood harness', async () => {
@@ -127,6 +142,37 @@ test('cloud rollout helper execs the current Running Ready pod when old Error po
   }
 });
 
+test('cloud rollout helper fails closed on semantic smoke regressions', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-smoke-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27';
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+
+  try {
+    assert.throws(
+      () => execFileSync(process.execPath, [helperPath, '--apply'], {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PATH: `${tempDir}:${process.env.PATH}`,
+          KUBECONFIG: join(tempDir, 'kubeconfig'),
+          OPL_IMAGE: targetImage,
+          OPL_BASE_URL: 'https://opl.medopl.cn',
+          OPL_NAMESPACE: 'opl-webui',
+          TARGET_IMAGE: targetImage,
+          COMMAND_LOG: commandLog,
+          FAKE_METRICS_MISSING: '1',
+        },
+      }),
+      /metricsz semantic smoke failed/,
+    );
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 function writeFakeKubectl(tempDir) {
   writeFileSync(join(tempDir, 'kubectl'), `#!/usr/bin/env node
 const { appendFileSync } = require('node:fs');
@@ -189,7 +235,25 @@ function pod(name, phase, ready) {
 function writeFakeCurl(tempDir) {
   writeFileSync(join(tempDir, 'curl'), `#!/usr/bin/env bash
 printf 'curl %s\\n' "$*" >> "$COMMAND_LOG"
-printf 'ok\\n'
+url="\${@: -1}"
+case "$url" in
+  */readyz)
+    printf '{"ok":true,"missing":[]}\\n'
+    ;;
+  */metricsz)
+    if [ "$FAKE_METRICS_MISSING" = "1" ]; then
+      printf '{"ok":true,"missingDependencyCount":1,"missingDependencies":["database"]}\\n'
+    else
+      printf '{"ok":true,"missingDependencyCount":0,"missingDependencies":[]}\\n'
+    fi
+    ;;
+  */healthz)
+    printf '{"ok":true}\\n'
+    ;;
+  *)
+    printf '<html>One Person Lab Web</html>\\n'
+    ;;
+esac
 `, { mode: 0o755 });
 }
 

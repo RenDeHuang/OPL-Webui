@@ -22,6 +22,7 @@ const healthUrl = `${baseUrl}/healthz`;
 const readyUrl = `${baseUrl}/readyz`;
 const metricsUrl = `${baseUrl}/metricsz`;
 const homeUrl = `${baseUrl}/`;
+const allowedImagePattern = /^uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})$/;
 
 if (args.has('--help')) {
   printUsage();
@@ -34,12 +35,14 @@ if (args.has('--dogfood-e2e')) {
 }
 
 if (dryRun) {
+  validateImage(image);
   printDryRun();
   process.exit(0);
 }
 
 requireEnv('KUBECONFIG');
 requireEnv('OPL_IMAGE');
+validateImage(process.env.OPL_IMAGE);
 
 run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${process.env.OPL_IMAGE}`]));
 
@@ -59,9 +62,10 @@ run('canary db', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'ca
 
 run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'opl-cli']));
 
-for (const url of [healthUrl, readyUrl, metricsUrl, homeUrl]) {
-  run(`HTTPS smoke ${url}`, 'curl', ['--http2', '-fsS', url]);
-}
+run(`HTTPS smoke ${healthUrl}`, 'curl', ['--http2', '-fsS', healthUrl]);
+semanticSmoke('readyz', readyUrl, (body) => body?.ok === true && Array.isArray(body.missing) && body.missing.length === 0);
+semanticSmoke('metricsz', metricsUrl, (body) => body?.ok === true && body?.missingDependencyCount === 0);
+run(`HTTPS smoke ${homeUrl}`, 'curl', ['--http2', '-fsS', homeUrl]);
 
 async function runDogfoodE2E() {
   if (process.env.OPL_PRODUCTION_DOGFOOD_E2E !== '1') {
@@ -163,6 +167,31 @@ function run(label, command, commandArgs) {
   }
 }
 
+function semanticSmoke(label, url, validate) {
+  console.log(`[cloud-rollout] HTTPS smoke ${url}`);
+  const result = spawnSync('curl', ['--http2', '-fsS', url], { encoding: 'utf8' });
+  if (result.status !== 0) {
+    process.stdout.write(result.stdout ?? '');
+    process.stderr.write(result.stderr ?? '');
+    process.exit(result.status ?? 1);
+  }
+  process.stdout.write(result.stdout ?? '');
+  const body = parseJson(result.stdout, label);
+  if (!validate(body)) {
+    console.error(`${label} semantic smoke failed`);
+    process.exit(1);
+  }
+}
+
+function parseJson(text, label) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(`${label} semantic smoke did not return JSON`);
+    process.exit(1);
+  }
+}
+
 function capture(label, commandArgs) {
   console.log(`[cloud-rollout] ${label}`);
   const value = execFileSync('kubectl', commandArgs, { encoding: 'utf8' }).trim();
@@ -221,6 +250,17 @@ function formatPodSummary(pods) {
 function requireEnv(name) {
   if (!process.env[name]) {
     console.error(`Missing required ${name}. Run without --apply or --dogfood-e2e for dry-run output.`);
+    process.exit(2);
+  }
+}
+
+function validateImage(value) {
+  if (!value || value === '$OPL_IMAGE') {
+    console.error('Missing required OPL_IMAGE. Set an allowed OPL-Webui image tag or digest.');
+    process.exit(2);
+  }
+  if (!allowedImagePattern.test(value)) {
+    console.error('OPL_IMAGE is outside the allowed OPL-Webui image registry.');
     process.exit(2);
   }
 }

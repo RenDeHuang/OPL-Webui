@@ -30,7 +30,6 @@ permissions:
 jobs:
   production-dry-run:
     name: Production Dry Run
-    if: ${{ !inputs.apply }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     env:
       OPL_IMAGE: ${{ inputs.image }}
@@ -56,6 +55,7 @@ jobs:
 
   production-apply:
     name: Production Apply
+    needs: production-dry-run
     if: ${{ inputs.apply }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     environment: production
@@ -90,9 +90,21 @@ jobs:
         shell: bash
         run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --apply
 
+  dogfood-request-guard:
+    name: Production Dogfood Request Guard
+    if: ${{ !inputs.apply && inputs.authenticated_dogfood_e2e }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    steps:
+      - name: Reject dogfood without rollout apply
+        shell: bash
+        run: |
+          echo "Dogfood e2e requires apply=true so it can run after rollout canary/smoke evidence." >&2
+          exit 1
+
   production-dogfood-e2e:
     name: Production Authenticated Dogfood E2E
-    if: ${{ inputs.authenticated_dogfood_e2e }}
+    needs: production-apply
+    if: ${{ inputs.apply && inputs.authenticated_dogfood_e2e }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     environment: production
     env:
