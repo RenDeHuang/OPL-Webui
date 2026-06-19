@@ -23,6 +23,9 @@ const readyUrl = `${baseUrl}/readyz`;
 const metricsUrl = `${baseUrl}/metricsz`;
 const homeUrl = `${baseUrl}/`;
 const allowedImagePattern = /^uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})$/;
+const kubectlRolloutTimeoutSeconds = boundedInt(process.env.OPL_KUBECTL_ROLLOUT_TIMEOUT_SECONDS, 150, 10, 600);
+const rolloutStatusTimeoutMs = boundedInt(process.env.OPL_ROLLOUT_STATUS_TIMEOUT_MS, (kubectlRolloutTimeoutSeconds + 10) * 1000, 100, 600000);
+const diagnosticTimeoutMs = boundedInt(process.env.OPL_ROLLOUT_DIAGNOSTIC_TIMEOUT_MS, 5000, 100, 60000);
 
 if (args.has('--help')) {
   printUsage();
@@ -207,7 +210,7 @@ function kubectlArgs(commandArgs) {
 function printDryRun() {
   console.log('[cloud-rollout] dryRun=true; pass --apply to mutate the cluster.');
   printKubectl(['set', 'image', deployment, `${container}=${image}`]);
-  printKubectl(['rollout', 'status', deployment]);
+  printKubectl(['rollout', 'status', deployment, `--timeout=${kubectlRolloutTimeoutSeconds}s`]);
   printKubectl(['get', deployment, '-o', rolloutRevisionJsonpath]);
   printKubectl(['get', deployment, '-o', deploymentImageJsonpath]);
   console.log(`# selected pod is resolved from Running + Ready pods on ${image}`);
@@ -237,7 +240,16 @@ function run(label, command, commandArgs) {
 
 function runRolloutStatus() {
   console.log('[cloud-rollout] kubectl rollout status');
-  const result = spawnSync('kubectl', kubectlArgs(['rollout', 'status', deployment, '--timeout=180s']), { stdio: 'inherit' });
+  const result = spawnSync('kubectl', kubectlArgs(['rollout', 'status', deployment, `--timeout=${kubectlRolloutTimeoutSeconds}s`]), {
+    stdio: 'inherit',
+    timeout: rolloutStatusTimeoutMs,
+    killSignal: 'SIGTERM',
+  });
+  if (result.error?.code === 'ETIMEDOUT') {
+    console.error(`[cloud-rollout] kubectl rollout status timed out after ${rolloutStatusTimeoutMs}ms`);
+    printRolloutDiagnostics();
+    process.exit(124);
+  }
   if (result.status !== 0) {
     printRolloutDiagnostics();
     process.exit(result.status ?? 1);
@@ -260,9 +272,14 @@ function printRolloutDiagnostics() {
 
 function diagnostic(label, commandArgs) {
   console.error(`[cloud-rollout] ${label}`);
-  const result = spawnSync('kubectl', kubectlArgs(commandArgs), { encoding: 'utf8' });
+  const result = spawnSync('kubectl', kubectlArgs(commandArgs), {
+    encoding: 'utf8',
+    timeout: diagnosticTimeoutMs,
+    killSignal: 'SIGTERM',
+  });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   if (output) console.error(output);
+  if (result.error?.code === 'ETIMEDOUT') console.error(`[cloud-rollout] diagnostic command timed out after ${diagnosticTimeoutMs}ms`);
   if (result.status !== 0) console.error(`[cloud-rollout] diagnostic command failed: ${result.status}`);
   return { label, output };
 }

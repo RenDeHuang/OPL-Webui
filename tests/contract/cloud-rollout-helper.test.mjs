@@ -36,6 +36,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/readyz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\/metricsz/);
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\//);
+  assert.match(defaultDryRun, /--timeout=150s/);
 
   const configuredBaseUrlDryRun = execFileSync(process.execPath, [helperPath], {
     encoding: 'utf8',
@@ -287,6 +288,46 @@ test('cloud rollout helper diagnoses rollout status failures before canary', () 
   }
 });
 
+test('cloud rollout helper hard-times out hung kubectl rollout status and prints diagnostics', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-hung-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27';
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+
+  try {
+    const result = spawnSync(process.execPath, [helperPath, '--apply'], {
+      encoding: 'utf8',
+      timeout: 8000,
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        KUBECONFIG: join(tempDir, 'kubeconfig'),
+        OPL_IMAGE: targetImage,
+        OPL_BASE_URL: 'https://opl.medopl.cn',
+        OPL_NAMESPACE: 'opl-webui',
+        OPL_ROLLOUT_STATUS_TIMEOUT_MS: '100',
+        OPL_ROLLOUT_DIAGNOSTIC_TIMEOUT_MS: '100',
+        TARGET_IMAGE: targetImage,
+        COMMAND_LOG: commandLog,
+        FAKE_ROLLOUT_STATUS_HANG: '1',
+        FAKE_DIAGNOSTIC_HANG: '1',
+      },
+    });
+    const output = `${result.stdout}${result.stderr}`;
+    assert.notEqual(result.status, 0);
+    assert.match(output, /kubectl rollout status timed out after 100ms/);
+    assert.match(output, /rollout diagnostics/i);
+    assert.match(output, /diagnostic command timed out after 100ms/);
+    assert.match(output, /FailedScheduling.*Insufficient cpu/s);
+    assert.match(output, /rollout likely cause: scheduling_or_node_resources/);
+    assert.doesNotMatch(output, /selected pod|canary db/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 function writeFakeKubectl(tempDir) {
   writeFileSync(join(tempDir, 'kubectl'), `#!/usr/bin/env node
 const { appendFileSync } = require('node:fs');
@@ -304,6 +345,11 @@ appendFileSync(process.env.COMMAND_LOG, args.join(' ') + '\\n');
 
 if (args[0] === 'set') process.exit(0);
 if (args[0] === 'rollout') {
+  if (process.env.FAKE_ROLLOUT_STATUS_HANG === '1') {
+    process.stdout.write('Waiting for deployment spec update to be observed...\\n');
+    setInterval(() => {}, 1000);
+    return;
+  }
   if (process.env.FAKE_ROLLOUT_STATUS_FAIL === '1') {
     process.stdout.write('Waiting for deployment "opl-webui-control-plane" rollout to finish: 0 out of 1 new replicas have been updated...\\n');
     process.stderr.write('error: timed out waiting for the condition\\n');
@@ -320,6 +366,11 @@ if (args[0] === 'get' && args[1] === 'deployment/opl-webui-control-plane') {
   process.exit(0);
 }
 if (args[0] === 'describe' && args[1] === 'deployment/opl-webui-control-plane') {
+  if (process.env.FAKE_DIAGNOSTIC_HANG === '1') {
+    process.stdout.write('Name: opl-webui-control-plane\\n');
+    setInterval(() => {}, 1000);
+    return;
+  }
   process.stdout.write('Name: opl-webui-control-plane\\nConditions:\\n  Progressing=False Reason=ProgressDeadlineExceeded\\n');
   process.exit(0);
 }

@@ -55,6 +55,8 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 - `readiness_or_liveness_probe`：`/readyz` 或 `/healthz` 探针失败。
 - `old_pod_termination_or_node`：旧 Pod 删除或节点状态异常。
 
+`kubectl rollout status` 同时有 kubectl 内置等待和 helper 外层硬超时；如 kubectl 客户端本身卡住，helper 会在外层超时后杀掉该进程并继续打印上述诊断。默认 kubectl 等待 150 秒，外层超时 160 秒，可用 `OPL_KUBECTL_ROLLOUT_TIMEOUT_SECONDS` 和 `OPL_ROLLOUT_STATUS_TIMEOUT_MS` 调整。每条诊断 kubectl 命令也有 5 秒默认超时，可用 `OPL_ROLLOUT_DIAGNOSTIC_TIMEOUT_MS` 调整。
+
 手工 fallback 由云端/VPC runner 执行：
 
 ```bash
