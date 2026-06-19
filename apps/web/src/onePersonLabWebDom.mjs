@@ -45,6 +45,9 @@ function bindCapabilityButtons() {
       const input = document.querySelector('#chat-input');
       input.value = button.dataset.prompt;
       input.focus();
+      if (button.dataset.researchTaskIntent) {
+        document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
+      }
       document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
       if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate();
     });

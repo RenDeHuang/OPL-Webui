@@ -21,6 +21,8 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /prompt-command-center/);
   assert.match(html, /skill-launcher/);
   assert.match(html, /data-research-launcher/);
+  assert.match(html, /data-research-task/);
+  assert.match(html, /data-research-task-intent/);
   assert.match(html, /data-capability-marker/);
   assert.match(html, /data-capability-mode/);
   assert.match(html, /MedOPL/);
@@ -37,9 +39,7 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /科研能力入口/);
   assert.match(html, /账号与凭据状态/);
   assert.match(html, /OPL/);
-  assert.match(html, /科研入口/);
-  assert.match(html, /产物入口/);
-  assert.match(html, /辅助入口/);
+  assert.match(html, /科研任务入口/);
   assert.match(html, /@科研/);
   assert.match(html, /@论文/);
   assert.match(html, /@基金/);
@@ -52,6 +52,11 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /普通聊天/);
   assert.match(html, /普通聊天是 fallback/);
   assert.match(html, /普通问答/);
+  assert.match(html, /开题\/研究方向/);
+  assert.match(html, /论文问题/);
+  assert.match(html, /基金计划/);
+  assert.match(html, /综述地图/);
+  assert.match(html, /材料线索/);
   assert.match(html, /论文/);
   assert.match(html, /基金/);
   assert.match(html, /综述/);
@@ -59,14 +64,14 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /@基金/);
   assert.match(html, /@文件/);
   assert.doesNotMatch(html, /@RCA/);
-  assert.match(html, /需要 MedOPL Runtime/);
-  assert.match(html, /该能力需要托管运行环境、存储或 node pool/);
+  assert.match(html, /需要 MedOPL 授权/);
+  assert.match(html, /该能力需要在 MedOPL 开通后继续/);
   assert.match(html, /medopl\.medopl\.cn/);
   assert.match(html, /chat-log/);
   assert.match(html, /settings-panel/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
   assert.doesNotMatch(html, /styles\/v3\.css/);
-  assert.doesNotMatch(html, /轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM/);
+  assert.doesNotMatch(html, /MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM/);
 });
 
 test('one-person-lab-web shell keeps internal workspace concepts hidden', () => {
@@ -77,7 +82,7 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
     'apps/web/src/onePersonLabWebDom.mjs',
   ].map((path) => readFileSync(path, 'utf8')).join('\n');
 
-  assert.doesNotMatch(html, /workspace|runtime tab|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
+  assert.doesNotMatch(html, /workspace|runtime tab|MedOPL Runtime|node pool|托管运行环境|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(webSource, /dataset\.chatState/);

@@ -46,7 +46,10 @@ try {
   await activate(cdp, '[data-save-key-button]');
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
 
-  await submitPrompt(cdp, '@科研 帮我拆解研究方向');
+  await userClick(cdp, '[data-research-task-intent="research_direction"]');
+  await assertPage(cdp, 'document.body.dataset.chatState === "research_entry_selected"', 'research task template selected');
+  await assertPage(cdp, 'document.querySelector("#chat-input")?.value.includes("@科研")', 'research task template prompt');
+  await activate(cdp, '[data-chat-submit]');
   await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
   await waitForAuditKind(cdp, 'chat.completed');
 
@@ -68,6 +71,7 @@ try {
     authState: document.body.dataset.authState,
     chatState: document.body.dataset.chatState,
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
+    selectedTaskIntent: document.body.dataset.researchTaskIntent,
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);

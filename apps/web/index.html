@@ -54,10 +54,10 @@
       </aside>
 
       <main class="main-stage">
-        <section class="runtime-card" aria-label="MedOPL Runtime gate">
-          <p class="panel-kicker">MedOPL Runtime</p>
-          <h2>开通托管运行环境</h2>
-          <p>涉及托管资源或 node pool 时，Web 只打开授权入口。</p>
+        <section class="runtime-card" aria-label="MedOPL 授权入口">
+          <p class="panel-kicker">MedOPL</p>
+          <h2>开通后继续</h2>
+          <p>需要云端能力时，Web 只打开授权入口。</p>
           <a href="https://medopl.medopl.cn">去 MedOPL</a>
         </section>
 
@@ -77,22 +77,32 @@
             </div>
           </form>
 
-          <div class="skill-launcher" data-research-launcher aria-label="科研能力启动器">
-            <section>
-              <h2>科研入口</h2>
-              <button type="button" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">@科研</button>
-              <button type="button" data-capability-marker="@论文" data-capability-mode="runtime_gate" data-prompt="@论文 生成研究选题和证据计划">@论文</button>
-              <button type="button" data-capability-marker="@基金" data-capability-mode="runtime_gate" data-prompt="@基金 帮我拆解标书结构">@基金</button>
-            </section>
-            <section>
-              <h2>产物入口</h2>
-              <button type="button" data-capability-marker="@综述" data-capability-mode="runtime_gate" data-prompt="@综述 帮我整理综述结构和证据线索">@综述</button>
-              <button type="button" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">@文件</button>
-            </section>
-            <section>
-              <h2>辅助入口</h2>
-              <button type="button" data-capability-marker="普通问答" data-capability-mode="ordinary_chat_fallback" data-prompt="解释 OPL 如何帮助复杂知识工作">普通问答</button>
-            </section>
+          <div class="skill-launcher research-task-grid" data-research-launcher aria-label="科研任务入口">
+            <button type="button" data-research-task data-research-task-intent="research_direction" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">
+              <span>@科研</span>
+              <strong>开题/研究方向</strong>
+              <small>拆解研究方向、问题和下一步计划。</small>
+            </button>
+            <button type="button" data-research-task data-research-task-intent="paper_question" data-capability-marker="@论文" data-capability-mode="runtime_gate" data-prompt="@论文 生成研究选题、问题拆解和证据计划">
+              <span>@论文</span>
+              <strong>论文问题</strong>
+              <small>从选题、问题和证据计划进入。</small>
+            </button>
+            <button type="button" data-research-task data-research-task-intent="grant_plan" data-capability-marker="@基金" data-capability-mode="runtime_gate" data-prompt="@基金 帮我拆解标书结构、研究目标和执行路径">
+              <span>@基金</span>
+              <strong>基金计划</strong>
+              <small>拆解标书结构、研究目标和执行路径。</small>
+            </button>
+            <button type="button" data-research-task data-research-task-intent="review_map" data-capability-marker="@综述" data-capability-mode="runtime_gate" data-prompt="@综述 帮我整理综述结构、证据线索和引用计划">
+              <span>@综述</span>
+              <strong>综述地图</strong>
+              <small>整理综述结构、证据线索和引用计划。</small>
+            </button>
+            <button type="button" data-research-task data-research-task-intent="materials_refs" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">
+              <span>@文件</span>
+              <strong>材料线索</strong>
+              <small>围绕材料、引用和交付物 refs 组织输入。</small>
+            </button>
           </div>
         </section>
 
@@ -158,7 +168,7 @@
           <div class="section-heading">
             <p class="panel-kicker">Capabilities</p>
             <h2 id="capabilities-title">科研能力入口</h2>
-            <p>选择一个科研入口；contract-defined runtime markers 只打开 MedOPL Runtime gate。</p>
+            <p>选择一个科研入口；需要云端能力的任务只打开 MedOPL 授权提示。</p>
           </div>
           <div class="foundry-grid">
             <article class="foundry-card" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback">
@@ -223,11 +233,11 @@
           </ol>
         </aside>
 
-        <aside class="runtime-gate" data-runtime-gate aria-label="MedOPL runtime gate">
+        <aside class="runtime-gate" data-runtime-gate aria-label="MedOPL 授权提示">
           <div>
             <p class="panel-kicker">RUNTIME_REQUIRED</p>
-            <h2>需要 MedOPL Runtime</h2>
-            <p>该能力需要托管运行环境、存储或 node pool。当前只提供开通入口，不执行真实 OPL runtime。</p>
+            <h2>需要 MedOPL 授权</h2>
+            <p>该能力需要在 MedOPL 开通后继续。当前只提供开通入口，不执行真实 OPL 任务。</p>
           </div>
           <a class="primary-button" href="https://medopl.medopl.cn">去 MedOPL 开通</a>
         </aside>

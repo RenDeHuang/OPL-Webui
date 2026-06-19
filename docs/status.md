@@ -53,6 +53,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2` after dry-run, production apply, and canary/smoke success. With `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, this run includes production real ordinary chat completion and `chat.completed` audit evidence. It is not browser e2e and not MedOPL runtime execution evidence.
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 - Browser e2e is now a CI release gate before image release: `.github/workflows/ci.yml` installs Chromium and runs `npm run verify:browser`; `Release Image` still depends on successful CI before pushing the cloud image.
+- Research-task-first UX is implemented in the browser shell and page-state contract: the first-screen task templates cover `research_direction`, `paper_question`, `grant_plan`, `review_map`, and `materials_refs`; `npm run verify:browser` clicks the `research_direction` template before ordinary chat fallback and still verifies `@论文`/`@基金` runtime gates.
 
 ## Cannot Claim
 
@@ -64,6 +65,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Continue richer research capability UX now that the browser evidence path is release-gated in CI.
+1. Add production MedOPL authority integration only as readonly projection evidence, not runtime mutation.
 2. Add production availability evidence beyond one successful dogfood run before claiming production-ready SaaS.
-3. Add production MedOPL authority integration only as readonly projection evidence, not runtime mutation.
+3. Add team/commercial account lifecycle only after owner/consumer/test boundaries are explicit.

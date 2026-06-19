@@ -57,6 +57,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'current_session',
     'browser_session_bootstrap',
     'api_key_binding',
+    'research_task_template_selected',
     'research_capability_launcher',
     'ordinary_chat_fallback',
     'quota_exceeded',
@@ -71,6 +72,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-launcher]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-marker]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-mode]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-task]'), true);
+  assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
+    ['research_direction', '@科研', 'ordinary_chat_fallback'],
+    ['paper_question', '@论文', 'runtime_gate'],
+    ['grant_plan', '@基金', 'runtime_gate'],
+    ['review_map', '@综述', 'runtime_gate'],
+    ['materials_refs', '@文件', 'runtime_gate'],
+  ]);
 
   for (const path of [
     '/api/session/current',
@@ -249,6 +258,13 @@ test('web data module implements the page-state chat matrix', () => {
   assert.equal(web.chatStateForPrompt('@基金 帮我拆解标书结构'), 'grant_entry_selected');
   assert.equal(web.chatStateForPrompt('@文件 整理材料引用'), 'materials_refs_pending');
   assert.equal(web.chatStateForPrompt('普通问答'), 'idle');
+  assert.deepEqual(web.RESEARCH_TASK_INTENTS.map((intent) => [intent.id, intent.marker, intent.expectedChatState]), [
+    ['research_direction', '@科研', 'research_entry_selected'],
+    ['paper_question', '@论文', 'paper_entry_selected'],
+    ['grant_plan', '@基金', 'grant_entry_selected'],
+    ['review_map', '@综述', 'materials_refs_pending'],
+    ['materials_refs', '@文件', 'materials_refs_pending'],
+  ]);
 
   for (const state of [
     web.chatStateForResult(null),
@@ -436,11 +452,26 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.match(view.capabilitySource.appContract, /one-person-lab-app\/contracts\/app-product-profile\.json/);
   assert.match(view.capabilitySource.frameworkContract, /one-person-lab\/contracts\/opl-framework\/domains\.json/);
   assert.deepEqual(view.capabilities.map((item) => item.label), ['科研规划', '论文/综述', '基金', '材料/文件', '普通问答']);
-  assert.deepEqual(view.skillGroups.map((group) => group.title), ['科研入口', '产物入口', '辅助入口']);
-  assert.deepEqual(view.skillGroups[0].skills.map((skill) => skill.label), ['@科研', '@论文', '@基金']);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.id), [
+    'research_direction',
+    'paper_question',
+    'grant_plan',
+    'review_map',
+    'materials_refs',
+  ]);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.consumer), [
+    'research_user_prompt',
+    'research_user_prompt',
+    'research_user_prompt',
+    'research_user_prompt',
+    'research_user_prompt',
+  ]);
+  assert.equal(view.skillGroups, undefined);
   assert.deepEqual(view.capabilities.filter((item) => item.runtimeRequired).map((item) => item.sourceAssistant), ['mas', 'mag', 'medopl']);
   assert.equal(view.runtimeGate.deepLink, 'https://medopl.medopl.cn');
-  assert.doesNotMatch(JSON.stringify(view.runtimeGate), /无限计算资源|创始人计划|WebUI owns/i);
+  assert.equal(view.runtimeGate.title, '需要 MedOPL 授权');
+  assert.equal(view.runtimeGate.message, '该能力需要在 MedOPL 开通后继续');
+  assert.doesNotMatch(JSON.stringify(view.runtimeGate), /MedOPL Runtime|node pool|托管运行环境|存储|无限计算资源|创始人计划|WebUI owns/i);
   assert.deepEqual(view.workbenchSteps.map((item) => item.title), [
     '选择专业工作',
     '绑定真实材料',
