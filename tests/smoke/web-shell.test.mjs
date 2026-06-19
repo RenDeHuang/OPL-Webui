@@ -68,13 +68,17 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
 
 test('one-person-lab-web shell keeps internal workspace concepts hidden', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
-  const dataBridge = readFileSync('apps/web/src/onePersonLabWeb.mjs', 'utf8');
+  const webSource = [
+    'apps/web/src/onePersonLabWeb.mjs',
+    'apps/web/src/onePersonLabWebState.mjs',
+    'apps/web/src/onePersonLabWebDom.mjs',
+  ].map((path) => readFileSync(path, 'utf8')).join('\n');
 
   assert.doesNotMatch(html, /workspace|runtime tab|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
-  assert.doesNotMatch(dataBridge, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
-  assert.ok((dataBridge.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
-  assert.match(dataBridge, /\/api\/chat/);
-  assert.match(dataBridge, /\/api\/settings\/model-provider/);
+  assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
+  assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
+  assert.match(webSource, /\/api\/chat/);
+  assert.match(webSource, /\/api\/settings\/model-provider/);
 });
 
 test('settings hash has a dedicated productized settings surface', () => {

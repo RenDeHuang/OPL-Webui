@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import * as web from '../../apps/web/src/onePersonLabWeb.mjs';
@@ -185,6 +185,20 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
     '管理运行时',
   ]);
   assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
+});
+
+test('web product entry delegates state and DOM ownership to focused modules', () => {
+  const entryPath = 'apps/web/src/onePersonLabWeb.mjs';
+  const statePath = 'apps/web/src/onePersonLabWebState.mjs';
+  const domPath = 'apps/web/src/onePersonLabWebDom.mjs';
+  const entry = readFileSync(entryPath, 'utf8');
+
+  assert.equal(existsSync(statePath), true, `missing state owner module: ${statePath}`);
+  assert.equal(existsSync(domPath), true, `missing DOM owner module: ${domPath}`);
+  assert.match(entry, /onePersonLabWebState\.mjs/);
+  assert.match(entry, /onePersonLabWebDom\.mjs/);
+  assert.doesNotMatch(entry, /querySelector|addEventListener|appendMessage|writeJSON|readJSON|providerFallback/);
+  assert.ok(entry.split('\n').length <= 80, 'product entry should stay thin');
 });
 
 function response(payload, status = 200) {
