@@ -46,6 +46,15 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 6. `availability_probe=true` 会运行 no-secret production availability probe。`apply=false` 时探测当前线上；`apply=true` 时在本次 rollout apply、canary、smoke 成功后探测新版本线上。该 probe 不读取 kubeconfig、image、DB、dogfood secret、MedOPL token 或 TCR 凭据。
 7. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
 
+如果 `rollout status` 超时或失败，helper 会在退出前打印 Deployment、ReplicaSet/Pod、Pod describe、Pod logs 和 events 摘要，并给出 `rollout likely cause`。分类只用于定位下一步排查，不改变集群状态：
+
+- `scheduling_or_node_resources`：调度、nodeSelector、taint、CPU/内存资源不足。
+- `image_pull`：镜像 tag、TCR 权限或 `imagePullSecrets` 问题。
+- `missing_kubernetes_secret_or_config`：Secret/ConfigMap 或 key 缺失。
+- `container_startup_or_crash`：容器启动失败或 CrashLoop。
+- `readiness_or_liveness_probe`：`/readyz` 或 `/healthz` 探针失败。
+- `old_pod_termination_or_node`：旧 Pod 删除或节点状态异常。
+
 手工 fallback 由云端/VPC runner 执行：
 
 ```bash

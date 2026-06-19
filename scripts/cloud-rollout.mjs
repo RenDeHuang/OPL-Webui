@@ -51,7 +51,7 @@ validateImage(process.env.OPL_IMAGE);
 
 run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${process.env.OPL_IMAGE}`]));
 
-run('kubectl rollout status', 'kubectl', kubectlArgs(['rollout', 'status', deployment]));
+runRolloutStatus();
 
 capture('rollout revision', kubectlArgs(['get', deployment, '-o', rolloutRevisionJsonpath]));
 
@@ -233,6 +233,60 @@ function run(label, command, commandArgs) {
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
+}
+
+function runRolloutStatus() {
+  console.log('[cloud-rollout] kubectl rollout status');
+  const result = spawnSync('kubectl', kubectlArgs(['rollout', 'status', deployment, '--timeout=180s']), { stdio: 'inherit' });
+  if (result.status !== 0) {
+    printRolloutDiagnostics();
+    process.exit(result.status ?? 1);
+  }
+}
+
+function printRolloutDiagnostics() {
+  console.error('[cloud-rollout] rollout diagnostics');
+  const outputs = [
+    diagnostic('kubectl get deployment wide', ['get', deployment, '-o', 'wide']),
+    diagnostic('kubectl describe deployment/opl-webui-control-plane', ['describe', deployment]),
+    diagnostic('kubectl get rs,pod wide', ['get', 'rs,pod', '-l', podSelector, '-o', 'wide']),
+    diagnostic('kubectl describe pod -l app.kubernetes.io/name=opl-webui', ['describe', 'pod', '-l', podSelector]),
+    diagnostic('kubectl logs -l app.kubernetes.io/name=opl-webui', ['logs', '-l', podSelector, '--all-containers', '--tail=120']),
+    diagnostic('kubectl get events', ['get', 'events', '--sort-by=.lastTimestamp']),
+  ];
+  const combined = outputs.map((item) => item.output).join('\n');
+  console.error(`[cloud-rollout] rollout likely cause: ${classifyRolloutFailure(combined)}`);
+}
+
+function diagnostic(label, commandArgs) {
+  console.error(`[cloud-rollout] ${label}`);
+  const result = spawnSync('kubectl', kubectlArgs(commandArgs), { encoding: 'utf8' });
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+  if (output) console.error(output);
+  if (result.status !== 0) console.error(`[cloud-rollout] diagnostic command failed: ${result.status}`);
+  return { label, output };
+}
+
+function classifyRolloutFailure(text) {
+  if (/FailedScheduling|Insufficient cpu|Insufficient memory|didn'?t match.*node selector|node\(s\) had untolerated taint|No preemption victims/i.test(text)) {
+    return 'scheduling_or_node_resources';
+  }
+  if (/ErrImagePull|ImagePullBackOff|pull access denied|failed to pull and unpack image|Back-off pulling image/i.test(text)) {
+    return 'image_pull';
+  }
+  if (/CreateContainerConfigError|secret .* not found|couldn'?t find key|configmap .* not found/i.test(text)) {
+    return 'missing_kubernetes_secret_or_config';
+  }
+  if (/CrashLoopBackOff|Back-off restarting failed container|Error: failed|panic:|executable file not found/i.test(text)) {
+    return 'container_startup_or_crash';
+  }
+  if (/Readiness probe failed|Liveness probe failed|connection refused|HTTP probe failed/i.test(text)) {
+    return 'readiness_or_liveness_probe';
+  }
+  if (/Terminating|marked for deletion|failed to kill pod|volume.*detach/i.test(text)) {
+    return 'old_pod_termination_or_node';
+  }
+  return 'unknown_rollout_failure';
 }
 
 function semanticSmoke(label, url, validate) {

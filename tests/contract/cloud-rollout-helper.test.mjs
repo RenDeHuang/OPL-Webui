@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
@@ -250,6 +250,43 @@ test('cloud rollout helper fails closed on semantic smoke regressions', () => {
   }
 });
 
+test('cloud rollout helper diagnoses rollout status failures before canary', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-diagnostics-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27';
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+
+  try {
+    const result = spawnSync(process.execPath, [helperPath, '--apply'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        KUBECONFIG: join(tempDir, 'kubeconfig'),
+        OPL_IMAGE: targetImage,
+        OPL_BASE_URL: 'https://opl.medopl.cn',
+        OPL_NAMESPACE: 'opl-webui',
+        TARGET_IMAGE: targetImage,
+        COMMAND_LOG: commandLog,
+        FAKE_ROLLOUT_STATUS_FAIL: '1',
+      },
+    });
+    const output = `${result.stdout}${result.stderr}`;
+    assert.notEqual(result.status, 0);
+    assert.match(output, /rollout diagnostics/i);
+    assert.match(output, /FailedScheduling.*Insufficient cpu/s);
+    assert.match(output, /rollout likely cause: scheduling_or_node_resources/);
+    assert.match(output, /kubectl describe deployment\/opl-webui-control-plane/);
+    assert.match(output, /kubectl describe pod -l app\.kubernetes\.io\/name=opl-webui/);
+    assert.match(output, /kubectl logs -l app\.kubernetes\.io\/name=opl-webui/);
+    assert.doesNotMatch(output, /selected pod|canary db/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 function writeFakeKubectl(tempDir) {
   writeFileSync(join(tempDir, 'kubectl'), `#!/usr/bin/env node
 const { appendFileSync } = require('node:fs');
@@ -265,9 +302,41 @@ for (let index = 0; index < rawArgs.length; index += 1) {
 }
 appendFileSync(process.env.COMMAND_LOG, args.join(' ') + '\\n');
 
-if (args[0] === 'set' || args[0] === 'rollout') process.exit(0);
+if (args[0] === 'set') process.exit(0);
+if (args[0] === 'rollout') {
+  if (process.env.FAKE_ROLLOUT_STATUS_FAIL === '1') {
+    process.stdout.write('Waiting for deployment "opl-webui-control-plane" rollout to finish: 0 out of 1 new replicas have been updated...\\n');
+    process.stderr.write('error: timed out waiting for the condition\\n');
+    process.exit(1);
+  }
+  process.exit(0);
+}
 if (args[0] === 'get' && args[1] === 'deployment/opl-webui-control-plane') {
+  if (args.includes('wide')) {
+    process.stdout.write('NAME READY UP-TO-DATE AVAILABLE\\nopl-webui-control-plane 0/1 0 1\\n');
+    process.exit(0);
+  }
   process.stdout.write(args.includes('containers') ? process.env.TARGET_IMAGE : '4');
+  process.exit(0);
+}
+if (args[0] === 'describe' && args[1] === 'deployment/opl-webui-control-plane') {
+  process.stdout.write('Name: opl-webui-control-plane\\nConditions:\\n  Progressing=False Reason=ProgressDeadlineExceeded\\n');
+  process.exit(0);
+}
+if (args[0] === 'get' && args[1] === 'rs,pod') {
+  process.stdout.write('NAME READY STATUS\\npod/opl-webui-control-plane-new-pending 0/1 Pending\\n');
+  process.exit(0);
+}
+if (args[0] === 'describe' && args[1] === 'pod' && args.includes('-l')) {
+  process.stdout.write('Events:\\n  Warning  FailedScheduling  default-scheduler  0/3 nodes are available: 3 Insufficient cpu.\\n');
+  process.exit(0);
+}
+if (args[0] === 'logs' && args.includes('-l')) {
+  process.stdout.write('no logs: pod is Pending\\n');
+  process.exit(0);
+}
+if (args[0] === 'get' && args[1] === 'events') {
+  process.stdout.write('LAST SEEN TYPE REASON OBJECT MESSAGE\\n1m Warning FailedScheduling pod/opl-webui-control-plane-new-pending 0/3 nodes are available: 3 Insufficient cpu.\\n');
   process.exit(0);
 }
 if (args[0] === 'get' && args[1] === 'pod' && args.includes('-l') && args.includes('json')) {
