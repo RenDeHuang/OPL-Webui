@@ -21,7 +21,8 @@ It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo own
 6. `docs/architecture.md`
 7. `docs/invariants.md`
 8. `docs/docs_portfolio_consolidation.md`
-9. `contracts/*.json`
+9. `docs/active/README.md`
+10. `contracts/*.json`
 
 ## Product Boundary
 
@@ -42,3 +43,5 @@ Use fixed truth, not per-change process packages:
 7. Run verification scaled to risk.
 
 Small docs/test/source maintenance can use targeted tests plus the relevant verify suite. User-visible, API, runtime, billing, storage, deploy, OPL bridge, or release-claim changes require `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, and `sentrux check .`.
+
+`docs/active/README.md` is the current gap baton for worktree lanes and next-agent handoff. Retired surfaces that should not return are indexed in `docs/history/tombstones/README.md`.

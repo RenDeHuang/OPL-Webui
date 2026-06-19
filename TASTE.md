@@ -14,10 +14,11 @@
 - No fake capability: runtime, billing, storage, OPL execution, and production claims require contracts and evals.
 - Machine truth wins: source, API behavior, contracts, fixtures, scripts, and tests outrank prose.
 - Small files stay purposeful: line count is only a hard hygiene boundary at 1000 lines unless generated, fixture, or schema material. Below that boundary, split files because responsibilities are clearer, not because an arbitrary small number was crossed.
+- File count is a portfolio signal, not a release blocker. Remove unowned or retired surfaces, but do not block useful product work on an arbitrary durable-file number.
 
 ## Default Development Loop
 
-1. Read `README.md`, `AGENTS.md`, this file, `docs/status.md`, `docs/decisions.md`, and relevant `contracts/*.json`.
+1. Read `README.md`, `AGENTS.md`, this file, `docs/status.md`, `docs/decisions.md`, `docs/active/README.md`, and relevant `contracts/*.json`.
 2. Pick one gap and identify the owner surface before editing.
 3. Update contracts first for user-visible, API, page-state, runtime-gate, deploy, or release-claim changes.
 4. Write or update tests first and register new test files.

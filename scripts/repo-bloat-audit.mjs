@@ -4,7 +4,8 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ignoredDirectories = ['.git', 'node_modules', '.runtime', '.superpowers'];
-const budgets = {
+const portfolioSignals = {
+  mode: 'report-only',
   files: 85,
   markdownDocs: 24,
   scripts: 8,
@@ -67,9 +68,17 @@ const counts = {
 };
 
 const violations = [];
-for (const [name, budget] of Object.entries(budgets)) {
+const portfolioFindings = [];
+for (const [name, budget] of Object.entries(portfolioSignals)) {
+  if (name === 'mode') continue;
   if (counts[name] > budget) {
-    violations.push({ name, count: counts[name], budget });
+    portfolioFindings.push({
+      name,
+      count: counts[name],
+      budget,
+      severity: portfolioSignals.mode,
+      message: 'Portfolio size signal only; inspect ownership, consumers, and retired surfaces before deleting files.',
+    });
   }
 }
 const lineBudgetFindings = lineCounts
@@ -93,7 +102,12 @@ for (const file of lineBudgetFindings) {
 
 const report = {
   ok: violations.length === 0,
-  budgets,
+  budgets: portfolioSignals,
+  portfolioPolicy: {
+    fileCountMode: 'report-only',
+    hardFailures: ['lineBudget', 'retiredSurface', 'testRegistry', 'contractViolation'],
+  },
+  portfolioFindings,
   lineBudgetPolicy,
   counts,
   largestFile,

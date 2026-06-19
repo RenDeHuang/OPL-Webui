@@ -14,7 +14,9 @@ const fixedTruthFiles = [
   'docs/architecture.md',
   'docs/invariants.md',
   'docs/docs_portfolio_consolidation.md',
+  'docs/active/README.md',
   'docs/history/process/closeouts.md',
+  'docs/history/tombstones/README.md',
 ];
 
 const contractFiles = [
@@ -48,7 +50,6 @@ test('repo exposes fixed truth, durable contracts, and structural rules', () => 
     'changes/README.md',
     'changes/active',
     'changes/archive/closeouts.md',
-    'docs/active/README.md',
     'docs/README.md',
     'docs/history/README.md',
     'tests/README.md',
@@ -82,9 +83,42 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
   assert.match(status, /research SaaS product-truth alignment/);
+  assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work should now resume one gap at a time/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
+  assert.match(decisions, /File count is report-only/);
   assert.match(portfolio, /Retired Workflow/);
+  assert.match(portfolio, /Active Baton Lifecycle/);
+});
+
+test('active baton and tombstone preserve next-agent context without becoming machine truth', () => {
+  const active = readFileSync('docs/active/README.md', 'utf8');
+  const tombstones = readFileSync('docs/history/tombstones/README.md', 'utf8');
+
+  for (const required of ['owner:', 'purpose:', 'state:', 'machine boundary:']) {
+    assert.match(active, new RegExp(required));
+    assert.match(tombstones, new RegExp(required));
+  }
+
+  for (const required of [
+    'Current Truth',
+    'Worktree Lane Model',
+    'Next Agent Context',
+    'Foldback Rules',
+  ]) {
+    assert.match(active, new RegExp(required));
+  }
+
+  for (const required of [
+    'changes/active',
+    'apps/api',
+    '/api/mvp/task',
+    'demoData',
+    '@长任务',
+    'No-Resurrection Rules',
+  ]) {
+    assert.match(tombstones, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
 });
 
 test('archive keeps prior production evidence while active truth points to current contracts', () => {
@@ -139,6 +173,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(api.components.schemas.ChatErrorCode, undefined);
   assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
   assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件']);
+  assert.equal(runtime.runtimeRequiredMarkers.includes('@长任务'), false);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');

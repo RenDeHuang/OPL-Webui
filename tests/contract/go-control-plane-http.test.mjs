@@ -273,6 +273,11 @@ test('chat API requires auth and user API key, rejects client base_url override,
     assert.equal(uncontractedAtMention.response.status, 200);
     assert.equal(upstream.requests.length, 1);
     assert.equal(upstream.requests[0].body.messages[0].content, '@RCA 规划可视化交付方案');
+
+    const retiredRuntimeMarker = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@长任务 规划一个普通研究排期' });
+    assert.equal(retiredRuntimeMarker.response.status, 200);
+    assert.equal(upstream.requests.length, 2);
+    assert.equal(upstream.requests[1].body.messages[0].content, '@长任务 规划一个普通研究排期');
   } finally {
     await stopGoServer(child);
     await upstream.close();

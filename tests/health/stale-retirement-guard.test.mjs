@@ -13,6 +13,7 @@ const scannedRoots = [
 
 const allowedFiles = new Set([
   'tests/health/stale-retirement-guard.test.mjs',
+  'tests/contract/fixed-truth-lifecycle.test.mjs',
   'tests/smoke/web-shell.test.mjs',
   'tests/contract/go-control-plane-http.test.mjs',
   'tests/contract/one-person-lab-web-data.test.mjs',
@@ -47,7 +48,9 @@ const activeRoots = [
 
 const productDebtAllowedPatterns = [
   /^docs\/history\/process\/closeouts\.md$/,
+  /^docs\/history\/tombstones\/README\.md$/,
   /^tests\/health\/stale-retirement-guard\.test\.mjs$/,
+  /^tests\/contract\/fixed-truth-lifecycle\.test\.mjs$/,
   /^tests\/contract\/go-control-plane-http\.test\.mjs$/,
   /^tests\/contract\/one-person-lab-web-data\.test\.mjs$/,
   /^tests\/smoke\/web-shell\.test\.mjs$/,

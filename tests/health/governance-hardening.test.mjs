@@ -11,6 +11,8 @@ const coreDocs = [
   'docs/architecture.md',
   'docs/invariants.md',
   'docs/docs_portfolio_consolidation.md',
+  'docs/active/README.md',
+  'docs/history/tombstones/README.md',
 ];
 
 test('repository governance exposes OPL-style lifecycle surfaces', () => {
@@ -27,6 +29,8 @@ test('repository governance exposes OPL-style lifecycle surfaces', () => {
     '测试登记',
     '机器 gate',
     '不使用 `changes/active` 七件套作为默认开发系统',
+    'docs/active/',
+    'docs/history/tombstones/',
     '不得保留无 consumer 的兼容层',
     '每次正式变更必须同步清退',
     '理想态优先',
@@ -56,6 +60,9 @@ test('documentation portfolio defines lightweight OPL-inspired taxonomy', () => 
     '不要复制 one-person-lab 的目录体量',
     'contracts/ 是 One Person Lab Web 的 durable machine truth',
     'Retired Workflow',
+    'docs/active/',
+    'docs/history/tombstones/',
+    'Active Baton Lifecycle',
   ]) {
     assert.match(portfolio, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -76,4 +83,14 @@ test('retired vocabulary guard is tracked as a health gate', () => {
   const registry = readFileSync('scripts/test-classification.mjs', 'utf8');
   assert.match(registry, /tests\/health\/governance-hardening\.test\.mjs/);
   assert.match(registry, /tests\/health\/stale-retirement-guard\.test\.mjs/);
+});
+
+test('bloat policy does not hard-fail on durable file count', () => {
+  const script = readFileSync('scripts/repo-bloat-audit.mjs', 'utf8');
+  const taste = readFileSync('TASTE.md', 'utf8');
+
+  assert.match(script, /fileCountMode: 'report-only'/);
+  assert.match(script, /portfolioFindings/);
+  assert.doesNotMatch(script, /violations\.push\(\{ name, count: counts\[name\], budget \}\)/);
+  assert.match(taste, /File count is a portfolio signal/);
 });

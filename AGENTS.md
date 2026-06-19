@@ -12,7 +12,7 @@
 ## 定位
 
 - `AGENTS.md` 只约束工作方式、稳定边界和工程纪律，不承载完整项目知识。
-- 项目知识默认从 `README.md`、`TASTE.md`、`docs/project.md`、`docs/status.md`、`docs/decisions.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/docs_portfolio_consolidation.md` 和 `contracts/*.json` 读取。
+- 项目知识默认从 `README.md`、`TASTE.md`、`docs/project.md`、`docs/status.md`、`docs/decisions.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/docs_portfolio_consolidation.md`、`docs/active/README.md` 和 `contracts/*.json` 读取。
 - 每次正式开发必须先确认固定 truth，再进入一个明确的 gap-driven phase；不要从临时过程文件推导当前事实。
 
 ## 产品边界
@@ -54,7 +54,9 @@
 
 - `docs/docs_portfolio_consolidation.md` 是文档组合治理入口。
 - 每份长期文档都必须说明 `owner`、`purpose`、`state` 和 `machine boundary`。
-- 新文档先判断角色，再落到 `docs/` core、`docs/history/` 或 `contracts/`。
+- 新文档先判断角色，再落到 `docs/` core、`docs/active/`、`docs/history/`、`docs/history/tombstones/` 或 `contracts/`。
+- `docs/active/` 只放当前 gap baton、worktree lane、下一轮 Agent 上下文和 foldback target；不能变成过程日志或第二套 truth。
+- `docs/history/tombstones/` 只放退役 surface 的 no-resurrection 记录；不能作为兼容入口。
 - 退役路线、历史定位和 tombstone 只能放在 archive/history 语境；active truth 提到旧路线时必须指向当前 owner。
 
 ## 代码清退
@@ -84,7 +86,7 @@
 - `scripts/` 只放 runner、classifier、gate；不要把业务逻辑塞进脚本。
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
 - 单文件行数只作为硬 hygiene 边界：默认上限为 `1000` 行；生成文件、fixture 和 schema 可豁免。不到上限时按职责边界和可维护性判断是否拆分，不为任意小阈值拆文件。
-- 仓库接近或达到 bloat 预算时，新增业务能力前必须先清退、拆分或收敛现有 surface。
+- 仓库文件数量只作为 report-only portfolio signal；不能用固定文件数卡死产品开发。仓库接近或达到 bloat 信号时，新增业务能力前必须先判断是否存在无 owner、无 consumer、已退役或可合并 surface。
 
 ## worktree / subagent
 

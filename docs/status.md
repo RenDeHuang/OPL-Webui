@@ -11,6 +11,8 @@ One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. The r
 
 The current stage is research SaaS product-truth alignment. Product work should now resume one gap at a time through contracts, source, tests, cleanup, and fresh evidence.
 
+`docs/active/README.md` now carries the lightweight current gap baton for worktree lanes and next-agent handoff. It supports the fixed truth set; it does not replace this status file or any machine contract.
+
 ## Machine Truth
 
 - Product boundary: `contracts/web-product-profile.json`
@@ -19,6 +21,8 @@ The current stage is research SaaS product-truth alignment. Product work should 
 - Runtime gate and refs-only projection: `contracts/web-runtime-bridge.json`
 - Release readiness: `contracts/web-release-profile.json`
 - Historical process evidence: `docs/history/process/closeouts.md`
+- Active gap baton: `docs/active/README.md`
+- Retired surface tombstones: `docs/history/tombstones/README.md`
 - Production runbook evidence: `deploy/web-cloud/RUNBOOK.md`
 
 Markdown docs explain those contracts. If docs and contracts disagree, update the contract or retire the stale prose in the same diff.
@@ -28,7 +32,9 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - `changes/active` is retired as the default development system.
 - Fixed truth entries are `README.md`, `AGENTS.md`, `TASTE.md`, `docs/project.md`, `docs/status.md`, `docs/decisions.md`, `docs/architecture.md`, `docs/invariants.md`, `docs/docs_portfolio_consolidation.md`, and `contracts/*.json`.
 - `docs/status.md` keeps the current gap and handoff boundary.
+- `docs/active/README.md` keeps the worktree lane baton for current/vision-driven development.
 - `docs/history/process/closeouts.md` is historical provenance only; it must not become current truth.
+- `docs/history/tombstones/README.md` records retired surfaces and no-resurrection rules.
 
 ## Can Claim
 

@@ -72,7 +72,7 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 }
 
 func requiresRuntime(message string) bool {
-	for _, marker := range []string{"@基金", "@论文", "@综述", "@长任务", "@文件"} {
+	for _, marker := range []string{"@基金", "@论文", "@综述", "@文件"} {
 		if strings.Contains(message, marker) {
 			return true
 		}
