@@ -24,7 +24,8 @@
       "OPL_DOGFOOD_EMAIL",
       "OPL_DOGFOOD_PASSWORD",
       "OPL_DOGFOOD_API_KEY",
-      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
+      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT",
+      "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY"
     ]
   },
   "rolloutPipeline": {
@@ -88,7 +89,8 @@
       "OPL_PRODUCTION_DOGFOOD_E2E"
     ],
     "optionalSwitches": [
-      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
+      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT",
+      "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY"
     ],
     "forbiddenSecrets": [
       "KUBECONFIG",
@@ -106,6 +108,9 @@
       "ordinary_chat_real_completion",
       "chat_completed_audit",
       "runtime_gate_audit",
+      "medopl_readonly_runtime_status",
+      "medopl_readonly_materials_deliverables",
+      "medopl_readonly_billing_summary",
       "sanitized_audit"
     ],
     "cannotClaim": [

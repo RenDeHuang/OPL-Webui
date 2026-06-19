@@ -194,6 +194,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
   assert.equal(release.requiredEnvKeys.includes('OPL_SESSION_SECRET'), true);
   assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
+  assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY'), true);
   assert.equal(release.rolloutPipeline.mode, 'dry_run_first_apply_canary_smoke_then_dogfood');
   assert.deepEqual(release.rolloutPipeline.orderedStages, [
     'production_dry_run',
@@ -218,6 +219,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.requiresSuccessfulRolloutEvidence, true);
   assert.equal(release.productionDogfoodReadiness.afterStage, 'production_apply_canary_smoke');
   assert.equal(release.productionDogfoodReadiness.browserAutomation, false);
+  assert.equal(release.productionDogfoodReadiness.optionalSwitches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
+  assert.equal(release.productionDogfoodReadiness.optionalSwitches.includes('OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY'), true);
   assert.deepEqual(release.productionDogfoodReadiness.requiredSecrets, [
     'OPL_DOGFOOD_EMAIL',
     'OPL_DOGFOOD_PASSWORD',
@@ -231,7 +234,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.coverage.includes('register_or_login'), true);
   assert.equal(release.productionDogfoodReadiness.coverage.includes('ordinary_chat_real_completion'), true);
   assert.equal(release.productionDogfoodReadiness.coverage.includes('runtime_gate_audit'), true);
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('medopl_readonly_runtime_status'), true);
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('medopl_readonly_materials_deliverables'), true);
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('medopl_readonly_billing_summary'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('browser e2e'), true);
+  assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.mode, 'local_chromium_cdp_research_main_path');
   assert.equal(release.localBrowserE2EReadiness.state, 'executed_success_local_2026_06_19');

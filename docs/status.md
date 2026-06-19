@@ -54,17 +54,19 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 - Browser e2e is now a CI release gate before image release: `.github/workflows/ci.yml` installs Chromium and runs `npm run verify:browser`; `Release Image` still depends on successful CI before pushing the cloud image.
 - Research-task-first UX is implemented in the browser shell and page-state contract: the first-screen task templates cover `research_direction`, `paper_question`, `grant_plan`, `review_map`, and `materials_refs`; `npm run verify:browser` clicks the `research_direction` template before ordinary chat fallback and still verifies `@论文`/`@基金` runtime gates.
+- Production dogfood can optionally verify existing MedOPL-owned readonly projections with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`: runtime status, materials/deliverables projection, and billing summary. This proves sanitized projection availability and forbidden Web mutation flags only; it does not prove MedOPL runtime execution, payment, storage mutation, node lifecycle, or production MedOPL API integration.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production browser e2e；当前浏览器证据是 local no-secret Chromium/CDP evidence。
+- 本阶段没有执行 production readonly projection dogfood；需要用新镜像部署后设置 `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` 才能 claim production readonly projection evidence。
 - 本阶段没有新增 billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 
 ## Next Priorities
 
-1. Add production MedOPL authority integration only as readonly projection evidence, not runtime mutation.
+1. Run Cloud Rollout with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` on the next deployed image, then fold back compressed production readonly projection evidence.
 2. Add production availability evidence beyond one successful dogfood run before claiming production-ready SaaS.
 3. Add team/commercial account lifecycle only after owner/consumer/test boundaries are explicit.

@@ -103,8 +103,31 @@ async function runDogfoodE2E() {
   if (process.env.OPL_PRODUCTION_DOGFOOD_REAL_CHAT === '1' && !kinds.includes('chat.completed')) {
     throw new Error(`missing chat completed audit event: ${kinds.join(',')}`);
   }
+  if (process.env.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY === '1') {
+    await dogfoodMedOPLReadonly(session.cookie);
+  } else {
+    console.log('[cloud-rollout] MedOPL readonly projection dogfood skipped; set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to verify readonly projections.');
+  }
   assertNoSensitive({ current: current.body, saved: saved.body, gated: gated.body, audit: audit.body });
   console.log(`[cloud-rollout] production authenticated dogfood e2e passed; audit kinds=${[...new Set(kinds)].join(',')}`);
+}
+
+async function dogfoodMedOPLReadonly(cookie) {
+  const runtime = await dogfoodFetch('/api/medopl/runtime/status', { cookie }, 'runtime status');
+  assertEqual(runtime.body.owner, 'MedOPL', 'runtime status owner');
+  assertEqual(runtime.body.webuiRuntimeExecution, 'forbidden', 'runtime execution boundary');
+
+  const materials = await dogfoodFetch('/api/medopl/materials-deliverables/projection', { cookie }, 'materials deliverables');
+  assertEqual(materials.body.owner, 'MedOPL', 'materials owner');
+  assertEqual(materials.body.webuiStorageMutation, 'forbidden', 'storage mutation boundary');
+  assertEqual(materials.body.webuiArtifactBody, 'forbidden', 'artifact body boundary');
+
+  const billing = await dogfoodFetch('/api/account/billing-summary', { cookie }, 'billing summary');
+  assertEqual(billing.body.owner, 'MedOPL', 'billing owner');
+  assertEqual(billing.body.webuiBillingSourceOfTruth, 'forbidden', 'billing truth boundary');
+  assertEqual(billing.body.webuiPaymentMutation, 'forbidden', 'payment mutation boundary');
+
+  assertNoSensitive({ runtime: runtime.body, materials: materials.body, billing: billing.body });
 }
 
 async function dogfoodSession() {
@@ -324,5 +347,5 @@ function printUsage() {
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
 
-Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl.`);
+Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }

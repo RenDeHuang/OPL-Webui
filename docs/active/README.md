@@ -18,8 +18,9 @@ Current product work is moving from fixed truth into engineering evidence:
 1. Browser-level e2e runner executed successfully through `npm run verify:browser` with real Chromium/CDP for register, login, API Key binding, ordinary chat fallback, `@论文`/`@基金` gate, and sanitized audit evidence. It is now a CI release gate before image release; future non-CI hosts still need Chrome/Chromium via `OPL_BROWSER_BINARY` or system discovery.
 2. Research-task-first UX state is owned by the page-state contract, `RESEARCH_TASK_INTENTS`, and `chatStateForPrompt`; the browser runner now clicks the `research_direction` task template before ordinary chat fallback.
 3. Production authenticated dogfood HTTP evidence passed in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2`; user confirmed `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, so this run includes production real ordinary chat completion and `chat.completed` audit evidence. It remains secret-gated, not browser e2e, and not MedOPL runtime execution.
-4. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
-5. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
+4. Production dogfood now has an optional readonly projection lane: set `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` to verify runtime status, materials/deliverables, and billing summary projections after apply/canary/smoke. It only proves sanitized readonly projection availability and forbidden mutation flags.
+5. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
+6. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
 
 ## Worktree Lane Model
 

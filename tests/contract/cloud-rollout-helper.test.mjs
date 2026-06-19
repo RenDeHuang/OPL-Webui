@@ -65,6 +65,7 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
   const helper = readFileSync(helperPath, 'utf8');
   for (const required of [
     '--dogfood-e2e', 'OPL_PRODUCTION_DOGFOOD_E2E', 'OPL_PRODUCTION_DOGFOOD_REAL_CHAT',
+    'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY',
     'OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY',
     'https://gflabtoken.cn/v1', '@基金', 'RUNTIME_REQUIRED',
   ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
@@ -80,15 +81,19 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
         OPL_BASE_URL: fake.baseUrl,
         OPL_PRODUCTION_DOGFOOD_E2E: '1',
         OPL_PRODUCTION_DOGFOOD_REAL_CHAT: '1',
+        OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY: '1',
         OPL_DOGFOOD_EMAIL: 'dogfood@example.test',
         OPL_DOGFOOD_PASSWORD: 'dogfood-password',
         OPL_DOGFOOD_API_KEY: 'sk-dogfood-production-secret',
       },
     });
-    assert.match(output, /register|login|current session|API Key binding|ordinary chat|runtime gate|audit events/i);
+    assert.match(output, /register|login|current session|API Key binding|ordinary chat|runtime gate|audit events|runtime status|materials deliverables|billing summary/i);
     assert.doesNotMatch(output, /sk-dogfood-production-secret|dogfood-password|opl_session=secret-session/i);
     assert.equal(fake.requests.find((request) => request.path === '/api/settings/model-provider').body.apiKey, 'sk-dogfood-production-secret');
     assert.equal(fake.requests.some((request) => request.path === '/api/chat' && request.body.message.includes('@基金')), true);
+    assert.equal(fake.requests.some((request) => request.path === '/api/medopl/runtime/status'), true);
+    assert.equal(fake.requests.some((request) => request.path === '/api/medopl/materials-deliverables/projection'), true);
+    assert.equal(fake.requests.some((request) => request.path === '/api/account/billing-summary'), true);
   } finally {
     await fake.close();
   }
@@ -344,6 +349,39 @@ async function startFakeProduction(options = {}) {
     if (request.url === '/api/chat' && body.message.includes('@基金')) return send(409, { errorCode: 'RUNTIME_REQUIRED', medoplDeepLink: 'https://medopl.medopl.cn/runtime' });
     if (request.url === '/api/chat') return send(200, { assistantMessage: { content: 'pong' } });
     if (request.url === '/api/account/audit-events') return send(200, { events: [{ eventKind: 'chat.completed' }, { eventKind: 'runtime_gate.required' }] });
+    if (request.url === '/api/medopl/runtime/status') {
+      return send(200, {
+        ok: true,
+        owner: 'MedOPL',
+        state: 'ready',
+        deepLink: 'https://medopl.medopl.cn/runtime',
+        refs: { runtimeRef: 'runtime_public_ref_dogfood' },
+        counts: { activeRuns: 1 },
+        webuiRuntimeExecution: 'forbidden',
+      });
+    }
+    if (request.url === '/api/medopl/materials-deliverables/projection') {
+      return send(200, {
+        ok: true,
+        owner: 'MedOPL',
+        deepLink: 'https://medopl.medopl.cn/materials',
+        materials: [{ materialId: 'material_ref_dogfood', title: 'Linked material', kind: 'reference', status: 'ready' }],
+        deliverables: [{ deliverableId: 'deliverable_ref_dogfood', title: 'Linked deliverable', kind: 'artifact_ref', status: 'draft', ref: 'deliverable_ref_dogfood' }],
+        webuiStorageMutation: 'forbidden',
+        webuiArtifactBody: 'forbidden',
+      });
+    }
+    if (request.url === '/api/account/billing-summary') {
+      return send(200, {
+        ok: true,
+        owner: 'MedOPL',
+        deepLink: 'https://medopl.medopl.cn/billing',
+        quota: { limit: 100, used: 1, remaining: 99 },
+        audit: { eventCount: 2, latestEventKind: 'runtime_gate.required' },
+        webuiBillingSourceOfTruth: 'forbidden',
+        webuiPaymentMutation: 'forbidden',
+      });
+    }
     send(404, { errorCode: 'NOT_FOUND' });
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));

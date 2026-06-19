@@ -110,6 +110,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /--apply/);
   assert.match(workflow, /KUBECONFIG/);
   assert.match(workflow, /OPL_PRODUCTION_DOGFOOD_E2E:\s*1/);
+  assert.match(workflow, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY:\s*\$\{\{\s*vars\.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY\s*\}\}/);
   assert.match(workflow, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
   assert.match(workflow, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
   assert.match(workflow, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
@@ -143,6 +144,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(dogfoodJob, /environment:\s*production/);
   assert.match(dogfoodJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
   assert.match(dogfoodJob, /::add-mask::\$\{OPL_DOGFOOD_PASSWORD\}/);
+  assert.match(dogfoodJob, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY:\s*\$\{\{\s*vars\.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY\s*\}\}/);
   assert.match(dogfoodJob, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
   assert.match(dogfoodJob, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
   assert.match(dogfoodJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
