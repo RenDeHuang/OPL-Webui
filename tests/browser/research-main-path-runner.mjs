@@ -16,10 +16,8 @@ try {
   const browserBinary = findBrowserBinary();
   const upstream = await startMockChatUpstream();
   state.cleanup.push(() => upstream.close());
-  const app = await startControlPlane(upstream.baseUrl);
-  state.cleanup.push(() => app.close());
+  const app = await startControlPlane(upstream.baseUrl, state.cleanup);
   const browser = await startBrowser(browserBinary);
-  state.cleanup.push(() => browser.close());
 
   const pageWebSocketDebuggerUrl = await createPageTarget(browser.devtoolsBaseUrl);
   const cdp = await connectCDP(pageWebSocketDebuggerUrl);
@@ -27,7 +25,8 @@ try {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Page.navigate', { url: app.baseUrl });
-  await waitFor(cdp, 'document.querySelector("[data-register-button]")');
+  await waitFor(cdp, 'document.readyState === "complete"');
+  await waitFor(cdp, 'document.body.dataset.authState === "anonymous"');
 
   const email = `browser-${Date.now()}@example.test`;
   const password = 'browser-e2e-password';
@@ -47,16 +46,16 @@ try {
   await waitFor(cdp, 'document.body.dataset.authState === "authenticated_bound"');
 
   await submitPrompt(cdp, '@科研 帮我拆解研究方向');
-  await waitFor(cdp, 'document.body.dataset.chatState === "idle"');
-  await assertPage(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")', 'ordinary chat fallback');
+  await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
+  await waitForAuditKind(cdp, 'chat.completed');
 
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
-  await waitFor(cdp, 'document.body.dataset.chatState === "runtime_required"');
+  await waitForAuditKindCount(cdp, 'runtime_gate.required', 1);
   await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible")', 'paper runtime gate');
 
   await submitPrompt(cdp, '@基金 帮我拆解标书结构');
-  await waitFor(cdp, 'document.body.dataset.chatState === "runtime_required"');
-  const audit = await evaluateJSON(cdp, 'fetch("/api/account/audit-events").then((response) => response.json())');
+  await waitForAuditKindCount(cdp, 'runtime_gate.required', 2);
+  const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
   if (!kinds.includes('runtime_gate.required')) {
     throw new Error(`missing runtime_gate.required audit evidence: ${kinds.join(',')}`);
@@ -115,7 +114,7 @@ async function startMockChatUpstream() {
   };
 }
 
-async function startControlPlane(upstreamBaseUrl) {
+async function startControlPlane(upstreamBaseUrl, cleanup) {
   const port = await freePort();
   const child = spawn('go', ['run', './services/control-plane-go/cmd/opl-webui-control-plane'], {
     cwd: repoRoot,
@@ -131,20 +130,18 @@ async function startControlPlane(upstreamBaseUrl) {
       OPL_DATABASE_URL: '',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   });
+  cleanup.push(() => closeChildProcess(child));
   const output = [];
   child.stdout.on('data', (chunk) => output.push(String(chunk)));
   child.stderr.on('data', (chunk) => output.push(String(chunk)));
   const baseUrl = `http://127.0.0.1:${port}`;
   await waitForHTTP(`${baseUrl}/healthz`, () => {
     if (child.exitCode !== null) throw new Error(`control plane exited early:\n${output.join('')}`);
-  });
+  }, 120000);
   return {
     baseUrl,
-    close: async () => {
-      child.kill('SIGTERM');
-      await Promise.race([once(child, 'exit'), delay(1500).then(() => child.kill('SIGKILL'))]);
-    },
   };
 }
 
@@ -159,7 +156,8 @@ async function startBrowser(binary) {
     '--remote-debugging-port=0',
     `--user-data-dir=${userDataDir}`,
     'about:blank',
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+  ], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+  state.cleanup.push(() => closeChildProcess(child, () => rmSync(userDataDir, { recursive: true, force: true })));
 
   let devtools = '';
   child.stderr.on('data', (chunk) => {
@@ -177,11 +175,6 @@ async function startBrowser(binary) {
   const devtoolsBaseUrl = versionURL.replace('/json/version', '');
   return {
     devtoolsBaseUrl,
-    close: async () => {
-      child.kill('SIGTERM');
-      await Promise.race([once(child, 'exit'), delay(1500).then(() => child.kill('SIGKILL'))]);
-      rmSync(userDataDir, { recursive: true, force: true });
-    },
   };
 }
 
@@ -222,9 +215,19 @@ async function connectCDP(webSocketDebuggerUrl) {
 }
 
 async function setValue(cdp, selector, value) {
-  await cdp.send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}).focus()` });
-  await cdp.send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}).value = ''` });
-  await cdp.send('Input.insertText', { text: value });
+  await cdp.send('Runtime.evaluate', {
+    expression: `
+      {
+        const input = document.querySelector(${JSON.stringify(selector)});
+        input.focus();
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    `,
+    awaitPromise: true,
+  });
+  await waitFor(cdp, `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(value)}`);
 }
 
 async function submitPrompt(cdp, prompt) {
@@ -261,11 +264,27 @@ async function assertPage(cdp, expression, label) {
 
 async function evaluateJSON(cdp, expression) {
   const result = await cdp.send('Runtime.evaluate', {
-    expression: `JSON.stringify(await (${expression}))`,
+    expression: `(async () => JSON.stringify(await (${expression})))()`,
     returnByValue: true,
     awaitPromise: true,
   });
   return JSON.parse(result.result?.value || '{}');
+}
+
+async function readAuditEvents(cdp) {
+  return evaluateJSON(cdp, 'fetch("/api/account/audit-events").then((response) => response.json())');
+}
+
+async function waitForAuditKind(cdp, eventKind) {
+  await waitForAuditKindCount(cdp, eventKind, 1);
+}
+
+async function waitForAuditKindCount(cdp, eventKind, count) {
+  await waitUntil(async () => {
+    const audit = await readAuditEvents(cdp);
+    const actual = (audit.events ?? []).filter((event) => event.eventKind === eventKind).length;
+    return actual >= count;
+  }, 60000);
 }
 
 async function waitUntil(check, timeoutMs = 30000) {
@@ -283,7 +302,7 @@ async function waitUntil(check, timeoutMs = 30000) {
   throw lastError || new Error('timed out');
 }
 
-async function waitForHTTP(url, failFast) {
+async function waitForHTTP(url, failFast, timeoutMs = 60000) {
   await waitUntil(async () => {
     failFast?.();
     try {
@@ -292,11 +311,11 @@ async function waitForHTTP(url, failFast) {
     } catch {
       return false;
     }
-  }, 60000);
+  }, timeoutMs);
 }
 
-async function fetchJSON(url, headers = {}) {
-  const response = await fetch(url, { headers });
+async function fetchJSON(url, init = {}) {
+  const response = await fetch(url, init);
   if (!response.ok) throw new Error(`${url} returned ${response.status}`);
   return response.json();
 }
@@ -315,7 +334,19 @@ async function freePort() {
 }
 
 function closeServer(server) {
+  server.closeAllConnections?.();
   return new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+}
+
+async function closeChildProcess(child, afterClose = () => {}) {
+  try {
+    if (child.exitCode === null) {
+      process.kill(-child.pid, 'SIGTERM');
+      await Promise.race([once(child, 'exit'), delay(1500).then(() => process.kill(-child.pid, 'SIGKILL'))]);
+    }
+  } finally {
+    afterClose();
+  }
 }
 
 function delay(ms) {
