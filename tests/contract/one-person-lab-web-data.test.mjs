@@ -130,6 +130,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
+  assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
+  assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');
+  assert.equal(release.localBrowserE2EReadiness.requiredBeforeImageRelease, true);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);

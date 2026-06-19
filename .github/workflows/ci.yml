@@ -29,5 +29,11 @@ jobs:
       - name: Run verify
         run: npm run verify
 
+      - name: Install Chromium for browser e2e
+        run: npx --yes playwright install chromium
+
+      - name: Run browser e2e release gate
+        run: npm run verify:browser
+
       - name: Run review gate
         run: npm run gate:review

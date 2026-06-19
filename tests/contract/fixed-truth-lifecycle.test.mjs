@@ -235,6 +235,9 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.mode, 'local_chromium_cdp_research_main_path');
   assert.equal(release.localBrowserE2EReadiness.state, 'executed_success_local_2026_06_19');
+  assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
+  assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');
+  assert.equal(release.localBrowserE2EReadiness.requiredBeforeImageRelease, true);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.tests, 2);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.failures, 0);
@@ -259,10 +262,12 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
   assert.match(status, /production real ordinary chat completion/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
+  assert.match(status, /Browser e2e is now a CI release gate/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
   assert.match(status, /Next Priorities/);
+  assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
 });
 
 test('release automation evidence is historical after production-gated closeout', () => {

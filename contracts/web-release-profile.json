@@ -196,6 +196,9 @@
     "requiresProductionSecrets": false,
     "browserAutomation": true,
     "automationLevel": "real_chromium_cdp",
+    "releaseGate": true,
+    "ciWorkflow": ".github/workflows/ci.yml",
+    "requiredBeforeImageRelease": true,
     "entrypoint": "node scripts/verify.mjs suite browser",
     "evidenceCommands": [
       "npm run verify:browser"

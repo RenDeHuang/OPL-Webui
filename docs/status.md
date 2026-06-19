@@ -52,6 +52,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and browser e2e evidence. The explicit browser lane ran real Chromium/CDP automation through `npm run verify:browser`.
 - Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2` after dry-run, production apply, and canary/smoke success. With `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, this run includes production real ordinary chat completion and `chat.completed` audit evidence. It is not browser e2e and not MedOPL runtime execution evidence.
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
+- Browser e2e is now a CI release gate before image release: `.github/workflows/ci.yml` installs Chromium and runs `npm run verify:browser`; `Release Image` still depends on successful CI before pushing the cloud image.
 
 ## Cannot Claim
 
@@ -63,6 +64,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Promote browser-level e2e into CI or release-gate evidence without adding a frontend framework migration first.
-2. Continue richer research capability UX only after the local browser evidence path is runnable in CI or a documented developer environment.
-3. Add production availability evidence beyond one successful dogfood run before claiming production-ready SaaS.
+1. Continue richer research capability UX now that the browser evidence path is release-gated in CI.
+2. Add production availability evidence beyond one successful dogfood run before claiming production-ready SaaS.
+3. Add production MedOPL authority integration only as readonly projection evidence, not runtime mutation.

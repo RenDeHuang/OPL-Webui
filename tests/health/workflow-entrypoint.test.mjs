@@ -40,6 +40,8 @@ test('github ci workflow runs local gates only', () => {
   assert.match(workflow, /actions\/setup-node/);
   assert.match(workflow, /actions\/setup-go/);
   assert.match(workflow, /npm run verify/);
+  assert.match(workflow, /npx --yes playwright install chromium/);
+  assert.match(workflow, /npm run verify:browser/);
   assert.match(workflow, /npm run gate:review/);
   assert.match(workflow, /contents:\s*read/);
 
