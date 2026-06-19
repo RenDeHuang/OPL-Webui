@@ -50,20 +50,19 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
 - Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and browser e2e evidence. The explicit browser lane ran real Chromium/CDP automation through `npm run verify:browser`.
-- Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27823251419` for commit `73cfd2b01a4a11a452b753171ede02d140785821` after dry-run, production apply, and canary/smoke success. It is not browser e2e and not MedOPL runtime execution evidence.
+- Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2` after dry-run, production apply, and canary/smoke success. With `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, this run includes production real ordinary chat completion and `chat.completed` audit evidence. It is not browser e2e and not MedOPL runtime execution evidence.
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production browser e2e；当前浏览器证据是 local no-secret Chromium/CDP evidence。
-- 本阶段没有执行 production real ordinary chat completion dogfood；run `27823251419` 的 `realChat=false`。
 - 本阶段没有新增 billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 
 ## Next Priorities
 
-1. Execute production real ordinary chat dogfood only through approved secrets, explicit `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, and quota-aware evidence.
-2. Promote browser-level e2e into CI or release-gate evidence without adding a frontend framework migration first.
-3. Continue richer research capability UX only after the local browser evidence path is runnable in CI or a documented developer environment.
+1. Promote browser-level e2e into CI or release-gate evidence without adding a frontend framework migration first.
+2. Continue richer research capability UX only after the local browser evidence path is runnable in CI or a documented developer environment.
+3. Add production availability evidence beyond one successful dogfood run before claiming production-ready SaaS.

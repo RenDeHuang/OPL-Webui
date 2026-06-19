@@ -122,8 +122,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   ]);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27823251419');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27823251419');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27833052951_real_chat');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27833052951');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '116a56ce18e14c730be10628731d1a5fff9591c2');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
+  assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);

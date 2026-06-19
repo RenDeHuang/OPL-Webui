@@ -92,18 +92,18 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool m
 Latest compressed evidence:
 
 ```text
-run id: 27823251419
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27823251419
-commit: 73cfd2b01a4a11a452b753171ede02d140785821
+run id: 27833052951
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27833052951
+commit: 116a56ce18e14c730be10628731d1a5fff9591c2
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:73cfd2b
-real chat: false
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c
+real chat: true
 stages: Production Dry Run success, Production Apply success, Production Authenticated Dogfood E2E success
-steps: register_or_login,current_session,api_key_binding,runtime_gate,audit_events
+steps: register_or_login,current_session,api_key_binding,ordinary_chat,runtime_gate,audit_events
 HTTP status summary: GitHub job success; raw response bodies are not stored in git
-audit kinds: validated by dogfood harness; raw audit payload is not stored in git
+audit kinds: chat.completed,runtime_gate.required validated by dogfood harness; raw audit payload is not stored in git
 result: production authenticated dogfood e2e passed
-cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence, production real ordinary chat completion
+cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence
 ```
 
 ## 创建 Kubernetes Secret

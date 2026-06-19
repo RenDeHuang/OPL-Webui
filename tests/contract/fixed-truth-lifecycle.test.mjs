@@ -112,6 +112,12 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   ]) {
     assert.match(active, new RegExp(required));
   }
+  assert.match(active, /27833052951/);
+  assert.match(active, /116a56ce18e14c730be10628731d1a5fff9591c2/);
+  assert.match(active, /OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1/);
+  assert.match(active, /not browser e2e/);
+  assert.match(active, /not MedOPL runtime execution/);
+  assert.doesNotMatch(active, /27823251419/);
 
   for (const required of [
     'changes/active',
@@ -137,6 +143,8 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(closeout, /repo-slimming-and-stale-name-retirement/);
   assert.match(closeout, /production-dogfood-evidence-foldback/);
   assert.match(closeout, /27823251419/);
+  assert.match(closeout, /production-real-chat-dogfood-evidence-foldback/);
+  assert.match(closeout, /27833052951/);
   assert.match(closeout, /Production Authenticated Dogfood E2E/);
   assert.equal(release.currentStage, 'one-person-lab-web-contract-truth');
   assert.equal(release.historicalEvidenceRefs.includes('docs/history/process/closeouts.md'), true);
@@ -200,10 +208,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27823251419');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27823251419);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '73cfd2b01a4a11a452b753171ede02d140785821');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, false);
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27833052951_real_chat');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27833052951);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '116a56ce18e14c730be10628731d1a5fff9591c2');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.defaultEnabled, false);
   assert.equal(release.productionDogfoodReadiness.requiresProductionSecrets, true);
   assert.equal(release.productionDogfoodReadiness.requiresSuccessfulRolloutEvidence, true);
@@ -220,8 +229,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     assert.equal(release.productionDogfoodReadiness.forbiddenSecrets.includes(forbidden), true, `dogfood must not need ${forbidden}`);
   }
   assert.equal(release.productionDogfoodReadiness.coverage.includes('register_or_login'), true);
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('ordinary_chat_real_completion'), true);
   assert.equal(release.productionDogfoodReadiness.coverage.includes('runtime_gate_audit'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('browser e2e'), true);
+  assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.mode, 'local_chromium_cdp_research_main_path');
   assert.equal(release.localBrowserE2EReadiness.state, 'executed_success_local_2026_06_19');
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
@@ -233,8 +244,9 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.localBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
   assert.match(runbook, /OPL_SESSION_SECRET/);
   assert.match(runbook, /Production authenticated dogfood closeout/);
-  assert.match(runbook, /27823251419/);
-  assert.match(runbook, /73cfd2b/);
+  assert.match(runbook, /27833052951/);
+  assert.match(runbook, /116a56c/);
+  assert.match(runbook, /real chat: true/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
   assert.match(runbook, /run id/i);
   assert.match(runbook, /audit kinds/i);
@@ -245,8 +257,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /multi-tenant SaaS Web edition of One Person Lab/);
   assert.match(status, /Ordinary chat is a fallback entry/);
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
+  assert.match(status, /production real ordinary chat completion/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
+  assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
   assert.match(status, /Next Priorities/);
 });

@@ -66,7 +66,7 @@
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
-    "state": "executed_success_run_27823251419",
+    "state": "executed_success_run_27833052951_real_chat",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -103,7 +103,8 @@
       "api_key_binding",
       "fixed_gateway",
       "raw_api_key_not_returned",
-      "ordinary_chat_optional_real_quota",
+      "ordinary_chat_real_completion",
+      "chat_completed_audit",
       "runtime_gate_audit",
       "sanitized_audit"
     ],
@@ -115,14 +116,14 @@
       "storage or node pool mutation"
     ],
     "latestSuccessfulRun": {
-      "runId": 27823251419,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27823251419",
-      "commit": "73cfd2b01a4a11a452b753171ede02d140785821",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:73cfd2b",
+      "runId": 27833052951,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27833052951",
+      "commit": "116a56ce18e14c730be10628731d1a5fff9591c2",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-19T11:34:49Z",
-      "realChat": false,
+      "completedAt": "2026-06-19T14:58:46Z",
+      "realChat": true,
       "stages": [
         "production_dry_run",
         "production_apply",
@@ -140,6 +141,8 @@
         "api_key_binding",
         "fixed_gateway",
         "raw_api_key_not_returned",
+        "ordinary_chat_real_completion",
+        "chat_completed_audit",
         "runtime_gate_audit",
         "sanitized_audit"
       ]
