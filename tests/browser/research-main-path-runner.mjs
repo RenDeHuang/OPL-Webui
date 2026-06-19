@@ -21,7 +21,8 @@ try {
   const browser = await startBrowser(browserBinary);
   state.cleanup.push(() => browser.close());
 
-  const cdp = await connectCDP(browser.webSocketDebuggerUrl);
+  const pageWebSocketDebuggerUrl = await createPageTarget(browser.devtoolsBaseUrl);
+  const cdp = await connectCDP(pageWebSocketDebuggerUrl);
   state.cleanup.push(() => cdp.close());
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
@@ -173,14 +174,24 @@ async function startBrowser(binary) {
   const versionURL = devtools.replace(/^ws:\/\/([^/]+).*$/, 'http://$1/json/version');
   const version = await fetchJSON(versionURL);
   if (!version.webSocketDebuggerUrl) throw new Error('/json/version did not expose webSocketDebuggerUrl');
+  const devtoolsBaseUrl = versionURL.replace('/json/version', '');
   return {
-    webSocketDebuggerUrl: version.webSocketDebuggerUrl,
+    devtoolsBaseUrl,
     close: async () => {
       child.kill('SIGTERM');
       await Promise.race([once(child, 'exit'), delay(1500).then(() => child.kill('SIGKILL'))]);
       rmSync(userDataDir, { recursive: true, force: true });
     },
   };
+}
+
+async function createPageTarget(devtoolsBaseUrl) {
+  const created = await fetchJSON(`${devtoolsBaseUrl}/json/new?about:blank`, { method: 'PUT' });
+  if (created.webSocketDebuggerUrl) return created.webSocketDebuggerUrl;
+  const targets = await fetchJSON(`${devtoolsBaseUrl}/json/list`);
+  const page = targets.find((target) => target.type === 'page' && target.webSocketDebuggerUrl);
+  if (!page) throw new Error('Chrome did not expose a page target webSocketDebuggerUrl');
+  return page.webSocketDebuggerUrl;
 }
 
 async function connectCDP(webSocketDebuggerUrl) {
