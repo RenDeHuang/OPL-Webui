@@ -203,6 +203,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     'OPL_DOGFOOD_PASSWORD',
     'OPL_DOGFOOD_API_KEY',
   ]);
+  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_EMAIL, 'must contain @');
+  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_PASSWORD, 'min_length_12');
   for (const forbidden of ['KUBECONFIG', 'OPL_DATABASE_URL', 'PGPASSWORD', 'MEDOPL_TOKEN', 'TCR_PASSWORD']) {
     assert.equal(release.productionDogfoodReadiness.forbiddenSecrets.includes(forbidden), true, `dogfood must not need ${forbidden}`);
   }

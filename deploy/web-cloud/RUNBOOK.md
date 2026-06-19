@@ -58,7 +58,7 @@ helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-
 
 ## Production authenticated dogfood e2e
 
-该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout mutation。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须同时设置 `apply=true`，并且只能在该 workflow 的 `production-apply`、canary、smoke 成功后运行。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。
+该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout mutation。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须同时设置 `apply=true`，并且只能在该 workflow 的 `production-apply`、canary、smoke 成功后运行。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。`OPL_DOGFOOD_EMAIL` 必须是邮箱格式，`OPL_DOGFOOD_PASSWORD` 必须至少 12 个字符；helper 会在发起 production 请求前本地 fail-closed。
 
 执行边界：
 

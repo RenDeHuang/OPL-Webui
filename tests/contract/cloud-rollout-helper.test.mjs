@@ -94,6 +94,49 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
   }
 });
 
+test('cloud rollout helper reports credential input failures without unsafe-field false positives', async () => {
+  const fake = await startFakeProduction({ registerStatus: 400 });
+  try {
+    await assert.rejects(
+      runHelper({
+        env: {
+          ...process.env,
+          OPL_BASE_URL: fake.baseUrl,
+          OPL_PRODUCTION_DOGFOOD_E2E: '1',
+          OPL_DOGFOOD_EMAIL: 'dogfood@example.test',
+          OPL_DOGFOOD_PASSWORD: 'dogfood-password',
+          OPL_DOGFOOD_API_KEY: 'sk-dogfood-production-secret',
+        },
+      }),
+      /register expected 201\/409 but got 400/,
+    );
+  } finally {
+    await fake.close();
+  }
+});
+
+test('cloud rollout helper validates dogfood credentials locally before production requests', async () => {
+  const fake = await startFakeProduction();
+  try {
+    await assert.rejects(
+      runHelper({
+        env: {
+          ...process.env,
+          OPL_BASE_URL: fake.baseUrl,
+          OPL_PRODUCTION_DOGFOOD_E2E: '1',
+          OPL_DOGFOOD_EMAIL: 'dogfood@example.test',
+          OPL_DOGFOOD_PASSWORD: 'short',
+          OPL_DOGFOOD_API_KEY: 'sk-dogfood-production-secret',
+        },
+      }),
+      /OPL_DOGFOOD_PASSWORD must be at least 12 characters/,
+    );
+    assert.equal(fake.requests.length, 0);
+  } finally {
+    await fake.close();
+  }
+});
+
 test('cloud rollout helper captures rollout state evidence for closeout', () => {
   const helper = readFileSync(helperPath, 'utf8');
 
@@ -275,7 +318,7 @@ function runHelper(options) {
   });
 }
 
-async function startFakeProduction() {
+async function startFakeProduction(options = {}) {
   const requests = [];
   const server = http.createServer(async (request, response) => {
     let raw = '';
@@ -289,7 +332,12 @@ async function startFakeProduction() {
       response.end(JSON.stringify(payload));
     };
     if (request.url === '/') return send(200, { html: '严肃工作的 AI 工作台 https://gflabtoken.cn/v1' });
-    if (request.url === '/api/auth/register') return send(409, { errorCode: 'EMAIL_ALREADY_REGISTERED' });
+    if (request.url === '/api/auth/register') {
+      if (options.registerStatus === 400) {
+        return send(400, { ok: false, errorCode: 'INVALID_CREDENTIALS_INPUT', message: 'valid email and password are required' });
+      }
+      return send(409, { errorCode: 'EMAIL_ALREADY_REGISTERED' });
+    }
     if (request.url === '/api/auth/login') return send(200, { email: body.email }, true);
     if (request.url === '/api/session/current') return send(200, { email: 'dogfood@example.test' });
     if (request.url === '/api/settings/model-provider') return send(200, { baseUrl: 'https://gflabtoken.cn/v1', apiKeyConfigured: true, maskedKey: 'sk-***ret' });

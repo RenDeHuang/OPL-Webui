@@ -80,6 +80,10 @@
       "OPL_DOGFOOD_PASSWORD",
       "OPL_DOGFOOD_API_KEY"
     ],
+    "secretValidation": {
+      "OPL_DOGFOOD_EMAIL": "must contain @",
+      "OPL_DOGFOOD_PASSWORD": "min_length_12"
+    },
     "requiredSwitches": [
       "OPL_PRODUCTION_DOGFOOD_E2E"
     ],

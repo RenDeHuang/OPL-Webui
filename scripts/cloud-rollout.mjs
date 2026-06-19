@@ -75,6 +75,7 @@ async function runDogfoodE2E() {
   for (const name of ['OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY']) {
     requireEnv(name);
   }
+  validateDogfoodCredentials();
   const session = await dogfoodSession();
   const current = await dogfoodFetch('/api/session/current', { cookie: session.cookie }, 'current session');
   assertEqual(current.body.email, process.env.OPL_DOGFOOD_EMAIL, 'current session email');
@@ -254,6 +255,19 @@ function requireEnv(name) {
   }
 }
 
+function validateDogfoodCredentials() {
+  const email = process.env.OPL_DOGFOOD_EMAIL?.trim() ?? '';
+  const password = process.env.OPL_DOGFOOD_PASSWORD?.trim() ?? '';
+  if (!email.includes('@')) {
+    console.error('OPL_DOGFOOD_EMAIL must be a valid email address.');
+    process.exit(2);
+  }
+  if (password.length < 12) {
+    console.error('OPL_DOGFOOD_PASSWORD must be at least 12 characters.');
+    process.exit(2);
+  }
+}
+
 function validateImage(value) {
   if (!value || value === '$OPL_IMAGE') {
     console.error('Missing required OPL_IMAGE. Set an allowed OPL-Webui image tag or digest.');
@@ -274,7 +288,23 @@ function assertNoSensitive(value) {
   for (const sensitive of [process.env.OPL_DOGFOOD_API_KEY, process.env.OPL_DOGFOOD_PASSWORD]) {
     if (sensitive && text.includes(sensitive)) throw new Error('dogfood response contains sensitive material');
   }
-  if (/rawApiKey|encryptedApiKey|password|postgres:\/\//i.test(text)) throw new Error('dogfood response contains unsafe fields');
+  assertNoUnsafeFields(value);
+}
+
+function assertNoUnsafeFields(value) {
+  if (Array.isArray(value)) {
+    for (const item of value) assertNoUnsafeFields(item);
+    return;
+  }
+  if (!value || typeof value !== 'object') {
+    if (typeof value === 'string' && /postgres:\/\//i.test(value)) throw new Error('dogfood response contains unsafe fields');
+    return;
+  }
+  for (const [key, nested] of Object.entries(value)) {
+    if (/rawApiKey|encryptedApiKey|passwordHash/i.test(key)) throw new Error('dogfood response contains unsafe fields');
+    if (/password/i.test(key) && typeof nested !== 'boolean') throw new Error('dogfood response contains unsafe fields');
+    assertNoUnsafeFields(nested);
+  }
 }
 
 function formatCommand(command, commandArgs) {
