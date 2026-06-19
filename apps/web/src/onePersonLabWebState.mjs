@@ -21,8 +21,9 @@ export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const session = shouldProbeSession ? await readJSON(fetchRef, '/api/session/current') : { ok: false };
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
+  const runtimeStatus = await readJSON(fetchRef, '/api/medopl/runtime/status');
   const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
-  return createOnePersonLabViewModel({ session, provider, conversations, oplSnapshot });
+  return createOnePersonLabViewModel({ session, provider, conversations, runtimeStatus, oplSnapshot });
 }
 
 export async function registerAccount(fetchRef, email, password) {
@@ -116,6 +117,7 @@ export function createOnePersonLabViewModel(state) {
       message: '该能力需要托管运行环境、存储或 node pool',
       deepLink: MEDOPL_DEEP_LINK,
     },
+    runtimeStatus: runtimeStatusFallback(state.runtimeStatus),
     readonly: {
       mode: state.oplSnapshot?.mode ?? 'readonly',
       ok: Boolean(state.oplSnapshot?.ok),
@@ -128,6 +130,7 @@ export function createInitialOnePersonLabViewModel() {
     session: { ok: false },
     provider: providerFallback(),
     conversations: { conversations: [] },
+    runtimeStatus: runtimeStatusFallback(),
     oplSnapshot: { ok: false },
   });
 }
@@ -162,4 +165,16 @@ async function readResponse(response) {
 
 function providerFallback() {
   return { ok: false, provider: 'gflabtoken', baseUrl: FIXED_BASE_URL, apiKeyConfigured: false, maskedKey: '' };
+}
+
+function runtimeStatusFallback(status = {}) {
+  return {
+    ok: Boolean(status.ok),
+    owner: status.owner || 'MedOPL',
+    state: status.state || 'required',
+    deepLink: status.deepLink || `${MEDOPL_DEEP_LINK}/runtime`,
+    refs: status.refs || {},
+    counts: status.counts || { activeRuns: 0 },
+    webuiRuntimeExecution: 'forbidden',
+  };
 }

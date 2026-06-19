@@ -38,6 +38,7 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/session/current", server.HandleCurrentSession)
 	mux.HandleFunc("/api/settings/model-provider", server.HandleModelProvider)
 	mux.HandleFunc("/api/account/audit-events", server.HandleAuditEvents)
+	mux.HandleFunc("/api/medopl/runtime/status", server.HandleRuntimeStatus)
 	mux.HandleFunc("/api/chat/conversations/", server.HandleConversation)
 	mux.HandleFunc("/api/chat/conversations", server.HandleConversations)
 	mux.HandleFunc("/api/chat", server.HandleChat)

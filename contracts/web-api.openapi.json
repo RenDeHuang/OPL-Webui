@@ -226,6 +226,19 @@
         }
       }
     },
+    "/api/medopl/runtime/status": {
+      "get": {
+        "summary": "Read sanitized MedOPL runtime status projection.",
+        "responses": {
+          "200": {
+            "description": "Readonly MedOPL runtime status projection."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
     "/api/opl/snapshot": {
       "get": {
         "summary": "Read OPL readonly snapshot projection.",

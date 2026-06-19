@@ -70,6 +70,14 @@ test('web data module calls session provider and chat APIs only', async () => {
       maskedKey: 'sk-***1234',
     });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/medopl/runtime/status') return response({
+      ok: true,
+      owner: 'MedOPL',
+      state: 'ready',
+      deepLink: 'https://medopl.medopl.cn/runtime',
+      counts: { activeRuns: 1 },
+      webuiRuntimeExecution: 'forbidden',
+    });
     if (url === '/api/chat') return response({ ok: true, conversationId: 'conv_1', assistantMessage: { content: '你好' } });
     if (url === '/api/opl/snapshot') return response({ ok: true, mode: 'readonly' });
     return response({ ok: false }, 404);
@@ -86,6 +94,7 @@ test('web data module calls session provider and chat APIs only', async () => {
     '/api/session/current',
     '/api/settings/model-provider',
     '/api/chat/conversations',
+    '/api/medopl/runtime/status',
     '/api/opl/snapshot',
     '/api/chat',
   ]);
@@ -175,6 +184,32 @@ test('web data module surfaces runtime gate with MedOPL deep link', async () => 
 
   assert.equal(gated.errorCode, 'RUNTIME_REQUIRED');
   assert.match(gated.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
+});
+
+test('web data module loads sanitized MedOPL runtime status projection', async () => {
+  const view = await web.loadOnePersonLabWebState(async (url) => {
+    if (url === '/api/session/current') return response({ ok: true, email: 'runtime@example.com' });
+    if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
+    if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/medopl/runtime/status') return response({
+      ok: true,
+      owner: 'MedOPL',
+      state: 'required',
+      deepLink: 'https://medopl.medopl.cn/runtime',
+      refs: { runtimeRef: 'runtime_public_ref_123' },
+      counts: { activeRuns: 0 },
+      webuiRuntimeExecution: 'forbidden',
+    });
+    if (url === '/api/opl/snapshot') return response({ ok: true, mode: 'readonly' });
+    return response({ ok: false }, 404);
+  });
+
+  assert.equal(view.runtimeStatus.owner, 'MedOPL');
+  assert.equal(view.runtimeStatus.state, 'required');
+  assert.equal(view.runtimeStatus.deepLink, 'https://medopl.medopl.cn/runtime');
+  assert.equal(view.runtimeStatus.webuiRuntimeExecution, 'forbidden');
+  assert.equal(view.runtimeStatus.refs.runtimeRef, 'runtime_public_ref_123');
+  assert.doesNotMatch(JSON.stringify(view.runtimeStatus), /secret|raw_provider_secret|artifact_body|private_state_path|mutation_result/i);
 });
 
 test('web view model keeps workspace hidden and exposes fixed provider surface', () => {

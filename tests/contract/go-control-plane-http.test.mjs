@@ -32,6 +32,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
 
   const errorCodes = api.components.schemas.ApiErrorCode.enum;
@@ -125,6 +126,32 @@ test('model provider binding stores user API key without returning raw secret', 
     assert.equal(loaded.body.baseUrl, 'https://gflabtoken.cn/v1');
     assert.equal(loaded.body.maskedKey, saved.body.maskedKey);
     assertNoSensitiveMaterial(loaded.body);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('MedOPL runtime status endpoint is readonly and sanitized', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    MEDOPL_RUNTIME_STATE: 'ready',
+    MEDOPL_RUNTIME_REF: 'runtime_public_ref_123',
+    MEDOPL_RUNTIME_ACTIVE_RUNS: '2',
+  });
+  try {
+    const status = await jsonFetch(`${baseUrl}/api/medopl/runtime/status`);
+    assert.equal(status.response.status, 200);
+    assert.equal(status.body.ok, true);
+    assert.equal(status.body.owner, 'MedOPL');
+    assert.equal(status.body.state, 'ready');
+    assert.equal(status.body.deepLink, 'https://medopl.medopl.cn/runtime');
+    assert.equal(status.body.refs.runtimeRef, 'runtime_public_ref_123');
+    assert.equal(status.body.counts.activeRuns, 2);
+    assert.equal(status.body.webuiRuntimeExecution, 'forbidden');
+    assertNoSensitiveMaterial(status.body);
+
+    const post = await fetch(`${baseUrl}/api/medopl/runtime/status`, { method: 'POST' });
+    assert.equal(post.status, 405);
   } finally {
     await stopGoServer(child);
   }

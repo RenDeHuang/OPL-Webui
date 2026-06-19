@@ -34,6 +34,14 @@ func (server Server) HandleConversations(response http.ResponseWriter, request *
 	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversations": server.Store.ListConversations(user.ID)})
 }
 
+func (server Server) HandleRuntimeStatus(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	writeJSON(response, http.StatusOK, runtimeStatusProjection())
+}
+
 func (server Server) HandleConversation(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
@@ -54,6 +62,27 @@ func (server Server) HandleConversation(response http.ResponseWriter, request *h
 		return
 	}
 	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversation": conversation, "messages": messages})
+}
+
+func runtimeStatusProjection() map[string]any {
+	state := strings.TrimSpace(os.Getenv("MEDOPL_RUNTIME_STATE"))
+	if state == "" {
+		state = "required"
+	}
+	if state != "not_connected" && state != "required" && state != "ready" {
+		state = "required"
+	}
+	counts := map[string]any{"activeRuns": runtimeCount("MEDOPL_RUNTIME_ACTIVE_RUNS")}
+	refs := map[string]any{}
+	if runtimeRef := strings.TrimSpace(os.Getenv("MEDOPL_RUNTIME_REF")); runtimeRef != "" {
+		refs["runtimeRef"] = runtimeRef
+	}
+	return map[string]any{
+		"ok": true, "owner": "MedOPL", "state": state,
+		"deepLink": MedOPLURL + "/runtime",
+		"refs": refs, "counts": counts,
+		"webuiRuntimeExecution": "forbidden",
+	}
 }
 
 func (server Server) currentUser(response http.ResponseWriter, request *http.Request) (User, bool) {
@@ -164,4 +193,16 @@ func chatMonthlyQuota() int {
 		return defaultChatMonthlyQuota
 	}
 	return quota
+}
+
+func runtimeCount(key string) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return 0
+	}
+	count, err := strconv.Atoi(value)
+	if err != nil || count < 0 {
+		return 0
+	}
+	return count
 }
