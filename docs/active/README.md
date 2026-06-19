@@ -31,17 +31,19 @@ No active change is open. 正式开发开始前必须创建 `changes/active/<cha
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
 - Runtime, node pool, storage, billing, API gateway, OPL execution, artifact body authority, and MAS/MAG/RCA domain judgment are not owned by this repo.
 - Runtime-requiring markers such as `@基金` and `@论文` stop at a MedOPL Runtime gate unless future Go-side contract, eval, whitelist, and authorization boundaries admit more.
+- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract plus static shell evidence, not real browser automation. It covers register, login, current session, API Key binding, ordinary chat with mock upstream, quota exceeded, runtime gate, sanitized audit, desktop shell, mobile shell, and settings hash.
 - Prior production evidence remains archived in `changes/archive/closeouts.md` and `deploy/web-cloud/RUNBOOK.md`; active truth does not duplicate one-off rollout prose.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production authenticated dogfood e2e。
+- 本阶段没有执行 Playwright、Puppeteer 或 Chromium-driven browser automation。
 - 本阶段没有新增真实 chat、billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 
 ## Next Priorities
 
-1. Browser e2e readiness: cover register/login/API Key/chat/runtime gate/audit without production secrets.
-2. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.
+1. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.
+2. Continue one gap per lifecycle loop: contract first, tests registered, cleanup complete, gates green.

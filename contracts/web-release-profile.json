@@ -27,6 +27,37 @@
       "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
     ]
   },
+  "localNoSecretReadiness": {
+    "requiresProductionSecrets": false,
+    "browserAutomation": false,
+    "automationLevel": "http_contract_and_static_shell",
+    "coverage": [
+      "register",
+      "login",
+      "current_session",
+      "api_key_binding",
+      "ordinary_chat_mock_upstream",
+      "quota_exceeded",
+      "runtime_gate",
+      "sanitized_audit",
+      "desktop_shell",
+      "mobile_shell",
+      "settings_hash"
+    ],
+    "evidenceCommands": [
+      "node --test tests/contract/one-person-lab-chat-upstream.test.mjs",
+      "node --test tests/contract/go-control-plane-http.test.mjs",
+      "node --test tests/contract/one-person-lab-web-data.test.mjs",
+      "node --test tests/smoke/web-shell.test.mjs"
+    ],
+    "cannotClaim": [
+      "production authenticated dogfood e2e executed",
+      "real upstream/API Key online dogfood",
+      "production quota exhaustion online evidence",
+      "MedOPL production runtime bridge",
+      "real OPL execution or mutation"
+    ]
+  },
   "historicalEvidenceRefs": [
     "changes/archive/closeouts.md",
     "deploy/web-cloud/RUNBOOK.md"

@@ -30,6 +30,21 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(pageStates.routes.map((route) => route.id), ['chat', 'settings', 'capabilities', 'medopl']);
   assert.deepEqual(pageStates.accountStates, ['anonymous', 'authenticated_unbound', 'authenticated_bound']);
   assert.equal(pageStates.chatStates.includes('runtime_required'), true);
+  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), [
+    'anonymous_shell',
+    'register',
+    'login',
+    'current_session',
+    'api_key_binding',
+    'ordinary_chat',
+    'quota_exceeded',
+    'runtime_gate',
+    'sanitized_audit',
+  ]);
+  assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-chat-log]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-gate]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-settings-panel]'), true);
 
   for (const path of [
     '/api/session/current',
@@ -54,6 +69,25 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
   assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
+  assert.equal(release.localNoSecretReadiness.requiresProductionSecrets, false);
+  assert.equal(release.localNoSecretReadiness.browserAutomation, false);
+  assert.equal(release.localNoSecretReadiness.automationLevel, 'http_contract_and_static_shell');
+  assert.deepEqual(release.localNoSecretReadiness.coverage, [
+    'register',
+    'login',
+    'current_session',
+    'api_key_binding',
+    'ordinary_chat_mock_upstream',
+    'quota_exceeded',
+    'runtime_gate',
+    'sanitized_audit',
+    'desktop_shell',
+    'mobile_shell',
+    'settings_hash',
+  ]);
+  assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
+  assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
+  assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), true);
   assert.equal(release.dogfood.rawApiKeyPrinted, false);
 });
 

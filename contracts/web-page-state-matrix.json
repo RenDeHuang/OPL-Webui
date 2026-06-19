@@ -56,5 +56,81 @@
       "requiredApi": ["/api/chat"],
       "allowedAction": "show_medopl_runtime_gate"
     }
-  ]
+  ],
+  "localReadinessScenario": {
+    "requiresProductionSecrets": false,
+    "observableSelectors": [
+      "[data-chat-form]",
+      "[data-chat-log]",
+      "[data-register-button]",
+      "[data-login-button]",
+      "[data-provider-form]",
+      "[data-settings-panel]",
+      "[data-runtime-gate]"
+    ],
+    "steps": [
+      {
+        "id": "anonymous_shell",
+        "route": "chat",
+        "expectedState": "anonymous",
+        "evidence": "tests/smoke/web-shell.test.mjs"
+      },
+      {
+        "id": "register",
+        "route": "settings",
+        "requiredApi": "/api/auth/register",
+        "expectedState": "authenticated_unbound",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "login",
+        "route": "settings",
+        "requiredApi": "/api/auth/login",
+        "expectedState": "authenticated_unbound",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "current_session",
+        "route": "settings",
+        "requiredApi": "/api/session/current",
+        "expectedState": "authenticated_unbound",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "api_key_binding",
+        "route": "settings",
+        "requiredApi": "/api/settings/model-provider",
+        "expectedState": "authenticated_bound",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "ordinary_chat",
+        "route": "chat",
+        "requiredApi": "/api/chat",
+        "expectedState": "idle",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "quota_exceeded",
+        "route": "chat",
+        "requiredApi": "/api/chat",
+        "expectedState": "quota_exceeded",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "runtime_gate",
+        "route": "chat",
+        "requiredApi": "/api/chat",
+        "expectedState": "runtime_required",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "sanitized_audit",
+        "route": "settings",
+        "requiredApi": "/api/account/audit-events",
+        "expectedState": "authenticated_bound",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      }
+    ]
+  }
 }
