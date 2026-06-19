@@ -186,5 +186,53 @@
     "real OPL runtime execution",
     "MedOPL runtime bridge implementation",
     "billing source of truth"
-  ]
+  ],
+  "localBrowserE2EReadiness": {
+    "mode": "local_chromium_cdp_research_main_path",
+    "state": "executed_success_local_2026_06_19",
+    "requiresProductionSecrets": false,
+    "browserAutomation": true,
+    "automationLevel": "real_chromium_cdp",
+    "entrypoint": "node scripts/verify.mjs suite browser",
+    "evidenceCommands": [
+      "npm run verify:browser"
+    ],
+    "coverage": [
+      "register",
+      "login",
+      "logout",
+      "current_session",
+      "api_key_binding",
+      "ordinary_chat_mock_upstream",
+      "paper_runtime_gate",
+      "grant_runtime_gate",
+      "sanitized_audit",
+      "user_like_input",
+      "page_state_evidence"
+    ],
+    "latestSuccessfulRun": {
+      "command": "npm run verify:browser",
+      "executedAt": "2026-06-19T20:00:00+08:00",
+      "tests": 2,
+      "failures": 0,
+      "durationMs": 71021,
+      "path": "research-main-path",
+      "browser": "chromium_or_chrome_discovered_by_runner",
+      "authState": "authenticated_bound",
+      "chatState": "runtime_required",
+      "auditKinds": [
+        "chat.completed",
+        "runtime_gate.required"
+      ],
+      "upstreamRequestsMin": 1
+    },
+    "cannotClaim": [
+      "production browser e2e",
+      "production real ordinary chat completion",
+      "MedOPL runtime execution",
+      "billing source of truth",
+      "storage or node pool mutation",
+      "quota exhaustion production evidence"
+    ]
+  }
 }

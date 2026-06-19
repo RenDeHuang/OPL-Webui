@@ -49,13 +49,14 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
-- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and a browser e2e runner contract. The explicit browser lane verifies the runner shape; actual Chromium execution requires `OPL_BROWSER_BINARY` when the local environment does not provide Chrome/Chromium.
+- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and browser e2e evidence. The explicit browser lane ran real Chromium/CDP automation through `npm run verify:browser`.
 - Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27823251419` for commit `73cfd2b01a4a11a452b753171ede02d140785821` after dry-run, production apply, and canary/smoke success. It is not browser e2e and not MedOPL runtime execution evidence.
+- Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
-- 本阶段没有执行真实 Chromium-driven browser automation；已新增无依赖 CDP runner，但本地运行需要 `OPL_BROWSER_BINARY` 或系统 Chrome/Chromium。
+- 本阶段没有执行 production browser e2e；当前浏览器证据是 local no-secret Chromium/CDP evidence。
 - 本阶段没有执行 production real ordinary chat completion dogfood；run `27823251419` 的 `realChat=false`。
 - 本阶段没有新增 billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
@@ -63,6 +64,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Run the browser-level e2e runner in an environment with Chrome/Chromium: register, login, bind API Key, ordinary chat fallback, `@论文`/`@基金` gate, and audit evidence.
-2. Promote browser-level e2e into CI or a documented developer environment without adding a frontend framework migration first.
+1. Execute production real ordinary chat dogfood only through approved secrets, explicit `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, and quota-aware evidence.
+2. Promote browser-level e2e into CI or release-gate evidence without adding a frontend framework migration first.
 3. Continue richer research capability UX only after the local browser evidence path is runnable in CI or a documented developer environment.

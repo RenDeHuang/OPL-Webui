@@ -124,6 +124,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
   assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27823251419');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27823251419');
+  assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
+  assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
+  assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);
   assert.equal(release.dogfood.rawApiKeyPrinted, false);
