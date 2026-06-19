@@ -15,11 +15,11 @@
 
 ## Engineering Invariants
 
-- No formal change without `changes/active/<change-id>/`.
+- No current truth in per-change process packages; fixed truth lives in README, core docs, contracts, source, tests, scripts, and API/CLI behavior.
 - No user-visible behavior change before the relevant contract is updated.
 - No page behavior change before `contracts/web-page-state-matrix.json` is updated.
 - No new behavior without test coverage and registry entry.
 - No compatibility layer without a real consumer, explicit contract, and retirement plan.
 - No active retired vocabulary unless it is a fail-closed guard or a history/archive reference.
 - No completion claim without fresh verification evidence.
-- Docs cannot claim beyond contracts, tests, source, and verified closeout evidence.
+- Docs cannot claim beyond contracts, tests, source, scripts, API behavior, deploy artifacts, and verified historical evidence.

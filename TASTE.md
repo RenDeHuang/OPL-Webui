@@ -17,10 +17,11 @@
 
 ## Default Development Loop
 
-1. Read `AGENTS.md`, this file, `docs/active/README.md`, and relevant `contracts/*.json`.
-2. Create or update one `changes/active/<change-id>/` package.
-3. Write or update tests first and register them.
-4. Implement the smallest behavior.
-5. Retire replaced code and docs in the same change.
-6. Run targeted tests, then full gates.
-7. Close out with verification evidence and cannot-claim boundaries.
+1. Read `README.md`, `AGENTS.md`, this file, `docs/status.md`, `docs/decisions.md`, and relevant `contracts/*.json`.
+2. Pick one gap and identify the owner surface before editing.
+3. Update contracts first for user-visible, API, page-state, runtime-gate, deploy, or release-claim changes.
+4. Write or update tests first and register new test files.
+5. Implement the smallest behavior.
+6. Retire replaced code and docs in the same change.
+7. Run targeted tests, then verification scaled to risk.
+8. Update fixed truth entries with verification evidence and cannot-claim boundaries when the current status changes.

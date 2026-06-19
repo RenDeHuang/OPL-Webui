@@ -21,20 +21,19 @@ Markdown prose is not a stable machine interface. Machine behavior must use sour
 1. `AGENTS.md`
 2. `TASTE.md`
 3. `docs/project.md`
-4. `docs/architecture.md`
-5. `docs/invariants.md`
-6. `docs/active/README.md`
-7. `contracts/*.json`
+4. `docs/status.md`
+5. `docs/decisions.md`
+6. `docs/architecture.md`
+7. `docs/invariants.md`
+8. `docs/docs_portfolio_consolidation.md`
+9. `contracts/*.json`
 
 ## Directory Roles
 
 - `docs/` root keeps the core current truth and this portfolio guide.
-- `docs/active/` keeps current phase truth and can/cannot-claim status.
 - `contracts/` 是 One Person Lab Web 的 durable machine truth for product boundary, page state, API, runtime gate, and release readiness.
 - contracts/ 是 One Person Lab Web 的 durable machine truth；Markdown prose only explains it.
-- `docs/history/` keeps retired routes, dated plans, tombstones, and provenance.
-- `changes/active/` keeps short-lived active workbench packages.
-- `changes/archive/` keeps compact closeout history only.
+- `docs/history/` keeps retired routes, dated plans, tombstones, process closeouts, and provenance.
 
 ## Lightweight OPL-Inspired Taxonomy
 
@@ -46,6 +45,10 @@ This repo copies One Person Lab's development discipline, not its directory volu
 - `contracts/`: keep durable machine-readable API, DTO, allowlist, schema, page-state, product-boundary, runtime-gate, or release-profile surfaces.
 
 Docs explain contracts; they do not replace them. If prose and contract disagree, update the contract or mark the prose as stale and retire it in the same change.
+
+## Retired Workflow
+
+`changes/active` and `changes/archive` are retired as active development entry points. Historical closeouts live at `docs/history/process/closeouts.md` for provenance only. Future work should update fixed truth entries, contracts, source, tests, scripts, and deploy artifacts directly.
 
 ## Anti-Pollution Rules
 

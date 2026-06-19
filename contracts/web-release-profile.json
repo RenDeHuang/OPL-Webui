@@ -60,7 +60,7 @@
     ]
   },
   "historicalEvidenceRefs": [
-    "changes/archive/closeouts.md",
+    "docs/history/process/closeouts.md",
     "deploy/web-cloud/RUNBOOK.md"
   ],
   "cannotClaim": [

@@ -3,8 +3,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const coreDocs = [
+  'README.md',
   'TASTE.md',
   'docs/project.md',
+  'docs/status.md',
+  'docs/decisions.md',
   'docs/architecture.md',
   'docs/invariants.md',
   'docs/docs_portfolio_consolidation.md',
@@ -23,6 +26,7 @@ test('repository governance exposes OPL-style lifecycle surfaces', () => {
     '代码清退',
     '测试登记',
     '机器 gate',
+    '不使用 `changes/active` 七件套作为默认开发系统',
     '不得保留无 consumer 的兼容层',
     '每次正式变更必须同步清退',
     '理想态优先',
@@ -51,6 +55,7 @@ test('documentation portfolio defines lightweight OPL-inspired taxonomy', () => 
     'contracts/',
     '不要复制 one-person-lab 的目录体量',
     'contracts/ 是 One Person Lab Web 的 durable machine truth',
+    'Retired Workflow',
   ]) {
     assert.match(portfolio, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }

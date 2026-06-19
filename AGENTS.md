@@ -12,8 +12,8 @@
 ## 定位
 
 - `AGENTS.md` 只约束工作方式、稳定边界和工程纪律，不承载完整项目知识。
-- 项目知识默认从 `TASTE.md`、`docs/project.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/active/README.md` 和 `contracts/*.json` 读取。
-- 每次正式开发必须先确认当前 truth，再进入一个明确的 gap-driven phase。
+- 项目知识默认从 `README.md`、`TASTE.md`、`docs/project.md`、`docs/status.md`、`docs/decisions.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/docs_portfolio_consolidation.md` 和 `contracts/*.json` 读取。
+- 每次正式开发必须先确认固定 truth，再进入一个明确的 gap-driven phase；不要从临时过程文件推导当前事实。
 
 ## 产品边界
 
@@ -29,12 +29,13 @@
 ## 工程闭环
 
 - 进入 code、docs、contracts、tests、scripts、deploy 或 API 行为变更时，即视为正式开发；除非用户明确要求只读分析，否则必须走本节闭环。
-- 正式变更必须先有 `changes/active/<change-id>/`，并包含 proposal、spec-delta、design、tasks、eval-plan、review、closeout。
+- 本仓不使用 `changes/active` 七件套作为默认开发系统；当前事实只写入固定 truth、contracts、source、tests 和脚本。
 - 每次正式变更必须执行四个工作面：文档生命周期、代码清退、测试登记、机器 gate。
 - 每次正式变更必须同步清退被替代的旧代码、旧 route、旧 schema、旧测试、旧文档入口和旧命名；不能把清退留给未来。
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
 - 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts 和 verifySuites。
-- 默认验证入口是 `npm run verify`；review gate 是 `npm run gate:review`；正式完成前还必须跑 `npm run repo:bloat` 和 `sentrux check .`。
+- 默认验证入口是 `npm run verify`；review gate 是 `npm run gate:review`。
+- 验证强度按风险分级：小型 docs/test/source 维护至少跑 targeted tests 和相关 verify suite；用户可见、API、contract、runtime、billing、storage、deploy 或 release claim 变更还必须跑 `npm run verify`、`npm run gate:review`、`npm run repo:bloat` 和 `sentrux check .`。
 - contract-first：新增或修改用户可见功能、API、runtime gate、release claim 前，必须先更新对应 `contracts/*.json`。
 - page-state-first：新增或修改页面/交互前，必须先更新 `contracts/web-page-state-matrix.json`。
 - browser-e2e-first：商业主路径变化必须有浏览器级或等价 smoke/e2e 计划；不能只靠文案声明。
@@ -52,7 +53,7 @@
 
 - `docs/docs_portfolio_consolidation.md` 是文档组合治理入口。
 - 每份长期文档都必须说明 `owner`、`purpose`、`state` 和 `machine boundary`。
-- 新文档先判断角色，再落到 `docs/` core、`docs/active/`、`docs/history/`、`contracts/` 或 `changes/active/`。
+- 新文档先判断角色，再落到 `docs/` core、`docs/history/` 或 `contracts/`。
 - 退役路线、历史定位和 tombstone 只能放在 archive/history 语境；active truth 提到旧路线时必须指向当前 owner。
 
 ## 代码清退
@@ -71,7 +72,7 @@
 ## 机器 gate
 
 - 完成声明必须有新鲜验证证据；不能用“应该通过”代替命令输出。
-- 默认完成 gate：targeted tests、`npm run verify`、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
+- 默认完成 gate 按风险分级；高风险、发布、deploy、public API、runtime、billing、storage、OPL bridge 或 release claim 变更必须覆盖 targeted tests、`npm run verify`、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
 - 修改 AI、OPL、runtime、billing、storage、deploy 或 public API 行为时，必须有对应 contract/eval；没有 eval/test 不算完成。
 - 当用户要求“彻底落地 / 全部落地 / 一步到位 / 完善后立刻吸收 / 持续推进直到完成 / 能做的都做掉”时，最终声明完成前必须执行 Plan Completion Audit：逐项列出 done / partial / not_started / blocked、证据、缺口和后续动作。
 
