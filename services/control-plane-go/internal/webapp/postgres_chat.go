@@ -167,3 +167,19 @@ on conflict (user_id, period) do update set used_count = $3, updated_at = now()
 	committed = true
 	return quotaStatus(limit, used), true
 }
+
+func (store PostgresStore) ChatQuotaStatus(userID string, limit int) ChatQuotaStatus {
+	period := time.Now().UTC().Format("2006-01")
+	used := 0
+	err := store.db.QueryRowContext(context.Background(), `
+select used_count from webapp_chat_usage
+where user_id = $1 and period = $2
+`, userID, period).Scan(&used)
+	if err == sql.ErrNoRows {
+		return quotaStatus(limit, 0)
+	}
+	if err != nil {
+		return quotaStatus(limit, limit)
+	}
+	return quotaStatus(limit, used)
+}

@@ -48,6 +48,12 @@ func (store *MemoryStore) ConsumeChatQuota(userID string, limit int) (ChatQuotaS
 	return quotaStatus(limit, used), true
 }
 
+func (store *MemoryStore) ChatQuotaStatus(userID string, limit int) ChatQuotaStatus {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	return quotaStatus(limit, store.chatUsage[quotaKey(userID, time.Now().UTC())])
+}
+
 func quotaKey(userID string, now time.Time) string {
 	return userID + ":" + now.Format("2006-01")
 }

@@ -78,6 +78,7 @@ type Store interface {
 	RecordAuditEvent(AuditEvent) error
 	ListAuditEvents(userID string) []AuditEvent
 	ConsumeChatQuota(userID string, limit int) (ChatQuotaStatus, bool)
+	ChatQuotaStatus(userID string, limit int) ChatQuotaStatus
 }
 
 type MemoryStore struct {

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
@@ -197,7 +198,12 @@ test('materials deliverables endpoint is readonly and sanitized', async () => {
 });
 
 test('billing summary endpoint is authenticated readonly projection', async () => {
-  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, OPL_CHAT_MONTHLY_QUOTA: '3' });
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+    OPL_CHAT_MONTHLY_QUOTA: '3',
+  });
   try {
     const unauth = await jsonFetch(`${baseUrl}/api/account/billing-summary`);
     assert.equal(unauth.response.status, 401);
@@ -207,6 +213,9 @@ test('billing summary endpoint is authenticated readonly projection', async () =
     await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-billing-secret' });
     const gated = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@基金 写申请书' });
     assert.equal(gated.response.status, 409);
+    const ordinary = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '普通 billing usage check' });
+    assert.equal(ordinary.response.status, 200);
+    assert.equal(upstream.requests.length, 1);
 
     const summary = await jsonFetch(`${baseUrl}/api/account/billing-summary`, {
       headers: { cookie: session.cookieHeader },
@@ -216,8 +225,8 @@ test('billing summary endpoint is authenticated readonly projection', async () =
     assert.equal(summary.body.owner, 'MedOPL');
     assert.equal(summary.body.deepLink, 'https://medopl.medopl.cn/billing');
     assert.equal(summary.body.quota.limit, 3);
-    assert.equal(summary.body.quota.used, 0);
-    assert.equal(summary.body.quota.remaining, 3);
+    assert.equal(summary.body.quota.used, 1);
+    assert.equal(summary.body.quota.remaining, 2);
     assert.equal(summary.body.audit.eventCount >= 2, true);
     assert.equal(typeof summary.body.audit.latestEventKind, 'string');
     assert.equal(summary.body.webuiBillingSourceOfTruth, 'forbidden');
@@ -229,6 +238,7 @@ test('billing summary endpoint is authenticated readonly projection', async () =
     assert.equal(post.status, 405);
   } finally {
     await stopGoServer(child);
+    await upstream.close();
   }
 });
 
@@ -320,6 +330,28 @@ async function postJSON(baseUrl, path, body) {
 
 async function putJSON(baseUrl, path, cookie, body) {
   return jsonFetch(`${baseUrl}${path}`, { method: 'PUT', headers: { cookie }, body });
+}
+
+async function startFakeUpstream() {
+  const requests = [];
+  const server = http.createServer(async (request, response) => {
+    let raw = '';
+    for await (const chunk of request) raw += chunk;
+    requests.push({
+      url: request.url,
+      authorization: request.headers.authorization,
+      body: raw ? JSON.parse(raw) : {},
+    });
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ choices: [{ message: { content: '上游响应' } }] }));
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  return {
+    baseUrl: `http://127.0.0.1:${port}/v1`,
+    requests,
+    close: () => new Promise((resolve) => server.close(resolve)),
+  };
 }
 
 async function jsonFetch(url, options = {}) {

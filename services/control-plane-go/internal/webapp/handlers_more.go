@@ -37,9 +37,10 @@ func (server Server) HandleBillingSummary(response http.ResponseWriter, request 
 		latestEventKind = events[len(events)-1].EventKind
 	}
 	limit := chatMonthlyQuota()
+	quota := server.Store.ChatQuotaStatus(user.ID, limit)
 	writeJSON(response, http.StatusOK, map[string]any{
 		"ok": true, "owner": "MedOPL", "deepLink": MedOPLURL + "/billing",
-		"quota": map[string]any{"limit": limit, "used": 0, "remaining": limit},
+		"quota": quota,
 		"audit": map[string]any{"eventCount": len(events), "latestEventKind": latestEventKind},
 		"webuiBillingSourceOfTruth": "forbidden",
 		"webuiPaymentMutation":       "forbidden",
