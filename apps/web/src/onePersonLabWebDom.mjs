@@ -4,6 +4,7 @@ import {
   loginAccount,
   logoutAccount,
   registerAccount,
+  requiresRuntimeGate,
   saveAPIKey,
   chatStateForResult,
   sendChatMessage,
@@ -43,7 +44,7 @@ function bindCapabilityButtons() {
       const input = document.querySelector('#chat-input');
       input.value = button.dataset.prompt;
       input.focus();
-      if (button.dataset.prompt.includes('@')) showRuntimeGate();
+      if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate();
     });
   }
 }
@@ -67,7 +68,7 @@ function bindChatForm(getView) {
     const message = input.value.trim();
     if (!message) return;
     appendMessage('你', message, 'user-message');
-    if (message.includes('@')) {
+    if (requiresRuntimeGate(message)) {
       document.body.dataset.chatState = chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' });
       showRuntimeGate();
       appendMessage('OPL', '需要 MedOPL Runtime。该能力需要托管运行环境、存储或 node pool。', 'assistant-message');

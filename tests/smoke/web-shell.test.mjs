@@ -56,6 +56,8 @@ test('one-person-lab-web shell exposes serious AI workbench product surface', ()
   assert.match(html, /数据分析/);
   assert.match(html, /长任务/);
   assert.match(html, /@基金/);
+  assert.match(html, /@文件/);
+  assert.doesNotMatch(html, /@RCA/);
   assert.match(html, /需要 MedOPL Runtime/);
   assert.match(html, /该能力需要托管运行环境、存储或 node pool/);
   assert.match(html, /medopl\.medopl\.cn/);

@@ -243,7 +243,11 @@ test('billing summary endpoint is authenticated readonly projection', async () =
 });
 
 test('chat API requires auth and user API key, rejects client base_url override, and gates OPL runtime abilities', async () => {
-  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+  });
   try {
     const unauth = await postJSON(baseUrl, '/api/chat', { message: 'hello' });
     assert.equal(unauth.response.status, 401);
@@ -264,8 +268,14 @@ test('chat API requires auth and user API key, rejects client base_url override,
     assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
     assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
     assertNoSensitiveMaterial(gated.body);
+
+    const uncontractedAtMention = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@RCA 规划可视化交付方案' });
+    assert.equal(uncontractedAtMention.response.status, 200);
+    assert.equal(upstream.requests.length, 1);
+    assert.equal(upstream.requests[0].body.messages[0].content, '@RCA 规划可视化交付方案');
   } finally {
     await stopGoServer(child);
+    await upstream.close();
   }
 });
 

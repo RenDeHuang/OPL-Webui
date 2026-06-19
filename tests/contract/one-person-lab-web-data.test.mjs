@@ -249,6 +249,20 @@ test('web data module surfaces runtime gate with MedOPL deep link', async () => 
   assert.match(gated.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
 });
 
+test('runtime marker policy is explicit and does not gate uncontracted at-mentions', () => {
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+
+  assert.deepEqual(web.RUNTIME_REQUIRED_MARKERS, runtime.runtimeRequiredMarkers);
+  for (const marker of runtime.runtimeRequiredMarkers) {
+    assert.equal(web.requiresRuntimeGate(`${marker} 做一个任务`), true, `contract marker must gate: ${marker}`);
+  }
+  assert.equal(web.requiresRuntimeGate('@RCA 规划可视化交付方案'), false);
+  assert.equal(web.requiresRuntimeGate('请 @同事 看一下这个普通问题'), false);
+  assert.match(domSource, /requiresRuntimeGate/);
+  assert.doesNotMatch(domSource, /\.includes\('@'\)/);
+});
+
 test('web data module loads sanitized MedOPL runtime status projection', async () => {
   const view = await web.loadOnePersonLabWebState(async (url) => {
     if (url === '/api/session/current') return response({ ok: true, email: 'runtime@example.com' });

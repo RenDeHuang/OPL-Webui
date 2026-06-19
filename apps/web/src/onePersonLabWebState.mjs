@@ -1,6 +1,7 @@
 export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
 export const FIGMA_MAKE_SOURCE = 'E8nYfNFc2D9P01FYZ8UwBW';
+export const RUNTIME_REQUIRED_MARKERS = ['@基金', '@论文', '@综述', '@长任务', '@文件'];
 export const OPL_CAPABILITY_MANIFEST = {
   source: { syncMode: 'source_path_pinned_manifest', dynamicSync: false, commitPin: 'blocked_by_github_tls_timeout',
     appContract: 'github.com/gaofeng21cn/one-person-lab-app/contracts/app-product-profile.json',
@@ -68,6 +69,10 @@ export function chatStateForResult(result, pending = false) {
   if (result.errorCode === 'UPSTREAM_CHAT_FAILED') return 'upstream_failed';
   if (result.ok === false) return 'upstream_failed';
   return 'idle';
+}
+
+export function requiresRuntimeGate(message) {
+  return RUNTIME_REQUIRED_MARKERS.some((marker) => String(message || '').includes(marker));
 }
 
 export function createOnePersonLabViewModel(state) {

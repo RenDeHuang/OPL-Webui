@@ -10,7 +10,7 @@
 - Users cannot customize `base_url`; it remains `https://gflabtoken.cn/v1`.
 - Raw API Keys must not be returned to the browser, logged, or stored unencrypted.
 - Ordinary chat can call the fixed OpenAI-compatible upstream only after auth, API Key binding, and quota precheck.
-- `@OPL` runtime-requiring capabilities must not fake execution.
+- Contract-defined runtime markers must not fake execution.
 - Workspace/runtime/node pool/storage/billing concepts stay hidden from the public WebUI unless a future contract admits a user-facing projection.
 
 ## Engineering Invariants
