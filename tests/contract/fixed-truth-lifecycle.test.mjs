@@ -240,6 +240,24 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('browser e2e'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
+  assert.equal(release.productionAvailabilityReadiness.mode, 'no_secret_public_http_probe');
+  assert.equal(release.productionAvailabilityReadiness.state, 'harness_ready_pending_next_cloud_rollout_run');
+  assert.equal(release.productionAvailabilityReadiness.defaultEnabled, false);
+  assert.equal(release.productionAvailabilityReadiness.requiresProductionSecrets, false);
+  assert.equal(release.productionAvailabilityReadiness.requiresKubeconfig, false);
+  assert.equal(release.productionAvailabilityReadiness.mutatesCluster, false);
+  assert.equal(release.productionAvailabilityReadiness.entrypoint, 'node scripts/cloud-rollout.mjs --availability-probe');
+  assert.equal(release.productionAvailabilityReadiness.workflow, '.github/workflows/cloud-rollout.yml');
+  assert.deepEqual(release.productionAvailabilityReadiness.requiredSecrets, []);
+  assert.deepEqual(release.productionAvailabilityReadiness.coverage, [
+    'HTTPS /healthz',
+    'HTTPS /readyz',
+    'HTTPS /metricsz',
+    'HTTPS /',
+  ]);
+  assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('multi-node HA'), true);
+  assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production authenticated dogfood'), true);
+  assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production-ready SaaS'), true);
   assert.equal(release.localBrowserE2EReadiness.mode, 'local_chromium_cdp_research_main_path');
   assert.equal(release.localBrowserE2EReadiness.state, 'executed_success_local_2026_06_19');
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
@@ -258,6 +276,9 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(runbook, /116a56c/);
   assert.match(runbook, /real chat: true/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
+  assert.match(runbook, /Production availability probe/);
+  assert.match(runbook, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.match(runbook, /OPL_AVAILABILITY_PROBE_SAMPLES=3/);
   assert.match(runbook, /run id/i);
   assert.match(runbook, /audit kinds/i);
 
@@ -270,6 +291,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /production real ordinary chat completion/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.match(status, /Browser e2e is now a CI release gate/);
+  assert.match(status, /Production availability probe harness is ready/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);

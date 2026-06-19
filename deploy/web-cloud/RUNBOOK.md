@@ -43,7 +43,8 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 3. 手动运行 `Cloud Rollout`：`image=$OPL_IMAGE`，`target_environment=production`，`apply=false`。dry-run 不读取 kubeconfig、不改集群，只打印 rollout、evidence、canary 和 HTTPS smoke 命令。
 4. dry-run 审计通过后，用同一 image 再运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。同一次 workflow 会先执行 `production-dry-run`，再通过 GitHub `production` Environment approval 进入 `production-apply`，执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli` 和 HTTPS smoke。
 5. `authenticated_dogfood_e2e=true` 只能和 `apply=true` 一起使用；dogfood job 依赖 `production-apply`，因此只能在该 image 的 apply、canary、smoke 成功后运行。`apply=false` 时请求 dogfood 会 fail-closed。
-6. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
+6. `availability_probe=true` 会运行 no-secret production availability probe。`apply=false` 时探测当前线上；`apply=true` 时在本次 rollout apply、canary、smoke 成功后探测新版本线上。该 probe 不读取 kubeconfig、image、DB、dogfood secret、MedOPL token 或 TCR 凭据。
+7. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
 
 手工 fallback 由云端/VPC runner 执行：
 
@@ -55,6 +56,36 @@ node scripts/cloud-rollout.mjs --apply
 ```
 
 helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
+
+## Production availability probe
+
+该 probe 是 production 可用性抽样证据，不是 rollout mutation，也不是 authenticated dogfood。它只访问公开 HTTPS 入口，重复检查 `/healthz`、`/readyz`、`/metricsz` 和首页，不读取 kubeconfig、镜像、数据库、dogfood secret、MedOPL token 或 TCR 凭据。默认抽样 3 次，可用 `OPL_AVAILABILITY_PROBE_SAMPLES=3` 和 `OPL_AVAILABILITY_PROBE_INTERVAL_MS=1000` 调整；脚本会限制样本数和间隔上限。
+
+执行边界：
+
+```bash
+OPL_BASE_URL=https://opl.medopl.cn \
+OPL_AVAILABILITY_PROBE_SAMPLES=3 \
+node scripts/cloud-rollout.mjs --availability-probe
+```
+
+GitHub `Cloud Rollout` 手动 input `availability_probe=true` 时：
+
+- `apply=false`：`Production Availability Probe Current` 在 dry-run 后探测当前线上。
+- `apply=true`：`Production Availability Probe After Apply` 在本次 apply、canary、smoke 成功后探测新版本线上。
+
+Production availability probe closeout 只记录压缩摘要，不记录 response body、cookie、secret、DB URL 或 request payload：
+
+```text
+run id:
+target host: https://opl.medopl.cn
+image:
+samples:
+checks: healthz,readyz,metricsz,home
+failures:
+result:
+cannot claim: multi-node HA, production browser e2e, production authenticated dogfood, production-ready SaaS, MedOPL runtime execution, billing/payment/storage/node pool mutation
+```
 
 ## Production authenticated dogfood e2e
 

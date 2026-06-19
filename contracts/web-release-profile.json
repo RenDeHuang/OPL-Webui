@@ -153,6 +153,57 @@
       ]
     }
   },
+  "productionAvailabilityReadiness": {
+    "mode": "no_secret_public_http_probe",
+    "state": "harness_ready_pending_next_cloud_rollout_run",
+    "defaultEnabled": false,
+    "requiresProductionSecrets": false,
+    "requiresKubeconfig": false,
+    "mutatesCluster": false,
+    "entrypoint": "node scripts/cloud-rollout.mjs --availability-probe",
+    "workflow": ".github/workflows/cloud-rollout.yml",
+    "workflowInput": "availability_probe",
+    "requiredSecrets": [],
+    "coverage": [
+      "HTTPS /healthz",
+      "HTTPS /readyz",
+      "HTTPS /metricsz",
+      "HTTPS /"
+    ],
+    "semanticJsonChecks": [
+      "/healthz ok=true",
+      "/readyz ok=true missing=[]",
+      "/metricsz ok=true missingDependencyCount=0"
+    ],
+    "sampling": {
+      "defaultSamples": 3,
+      "sampleBounds": [
+        1,
+        20
+      ],
+      "defaultIntervalMs": 1000,
+      "intervalBoundsMs": [
+        0,
+        60000
+      ]
+    },
+    "forbiddenSecrets": [
+      "KUBECONFIG",
+      "OPL_IMAGE",
+      "OPL_DATABASE_URL",
+      "PGPASSWORD",
+      "MEDOPL_TOKEN",
+      "TCR_PASSWORD"
+    ],
+    "cannotClaim": [
+      "multi-node HA",
+      "production authenticated dogfood",
+      "production browser e2e",
+      "production-ready SaaS",
+      "MedOPL runtime execution",
+      "billing/payment/storage/node pool mutation"
+    ]
+  },
   "localNoSecretReadiness": {
     "requiresProductionSecrets": false,
     "browserAutomation": false,

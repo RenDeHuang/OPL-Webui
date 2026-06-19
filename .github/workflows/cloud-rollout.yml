@@ -23,6 +23,11 @@ on:
         required: true
         default: false
         type: boolean
+      availability_probe:
+        description: Run no-secret production availability probe against the public host.
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -89,6 +94,34 @@ jobs:
       - name: Rollout apply
         shell: bash
         run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --apply
+
+  production-availability-probe-current:
+    name: Production Availability Probe Current
+    needs: production-dry-run
+    if: ${{ !inputs.apply && inputs.availability_probe }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run no-secret availability probe
+        run: node scripts/cloud-rollout.mjs --availability-probe
+
+  production-availability-probe-after-apply:
+    name: Production Availability Probe After Apply
+    needs: production-apply
+    if: ${{ inputs.apply && inputs.availability_probe }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run no-secret availability probe
+        run: node scripts/cloud-rollout.mjs --availability-probe
 
   dogfood-request-guard:
     name: Production Dogfood Request Guard

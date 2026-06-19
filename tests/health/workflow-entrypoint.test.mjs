@@ -89,6 +89,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /image:/);
   assert.match(workflow, /target_environment:/);
   assert.match(workflow, /authenticated_dogfood_e2e:/);
+  assert.match(workflow, /availability_probe:/);
   assert.match(workflow, /production/);
   assert.match(workflow, /options:\s*\n\s*- production/);
   assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
@@ -102,11 +103,18 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-dogfood-e2e:/);
   assert.match(workflow, /production-dogfood-e2e:[\s\S]*?needs:\s*production-apply/);
   assert.match(workflow, /production-dogfood-e2e:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.authenticated_dogfood_e2e\s*\}\}/);
+  assert.match(workflow, /production-availability-probe-current:/);
+  assert.match(workflow, /production-availability-probe-current:[\s\S]*?needs:\s*production-dry-run/);
+  assert.match(workflow, /production-availability-probe-current:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && inputs\.availability_probe\s*\}\}/);
+  assert.match(workflow, /production-availability-probe-after-apply:/);
+  assert.match(workflow, /production-availability-probe-after-apply:[\s\S]*?needs:\s*production-apply/);
+  assert.match(workflow, /production-availability-probe-after-apply:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.availability_probe\s*\}\}/);
   assert.match(workflow, /dogfood-request-guard:/);
   assert.match(workflow, /dogfood-request-guard:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && inputs\.authenticated_dogfood_e2e\s*\}\}/);
   assert.match(workflow, /Dogfood e2e requires apply=true so it can run after rollout canary\/smoke evidence\./);
   assert.match(workflow, /environment:\s*production/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.match(workflow, /--apply/);
   assert.match(workflow, /KUBECONFIG/);
   assert.match(workflow, /OPL_PRODUCTION_DOGFOOD_E2E:\s*1/);
@@ -149,6 +157,23 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(dogfoodJob, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
   assert.match(dogfoodJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
   assert.doesNotMatch(dogfoodJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
+
+  const availabilityCurrentJob = workflow.slice(
+    workflow.indexOf('production-availability-probe-current:'),
+    workflow.indexOf('production-availability-probe-after-apply:'),
+  );
+  assert.match(availabilityCurrentJob, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
+  assert.match(availabilityCurrentJob, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.doesNotMatch(availabilityCurrentJob, /environment:\s*production/);
+  assert.doesNotMatch(availabilityCurrentJob, /KUBECONFIG|kubectl|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
+
+  const availabilityAfterApplyJob = workflow.slice(
+    workflow.indexOf('production-availability-probe-after-apply:'),
+    workflow.indexOf('dogfood-request-guard:'),
+  );
+  assert.match(availabilityAfterApplyJob, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
+  assert.match(availabilityAfterApplyJob, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.doesNotMatch(availabilityAfterApplyJob, /KUBECONFIG|kubectl|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
 });
 
 test('current frontend engineering stays static until browser/product evidence requires migration', () => {

@@ -99,6 +99,35 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
   }
 });
 
+test('cloud rollout helper has a no-secret production availability probe', async () => {
+  const helper = readFileSync(helperPath, 'utf8');
+  for (const required of [
+    '--availability-probe', 'OPL_AVAILABILITY_PROBE_SAMPLES', 'OPL_AVAILABILITY_PROBE_INTERVAL_MS',
+    'availability probe passed', '/healthz', '/readyz', '/metricsz',
+  ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
+
+  const fake = await startFakeAvailability();
+  try {
+    const output = await runHelper({
+      env: {
+        ...process.env,
+        OPL_BASE_URL: fake.baseUrl,
+        OPL_AVAILABILITY_PROBE_SAMPLES: '2',
+        OPL_AVAILABILITY_PROBE_INTERVAL_MS: '1',
+      },
+    }, ['--availability-probe']);
+    assert.match(output, /availability probe passed/);
+    assert.match(output, /"samples":2/);
+    assert.match(output, /"failures":0/);
+    assert.doesNotMatch(output, /KUBECONFIG|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|opl_session/i);
+    for (const path of ['/healthz', '/readyz', '/metricsz', '/']) {
+      assert.equal(fake.requests.filter((request) => request.path === path).length, 2);
+    }
+  } finally {
+    await fake.close();
+  }
+});
+
 test('cloud rollout helper reports credential input failures without unsafe-field false positives', async () => {
   const fake = await startFakeProduction({ registerStatus: 400 });
   try {
@@ -305,9 +334,9 @@ esac
 `, { mode: 0o755 });
 }
 
-function runHelper(options) {
+function runHelper(options, args = ['--dogfood-e2e']) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [helperPath, '--dogfood-e2e'], options);
+    const child = spawn(process.execPath, [helperPath, ...args], options);
     let output = '';
     const timer = setTimeout(() => {
       child.kill();
@@ -382,6 +411,25 @@ async function startFakeProduction(options = {}) {
         webuiPaymentMutation: 'forbidden',
       });
     }
+    send(404, { errorCode: 'NOT_FOUND' });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  return { baseUrl: `http://127.0.0.1:${port}`, requests, close: () => new Promise((resolve) => server.close(resolve)) };
+}
+
+async function startFakeAvailability() {
+  const requests = [];
+  const server = http.createServer((request, response) => {
+    requests.push({ path: request.url });
+    const send = (status, payload, contentType = 'application/json') => {
+      response.writeHead(status, { 'content-type': contentType });
+      response.end(contentType === 'application/json' ? JSON.stringify(payload) : payload);
+    };
+    if (request.url === '/healthz') return send(200, { ok: true });
+    if (request.url === '/readyz') return send(200, { ok: true, missing: [] });
+    if (request.url === '/metricsz') return send(200, { ok: true, missingDependencyCount: 0 });
+    if (request.url === '/') return send(200, '<html>One Person Lab Web</html>', 'text/html');
     send(404, { errorCode: 'NOT_FOUND' });
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));

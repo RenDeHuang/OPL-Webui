@@ -34,6 +34,11 @@ if (args.has('--dogfood-e2e')) {
   process.exit(0);
 }
 
+if (args.has('--availability-probe')) {
+  await runAvailabilityProbe();
+  process.exit(0);
+}
+
 if (dryRun) {
   validateImage(image);
   printDryRun();
@@ -135,6 +140,45 @@ async function dogfoodSession() {
   const registered = await dogfoodFetch('/api/auth/register', { method: 'POST', body: credentials }, 'register', [201, 409]);
   if (registered.response.status === 201) return registered;
   return dogfoodFetch('/api/auth/login', { method: 'POST', body: credentials }, 'login');
+}
+
+async function runAvailabilityProbe() {
+  const samples = boundedInt(process.env.OPL_AVAILABILITY_PROBE_SAMPLES, 3, 1, 20);
+  const intervalMs = boundedInt(process.env.OPL_AVAILABILITY_PROBE_INTERVAL_MS, 1000, 0, 60000);
+  const summary = { targetHost: baseUrl, samples, failures: 0, checks: [] };
+
+  for (let index = 0; index < samples; index += 1) {
+    if (index > 0 && intervalMs > 0) await sleep(intervalMs);
+    summary.checks.push(await availabilityCheck('healthz', healthUrl, (body) => body?.ok === true));
+    summary.checks.push(await availabilityCheck('readyz', readyUrl, (body) => body?.ok === true && Array.isArray(body.missing) && body.missing.length === 0));
+    summary.checks.push(await availabilityCheck('metricsz', metricsUrl, (body) => body?.ok === true && body?.missingDependencyCount === 0));
+    summary.checks.push(await availabilityCheck('home', homeUrl, (_body, text) => /One Person Lab Web|严肃工作的 AI 工作台/.test(text)));
+  }
+
+  summary.failures = summary.checks.filter((check) => !check.ok).length;
+  assertNoSensitive(summary);
+  console.log(`[cloud-rollout] availability probe summary ${JSON.stringify(summary)}`);
+  if (summary.failures > 0) throw new Error(`availability probe failed: ${summary.failures} check(s) failed`);
+  console.log('[cloud-rollout] availability probe passed');
+}
+
+async function availabilityCheck(label, url, validate) {
+  const startedAt = Date.now();
+  try {
+    const response = await fetch(url, { headers: { connection: 'close' } });
+    const text = await response.text();
+    let body = {};
+    try {
+      body = text ? JSON.parse(text) : {};
+    } catch {
+      body = {};
+    }
+    assertNoSensitive(body);
+    const ok = response.status === 200 && validate(body, text);
+    return { label, status: response.status, durationMs: Date.now() - startedAt, ok };
+  } catch (error) {
+    return { label, status: 0, durationMs: Date.now() - startedAt, ok: false, errorCode: error.name ?? 'FetchError' };
+  }
 }
 
 async function dogfoodFetch(path, options, label, expected = 200) {
@@ -302,6 +346,16 @@ function validateImage(value) {
   }
 }
 
+function boundedInt(value, fallback, min, max) {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function assertEqual(actual, expected, label) {
   if (actual !== expected) throw new Error(`${label} mismatch`);
 }
@@ -346,6 +400,7 @@ function printUsage() {
   node scripts/cloud-rollout.mjs
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
+  OPL_BASE_URL=https://opl.medopl.cn OPL_AVAILABILITY_PROBE_SAMPLES=3 node scripts/cloud-rollout.mjs --availability-probe
 
-Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
+Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }
