@@ -66,7 +66,7 @@
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
-    "state": "configured_not_executed_in_this_phase",
+    "state": "executed_success_run_27823251419",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -113,7 +113,37 @@
       "quota exhaustion production evidence",
       "billing source of truth",
       "storage or node pool mutation"
-    ]
+    ],
+    "latestSuccessfulRun": {
+      "runId": 27823251419,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27823251419",
+      "commit": "73cfd2b01a4a11a452b753171ede02d140785821",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:73cfd2b",
+      "targetHost": "https://opl.medopl.cn",
+      "workflow": "Cloud Rollout",
+      "completedAt": "2026-06-19T11:34:49Z",
+      "realChat": false,
+      "stages": [
+        "production_dry_run",
+        "production_apply",
+        "canary_smoke",
+        "production_authenticated_dogfood"
+      ],
+      "statusSummary": [
+        "Production Dry Run success",
+        "Production Apply success",
+        "Production Authenticated Dogfood E2E success"
+      ],
+      "coverage": [
+        "register_or_login",
+        "current_session",
+        "api_key_binding",
+        "fixed_gateway",
+        "raw_api_key_not_returned",
+        "runtime_gate_audit",
+        "sanitized_audit"
+      ]
+    }
   },
   "localNoSecretReadiness": {
     "requiresProductionSecrets": false,
@@ -140,7 +170,7 @@
       "node --test tests/smoke/web-shell.test.mjs"
     ],
     "cannotClaim": [
-      "production authenticated dogfood e2e executed",
+      "production authenticated dogfood e2e requires Cloud Rollout evidence",
       "real upstream/API Key online dogfood",
       "production quota exhaustion online evidence",
       "MedOPL production runtime bridge",
@@ -153,7 +183,6 @@
   ],
   "cannotClaim": [
     "complete production-ready SaaS",
-    "production authenticated dogfood e2e executed in this phase",
     "real OPL runtime execution",
     "MedOPL runtime bridge implementation",
     "billing source of truth"

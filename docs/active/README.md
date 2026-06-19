@@ -17,7 +17,7 @@ Current product work is moving from fixed truth into engineering evidence:
 
 1. Browser-level e2e runner exists for register, login, API Key binding, ordinary chat fallback, `@论文`/`@基金` gate, and sanitized audit evidence; actual run requires Chrome/Chromium via `OPL_BROWSER_BINARY` when the host has no browser.
 2. Research-task-first UX state is owned by the page-state contract and `chatStateForPrompt`.
-3. Production authenticated dogfood is secret-gated HTTP evidence behind explicit switches, not browser e2e.
+3. Production authenticated dogfood HTTP evidence passed in GitHub Actions run `27823251419` for commit `73cfd2b01a4a11a452b753171ede02d140785821`; it remains secret-gated and is not browser e2e.
 4. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
 5. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
 
