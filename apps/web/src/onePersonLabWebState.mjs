@@ -22,8 +22,9 @@ export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
   const runtimeStatus = await readJSON(fetchRef, '/api/medopl/runtime/status');
+  const materialsDeliverables = await readJSON(fetchRef, '/api/medopl/materials-deliverables/projection');
   const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
-  return createOnePersonLabViewModel({ session, provider, conversations, runtimeStatus, oplSnapshot });
+  return createOnePersonLabViewModel({ session, provider, conversations, runtimeStatus, materialsDeliverables, oplSnapshot });
 }
 
 export async function registerAccount(fetchRef, email, password) {
@@ -118,6 +119,7 @@ export function createOnePersonLabViewModel(state) {
       deepLink: MEDOPL_DEEP_LINK,
     },
     runtimeStatus: runtimeStatusFallback(state.runtimeStatus),
+    materialsDeliverables: materialsDeliverablesFallback(state.materialsDeliverables),
     readonly: {
       mode: state.oplSnapshot?.mode ?? 'readonly',
       ok: Boolean(state.oplSnapshot?.ok),
@@ -131,6 +133,7 @@ export function createInitialOnePersonLabViewModel() {
     provider: providerFallback(),
     conversations: { conversations: [] },
     runtimeStatus: runtimeStatusFallback(),
+    materialsDeliverables: materialsDeliverablesFallback(),
     oplSnapshot: { ok: false },
   });
 }
@@ -176,5 +179,17 @@ function runtimeStatusFallback(status = {}) {
     refs: status.refs || {},
     counts: status.counts || { activeRuns: 0 },
     webuiRuntimeExecution: 'forbidden',
+  };
+}
+
+function materialsDeliverablesFallback(projection = {}) {
+  return {
+    ok: Boolean(projection.ok),
+    owner: projection.owner || 'MedOPL',
+    deepLink: projection.deepLink || `${MEDOPL_DEEP_LINK}/materials`,
+    materials: Array.isArray(projection.materials) ? projection.materials : [],
+    deliverables: Array.isArray(projection.deliverables) ? projection.deliverables : [],
+    webuiStorageMutation: 'forbidden',
+    webuiArtifactBody: 'forbidden',
   };
 }

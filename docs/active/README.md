@@ -37,14 +37,12 @@ No active change is open. 正式开发开始前必须创建 `changes/active/<cha
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production authenticated dogfood e2e。
-- 本阶段没有新增真实 chat、billing、storage、runtime bridge、OPL worker、object storage、artifact refs endpoint 或 MedOPL runtime status bridge。
+- 本阶段没有新增真实 chat、billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 
 ## Next Priorities
 
-1. API contract implementation: make Go handlers and frontend calls fully traceable to `contracts/web-api.openapi.json`.
-2. Page-state productization: drive future UI work from `contracts/web-page-state-matrix.json`.
-3. Browser e2e readiness: cover register/login/API Key/chat/runtime gate/audit without production secrets.
-4. MedOPL runtime status bridge as refs-only projection.
-5. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.
+1. Browser e2e readiness: cover register/login/API Key/chat/runtime gate/audit without production secrets.
+2. Billing/quota/audit projection from Go control-plane truth without owning payment source of truth.
+3. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.

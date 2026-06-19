@@ -239,6 +239,19 @@
         }
       }
     },
+    "/api/medopl/materials-deliverables/projection": {
+      "get": {
+        "summary": "Read sanitized MedOPL materials and deliverables projection.",
+        "responses": {
+          "200": {
+            "description": "Readonly MedOPL materials and deliverables projection."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
     "/api/opl/snapshot": {
       "get": {
         "summary": "Read OPL readonly snapshot projection.",

@@ -42,6 +42,14 @@ func (server Server) HandleRuntimeStatus(response http.ResponseWriter, request *
 	writeJSON(response, http.StatusOK, runtimeStatusProjection())
 }
 
+func (server Server) HandleMaterialsDeliverables(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	writeJSON(response, http.StatusOK, materialsDeliverablesProjection())
+}
+
 func (server Server) HandleConversation(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
@@ -82,6 +90,36 @@ func runtimeStatusProjection() map[string]any {
 		"deepLink": MedOPLURL + "/runtime",
 		"refs": refs, "counts": counts,
 		"webuiRuntimeExecution": "forbidden",
+	}
+}
+
+func materialsDeliverablesProjection() map[string]any {
+	materials := []map[string]any{}
+	if materialRef := strings.TrimSpace(os.Getenv("MEDOPL_MATERIAL_REF")); materialRef != "" {
+		materials = append(materials, map[string]any{
+			"materialId": materialRef,
+			"title":      "Linked material",
+			"kind":       "reference",
+			"status":     "ready",
+		})
+	}
+	deliverables := []map[string]any{}
+	if deliverableRef := strings.TrimSpace(os.Getenv("MEDOPL_DELIVERABLE_REF")); deliverableRef != "" {
+		deliverables = append(deliverables, map[string]any{
+			"deliverableId": deliverableRef,
+			"title":         "Linked deliverable",
+			"kind":          "artifact_ref",
+			"status":        "draft",
+			"ref":           deliverableRef,
+		})
+	}
+	return map[string]any{
+		"ok": true, "owner": "MedOPL",
+		"deepLink":              MedOPLURL + "/materials",
+		"materials":             materials,
+		"deliverables":          deliverables,
+		"webuiStorageMutation":  "forbidden",
+		"webuiArtifactBody":     "forbidden",
 	}
 }
 

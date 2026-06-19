@@ -17,6 +17,22 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+function activeChangeIds() {
+  return existsSync('changes/active') ? readdirSync('changes/active') : [];
+}
+
+function assertActiveTruthMatchesWork(readme) {
+  const activeChanges = activeChangeIds();
+  if (activeChanges.length === 0) {
+    assert.match(readme, /No active change|没有 active change/);
+    return;
+  }
+  assert.doesNotMatch(readme, /No active change|没有 active change/);
+  for (const changeId of activeChanges) {
+    assert.match(readme, new RegExp(`changes/active/${changeId}/`));
+  }
+}
+
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
     'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
@@ -66,7 +82,7 @@ test('active truth links active change work instead of phase package docs', () =
   assert.doesNotMatch(readme, /changes\/active\/repo-slimming-and-stale-name-retirement/);
   assert.doesNotMatch(readme, /one-person-lab-web-truth-reset/);
   assert.doesNotMatch(readme, /repo-slimming-and-stale-name-retirement/);
-  assert.match(readme, /No active change|没有 active change/);
+  assertActiveTruthMatchesWork(readme);
   assert.match(readme, /one-person-lab-web/);
 });
 
@@ -120,8 +136,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(active, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(active, /No active change|没有 active change/);
-  assert.match(active, /Next Priorities[\s\S]{0,240}API contract implementation/);
+  assertActiveTruthMatchesWork(active);
+  assert.match(active, /Next Priorities/);
 });
 
 test('release automation is compacted after production-gated closeout', () => {

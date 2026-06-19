@@ -33,6 +33,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
+  assert.deepEqual(responseCodes(api, '/api/medopl/materials-deliverables/projection', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
 
   const errorCodes = api.components.schemas.ApiErrorCode.enum;
@@ -151,6 +152,43 @@ test('MedOPL runtime status endpoint is readonly and sanitized', async () => {
     assertNoSensitiveMaterial(status.body);
 
     const post = await fetch(`${baseUrl}/api/medopl/runtime/status`, { method: 'POST' });
+    assert.equal(post.status, 405);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('materials deliverables endpoint is readonly and sanitized', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    MEDOPL_MATERIAL_REF: 'material_public_ref_123',
+    MEDOPL_DELIVERABLE_REF: 'deliverable_public_ref_456',
+  });
+  try {
+    const projection = await jsonFetch(`${baseUrl}/api/medopl/materials-deliverables/projection`);
+    assert.equal(projection.response.status, 200);
+    assert.equal(projection.body.ok, true);
+    assert.equal(projection.body.owner, 'MedOPL');
+    assert.equal(projection.body.deepLink, 'https://medopl.medopl.cn/materials');
+    assert.deepEqual(projection.body.materials, [{
+      materialId: 'material_public_ref_123',
+      title: 'Linked material',
+      kind: 'reference',
+      status: 'ready',
+    }]);
+    assert.deepEqual(projection.body.deliverables, [{
+      deliverableId: 'deliverable_public_ref_456',
+      title: 'Linked deliverable',
+      kind: 'artifact_ref',
+      status: 'draft',
+      ref: 'deliverable_public_ref_456',
+    }]);
+    assert.equal(projection.body.webuiStorageMutation, 'forbidden');
+    assert.equal(projection.body.webuiArtifactBody, 'forbidden');
+    assertNoSensitiveMaterial(projection.body);
+    assert.doesNotMatch(JSON.stringify(projection.body), /artifact_body|blob|private_state_path|raw_path|secret|token|password/i);
+
+    const post = await fetch(`${baseUrl}/api/medopl/materials-deliverables/projection`, { method: 'POST' });
     assert.equal(post.status, 405);
   } finally {
     await stopGoServer(child);
