@@ -35,6 +35,7 @@
       "register",
       "login",
       "current_session",
+      "browser_session_bootstrap",
       "api_key_binding",
       "ordinary_chat_mock_upstream",
       "quota_exceeded",

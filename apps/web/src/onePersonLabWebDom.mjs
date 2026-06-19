@@ -24,7 +24,7 @@ export async function initOnePersonLabWeb() {
     renderView(view);
   });
 
-  view = await loadOnePersonLabWebState(fetch, { probeSession: false, loadSnapshot: false });
+  view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
   renderView(view);
 }
 

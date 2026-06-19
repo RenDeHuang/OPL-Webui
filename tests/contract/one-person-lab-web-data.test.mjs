@@ -35,6 +35,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'register',
     'login',
     'current_session',
+    'browser_session_bootstrap',
     'api_key_binding',
     'ordinary_chat',
     'quota_exceeded',
@@ -76,6 +77,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'register',
     'login',
     'current_session',
+    'browser_session_bootstrap',
     'api_key_binding',
     'ordinary_chat_mock_upstream',
     'quota_exceeded',
@@ -153,6 +155,13 @@ test('web data module calls session provider and chat APIs only', async () => {
     '/api/chat',
   ]);
   assert.doesNotMatch(JSON.stringify(calls), /\/api\/mvp\/task|base_url|demo:\/\//);
+});
+
+test('browser bootstrap probes current session without loading OPL snapshot', () => {
+  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+
+  assert.match(domSource, /loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/);
+  assert.doesNotMatch(domSource, /loadOnePersonLabWebState\(fetch, \{ probeSession: false, loadSnapshot: false \}\)/);
 });
 
 test('web data module exposes hash view and account state machine', () => {

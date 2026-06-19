@@ -97,6 +97,13 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
+        "id": "browser_session_bootstrap",
+        "route": "chat",
+        "requiredApi": "/api/session/current",
+        "expectedState": "authenticated_bound",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+      },
+      {
         "id": "api_key_binding",
         "route": "settings",
         "requiredApi": "/api/settings/model-provider",
