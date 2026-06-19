@@ -36,7 +36,9 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - `docs/history/process/closeouts.md` is historical provenance only; it must not become current truth.
 - `docs/history/tombstones/README.md` records retired surfaces and no-resurrection rules.
 - Test workflow now uses fixed main lanes plus dynamic targeted lane selection. `current = smoke + contract + health + go`; `browser`, `deploy`, `regression`, and `full` are explicit lanes for changed surfaces and release-risk work.
-- `scripts/lane-advisory.mjs` maps changed files to recommended targeted lanes. It is advisory inside `npm run gate:review`; completion evidence still must list the actual commands run.
+- `scripts/test-classification.mjs` is the machine registry for lane membership, cost, lifecycle role, risk triggers, verify suites, and regression retirement metadata.
+- `scripts/lane-advisory.mjs` maps changed files to targeted lanes for operator visibility; lane-check/gate evidence decides whether the required targeted lanes were actually run for the current diff.
+- `regression` can be empty. Active `regression-guard` tests must carry retirement metadata, and when the condition is met the test, registry entry, and any needed tombstone cleanup happen in the same change.
 
 ## Can Claim
 

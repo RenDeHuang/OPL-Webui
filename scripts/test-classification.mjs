@@ -1,11 +1,105 @@
+export const TEST_COSTS = Object.freeze(['cheap', 'medium', 'heavy', 'soak', 'golden']);
+export const LIFECYCLE_ROLES = Object.freeze([
+  'current-owner',
+  'integration',
+  'regression-guard',
+  'tombstone-guard',
+]);
+export const VERIFY_SUITE_NAMES = Object.freeze([
+  'current',
+  'smoke',
+  'contract',
+  'health',
+  'go',
+  'browser',
+  'deploy',
+  'regression',
+  'full',
+]);
+
+const CURRENT_EXPLICIT_COSTS = Object.freeze(['heavy', 'soak', 'golden']);
+
+function assertValidStringArray(value, field, file) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`${file} must declare ${field}`);
+  }
+
+  for (const item of value) {
+    if (typeof item !== 'string' || item.length === 0) {
+      throw new Error(`${file} ${field} entries must be non-empty strings`);
+    }
+  }
+}
+
+function validateRetirement(entry) {
+  if (entry.lifecycleRole !== 'regression-guard') return;
+
+  if (entry.lane !== 'regression') {
+    throw new Error(`${entry.file} regression guard must live in regression lane`);
+  }
+  if (!entry.retirement || typeof entry.retirement !== 'object') {
+    throw new Error(`${entry.file} regression guard must declare retirement metadata`);
+  }
+
+  for (const field of ['condition', 'deleteWhen']) {
+    if (typeof entry.retirement[field] !== 'string' || entry.retirement[field].length === 0) {
+      throw new Error(`${entry.file} regression guard must declare retirement.${field}`);
+    }
+  }
+
+  if (
+    !Array.isArray(entry.retirement.remove)
+    || !entry.retirement.remove.includes('test')
+    || !entry.retirement.remove.includes('registry-entry')
+  ) {
+    throw new Error(`${entry.file} regression guard retirement must remove test and registry entry`);
+  }
+}
+
+function validateCurrentSuiteReason(entry) {
+  const needsReason =
+    entry.verifySuites.includes('current')
+    && (entry.lifecycleRole === 'integration' || CURRENT_EXPLICIT_COSTS.includes(entry.cost));
+
+  if (!needsReason) return;
+
+  if (typeof entry.currentSuiteReason !== 'string' || entry.currentSuiteReason.length === 0) {
+    throw new Error(`${entry.file} must explain why integration/heavy/golden/soak runs in current`);
+  }
+}
+
+function validateTestEntry(entry) {
+  if (!TEST_COSTS.includes(entry.cost)) {
+    throw new Error(`${entry.file} must declare supported cost`);
+  }
+  if (!LIFECYCLE_ROLES.includes(entry.lifecycleRole)) {
+    throw new Error(`${entry.file} must declare supported lifecycle role`);
+  }
+
+  assertValidStringArray(entry.contracts, 'contracts', entry.file);
+  assertValidStringArray(entry.riskTriggers, 'riskTriggers', entry.file);
+  assertValidStringArray(entry.verifySuites, 'verifySuites', entry.file);
+
+  for (const suite of entry.verifySuites) {
+    if (!VERIFY_SUITE_NAMES.includes(suite)) {
+      throw new Error(`${entry.file} references unsupported verify suite: ${suite}`);
+    }
+  }
+
+  validateRetirement(entry);
+  validateCurrentSuiteReason(entry);
+}
+
 function testEntry(entry) {
-  return Object.freeze({
+  const normalized = {
     cost: 'cheap',
     ...entry,
     contracts: Object.freeze(entry.contracts),
     riskTriggers: Object.freeze(entry.riskTriggers),
     verifySuites: Object.freeze(entry.verifySuites),
-  });
+  };
+  validateTestEntry(normalized);
+  return Object.freeze(normalized);
 }
 
 const TEST_ENTRIES = Object.freeze([
@@ -30,6 +124,16 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'health'],
   }),
   testEntry({
+    file: 'tests/health/lane-check.test.mjs',
+    runner: 'node',
+    lane: 'health',
+    ownerSurface: 'workflow',
+    lifecycleRole: 'current-owner',
+    contracts: ['package.json', 'scripts/verify.mjs', 'scripts/lane-check.mjs', 'scripts/lane-advisory.mjs', 'scripts/workflow-gate.mjs', 'AGENTS.md'],
+    riskTriggers: ['test-workflow'],
+    verifySuites: ['current', 'health'],
+  }),
+  testEntry({
     file: 'tests/health/repo-bloat.test.mjs',
     runner: 'node',
     lane: 'health',
@@ -45,7 +149,7 @@ const TEST_ENTRIES = Object.freeze([
     lane: 'health',
     ownerSurface: 'workflow',
     lifecycleRole: 'current-owner',
-    contracts: ['.github/workflows/ci.yml', '.github/workflows/cloud-rollout.yml', '.github/workflows/release-image.yml', 'package.json', 'scripts/verify.mjs', 'scripts/workflow-gate.mjs', 'scripts/lane-advisory.mjs'],
+    contracts: ['.github/workflows/ci.yml', '.github/workflows/cloud-rollout.yml', '.github/workflows/release-image.yml', 'package.json', 'scripts/verify.mjs', 'scripts/workflow-gate.mjs', 'scripts/lane-advisory.mjs', 'scripts/lane-check.mjs'],
     riskTriggers: ['test-workflow', 'deploy'],
     verifySuites: ['current', 'health'],
   }),
@@ -187,7 +291,7 @@ const TEST_ENTRIES = Object.freeze([
     runner: 'node',
     lane: 'browser',
     ownerSurface: 'browser-e2e',
-    lifecycleRole: 'current-owner',
+    lifecycleRole: 'integration',
     cost: 'medium',
     contracts: ['tests/browser/research-main-path-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json'],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e'],
@@ -198,7 +302,7 @@ const TEST_ENTRIES = Object.freeze([
     runner: 'node',
     lane: 'deploy',
     ownerSurface: 'deploy',
-    lifecycleRole: 'current-owner',
+    lifecycleRole: 'integration',
     contracts: ['Dockerfile', 'Dockerfile.cloud', '.dockerignore', '.dockerignore.cloud', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go'],
     riskTriggers: ['deploy', 'container'],
     verifySuites: ['deploy', 'full'],
@@ -208,7 +312,7 @@ const TEST_ENTRIES = Object.freeze([
     runner: 'node',
     lane: 'deploy',
     ownerSurface: 'deploy',
-    lifecycleRole: 'current-owner',
+    lifecycleRole: 'integration',
     contracts: ['deploy/web-cloud/opl-webui.k8s.json', 'deploy/web-cloud/RUNBOOK.md'],
     riskTriggers: ['deploy'],
     verifySuites: ['deploy', 'full'],
@@ -218,7 +322,7 @@ const TEST_ENTRIES = Object.freeze([
     runner: 'node',
     lane: 'deploy',
     ownerSurface: 'deploy',
-    lifecycleRole: 'current-owner',
+    lifecycleRole: 'integration',
     cost: 'medium',
     contracts: ['scripts/cloud-rollout.mjs', 'deploy/web-cloud/RUNBOOK.md'],
     riskTriggers: ['deploy', 'cloud-rollout'],

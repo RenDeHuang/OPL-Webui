@@ -19,6 +19,7 @@
 - No user-visible behavior change before the relevant contract is updated.
 - No page behavior change before `contracts/web-page-state-matrix.json` is updated.
 - No new behavior without test coverage and registry entry.
+- No test taxonomy outside the registry: lifecycle role, cost, risk triggers, verify suites, and regression retirement metadata belong in `scripts/test-classification.mjs`.
 - No compatibility layer without a real consumer, explicit contract, and retirement plan.
 - No active retired vocabulary unless it is a fail-closed guard or a history/archive reference.
 - No completion claim without fresh verification evidence.

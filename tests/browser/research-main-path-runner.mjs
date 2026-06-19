@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import http from 'node:http';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const repoRoot = new URL('../../', import.meta.url).pathname;
@@ -22,6 +22,7 @@ try {
   const pageWebSocketDebuggerUrl = await createPageTarget(browser.devtoolsBaseUrl);
   const cdp = await connectCDP(pageWebSocketDebuggerUrl);
   state.cleanup.push(() => cdp.close());
+  await cdp.send('DOM.enable');
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Page.navigate', { url: app.baseUrl });
@@ -30,20 +31,20 @@ try {
 
   const email = `browser-${Date.now()}@example.test`;
   const password = 'browser-e2e-password';
-  await setValue(cdp, '#auth-email', email);
-  await setValue(cdp, '#auth-password', password);
-  await click(cdp, '[data-register-button]');
-  await waitFor(cdp, 'document.body.dataset.authState === "authenticated_unbound"');
-  await click(cdp, '[data-logout-button]');
-  await waitFor(cdp, 'document.body.dataset.authState === "anonymous"');
-  await setValue(cdp, '#auth-email', email);
-  await setValue(cdp, '#auth-password', password);
-  await click(cdp, '[data-login-button]');
-  await waitFor(cdp, 'document.body.dataset.authState === "authenticated_unbound"');
+  await typeInto(cdp, '#auth-email', email);
+  await typeInto(cdp, '#auth-password', password);
+  await activate(cdp, '[data-register-button]');
+  await waitForAuthState(cdp, 'authenticated_unbound', 'register');
+  await activate(cdp, '[data-logout-button]');
+  await waitForAuthState(cdp, 'anonymous', 'logout');
+  await typeInto(cdp, '#auth-email', email);
+  await typeInto(cdp, '#auth-password', password);
+  await activate(cdp, '[data-login-button]');
+  await waitForAuthState(cdp, 'authenticated_unbound', 'login');
 
-  await setValue(cdp, '#api-key', 'sk-browser-e2e-secret');
-  await submit(cdp, '[data-provider-form]');
-  await waitFor(cdp, 'document.body.dataset.authState === "authenticated_bound"');
+  await typeInto(cdp, '#api-key', 'sk-browser-e2e-secret');
+  await activate(cdp, '[data-save-key-button]');
+  await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
 
   await submitPrompt(cdp, '@科研 帮我拆解研究方向');
   await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
@@ -63,13 +64,23 @@ try {
   if (!kinds.includes('chat.completed')) {
     throw new Error(`missing chat.completed audit evidence: ${kinds.join(',')}`);
   }
+  const pageStates = await evaluateJSON(cdp, `({
+    authState: document.body.dataset.authState,
+    chatState: document.body.dataset.chatState,
+    providerStatus: document.querySelector('[data-provider-status]')?.textContent,
+    runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
+    chatLogText: document.querySelector('[data-chat-log]')?.textContent,
+  })`);
+  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));
 
   console.log(JSON.stringify({
     ok: true,
     path: 'research-main-path',
     browser: browserBinary,
     baseUrl: app.baseUrl,
-    auditKinds: [...new Set(kinds)],
+    pageStates,
+    auditKinds: relevantAuditKinds,
+    allAuditKinds: [...new Set(kinds)],
     upstreamRequests: upstream.requests.length,
   }));
 } catch (error) {
@@ -86,11 +97,33 @@ function findBrowserBinary() {
   for (const candidate of ['chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable', 'chrome']) {
     if (spawnSyncStatus('which', [candidate]) === 0) return candidate;
   }
-  throw new Error('No browser binary found. Set OPL_BROWSER_BINARY to a Chrome/Chromium executable to run browser e2e.');
+  const playwrightChromium = findPlaywrightChromiumBinary();
+  if (playwrightChromium) return playwrightChromium;
+  throw new Error('No browser binary found. Install Chromium or run with OPL_BROWSER_BINARY=/path/to/chrome. Playwright users can run `npx playwright install chromium` and re-run npm run verify:browser.');
 }
 
 function spawnSyncStatus(command, args) {
   return spawnSync(command, args, { stdio: 'ignore' }).status;
+}
+
+function findPlaywrightChromiumBinary() {
+  const roots = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    join(homedir(), '.cache/ms-playwright'),
+  ].filter(Boolean);
+
+  for (const root of roots) {
+    if (!existsSync(root)) continue;
+    const browserDirs = readdirSync(root)
+      .filter((entry) => entry.startsWith('chromium-'))
+      .sort()
+      .reverse();
+    for (const dir of browserDirs) {
+      const binary = join(root, dir, 'chrome-linux64', 'chrome');
+      if (existsSync(binary)) return binary;
+    }
+  }
+  return '';
 }
 
 async function startMockChatUpstream() {
@@ -150,6 +183,7 @@ async function startBrowser(binary) {
   const child = spawn(binary, [
     '--headless=new',
     '--disable-gpu',
+    '--no-sandbox',
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-dev-shm-usage',
@@ -214,47 +248,124 @@ async function connectCDP(webSocketDebuggerUrl) {
   };
 }
 
-async function setValue(cdp, selector, value) {
-  await cdp.send('Runtime.evaluate', {
-    expression: `
-      {
-        const input = document.querySelector(${JSON.stringify(selector)});
-        input.focus();
-        input.value = ${JSON.stringify(value)};
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    `,
-    awaitPromise: true,
-  });
-  await waitFor(cdp, `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(value)}`);
-}
-
 async function submitPrompt(cdp, prompt) {
-  await setValue(cdp, '#chat-input', prompt);
-  await submit(cdp, '[data-chat-form]');
+  await typeInto(cdp, '#chat-input', prompt);
+  await activate(cdp, '[data-chat-submit]');
 }
 
-async function click(cdp, selector) {
+async function typeInto(cdp, selector, text) {
+  await userClick(cdp, selector);
+  await focusElement(cdp, selector);
+  await selectAll(cdp);
+  await keyPress(cdp, { key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 });
+  if (text) await cdp.send('Input.insertText', { text });
+  await waitFor(
+    cdp,
+    `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(text)}`,
+    async () => {
+      const state = await evaluateJSON(cdp, `({
+        selector: ${JSON.stringify(selector)},
+        expected: ${JSON.stringify(text)},
+        actual: document.querySelector(${JSON.stringify(selector)})?.value,
+        activeElement: document.activeElement?.id || document.activeElement?.tagName,
+      })`);
+      return `typeInto did not update input: ${JSON.stringify(state)}`;
+    },
+  );
+}
+
+async function userClick(cdp, selector) {
+  const { x, y } = await elementCenter(cdp, selector);
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+  await delay(50);
+}
+
+async function activate(cdp, selector) {
+  await userClick(cdp, selector);
+  await focusElement(cdp, selector);
+  await keyPress(cdp, { key: ' ', code: 'Space', windowsVirtualKeyCode: 32, nativeVirtualKeyCode: 32 });
+  await delay(50);
+}
+
+async function elementCenter(cdp, selector) {
+  const selectorJSON = JSON.stringify(selector);
   await cdp.send('Runtime.evaluate', {
-    expression: `document.querySelector(${JSON.stringify(selector)})?.click()`,
+    expression: `document.querySelector(${selectorJSON})?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })`,
     awaitPromise: true,
   });
+  return waitUntil(async () => {
+    const result = await cdp.send('Runtime.evaluate', {
+      expression: `(() => {
+        const element = document.querySelector(${selectorJSON});
+        if (!element) return null;
+        const rect = element.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const hit = document.elementFromPoint(x, y);
+        if (!hit || (hit !== element && !element.contains(hit))) return null;
+        return { x, y };
+      })()`,
+      returnByValue: true,
+    });
+    return result.result?.value;
+  }, 5000, () => `element is not clickable at center: ${selector}`);
 }
 
-async function submit(cdp, selector) {
+async function focusElement(cdp, selector) {
   await cdp.send('Runtime.evaluate', {
-    expression: `document.querySelector(${JSON.stringify(selector)})?.requestSubmit()`,
+    expression: `document.querySelector(${JSON.stringify(selector)})?.focus()`,
     awaitPromise: true,
   });
+  await waitFor(cdp, `document.activeElement === document.querySelector(${JSON.stringify(selector)})`);
 }
 
-async function waitFor(cdp, expression) {
+async function waitForAuthState(cdp, authState, label) {
+  await waitFor(
+    cdp,
+    `document.body.dataset.authState === ${JSON.stringify(authState)}`,
+    () => describePageState(cdp, `${label} did not reach ${authState}`),
+  );
+}
+
+async function describePageState(cdp, message) {
+  const state = await evaluateJSON(cdp, `({
+    message: ${JSON.stringify(message)},
+    authState: document.body.dataset.authState,
+    chatState: document.body.dataset.chatState,
+    settingsMessage: document.querySelector('[data-settings-message]')?.textContent,
+    sessionStatus: document.querySelector('[data-session-status]')?.textContent,
+    providerStatus: document.querySelector('[data-provider-status]')?.textContent,
+    emailValue: document.querySelector('#auth-email')?.value,
+    passwordLength: document.querySelector('#auth-password')?.value?.length,
+    apiKeyLength: document.querySelector('#api-key')?.value?.length,
+    activeElement: document.activeElement?.id || document.activeElement?.tagName,
+    session: await fetch('/api/session/current')
+      .then(async (response) => ({ status: response.status, body: await response.text() }))
+      .catch((error) => ({ error: String(error) })),
+  })`);
+  return JSON.stringify(state);
+}
+
+async function selectAll(cdp) {
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Control', code: 'ControlLeft', windowsVirtualKeyCode: 17 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Control', code: 'ControlLeft', windowsVirtualKeyCode: 17 });
+}
+
+async function keyPress(cdp, key) {
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', ...key });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
+}
+
+async function waitFor(cdp, expression, describeFailure) {
   await waitUntil(async () => Boolean((await cdp.send('Runtime.evaluate', {
     expression,
     returnByValue: true,
     awaitPromise: true,
-  })).result?.value));
+  })).result?.value), 30000, describeFailure);
 }
 
 async function assertPage(cdp, expression, label) {
@@ -287,7 +398,7 @@ async function waitForAuditKindCount(cdp, eventKind, count) {
   }, 60000);
 }
 
-async function waitUntil(check, timeoutMs = 30000) {
+async function waitUntil(check, timeoutMs = 30000, describeFailure) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
   while (Date.now() < deadline) {
@@ -298,6 +409,9 @@ async function waitUntil(check, timeoutMs = 30000) {
       lastError = error;
     }
     await delay(100);
+  }
+  if (describeFailure) {
+    throw new Error(await describeFailure());
   }
   throw lastError || new Error('timed out');
 }

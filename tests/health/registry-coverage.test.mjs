@@ -3,7 +3,9 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { TEST_LANE_REGISTRY, VERIFY_SUITES } from '../../scripts/test-classification.mjs';
+import * as testClassification from '../../scripts/test-classification.mjs';
+
+const { LIFECYCLE_ROLES, TEST_COSTS, TEST_LANE_REGISTRY, VERIFY_SUITES } = testClassification;
 
 test('registry covers the current lane model', () => {
   for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']) {
@@ -33,7 +35,10 @@ test('registry points only at existing test files', () => {
       }
       assert.equal(typeof entry.ownerSurface, 'string');
       assert.equal(typeof entry.lifecycleRole, 'string');
-      assert.ok(['cheap', 'medium', 'heavy'].includes(entry.cost), `${entry.file} must declare cost`);
+      assert.ok(Array.isArray(TEST_COSTS), 'registry must publish supported test costs');
+      assert.ok(Array.isArray(LIFECYCLE_ROLES), 'registry must publish supported lifecycle roles');
+      assert.ok(TEST_COSTS.includes(entry.cost), `${entry.file} must declare supported cost`);
+      assert.ok(LIFECYCLE_ROLES.includes(entry.lifecycleRole), `${entry.file} must declare supported lifecycle role`);
       assert.ok(Array.isArray(entry.riskTriggers), `${entry.file} must declare risk triggers`);
       assert.ok(entry.riskTriggers.length > 0, `${entry.file} must declare at least one risk trigger`);
       assert.ok(Array.isArray(entry.contracts));
@@ -52,6 +57,60 @@ test('registry points only at existing test files', () => {
 test('verify suites separate daily current from explicit heavy lanes', () => {
   assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'contract', 'health', 'go']);
   assert.deepEqual(VERIFY_SUITES.full, ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']);
+});
+
+test('registry publishes the supported taxonomy values', () => {
+  assert.ok(Array.isArray(TEST_COSTS), 'registry must publish supported test costs');
+  assert.ok(Array.isArray(LIFECYCLE_ROLES), 'registry must publish supported lifecycle roles');
+
+  for (const cost of ['cheap', 'medium', 'heavy', 'soak', 'golden']) {
+    assert.ok(TEST_COSTS.includes(cost), `missing cost taxonomy: ${cost}`);
+  }
+
+  for (const role of ['current-owner', 'integration', 'regression-guard', 'tombstone-guard']) {
+    assert.ok(LIFECYCLE_ROLES.includes(role), `missing lifecycle taxonomy: ${role}`);
+  }
+});
+
+test('regression guards carry machine-readable retirement metadata', () => {
+  for (const lane of Object.values(TEST_LANE_REGISTRY)) {
+    for (const entry of lane.tests) {
+      if (entry.lifecycleRole !== 'regression-guard') continue;
+
+      assert.equal(entry.lane, 'regression', `${entry.file} regression guard must live in regression lane`);
+      assert.equal(typeof entry.retirement, 'object', `${entry.file} must declare retirement metadata`);
+      assert.equal(typeof entry.retirement.condition, 'string', `${entry.file} must declare retirement condition`);
+      assert.ok(entry.retirement.condition.length > 0, `${entry.file} must declare retirement condition`);
+      assert.equal(typeof entry.retirement.deleteWhen, 'string', `${entry.file} must declare deleteWhen`);
+      assert.ok(entry.retirement.deleteWhen.length > 0, `${entry.file} must declare deleteWhen`);
+      assert.ok(
+        Array.isArray(entry.retirement.remove),
+        `${entry.file} retirement must declare removal targets`,
+      );
+      assert.ok(
+        entry.retirement.remove.includes('test') && entry.retirement.remove.includes('registry-entry'),
+        `${entry.file} retirement must remove test and registry entry`,
+      );
+    }
+  }
+});
+
+test('integration and expensive tests enter current only by explicit reason', () => {
+  for (const lane of Object.values(TEST_LANE_REGISTRY)) {
+    for (const entry of lane.tests) {
+      const requiresExplicitCurrentReason =
+        entry.lifecycleRole === 'integration' || ['heavy', 'soak', 'golden'].includes(entry.cost);
+
+      if (!requiresExplicitCurrentReason || !entry.verifySuites.includes('current')) continue;
+
+      assert.equal(
+        typeof entry.currentSuiteReason,
+        'string',
+        `${entry.file} must explain why integration/heavy/golden/soak runs in current`,
+      );
+      assert.ok(entry.currentSuiteReason.length > 0, `${entry.file} must explain current suite inclusion`);
+    }
+  }
 });
 
 test('every current-suite test points back to the current suite', () => {

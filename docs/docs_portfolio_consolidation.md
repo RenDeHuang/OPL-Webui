@@ -16,6 +16,8 @@
 
 Markdown prose is not a stable machine interface. Machine behavior must use source, contracts, fixtures, scripts, tests, API behavior, or semantic IDs.
 
+Test lifecycle prose must point back to the registry. `scripts/test-classification.mjs` owns lane membership, `cost`, `lifecycleRole`, `riskTriggers`, `verifySuites`, and regression retirement metadata; docs only explain those machine rules.
+
 ## Reading Order
 
 1. `AGENTS.md`

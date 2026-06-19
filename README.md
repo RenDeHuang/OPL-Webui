@@ -43,7 +43,9 @@ Use fixed truth, not per-change process packages:
 7. Retire replaced routes, schemas, tests, docs, names, and compatibility surfaces in the same diff.
 8. Run targeted lane, then `current`, then risk-specific explicit lanes.
 
-Test truth is lane-based, not case-count-based. `npm run verify` runs `current = smoke + contract + health + go`. Use `npm run lane:advisory -- <files...>` to see targeted lanes for a change. Browser, deploy, regression, and full verification are explicit lanes, not hidden inside health checks.
+Test truth is lane-based, not case-count-based. `scripts/test-classification.mjs` owns test taxonomy, lane membership, cost, lifecycle role, risk triggers, and verify-suite metadata. `npm run verify` runs `current = smoke + contract + health + go`. Dynamic lane checks use changed files plus fresh verification evidence; `npm run lane:advisory -- <files...>` only explains the targeted lanes to run. Browser, deploy, regression, and full verification are explicit lanes, not hidden inside health checks.
+
+Regression tests are temporary guards, not permanent inventory. The `regression` lane may be empty. Any `regression-guard` entry must carry retirement metadata, and when its condition is satisfied the same cleanup removes the test file, registry entry, and any needed no-resurrection tombstone.
 
 Small docs/test/source maintenance can use targeted tests plus the relevant verify suite and `npm run verify`. User-visible, API, runtime, billing, storage, deploy, OPL bridge, or release-claim changes require the targeted explicit lane, `npm run gate:review`, `npm run repo:bloat`, and `sentrux check .`.
 

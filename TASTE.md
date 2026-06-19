@@ -31,6 +31,8 @@
 ## Test Lane Taste
 
 - Treat lane membership as product truth: tests should explain the owner surface and contract they protect, not just where the file lives.
+- Keep taxonomy machine-readable in `scripts/test-classification.mjs`: `cost` communicates execution weight, `lifecycleRole` communicates why the test exists, and `riskTriggers` drive targeted lane selection.
 - Keep the main lane stable. `current` is the daily bias check for smoke, contract, health, and Go control plane.
 - Keep expensive or environment-sensitive lanes explicit. Browser, deploy, regression, and full gates are selected by changed surface and release risk.
+- Keep regression guards disposable. A `regression-guard` must say when it retires, and retirement deletes the test plus registry entry instead of accumulating old bug reproductions.
 - Do not create direct test scripts that bypass `scripts/verify.mjs`; register tests and let the lane runner own execution.

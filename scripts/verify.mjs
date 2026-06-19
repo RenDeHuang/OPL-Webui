@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 import { TEST_LANE_REGISTRY, VERIFY_SUITES } from './test-classification.mjs';
+import { currentDiffFingerprint, DEFAULT_EVIDENCE_PATH, resolveDefaultBaseRef } from './lane-check.mjs';
 
 const mode = process.argv[2] ?? 'current';
 const target = mode === 'suite' ? process.argv[3] : mode;
@@ -46,6 +49,10 @@ for (const laneName of lanes) {
   }
 }
 
+if (!failed) {
+  writeVerifyEvidence({ target, lanes });
+}
+
 process.exit(failed ? 1 : 0);
 
 function uniqueGoPackageEntries(entries) {
@@ -60,4 +67,29 @@ function uniqueGoPackageEntries(entries) {
     unique.push(entry);
   }
   return unique;
+}
+
+function writeVerifyEvidence(run) {
+  const evidencePath = process.env.OPL_VERIFY_EVIDENCE_PATH ?? DEFAULT_EVIDENCE_PATH;
+  const previous = readExistingEvidence(evidencePath);
+  const baseRef = process.env.OPL_LANE_BASE ?? resolveDefaultBaseRef();
+  const nextRun = {
+    target: run.target,
+    lanes: run.lanes,
+    status: 'passed',
+    baseRef,
+    diffFingerprint: currentDiffFingerprint(baseRef),
+    completedAt: new Date().toISOString(),
+  };
+  const runs = [...(previous.runs ?? []), nextRun].slice(-50);
+  mkdirSync(dirname(evidencePath), { recursive: true });
+  writeFileSync(evidencePath, `${JSON.stringify({ schemaVersion: 1, runs }, null, 2)}\n`);
+}
+
+function readExistingEvidence(evidencePath) {
+  try {
+    return JSON.parse(readFileSync(evidencePath, 'utf8'));
+  } catch {
+    return { schemaVersion: 1, runs: [] };
+  }
 }

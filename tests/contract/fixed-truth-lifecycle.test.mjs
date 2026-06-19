@@ -90,7 +90,7 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(decisions, /File count is report-only/);
   assert.match(decisions, /fixed main lanes and dynamic targeted lanes/);
-  assert.match(decisions, /changed-file lane advisory/);
+  assert.match(decisions, /lane-check\/gate evidence/);
   assert.match(portfolio, /Retired Workflow/);
   assert.match(portfolio, /Active Baton Lifecycle/);
 });

@@ -1,67 +1,45 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const helperPath = 'tests/browser/research-main-path-runner.mjs';
+const runnerPath = 'tests/browser/research-main-path-runner.mjs';
 
-test('browser e2e runner is a real browser harness, not an HTTP-only smoke', () => {
-  const runner = readFileSync(helperPath, 'utf8');
+test('research main path runs in a real browser and records page-state evidence', { timeout: 180000 }, () => {
+  const result = spawnSync(process.execPath, [runnerPath], {
+    encoding: 'utf8',
+    timeout: 170000,
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const evidence = JSON.parse(result.stdout.trim().split('\n').at(-1));
+
+  assert.equal(evidence.ok, true);
+  assert.equal(evidence.path, 'research-main-path');
+  assert.match(evidence.browser, /chrome|chromium/i);
+  assert.equal(evidence.pageStates.authState, 'authenticated_bound');
+  assert.equal(evidence.pageStates.chatState, 'runtime_required');
+  assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
+  assert.ok(evidence.upstreamRequests >= 1);
+});
+
+test('browser runner uses user-like browser input instead of direct DOM mutation', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
 
   for (const required of [
-    'OPL_BROWSER_BINARY',
-    '--remote-debugging-port=0',
-    '/json/version',
-    '/json/new?about:blank',
-    '/json/list',
-    'webSocketDebuggerUrl',
-    'createPageTarget',
+    'Input.dispatchMouseEvent',
+    'Input.dispatchKeyEvent',
+    'Input.insertText',
+    'getBoundingClientRect',
     'Page.navigate',
-    'Runtime.evaluate',
+    'webSocketDebuggerUrl',
     'document.readyState === "complete"',
-    'data-register-button',
-    'document.body.dataset.authState === "anonymous"',
-    'data-login-button',
-    'data-provider-form',
-    'data-chat-form',
-    'data-runtime-gate',
-    'waitForAuditKindCount',
-    'runtime_gate.required',
-    'chat.completed',
   ]) {
     assert.match(runner, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.doesNotMatch(runner, /playwright|puppeteer|selenium/i);
+  assert.doesNotMatch(runner, /\.value\s*=(?!=)/);
+  assert.doesNotMatch(runner, /\.click\(\)/);
+  assert.doesNotMatch(runner, /requestSubmit\(\)/);
   assert.doesNotMatch(runner, /OPL_DOGFOOD_API_KEY|KUBECONFIG|kubectl|postgres:\/\//i);
-});
-
-test('browser e2e runner tolerates cold Go startup and cleans partial launches', () => {
-  const runner = readFileSync(helperPath, 'utf8');
-
-  assert.match(runner, /waitForHTTP\(`\$\{baseUrl\}\/healthz`[^,]*,\s*[^,]*,\s*120000\)/s);
-  assert.match(runner, /const app = await startControlPlane\(upstream\.baseUrl,\s*state\.cleanup\)/);
-  assert.match(runner, /detached:\s*true/);
-  assert.match(runner, /cleanup\.push\(\(\) => closeChildProcess\(child\)\)/);
-  assert.match(runner, /process\.kill\(-child\.pid,\s*'SIGTERM'\)/);
-  assert.match(runner, /finally\s*\{\s*afterClose\(\)/);
-  assert.match(runner, /closeAllConnections/);
-});
-
-test('browser e2e runner creates Chrome page targets with request init', () => {
-  const runner = readFileSync(helperPath, 'utf8');
-
-  assert.match(runner, /fetchJSON\(`\$\{devtoolsBaseUrl\}\/json\/new\?about:blank`,\s*\{\s*method:\s*'PUT'\s*\}\)/);
-  assert.match(runner, /async function fetchJSON\(url,\s*init = \{\}\)/);
-  assert.match(runner, /fetch\(url,\s*init\)/);
-  assert.match(runner, /async function evaluateJSON/);
-  assert.match(runner, /\(async \(\) => JSON\.stringify\(await \(\$\{expression\}\)\)\)\(\)/);
-});
-
-test('browser e2e runner writes form values through DOM events', () => {
-  const runner = readFileSync(helperPath, 'utf8');
-
-  assert.match(runner, /function setValue/);
-  assert.match(runner, /value ===/);
-  assert.match(runner, /dispatchEvent\(new Event\('input'/);
-  assert.match(runner, /dispatchEvent\(new Event\('change'/);
 });

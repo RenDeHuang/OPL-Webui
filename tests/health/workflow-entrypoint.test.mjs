@@ -22,6 +22,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['test:browser'], 'node scripts/verify.mjs suite browser');
   assert.equal(pkg.scripts['test:deploy'], 'node scripts/verify.mjs suite deploy');
   assert.equal(pkg.scripts['lane:advisory'], 'node scripts/lane-advisory.mjs');
+  assert.equal(pkg.scripts['lane:check'], 'node scripts/lane-check.mjs');
 });
 
 test('workflow gate script exists', () => {
@@ -161,15 +162,15 @@ test('current frontend engineering stays static until browser/product evidence r
   assert.doesNotMatch(workflow, /npm run build/);
 });
 
-test('review gate includes diff hygiene, bloat, lane advisory, and current verify', async () => {
+test('review gate includes diff hygiene, bloat, hard lane check, and current verify', async () => {
   const { REVIEW_GATE_STEPS } = await import('../../scripts/workflow-gate.mjs');
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
     'diff hygiene',
     'repo bloat audit',
-    'changed-file lane advisory',
+    'required lane evidence check',
     'current verify',
   ]);
-  assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'changed-file lane advisory').args, ['scripts/lane-advisory.mjs']);
+  assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'required lane evidence check').args, ['scripts/lane-check.mjs']);
 });
 
 test('workflow gate can be imported without executing gate steps', () => {
