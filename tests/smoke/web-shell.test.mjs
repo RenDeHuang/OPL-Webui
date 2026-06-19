@@ -77,6 +77,8 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
   assert.doesNotMatch(html, /workspace|runtime tab|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
+  assert.match(webSource, /dataset\.chatState/);
+  assert.match(webSource, /chatStateForResult/);
   assert.match(webSource, /\/api\/chat/);
   assert.match(webSource, /\/api\/settings\/model-provider/);
 });

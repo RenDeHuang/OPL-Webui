@@ -4,6 +4,7 @@ export {
   MEDOPL_DEEP_LINK,
   OPL_CAPABILITY_MANIFEST,
   accountState,
+  chatStateForResult,
   createOnePersonLabViewModel,
   loadOnePersonLabWebState,
   loginAccount,

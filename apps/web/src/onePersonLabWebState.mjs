@@ -48,13 +48,23 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
 
 export function viewFromHash(hash) {
   const normalized = String(hash || '').replace(/^#/, '');
-  return ['settings', 'capabilities'].includes(normalized) ? normalized : 'chat';
+  return ['settings', 'capabilities', 'medopl'].includes(normalized) ? normalized : 'chat';
 }
 
 export function accountState(session, provider) {
   if (!session?.ok) return 'anonymous';
   if (!provider?.apiKeyConfigured) return 'authenticated_unbound';
   return 'authenticated_bound';
+}
+
+export function chatStateForResult(result, pending = false) {
+  if (pending) return 'sending';
+  if (!result) return 'idle';
+  if (result.errorCode === 'RUNTIME_REQUIRED') return 'runtime_required';
+  if (result.errorCode === 'CHAT_QUOTA_EXCEEDED') return 'quota_exceeded';
+  if (result.errorCode === 'UPSTREAM_CHAT_FAILED') return 'upstream_failed';
+  if (result.ok === false) return 'upstream_failed';
+  return 'idle';
 }
 
 export function createOnePersonLabViewModel(state) {

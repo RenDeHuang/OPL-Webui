@@ -93,13 +93,45 @@ test('web data module calls session provider and chat APIs only', async () => {
 });
 
 test('web data module exposes hash view and account state machine', () => {
+  const pageStates = readJson('contracts/web-page-state-matrix.json');
+
   assert.equal(web.viewFromHash('#settings'), 'settings');
   assert.equal(web.viewFromHash('#capabilities'), 'capabilities');
+  assert.equal(web.viewFromHash('#medopl'), 'medopl');
   assert.equal(web.viewFromHash(''), 'chat');
+  for (const route of pageStates.routes) {
+    assert.equal(web.viewFromHash(route.hash), route.id, `route hash must resolve: ${route.id}`);
+  }
 
   assert.equal(web.accountState({ ok: false }, { apiKeyConfigured: false }), 'anonymous');
   assert.equal(web.accountState({ ok: true }, { apiKeyConfigured: false }), 'authenticated_unbound');
   assert.equal(web.accountState({ ok: true }, { apiKeyConfigured: true }), 'authenticated_bound');
+});
+
+test('web data module implements the page-state chat matrix', () => {
+  const pageStates = readJson('contracts/web-page-state-matrix.json');
+  const chatStates = pageStates.chatStates;
+
+  for (const state of ['idle', 'sending', 'runtime_required', 'quota_exceeded', 'upstream_failed']) {
+    assert.equal(chatStates.includes(state), true, `missing contract chat state: ${state}`);
+  }
+
+  assert.equal(web.chatStateForResult(null), 'idle');
+  assert.equal(web.chatStateForResult(null, true), 'sending');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }), 'runtime_required');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }), 'quota_exceeded');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }), 'upstream_failed');
+  assert.equal(web.chatStateForResult({ ok: true, assistantMessage: { content: 'ok' } }), 'idle');
+
+  for (const state of [
+    web.chatStateForResult(null),
+    web.chatStateForResult(null, true),
+    web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }),
+    web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }),
+    web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }),
+  ]) {
+    assert.equal(chatStates.includes(state), true, `chat state is outside contract: ${state}`);
+  }
 });
 
 test('anonymous users cannot save API keys from the web data module', async () => {

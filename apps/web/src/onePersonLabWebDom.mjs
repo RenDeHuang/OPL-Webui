@@ -5,12 +5,14 @@ import {
   logoutAccount,
   registerAccount,
   saveAPIKey,
+  chatStateForResult,
   sendChatMessage,
   viewFromHash,
 } from './onePersonLabWebState.mjs';
 
 export async function initOnePersonLabWeb() {
   let view = createInitialOnePersonLabViewModel();
+  document.body.dataset.chatState = chatStateForResult(null);
 
   syncHashView();
   window.addEventListener('hashchange', syncHashView);
@@ -66,6 +68,7 @@ function bindChatForm(getView) {
     if (!message) return;
     appendMessage('你', message, 'user-message');
     if (message.includes('@')) {
+      document.body.dataset.chatState = chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' });
       showRuntimeGate();
       appendMessage('OPL', '需要 MedOPL Runtime。该能力需要托管运行环境、存储或 node pool。', 'assistant-message');
       return;
@@ -80,7 +83,9 @@ function bindChatForm(getView) {
       window.location.hash = 'settings';
       return;
     }
+    document.body.dataset.chatState = chatStateForResult(null, true);
     const result = await sendChatMessage(fetch, message);
+    document.body.dataset.chatState = chatStateForResult(result);
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
   });
 }
@@ -120,6 +125,7 @@ async function authAction(kind, setView) {
 
 function renderView(view) {
   document.body.dataset.authState = view.accountState;
+  document.body.dataset.chatState = document.body.dataset.chatState || chatStateForResult(null);
   document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
   document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
   setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
