@@ -22,6 +22,30 @@ func (server Server) HandleAuditEvents(response http.ResponseWriter, request *ht
 	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "events": server.Store.ListAuditEvents(user.ID)})
 }
 
+func (server Server) HandleBillingSummary(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	events := server.Store.ListAuditEvents(user.ID)
+	latestEventKind := ""
+	if len(events) > 0 {
+		latestEventKind = events[len(events)-1].EventKind
+	}
+	limit := chatMonthlyQuota()
+	writeJSON(response, http.StatusOK, map[string]any{
+		"ok": true, "owner": "MedOPL", "deepLink": MedOPLURL + "/billing",
+		"quota": map[string]any{"limit": limit, "used": 0, "remaining": limit},
+		"audit": map[string]any{"eventCount": len(events), "latestEventKind": latestEventKind},
+		"webuiBillingSourceOfTruth": "forbidden",
+		"webuiPaymentMutation":       "forbidden",
+	})
+}
+
 func (server Server) HandleConversations(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")

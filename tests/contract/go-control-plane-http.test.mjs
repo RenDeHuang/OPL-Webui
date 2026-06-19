@@ -32,6 +32,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/account/billing-summary', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/materials-deliverables/projection', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
@@ -195,6 +196,42 @@ test('materials deliverables endpoint is readonly and sanitized', async () => {
   }
 });
 
+test('billing summary endpoint is authenticated readonly projection', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, OPL_CHAT_MONTHLY_QUOTA: '3' });
+  try {
+    const unauth = await jsonFetch(`${baseUrl}/api/account/billing-summary`);
+    assert.equal(unauth.response.status, 401);
+    assert.equal(unauth.body.errorCode, 'AUTH_REQUIRED');
+
+    const session = await register(baseUrl, 'billing-user@example.com');
+    await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-billing-secret' });
+    const gated = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@基金 写申请书' });
+    assert.equal(gated.response.status, 409);
+
+    const summary = await jsonFetch(`${baseUrl}/api/account/billing-summary`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(summary.response.status, 200);
+    assert.equal(summary.body.ok, true);
+    assert.equal(summary.body.owner, 'MedOPL');
+    assert.equal(summary.body.deepLink, 'https://medopl.medopl.cn/billing');
+    assert.equal(summary.body.quota.limit, 3);
+    assert.equal(summary.body.quota.used, 0);
+    assert.equal(summary.body.quota.remaining, 3);
+    assert.equal(summary.body.audit.eventCount >= 2, true);
+    assert.equal(typeof summary.body.audit.latestEventKind, 'string');
+    assert.equal(summary.body.webuiBillingSourceOfTruth, 'forbidden');
+    assert.equal(summary.body.webuiPaymentMutation, 'forbidden');
+    assertNoSensitiveMaterial(summary.body);
+    assert.doesNotMatch(JSON.stringify(summary.body), /rawApiKey|encryptedApiKey|paymentToken|ledger|invoiceBody|rawMetadata|private_state_path/i);
+
+    const post = await fetch(`${baseUrl}/api/account/billing-summary`, { method: 'POST', headers: { cookie: session.cookieHeader } });
+    assert.equal(post.status, 405);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
 test('chat API requires auth and user API key, rejects client base_url override, and gates OPL runtime abilities', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
@@ -301,5 +338,5 @@ async function jsonFetch(url, options = {}) {
 
 function assertNoSensitiveMaterial(value) {
   const encoded = JSON.stringify(value);
-  assert.doesNotMatch(encoded, /correct horse|sk-user-secret|sk-runtime-gate-secret|passwordHash|encryptedApiKey|rawApiKey/i);
+  assert.doesNotMatch(encoded, /correct horse|sk-user-secret|sk-runtime-gate-secret|sk-billing-secret|passwordHash|encryptedApiKey|rawApiKey/i);
 }

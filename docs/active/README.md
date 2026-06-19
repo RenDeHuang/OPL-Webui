@@ -44,5 +44,4 @@ No active change is open. 正式开发开始前必须创建 `changes/active/<cha
 ## Next Priorities
 
 1. Browser e2e readiness: cover register/login/API Key/chat/runtime gate/audit without production secrets.
-2. Billing/quota/audit projection from Go control-plane truth without owning payment source of truth.
-3. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.
+2. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.

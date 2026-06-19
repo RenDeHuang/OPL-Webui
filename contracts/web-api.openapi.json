@@ -226,6 +226,22 @@
         }
       }
     },
+    "/api/account/billing-summary": {
+      "get": {
+        "summary": "Read current user's sanitized billing, quota, and audit projection.",
+        "responses": {
+          "200": {
+            "description": "Sanitized billing handoff and local quota/audit summary."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
     "/api/medopl/runtime/status": {
       "get": {
         "summary": "Read sanitized MedOPL runtime status projection.",

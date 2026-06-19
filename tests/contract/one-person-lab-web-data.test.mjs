@@ -70,6 +70,15 @@ test('web data module calls session provider and chat APIs only', async () => {
       maskedKey: 'sk-***1234',
     });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/billing-summary') return response({
+      ok: true,
+      owner: 'MedOPL',
+      deepLink: 'https://medopl.medopl.cn/billing',
+      quota: { limit: 100, used: 1, remaining: 99 },
+      audit: { eventCount: 2, latestEventKind: 'chat.completed' },
+      webuiBillingSourceOfTruth: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+    });
     if (url === '/api/medopl/runtime/status') return response({
       ok: true,
       owner: 'MedOPL',
@@ -103,6 +112,7 @@ test('web data module calls session provider and chat APIs only', async () => {
     '/api/session/current',
     '/api/settings/model-provider',
     '/api/chat/conversations',
+    '/api/account/billing-summary',
     '/api/medopl/runtime/status',
     '/api/medopl/materials-deliverables/projection',
     '/api/opl/snapshot',
@@ -248,6 +258,35 @@ test('web data module loads sanitized materials and deliverables projection', as
   assert.equal(view.materialsDeliverables.webuiStorageMutation, 'forbidden');
   assert.equal(view.materialsDeliverables.webuiArtifactBody, 'forbidden');
   assert.doesNotMatch(JSON.stringify(view.materialsDeliverables), /secret|raw_provider_secret|artifact_body|blob|private_state_path|mutation_result/i);
+});
+
+test('web data module loads sanitized billing summary projection', async () => {
+  const view = await web.loadOnePersonLabWebState(async (url) => {
+    if (url === '/api/session/current') return response({ ok: true, email: 'billing@example.com' });
+    if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
+    if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/billing-summary') return response({
+      ok: true,
+      owner: 'MedOPL',
+      deepLink: 'https://medopl.medopl.cn/billing',
+      quota: { limit: 3, used: 1, remaining: 2 },
+      audit: { eventCount: 4, latestEventKind: 'api_key.saved' },
+      webuiBillingSourceOfTruth: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+    });
+    if (url === '/api/medopl/runtime/status') return response({ ok: true, owner: 'MedOPL', state: 'ready', webuiRuntimeExecution: 'forbidden' });
+    if (url === '/api/medopl/materials-deliverables/projection') return response({ ok: true, owner: 'MedOPL', materials: [], deliverables: [] });
+    if (url === '/api/opl/snapshot') return response({ ok: true, mode: 'readonly' });
+    return response({ ok: false }, 404);
+  });
+
+  assert.equal(view.billingSummary.owner, 'MedOPL');
+  assert.equal(view.billingSummary.deepLink, 'https://medopl.medopl.cn/billing');
+  assert.equal(view.billingSummary.quota.remaining, 2);
+  assert.equal(view.billingSummary.audit.latestEventKind, 'api_key.saved');
+  assert.equal(view.billingSummary.webuiBillingSourceOfTruth, 'forbidden');
+  assert.equal(view.billingSummary.webuiPaymentMutation, 'forbidden');
+  assert.doesNotMatch(JSON.stringify(view.billingSummary), /secret|raw_provider_secret|paymentToken|ledger|invoiceBody|rawMetadata|private_state_path/i);
 });
 
 test('web view model keeps workspace hidden and exposes fixed provider surface', () => {

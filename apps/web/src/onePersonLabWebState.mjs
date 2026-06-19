@@ -21,10 +21,11 @@ export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const session = shouldProbeSession ? await readJSON(fetchRef, '/api/session/current') : { ok: false };
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
+  const billingSummary = session.ok ? await readJSON(fetchRef, '/api/account/billing-summary') : billingSummaryFallback();
   const runtimeStatus = await readJSON(fetchRef, '/api/medopl/runtime/status');
   const materialsDeliverables = await readJSON(fetchRef, '/api/medopl/materials-deliverables/projection');
   const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
-  return createOnePersonLabViewModel({ session, provider, conversations, runtimeStatus, materialsDeliverables, oplSnapshot });
+  return createOnePersonLabViewModel({ session, provider, conversations, billingSummary, runtimeStatus, materialsDeliverables, oplSnapshot });
 }
 
 export async function registerAccount(fetchRef, email, password) {
@@ -95,6 +96,7 @@ export function createOnePersonLabViewModel(state) {
       maskedKey: provider.maskedKey ?? '',
     },
     conversations: state.conversations?.conversations ?? [],
+    billingSummary: billingSummaryFallback(state.billingSummary),
     capabilitySource: OPL_CAPABILITY_MANIFEST.source,
     capabilities: OPL_CAPABILITY_MANIFEST.capabilities.map(([label, prompt, runtimeRequired, sourceAssistant]) => ({
       label, prompt, runtimeRequired, sourceAssistant,
@@ -132,6 +134,7 @@ export function createInitialOnePersonLabViewModel() {
     session: { ok: false },
     provider: providerFallback(),
     conversations: { conversations: [] },
+    billingSummary: billingSummaryFallback(),
     runtimeStatus: runtimeStatusFallback(),
     materialsDeliverables: materialsDeliverablesFallback(),
     oplSnapshot: { ok: false },
@@ -179,6 +182,18 @@ function runtimeStatusFallback(status = {}) {
     refs: status.refs || {},
     counts: status.counts || { activeRuns: 0 },
     webuiRuntimeExecution: 'forbidden',
+  };
+}
+
+function billingSummaryFallback(summary = {}) {
+  return {
+    ok: Boolean(summary.ok),
+    owner: summary.owner || 'MedOPL',
+    deepLink: summary.deepLink || `${MEDOPL_DEEP_LINK}/billing`,
+    quota: summary.quota || { limit: 0, used: 0, remaining: 0 },
+    audit: summary.audit || { eventCount: 0, latestEventKind: '' },
+    webuiBillingSourceOfTruth: 'forbidden',
+    webuiPaymentMutation: 'forbidden',
   };
 }
 
