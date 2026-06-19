@@ -29,6 +29,8 @@ test('repository governance exposes OPL-style lifecycle surfaces', () => {
     '测试登记',
     '机器 gate',
     '不使用 `changes/active` 七件套作为默认开发系统',
+    '固定主 lane 加动态 targeted lane',
+    'cost、riskTriggers',
     'docs/active/',
     'docs/history/tombstones/',
     '不得保留无 consumer 的兼容层',

@@ -5,9 +5,12 @@ import test from 'node:test';
 
 import { TEST_LANE_REGISTRY, VERIFY_SUITES } from '../../scripts/test-classification.mjs';
 
-test('registry covers the initial health, contract, and smoke lanes', () => {
-  for (const lane of ['health', 'contract', 'smoke']) {
+test('registry covers the current lane model', () => {
+  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']) {
     assert.ok(TEST_LANE_REGISTRY[lane], `missing ${lane} lane`);
+  }
+
+  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy']) {
     assert.ok(TEST_LANE_REGISTRY[lane].tests.length > 0, `${lane} lane has no tests`);
   }
 });
@@ -30,6 +33,9 @@ test('registry points only at existing test files', () => {
       }
       assert.equal(typeof entry.ownerSurface, 'string');
       assert.equal(typeof entry.lifecycleRole, 'string');
+      assert.ok(['cheap', 'medium', 'heavy'].includes(entry.cost), `${entry.file} must declare cost`);
+      assert.ok(Array.isArray(entry.riskTriggers), `${entry.file} must declare risk triggers`);
+      assert.ok(entry.riskTriggers.length > 0, `${entry.file} must declare at least one risk trigger`);
       assert.ok(Array.isArray(entry.contracts));
       assert.ok(entry.contracts.length > 0, `${entry.file} must declare contract refs`);
       for (const contractRef of entry.contracts) {
@@ -43,8 +49,9 @@ test('registry points only at existing test files', () => {
   assert.equal(new Set(registeredFiles).size, registeredFiles.length, 'registered tests must be unique');
 });
 
-test('current verify suite includes every first-phase lane', () => {
-  assert.deepEqual(VERIFY_SUITES.current, ['health', 'contract', 'smoke']);
+test('verify suites separate daily current from explicit heavy lanes', () => {
+  assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'contract', 'health', 'go']);
+  assert.deepEqual(VERIFY_SUITES.full, ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']);
 });
 
 test('every current-suite test points back to the current suite', () => {
@@ -53,6 +60,24 @@ test('every current-suite test points back to the current suite', () => {
       assert.ok(entry.verifySuites.includes('current'), `${entry.file} must be in current`);
     }
   }
+});
+
+test('browser and deploy tests are first-class lanes, not health spillover', () => {
+  const laneFiles = Object.fromEntries(
+    Object.entries(TEST_LANE_REGISTRY).map(([laneName, lane]) => [
+      laneName,
+      lane.tests.map((entry) => entry.file),
+    ]),
+  );
+
+  assert.ok(laneFiles.browser.includes('tests/browser/research-main-path.browser.test.mjs'));
+  assert.ok(laneFiles.deploy.includes('tests/deploy/container-readiness.test.mjs'));
+  assert.ok(laneFiles.deploy.includes('tests/contract/web-cloud-deploy-shape.test.mjs'));
+  assert.ok(laneFiles.deploy.includes('tests/contract/cloud-rollout-helper.test.mjs'));
+  assert.ok(laneFiles.go.includes('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
+
+  assert.equal(laneFiles.health.some((file) => file.startsWith('tests/browser/')), false);
+  assert.equal(laneFiles.health.includes('tests/deploy/container-readiness.test.mjs'), false);
 });
 
 function collectTestFiles(dir, predicate) {

@@ -10,11 +10,18 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['repo:bloat'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
   assert.equal(pkg.scripts.start, 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
-  assert.equal(pkg.scripts['test:go'], 'cd services/control-plane-go && go test ./...');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
   assert.equal(pkg.scripts['test:smoke'], 'node scripts/verify.mjs suite smoke');
+  assert.equal(pkg.scripts['verify:go'], 'node scripts/verify.mjs suite go');
+  assert.equal(pkg.scripts['verify:browser'], 'node scripts/verify.mjs suite browser');
+  assert.equal(pkg.scripts['verify:deploy'], 'node scripts/verify.mjs suite deploy');
+  assert.equal(pkg.scripts['verify:full'], 'node scripts/verify.mjs full');
+  assert.equal(pkg.scripts['test:go'], 'node scripts/verify.mjs suite go');
+  assert.equal(pkg.scripts['test:browser'], 'node scripts/verify.mjs suite browser');
+  assert.equal(pkg.scripts['test:deploy'], 'node scripts/verify.mjs suite deploy');
+  assert.equal(pkg.scripts['lane:advisory'], 'node scripts/lane-advisory.mjs');
 });
 
 test('workflow gate script exists', () => {
@@ -154,15 +161,15 @@ test('current frontend engineering stays static until browser/product evidence r
   assert.doesNotMatch(workflow, /npm run build/);
 });
 
-test('review gate includes diff hygiene, bloat, and current verify', async () => {
+test('review gate includes diff hygiene, bloat, lane advisory, and current verify', async () => {
   const { REVIEW_GATE_STEPS } = await import('../../scripts/workflow-gate.mjs');
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
     'diff hygiene',
     'repo bloat audit',
-    'go tests',
+    'changed-file lane advisory',
     'current verify',
   ]);
-  assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'go tests').args, ['test', './...']);
+  assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'changed-file lane advisory').args, ['scripts/lane-advisory.mjs']);
 });
 
 test('workflow gate can be imported without executing gate steps', () => {

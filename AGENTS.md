@@ -35,8 +35,10 @@
 - 每次正式变更必须同步清退被替代的旧代码、旧 route、旧 schema、旧测试、旧文档入口和旧命名；不能把清退留给未来。
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
 - 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts 和 verifySuites。
-- 默认验证入口是 `npm run verify`；review gate 是 `npm run gate:review`。
-- 验证强度按风险分级：小型 docs/test/source 维护至少跑 targeted tests 和相关 verify suite；用户可见、API、contract、runtime、billing、storage、deploy 或 release claim 变更还必须跑 `npm run verify`、`npm run gate:review`、`npm run repo:bloat` 和 `sentrux check .`。
+- 默认主验证入口是 `npm run verify`，即 `current = smoke + contract + health + go`；review gate 是 `npm run gate:review`。
+- 测试采用固定主 lane 加动态 targeted lane：`smoke` 守基础入口，`contract` 守 API/page-state/BYOK/tenant/OPL 边界，`health` 守治理和清退，`go` 守 Go control plane，`browser` 守浏览器主路径，`deploy` 守发布和云端形态，`regression` 守明确 bug 复现，`full` 用于发布和高风险合并。
+- 每次正式开发开始前必须根据改动面决定 targeted lane：`apps/web/**` 跑 `verify:smoke` 与 `verify:browser`；`contracts/web-page-state-matrix.json` 跑 `verify:contract` 与 `verify:browser`；`services/control-plane-go/**` 跑 `verify:contract` 与 `verify:go`；`deploy/**`、`.github/workflows/**`、`scripts/cloud-rollout.mjs` 跑 `verify:deploy` 与 `verify:health`；OPL bridge/runtime gate 变更跑 `verify:contract`、`verify:go` 和 `verify:full`。
+- 验证强度按风险分级：小型 docs/test/source 维护至少跑 targeted tests、对应 verify suite 和 `npm run verify`；用户可见、API、contract、runtime、billing、storage、deploy、OPL bridge 或 release claim 变更还必须跑对应 explicit lane、`npm run gate:review`、`npm run repo:bloat` 和 `sentrux check .`。
 - contract-first：新增或修改用户可见功能、API、runtime gate、release claim 前，必须先更新对应 `contracts/*.json`。
 - page-state-first：新增或修改页面/交互前，必须先更新 `contracts/web-page-state-matrix.json`。
 - browser-e2e-first：商业主路径变化必须有浏览器级或等价 smoke/e2e 计划；不能只靠文案声明。
@@ -69,13 +71,13 @@
 ## 测试登记
 
 - 新增或移动测试文件必须先登记在 `scripts/test-classification.mjs`。
-- 测试登记必须说明 lane、ownerSurface、lifecycleRole、contracts 和 verifySuites。
+- 测试登记必须说明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers 和 verifySuites。
 - 不能新增游离测试、散落 runner 或绕过 `npm run verify` 的单独验证入口。
 
 ## 机器 gate
 
 - 完成声明必须有新鲜验证证据；不能用“应该通过”代替命令输出。
-- 默认完成 gate 按风险分级；高风险、发布、deploy、public API、runtime、billing、storage、OPL bridge 或 release claim 变更必须覆盖 targeted tests、`npm run verify`、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
+- 默认完成 gate 按风险分级；高风险、发布、deploy、public API、runtime、billing、storage、OPL bridge 或 release claim 变更必须覆盖 targeted lane、`npm run verify`、对应 explicit lane、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
 - 修改 AI、OPL、runtime、billing、storage、deploy 或 public API 行为时，必须有对应 contract/eval；没有 eval/test 不算完成。
 - 当用户要求“彻底落地 / 全部落地 / 一步到位 / 完善后立刻吸收 / 持续推进直到完成 / 能做的都做掉”时，最终声明完成前必须执行 Plan Completion Audit：逐项列出 done / partial / not_started / blocked、证据、缺口和后续动作。
 

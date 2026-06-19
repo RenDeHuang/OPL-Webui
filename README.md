@@ -37,11 +37,14 @@ Use fixed truth, not per-change process packages:
 1. Read the fixed truth entry points above.
 2. Identify one gap and its owner surface.
 3. Update contracts first for user-visible, API, page-state, runtime-gate, deploy, or release-claim changes.
-4. Update or add registered tests.
-5. Implement the smallest source/docs change.
-6. Retire replaced routes, schemas, tests, docs, names, and compatibility surfaces in the same diff.
-7. Run verification scaled to risk.
+4. Choose the targeted test lane before implementation.
+5. Update or add registered tests.
+6. Implement the smallest source/docs change.
+7. Retire replaced routes, schemas, tests, docs, names, and compatibility surfaces in the same diff.
+8. Run targeted lane, then `current`, then risk-specific explicit lanes.
 
-Small docs/test/source maintenance can use targeted tests plus the relevant verify suite. User-visible, API, runtime, billing, storage, deploy, OPL bridge, or release-claim changes require `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, and `sentrux check .`.
+Test truth is lane-based, not case-count-based. `npm run verify` runs `current = smoke + contract + health + go`. Use `npm run lane:advisory -- <files...>` to see targeted lanes for a change. Browser, deploy, regression, and full verification are explicit lanes, not hidden inside health checks.
+
+Small docs/test/source maintenance can use targeted tests plus the relevant verify suite and `npm run verify`. User-visible, API, runtime, billing, storage, deploy, OPL bridge, or release-claim changes require the targeted explicit lane, `npm run gate:review`, `npm run repo:bloat`, and `sentrux check .`.
 
 `docs/active/README.md` is the current gap baton for worktree lanes and next-agent handoff. Retired surfaces that should not return are indexed in `docs/history/tombstones/README.md`.

@@ -85,8 +85,12 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(status, /research SaaS product engineering/);
   assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work now moves one gap at a time/);
+  assert.match(status, /current = smoke \+ contract \+ health \+ go/);
+  assert.match(status, /scripts\/lane-advisory\.mjs/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(decisions, /File count is report-only/);
+  assert.match(decisions, /fixed main lanes and dynamic targeted lanes/);
+  assert.match(decisions, /changed-file lane advisory/);
   assert.match(portfolio, /Retired Workflow/);
   assert.match(portfolio, /Active Baton Lifecycle/);
 });

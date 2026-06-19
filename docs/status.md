@@ -35,6 +35,8 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - `docs/active/README.md` keeps the worktree lane baton for current/vision-driven development.
 - `docs/history/process/closeouts.md` is historical provenance only; it must not become current truth.
 - `docs/history/tombstones/README.md` records retired surfaces and no-resurrection rules.
+- Test workflow now uses fixed main lanes plus dynamic targeted lane selection. `current = smoke + contract + health + go`; `browser`, `deploy`, `regression`, and `full` are explicit lanes for changed surfaces and release-risk work.
+- `scripts/lane-advisory.mjs` maps changed files to recommended targeted lanes. It is advisory inside `npm run gate:review`; completion evidence still must list the actual commands run.
 
 ## Can Claim
 
@@ -45,7 +47,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
-- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and a browser e2e runner contract. The static health gate verifies the runner shape; actual Chromium execution requires `OPL_BROWSER_BINARY` when the local environment does not provide Chrome/Chromium.
+- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and a browser e2e runner contract. The explicit browser lane verifies the runner shape; actual Chromium execution requires `OPL_BROWSER_BINARY` when the local environment does not provide Chrome/Chromium.
 - Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27823251419` for commit `73cfd2b01a4a11a452b753171ede02d140785821` after dry-run, production apply, and canary/smoke success. It is not browser e2e and not MedOPL runtime execution evidence.
 
 ## Cannot Claim

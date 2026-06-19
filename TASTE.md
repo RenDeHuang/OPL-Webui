@@ -24,5 +24,13 @@
 4. Write or update tests first and register new test files.
 5. Implement the smallest behavior.
 6. Retire replaced code and docs in the same change.
-7. Run targeted tests, then verification scaled to risk.
-8. Update fixed truth entries with verification evidence and cannot-claim boundaries when the current status changes.
+7. Run the targeted lane first, then `npm run verify` for the current main lane.
+8. Add explicit browser, deploy, regression, full, repo bloat, and Sentrux gates when the changed surface requires them.
+9. Update fixed truth entries with verification evidence and cannot-claim boundaries when the current status changes.
+
+## Test Lane Taste
+
+- Treat lane membership as product truth: tests should explain the owner surface and contract they protect, not just where the file lives.
+- Keep the main lane stable. `current` is the daily bias check for smoke, contract, health, and Go control plane.
+- Keep expensive or environment-sensitive lanes explicit. Browser, deploy, regression, and full gates are selected by changed surface and release risk.
+- Do not create direct test scripts that bypass `scripts/verify.mjs`; register tests and let the lane runner own execution.

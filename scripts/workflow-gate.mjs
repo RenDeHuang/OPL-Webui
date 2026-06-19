@@ -14,10 +14,9 @@ export const REVIEW_GATE_STEPS = Object.freeze([
     args: Object.freeze(['scripts/repo-bloat-audit.mjs']),
   }),
   Object.freeze({
-    label: 'go tests',
-    command: 'go',
-    args: Object.freeze(['test', './...']),
-    cwd: 'services/control-plane-go',
+    label: 'changed-file lane advisory',
+    command: process.execPath,
+    args: Object.freeze(['scripts/lane-advisory.mjs']),
   }),
   Object.freeze({
     label: 'current verify',
