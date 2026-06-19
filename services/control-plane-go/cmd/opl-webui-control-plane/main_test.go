@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/controlplane"
+	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/webapp"
 )
 
 func TestServerAddressUsesHostAndPort(t *testing.T) {
@@ -116,14 +116,14 @@ func TestHandleMetricszRejectsNonGet(t *testing.T) {
 func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
 	called := false
-	store := controlplane.NewMemoryTaskStore()
+	canary := &fakeDatabaseCanary{}
 
-	report, err := runDBCanary(func(databaseURL string) (controlplane.TaskProjectionStore, error) {
+	report, err := runDBCanary(func(databaseURL string) (webapp.DatabaseCanary, error) {
 		called = true
 		if databaseURL != "postgres://user:secret@example/oplweb" {
 			t.Fatalf("database URL mismatch: %s", databaseURL)
 		}
-		return store, nil
+		return canary, nil
 	})
 	if err != nil {
 		t.Fatalf("runDBCanary returned error: %v", err)
@@ -144,15 +144,15 @@ func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 	if !strings.Contains(strings.Join(report.Checks, ","), "delete") {
 		t.Fatalf("canary should report delete check: %#v", report.Checks)
 	}
-	if len(store.ListTaskProjections("tenant_cloud_canary", "workspace_cloud_canary", "user_cloud_canary")) != 0 {
-		t.Fatal("canary projection should be cleaned up")
+	if !canary.ran || !canary.closed {
+		t.Fatalf("canary should run and close: %#v", canary)
 	}
 }
 
 func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "")
 
-	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
+	_, err := runDBCanary(func(string) (webapp.DatabaseCanary, error) {
 		t.Fatal("opener should not run without database URL")
 		return nil, nil
 	})
@@ -163,7 +163,7 @@ func TestRunDBCanaryFailsClosedWithoutDatabaseURL(t *testing.T) {
 
 func TestRunDBCanaryPropagatesOpenError(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
-	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
+	_, err := runDBCanary(func(string) (webapp.DatabaseCanary, error) {
 		return nil, errors.New("network timeout")
 	})
 	if err == nil || !strings.Contains(err.Error(), "open postgres canary") {
@@ -185,52 +185,35 @@ func TestCanaryReportErrorRedactsConnectionDetails(t *testing.T) {
 	}
 }
 
-type readFailingCanaryStore struct {
-	projection controlplane.TaskResponse
-	deleted    bool
+type fakeDatabaseCanary struct {
+	runErr error
+	ran    bool
+	closed bool
 }
 
-func (store *readFailingCanaryStore) SaveTaskProjection(projection controlplane.TaskResponse) error {
-	store.projection = projection
+func (canary *fakeDatabaseCanary) Run(context.Context) error {
+	canary.ran = true
+	return canary.runErr
+}
+
+func (canary *fakeDatabaseCanary) Close() error {
+	canary.closed = true
 	return nil
 }
 
-func (store *readFailingCanaryStore) SaveTaskProjectionWithQuota(projection controlplane.TaskResponse) error {
-	return store.SaveTaskProjection(projection)
-}
-
-func (store *readFailingCanaryStore) GetUsageQuota(string, string) controlplane.UsageQuotaProjection {
-	return controlplane.UsageQuotaProjection{Plan: "starter", TaskQuota: 2, UsagePeriod: "monthly", RemainingCount: 2}
-}
-
-func (store *readFailingCanaryStore) GetTaskProjection(string, string, string) (controlplane.TaskResponse, bool) {
-	return controlplane.TaskResponse{}, false
-}
-
-func (store *readFailingCanaryStore) ListTaskProjections(string, string, string) []controlplane.TaskResponse {
-	return []controlplane.TaskResponse{}
-}
-
-func (store *readFailingCanaryStore) DeleteTaskProjection(tenantID string, workspaceID string, taskID string) error {
-	if tenantID == store.projection.TenantID && workspaceID == store.projection.WorkspaceID && taskID == store.projection.Task.TaskID {
-		store.deleted = true
-	}
-	return nil
-}
-
-func TestRunDBCanaryCleansUpAfterReadFailure(t *testing.T) {
+func TestRunDBCanaryClosesAfterRunFailure(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
-	store := &readFailingCanaryStore{}
+	canary := &fakeDatabaseCanary{runErr: errors.New("read webapp canary rows")}
 
-	_, err := runDBCanary(func(string) (controlplane.TaskProjectionStore, error) {
-		return store, nil
+	_, err := runDBCanary(func(string) (webapp.DatabaseCanary, error) {
+		return canary, nil
 	})
 
-	if err == nil || !strings.Contains(err.Error(), "read postgres canary projection") {
+	if err == nil || !strings.Contains(err.Error(), "webapp postgres canary") {
 		t.Fatalf("expected read error, got %v", err)
 	}
-	if !store.deleted {
-		t.Fatal("canary projection should be cleaned up after read failure")
+	if !canary.ran || !canary.closed {
+		t.Fatalf("canary should run and close after failure: %#v", canary)
 	}
 }
 

@@ -230,6 +230,11 @@ test('web data module implements the page-state chat matrix', () => {
   assert.equal(web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }), 'quota_exceeded');
   assert.equal(web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }), 'upstream_failed');
   assert.equal(web.chatStateForResult({ ok: true, assistantMessage: { content: 'ok' } }), 'idle');
+  assert.equal(web.chatStateForPrompt('@科研 帮我拆解研究方向'), 'research_entry_selected');
+  assert.equal(web.chatStateForPrompt('@论文 生成研究选题'), 'paper_entry_selected');
+  assert.equal(web.chatStateForPrompt('@基金 帮我拆解标书结构'), 'grant_entry_selected');
+  assert.equal(web.chatStateForPrompt('@文件 整理材料引用'), 'materials_refs_pending');
+  assert.equal(web.chatStateForPrompt('普通问答'), 'idle');
 
   for (const state of [
     web.chatStateForResult(null),
@@ -237,6 +242,10 @@ test('web data module implements the page-state chat matrix', () => {
     web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }),
     web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }),
     web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }),
+    web.chatStateForPrompt('@科研 帮我拆解研究方向'),
+    web.chatStateForPrompt('@论文 生成研究选题'),
+    web.chatStateForPrompt('@基金 帮我拆解标书结构'),
+    web.chatStateForPrompt('@文件 整理材料引用'),
   ]) {
     assert.equal(chatStates.includes(state), true, `chat state is outside contract: ${state}`);
   }

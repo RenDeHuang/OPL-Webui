@@ -9,7 +9,7 @@
 
 One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. The repo currently owns the public Web product surface, Go control plane API, multi-tenant account/session path, tenant isolation, BYOK binding, research capability entry, ordinary chat fallback, page state, sanitized audit projection, and release/deploy evidence.
 
-The current stage is research SaaS product-truth alignment. Product work should now resume one gap at a time through contracts, source, tests, cleanup, and fresh evidence.
+The current stage is research SaaS product engineering. Product work now moves one gap at a time through contracts, source, tests, cleanup, and fresh evidence.
 
 `docs/active/README.md` now carries the lightweight current gap baton for worktree lanes and next-agent handoff. It supports the fixed truth set; it does not replace this status file or any machine contract.
 
@@ -45,19 +45,20 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
-- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract plus static shell evidence.
+- Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and a browser e2e runner contract. The actual Chromium run requires `OPL_BROWSER_BINARY` when the local environment does not provide Chrome/Chromium.
+- Production authenticated dogfood is configured as secret-gated HTTP evidence, not browser e2e.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production authenticated dogfood e2e。
-- 本阶段没有执行 Playwright、Puppeteer 或 Chromium-driven browser automation。
+- 本阶段没有执行真实 Chromium-driven browser automation；已新增无依赖 CDP runner，但本地运行需要 `OPL_BROWSER_BINARY` 或系统 Chrome/Chromium。
 - 本阶段没有新增真实 chat、billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 
 ## Next Priorities
 
-1. Add browser-level e2e for the research SaaS main path: register, login, bind API Key, ordinary chat fallback, `@论文`/`@基金` gate, and audit evidence.
-2. Decide whether the next product gap is production authenticated dogfood evidence or richer research capability UX.
-3. Keep production dogfood e2e behind approved secrets and explicit switches.
+1. Run the browser-level e2e runner in an environment with Chrome/Chromium: register, login, bind API Key, ordinary chat fallback, `@论文`/`@基金` gate, and audit evidence.
+2. Execute production authenticated dogfood only through approved secrets and explicit switches.
+3. Continue richer research capability UX only after the local browser evidence path is runnable in CI or a documented developer environment.

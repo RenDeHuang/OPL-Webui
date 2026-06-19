@@ -21,8 +21,11 @@ const allowedFiles = new Set([
 
 const forbiddenPatterns = [
   /services\/control-plane-go\/internal\/mvp/i,
+  /services\/control-plane-go\/internal\/controlplane/i,
   /internal\/mvp/i,
+  /internal\/controlplane/i,
   /package\s+mvp\b/i,
+  /package\s+controlplane\b/i,
   /\bmvp\./,
   /\/api\/mvp\/task/i,
   /demoData/i,
@@ -30,6 +33,10 @@ const forbiddenPatterns = [
   /fake storage/i,
   /fake billing/i,
   /fake runtime execution/i,
+  /task_projections/i,
+  /usage_events/i,
+  /tenant_plans/i,
+  /opl\.cli\.readonly\.task-route/i,
 ];
 
 const activeRoots = [
@@ -55,6 +62,7 @@ const productDebtAllowedPatterns = [
   /^tests\/contract\/one-person-lab-web-data\.test\.mjs$/,
   /^tests\/smoke\/web-shell\.test\.mjs$/,
   /^apps\/web\/styles\.css$/,
+  /^docs\/history\/process\/closeouts\.md$/,
 ];
 
 function* walk(dir) {
@@ -122,4 +130,19 @@ test('active product surfaces do not present MVP transition naming', () => {
   }
 
   assert.deepEqual(violations, []);
+});
+
+test('retired Go task projection surfaces are deleted from active source', () => {
+  const retired = [
+    'services/control-plane-go/internal/controlplane',
+    'services/control-plane-go/internal/oplbridge/route.go',
+  ];
+  for (const path of retired) {
+    assert.equal(existsSync(path), false, `retired task projection surface must be gone: ${path}`);
+  }
+
+  const tombstones = readFileSync('docs/history/tombstones/README.md', 'utf8');
+  for (const retiredName of ['task_projections', 'usage_events', 'tenant_plans', 'opl.cli.readonly.task-route']) {
+    assert.match(tombstones, new RegExp(retiredName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
 });

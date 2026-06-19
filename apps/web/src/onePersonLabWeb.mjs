@@ -8,6 +8,7 @@ export {
   RUNTIME_REQUIRED_MARKERS,
   accountState,
   chatStateForResult,
+  chatStateForPrompt,
   createOnePersonLabViewModel,
   loadOnePersonLabWebState,
   loginAccount,

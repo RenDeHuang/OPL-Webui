@@ -82,9 +82,9 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, and `@文件`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /research SaaS product-truth alignment/);
+  assert.match(status, /research SaaS product engineering/);
   assert.match(status, /docs\/active\/README\.md/);
-  assert.match(status, /Product work should now resume one gap at a time/);
+  assert.match(status, /Product work now moves one gap at a time/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(decisions, /File count is report-only/);
   assert.match(portfolio, /Retired Workflow/);
@@ -179,7 +179,25 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
   assert.equal(release.requiredEnvKeys.includes('OPL_SESSION_SECRET'), true);
   assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
+  assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
+  assert.equal(release.productionDogfoodReadiness.defaultEnabled, false);
+  assert.equal(release.productionDogfoodReadiness.requiresProductionSecrets, true);
+  assert.equal(release.productionDogfoodReadiness.browserAutomation, false);
+  assert.deepEqual(release.productionDogfoodReadiness.requiredSecrets, [
+    'OPL_DOGFOOD_EMAIL',
+    'OPL_DOGFOOD_PASSWORD',
+    'OPL_DOGFOOD_API_KEY',
+  ]);
+  for (const forbidden of ['KUBECONFIG', 'OPL_DATABASE_URL', 'PGPASSWORD', 'MEDOPL_TOKEN', 'TCR_PASSWORD']) {
+    assert.equal(release.productionDogfoodReadiness.forbiddenSecrets.includes(forbidden), true, `dogfood must not need ${forbidden}`);
+  }
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('register_or_login'), true);
+  assert.equal(release.productionDogfoodReadiness.coverage.includes('runtime_gate_audit'), true);
+  assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('browser e2e'), true);
   assert.match(runbook, /OPL_SESSION_SECRET/);
+  assert.match(runbook, /Production authenticated dogfood closeout/);
+  assert.match(runbook, /run id/i);
+  assert.match(runbook, /audit kinds/i);
 
   assert.doesNotMatch(status, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);

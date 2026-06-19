@@ -73,6 +73,19 @@ node scripts/cloud-rollout.mjs --dogfood-e2e
 - 当前没有 delete user API，因此生产 dogfood 数据采用专用 test account / hidden personal tenant/workspace 隔离，不 claim 自动清理。
 - 该 harness 不执行 kubectl，不读取 kubeconfig，不连接真实 PostgreSQL，不连接 MedOPL production，不执行真实 OPL，不创建 runtime、storage、billing 或 node pool 生命周期。
 
+Production authenticated dogfood closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password 或 request payload：
+
+```text
+run id:
+target host: https://opl.medopl.cn
+image:
+real chat: false|true
+steps: register_or_login,current_session,api_key_binding,runtime_gate,audit_events
+HTTP status summary:
+audit kinds:
+cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence
+```
+
 ## 创建 Kubernetes Secret
 
 ```bash

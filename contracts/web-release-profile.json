@@ -27,6 +27,51 @@
       "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
     ]
   },
+  "productionDogfoodReadiness": {
+    "mode": "secret_gated_http_authenticated_e2e",
+    "state": "configured_not_executed_in_this_phase",
+    "defaultEnabled": false,
+    "requiresProductionSecrets": true,
+    "browserAutomation": false,
+    "entrypoint": "node scripts/cloud-rollout.mjs --dogfood-e2e",
+    "workflow": ".github/workflows/cloud-rollout.yml",
+    "environment": "production",
+    "requiredSecrets": [
+      "OPL_DOGFOOD_EMAIL",
+      "OPL_DOGFOOD_PASSWORD",
+      "OPL_DOGFOOD_API_KEY"
+    ],
+    "requiredSwitches": [
+      "OPL_PRODUCTION_DOGFOOD_E2E"
+    ],
+    "optionalSwitches": [
+      "OPL_PRODUCTION_DOGFOOD_REAL_CHAT"
+    ],
+    "forbiddenSecrets": [
+      "KUBECONFIG",
+      "OPL_DATABASE_URL",
+      "PGPASSWORD",
+      "MEDOPL_TOKEN",
+      "TCR_PASSWORD"
+    ],
+    "coverage": [
+      "register_or_login",
+      "current_session",
+      "api_key_binding",
+      "fixed_gateway",
+      "raw_api_key_not_returned",
+      "ordinary_chat_optional_real_quota",
+      "runtime_gate_audit",
+      "sanitized_audit"
+    ],
+    "cannotClaim": [
+      "browser e2e",
+      "MedOPL runtime execution",
+      "quota exhaustion production evidence",
+      "billing source of truth",
+      "storage or node pool mutation"
+    ]
+  },
   "localNoSecretReadiness": {
     "requiresProductionSecrets": false,
     "browserAutomation": false,

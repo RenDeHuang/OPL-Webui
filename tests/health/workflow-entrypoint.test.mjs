@@ -127,7 +127,26 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   const dogfoodJob = workflow.slice(workflow.indexOf('production-dogfood-e2e:'));
   assert.match(dogfoodJob, /environment:\s*production/);
   assert.match(dogfoodJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
+  assert.match(dogfoodJob, /::add-mask::\$\{OPL_DOGFOOD_PASSWORD\}/);
+  assert.match(dogfoodJob, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
+  assert.match(dogfoodJob, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
+  assert.match(dogfoodJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
   assert.doesNotMatch(dogfoodJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
+});
+
+test('current frontend engineering stays static until browser/product evidence requires migration', () => {
+  const decisions = readFileSync('docs/decisions.md', 'utf8');
+  const dockerfile = readFileSync('Dockerfile.cloud', 'utf8');
+  const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+
+  assert.match(decisions, /Maintain static HTML\/CSS\/ESM web shell/);
+  assert.match(decisions, /browser e2e/);
+  assert.match(decisions, /React\/Vite\/TypeScript migration trigger/);
+  assert.equal(pkg.scripts.build, undefined);
+  assert.equal(existsSync('vite.config.ts'), false);
+  assert.equal(existsSync('package-lock.json'), false);
+  assert.match(dockerfile, /COPY apps\/web apps\/web/);
+  assert.doesNotMatch(workflow, /npm run build/);
 });
 
 test('review gate includes diff hygiene, bloat, and current verify', async () => {

@@ -165,9 +165,6 @@ func validateReadonlyCommand(args []string) error {
 			return nil
 		}
 	}
-	if isTaskRouteCommand(args) {
-		return nil
-	}
 
 	return errors.New("OPL command is not in the readonly snapshot allowlist")
 }

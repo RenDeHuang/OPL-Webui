@@ -82,6 +82,8 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(webSource, /dataset\.chatState/);
   assert.match(webSource, /chatStateForResult/);
+  assert.match(webSource, /chatStateForPrompt/);
+  assert.doesNotMatch(webSource, /if \(requiresRuntimeGate\(message\)\) \{\n\s+document\.body\.dataset\.chatState = chatStateForResult/);
   assert.match(webSource, /\/api\/chat/);
   assert.match(webSource, /\/api\/settings\/model-provider/);
 });

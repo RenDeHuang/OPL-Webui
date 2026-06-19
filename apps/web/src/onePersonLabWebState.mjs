@@ -78,6 +78,15 @@ export function chatStateForResult(result, pending = false) {
   return 'idle';
 }
 
+export function chatStateForPrompt(message) {
+  const text = String(message || '');
+  if (text.includes('@科研')) return 'research_entry_selected';
+  if (text.includes('@论文')) return 'paper_entry_selected';
+  if (text.includes('@基金')) return 'grant_entry_selected';
+  if (text.includes('@文件') || text.includes('@综述')) return 'materials_refs_pending';
+  return 'idle';
+}
+
 export function requiresRuntimeGate(message) {
   return RUNTIME_REQUIRED_MARKERS.some((marker) => String(message || '').includes(marker));
 }

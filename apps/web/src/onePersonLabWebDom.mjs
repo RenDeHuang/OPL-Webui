@@ -7,6 +7,7 @@ import {
   requiresRuntimeGate,
   saveAPIKey,
   chatStateForResult,
+  chatStateForPrompt,
   sendChatMessage,
   viewFromHash,
 } from './onePersonLabWebState.mjs';
@@ -44,6 +45,7 @@ function bindCapabilityButtons() {
       const input = document.querySelector('#chat-input');
       input.value = button.dataset.prompt;
       input.focus();
+      document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
       if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate();
     });
   }
@@ -67,13 +69,8 @@ function bindChatForm(getView) {
     const input = document.querySelector('#chat-input');
     const message = input.value.trim();
     if (!message) return;
+    document.body.dataset.chatState = chatStateForPrompt(message);
     appendMessage('你', message, 'user-message');
-    if (requiresRuntimeGate(message)) {
-      document.body.dataset.chatState = chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' });
-      showRuntimeGate();
-      appendMessage('OPL', '需要 MedOPL Runtime。该能力需要托管运行环境、存储或 node pool。', 'assistant-message');
-      return;
-    }
     if (view.accountState === 'anonymous') {
       appendMessage('OPL', '请先登录/注册后开始聊天。', 'assistant-message');
       window.location.hash = 'settings';
@@ -87,6 +84,7 @@ function bindChatForm(getView) {
     document.body.dataset.chatState = chatStateForResult(null, true);
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
+    if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate();
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
   });
 }

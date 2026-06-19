@@ -10,7 +10,6 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/controlplane"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/webapp"
@@ -21,10 +20,6 @@ func main() {
 		os.Exit(code)
 	}
 
-	if err := controlplane.ConfigureDefaultTaskStoreFromEnv(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
 	if err := webapp.ConfigureDefaultStoreFromEnv(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -63,7 +58,7 @@ func runCLI(args []string, stdout io.Writer, stderr io.Writer) (bool, int) {
 	var err error
 	switch args[1] {
 	case "db":
-		report, err = runDBCanary(controlplane.OpenPostgresTaskStore)
+		report, err = runDBCanary(webapp.OpenPostgresDatabaseCanary)
 	case "opl-cli":
 		report = runOPLCLICanary(oplbridge.NewDefaultRunner())
 	default:
@@ -174,35 +169,19 @@ func canaryErrorReport(kind string, err error) CanaryReport {
 	}
 }
 
-func runDBCanary(openPostgres controlplane.PostgresStoreOpener) (CanaryReport, error) {
+func runDBCanary(openPostgres webapp.DatabaseCanaryOpener) (CanaryReport, error) {
 	databaseURL := os.Getenv("OPL_DATABASE_URL")
 	if databaseURL == "" {
 		return CanaryReport{}, fmt.Errorf("OPL_DATABASE_URL is required")
 	}
-	store, err := openPostgres(databaseURL)
+	canary, err := openPostgres(databaseURL)
 	if err != nil {
 		return CanaryReport{}, fmt.Errorf("open postgres canary: %w", err)
 	}
+	defer canary.Close()
 
-	projection, err := controlplane.CreateAndStoreTaskResponse(controlplane.TaskRequest{
-		TenantID:    "tenant_cloud_canary",
-		WorkspaceID: "workspace_cloud_canary",
-		UserID:      "user_cloud_canary",
-		Prompt:      "OPL-Webui web cloud database canary",
-		Intent:      "general",
-	}, store)
-	if err != nil {
-		return CanaryReport{}, fmt.Errorf("write postgres canary projection: %w", err)
-	}
-	cleanup := func() error {
-		return store.DeleteTaskProjection("tenant_cloud_canary", "workspace_cloud_canary", projection.Task.TaskID)
-	}
-	if _, ok := store.GetTaskProjection("tenant_cloud_canary", "workspace_cloud_canary", projection.Task.TaskID); !ok {
-		_ = cleanup()
-		return CanaryReport{}, fmt.Errorf("read postgres canary projection")
-	}
-	if err := cleanup(); err != nil {
-		return CanaryReport{}, fmt.Errorf("delete postgres canary projection: %w", err)
+	if err := canary.Run(context.Background()); err != nil {
+		return CanaryReport{}, fmt.Errorf("webapp postgres canary: %w", err)
 	}
 
 	return CanaryReport{
