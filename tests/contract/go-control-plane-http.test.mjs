@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import { startGoServerWithEnv, stopGoServer } from './go-control-plane-server-helper.mjs';
@@ -9,6 +10,55 @@ const secureEnv = {
   OPL_API_KEY_ENCRYPTION_SECRET: 'test-api-key-secret-32-bytes-min',
   OPL_CHAT_MODEL: 'gpt-4o-mini',
 };
+
+function readApiContract() {
+  return JSON.parse(readFileSync('contracts/web-api.openapi.json', 'utf8'));
+}
+
+function responseCodes(api, path, method) {
+  return Object.keys(api.paths[path][method].responses).sort();
+}
+
+test('OpenAPI contract covers implemented status and error-code surfaces', () => {
+  const api = readApiContract();
+
+  assert.deepEqual(responseCodes(api, '/api/auth/register', 'post'), ['201', '400', '405', '409', '500', '503']);
+  assert.deepEqual(responseCodes(api, '/api/auth/login', 'post'), ['200', '400', '401', '405', '503']);
+  assert.deepEqual(responseCodes(api, '/api/auth/logout', 'post'), ['204', '405']);
+  assert.deepEqual(responseCodes(api, '/api/session/current', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'put'), ['200', '400', '401', '405', '500', '503']);
+  assert.deepEqual(responseCodes(api, '/api/chat', 'post'), ['200', '400', '401', '404', '405', '409', '429', '502', '503', '504']);
+  assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
+  assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
+
+  const errorCodes = api.components.schemas.ApiErrorCode.enum;
+  for (const code of [
+    'METHOD_NOT_ALLOWED',
+    'AUTH_REQUIRED',
+    'INVALID_JSON',
+    'INVALID_CREDENTIALS_INPUT',
+    'EMAIL_ALREADY_REGISTERED',
+    'ACCOUNT_CREATE_FAILED',
+    'INVALID_CREDENTIALS',
+    'SESSION_SECRET_REQUIRED',
+    'API_KEY_SECRET_REQUIRED',
+    'INVALID_API_KEY',
+    'API_KEY_SAVE_FAILED',
+    'INVALID_CHAT_MESSAGE',
+    'INVALID_CONVERSATION_ID',
+    'CONVERSATION_NOT_FOUND',
+    'API_KEY_REQUIRED',
+    'API_KEY_DECRYPT_FAILED',
+    'RUNTIME_REQUIRED',
+    'CHAT_QUOTA_EXCEEDED',
+    'UPSTREAM_CHAT_FAILED',
+  ]) {
+    assert.ok(errorCodes.includes(code), `missing ApiErrorCode: ${code}`);
+  }
+});
 
 test('one-person-lab-web auth supports register login logout and safe current session', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);

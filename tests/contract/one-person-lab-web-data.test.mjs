@@ -41,8 +41,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     assert.ok(api.paths[path], `missing API path: ${path}`);
   }
   assert.equal(api.paths['/api/mvp/task'], undefined);
-  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('RUNTIME_REQUIRED'), true);
-  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+  assert.equal(api.components.schemas.ApiErrorCode.enum.includes('RUNTIME_REQUIRED'), true);
+  assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+  assert.equal(api.components.schemas.ChatErrorCode, undefined);
 
   assert.equal(runtime.owner, 'MedOPL');
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');

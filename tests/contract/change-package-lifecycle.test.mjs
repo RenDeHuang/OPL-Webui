@@ -108,7 +108,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
 
   assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
-  assert.equal(api.components.schemas.ChatErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+  assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
+  assert.equal(api.components.schemas.ChatErrorCode, undefined);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');

@@ -14,8 +14,23 @@
       "post": {
         "summary": "Register a public Web account.",
         "responses": {
-          "200": {
+          "201": {
             "description": "Registered and session cookie set."
+          },
+          "400": {
+            "description": "Invalid JSON or credential input."
+          },
+          "409": {
+            "description": "Email is already registered."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "500": {
+            "description": "Account could not be created."
+          },
+          "503": {
+            "description": "Session secret is missing."
           }
         }
       }
@@ -27,8 +42,17 @@
           "200": {
             "description": "Authenticated."
           },
+          "400": {
+            "description": "Invalid JSON."
+          },
           "401": {
             "description": "Invalid credentials."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "503": {
+            "description": "Session secret is missing."
           }
         }
       }
@@ -37,8 +61,11 @@
       "post": {
         "summary": "Clear the current session.",
         "responses": {
-          "200": {
+          "204": {
             "description": "Logged out."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -48,7 +75,13 @@
         "summary": "Return current user session state.",
         "responses": {
           "200": {
-            "description": "Current session or anonymous state."
+            "description": "Current authenticated session."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -59,6 +92,12 @@
         "responses": {
           "200": {
             "description": "Provider state with fixed baseUrl and masked key."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       },
@@ -68,8 +107,20 @@
           "200": {
             "description": "Provider key saved without returning raw key."
           },
+          "400": {
+            "description": "Invalid JSON or API key."
+          },
           "401": {
             "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "500": {
+            "description": "Provider key could not be saved."
+          },
+          "503": {
+            "description": "API key encryption secret is missing."
           }
         }
       }
@@ -81,14 +132,32 @@
           "200": {
             "description": "Assistant response."
           },
+          "400": {
+            "description": "Invalid JSON, message, or missing provider key."
+          },
           "401": {
-            "description": "Authentication or provider key required."
+            "description": "Authentication required."
+          },
+          "404": {
+            "description": "Conversation not found for current user."
+          },
+          "405": {
+            "description": "Method not allowed."
           },
           "409": {
             "description": "Runtime required for OPL capability."
           },
           "429": {
             "description": "Quota exceeded before upstream call."
+          },
+          "502": {
+            "description": "Upstream chat failed."
+          },
+          "503": {
+            "description": "Provider key binding cannot be decrypted."
+          },
+          "504": {
+            "description": "Upstream chat timed out."
           }
         }
       }
@@ -99,6 +168,12 @@
         "responses": {
           "200": {
             "description": "Conversation list."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -120,8 +195,17 @@
           "200": {
             "description": "Conversation detail."
           },
+          "400": {
+            "description": "Invalid conversation id."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
           "404": {
             "description": "Conversation not found for current user."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -132,6 +216,12 @@
         "responses": {
           "200": {
             "description": "Sanitized user audit events."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -142,6 +232,9 @@
         "responses": {
           "200": {
             "description": "Readonly snapshot projection."
+          },
+          "405": {
+            "description": "Method not allowed."
           }
         }
       }
@@ -149,14 +242,28 @@
   },
   "components": {
     "schemas": {
-      "ChatErrorCode": {
+      "ApiErrorCode": {
         "type": "string",
         "enum": [
+          "METHOD_NOT_ALLOWED",
           "AUTH_REQUIRED",
+          "INVALID_JSON",
+          "INVALID_CREDENTIALS_INPUT",
+          "EMAIL_ALREADY_REGISTERED",
+          "ACCOUNT_CREATE_FAILED",
+          "INVALID_CREDENTIALS",
+          "SESSION_SECRET_REQUIRED",
+          "API_KEY_SECRET_REQUIRED",
+          "INVALID_API_KEY",
+          "API_KEY_SAVE_FAILED",
+          "INVALID_CHAT_MESSAGE",
+          "INVALID_CONVERSATION_ID",
+          "CONVERSATION_NOT_FOUND",
           "API_KEY_REQUIRED",
+          "API_KEY_DECRYPT_FAILED",
           "RUNTIME_REQUIRED",
           "CHAT_QUOTA_EXCEEDED",
-          "UPSTREAM_FAILED"
+          "UPSTREAM_CHAT_FAILED"
         ]
       },
       "SanitizedAuditEvent": {
