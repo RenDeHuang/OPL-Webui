@@ -77,11 +77,12 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
     assert.match(text, /one-person-lab-web|One Person Lab Web/);
   }
 
-  assert.match(readme, /SaaS Web edition of One Person Lab App/);
+  assert.match(readme, /multi-tenant SaaS Web edition of One Person Lab/);
+  assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, and `@文件`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /development-system realignment/);
-  assert.match(status, /pause only until this fixed-truth workflow diff is reviewed and landed/);
+  assert.match(status, /research SaaS product-truth alignment/);
+  assert.match(status, /Product work should now resume one gap at a time/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(portfolio, /Retired Workflow/);
 });
@@ -115,11 +116,19 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   const runbook = readFileSync('deploy/web-cloud/RUNBOOK.md', 'utf8');
 
   assert.equal(product.productId, 'one-person-lab-web');
-  assert.equal(product.positioning, 'Web edition of One Person Lab App');
+  assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
+  assert.equal(product.primaryUserPath, 'research_capability_first_web_workbench');
+  assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
+  assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件']);
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(product.provider.userEditableBaseUrl, false);
+  assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), true);
   assert.equal(product.ownedSurfaces.includes('web_product_surface'), true);
+  assert.equal(product.ownedSurfaces.includes('tenant_isolation'), true);
+  assert.equal(product.ownedSurfaces.includes('research_capability_entry'), true);
+  assert.equal(product.ownedSurfaces.includes('ordinary_chat_fallback'), true);
   assert.equal(product.ownedSurfaces.includes('page_state'), true);
+  assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.nonOwnedTruth.includes('billing_source_of_truth'), true);
   assert.equal(product.nonOwnedTruth.includes('runtime_truth'), true);
   assert.equal(product.consumedAuthorities.includes('one-person-lab-app/contracts/app-product-profile.json'), true);
@@ -128,6 +137,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
   assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
   assert.equal(api.components.schemas.ChatErrorCode, undefined);
+  assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
+  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件']);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
@@ -138,6 +149,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
+  assert.match(status, /multi-tenant SaaS Web edition of One Person Lab/);
+  assert.match(status, /Ordinary chat is a fallback entry/);
   assert.match(status, /Next Priorities/);
 });
 

@@ -5,9 +5,11 @@
 - state: active_truth
 - machine boundary: human-readable navigation; contracts, source, tests, scripts, and API behavior are authoritative.
 
-One Person Lab Web is the SaaS Web edition of One Person Lab App at `opl.medopl.cn`. It owns the browser product surface, account/session experience, BYOK API Key binding, ordinary chat entry, Web page state, same-origin Go control plane API, Web release/deploy evidence, and MedOPL Runtime gate projection.
+One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through `@科研`, `@论文`, `@基金`, `@综述`, and `@文件` research capability entries.
 
-It is the Web product peer of `gaofeng21cn/one-person-lab-app`, not a MedOPL back office and not an OPL runtime owner.
+This repo owns the browser product surface, multi-tenant account/session experience, tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, and Web release/deploy evidence.
+
+It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo owns the desktop product entry, while this repo owns the SaaS browser product entry.
 
 ## Read First
 
@@ -23,11 +25,9 @@ It is the Web product peer of `gaofeng21cn/one-person-lab-app`, not a MedOPL bac
 
 ## Product Boundary
 
-- Web owns the public SaaS product entry, static shell, account/session path, fixed provider binding, ordinary chat request flow, page state, sanitized audit projection, and runtime gate display.
+- Web owns the multi-tenant SaaS product entry, static shell, account/session path, tenant isolation, fixed provider binding, research capability launcher, ordinary chat fallback, page state, sanitized audit projection, and Web release/deploy evidence.
 - Go control plane is the only backend business entry for this repo.
-- MedOPL owns recharge, runtime, node pool, storage, billing, resources, and commercial back office truth.
-- Upstream OPL owns framework/runtime semantics.
-- MAS/MAG/RCA own domain judgment and deliverable authority.
+- This repo does not own desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, or artifact/body authority.
 
 ## Development Loop
 

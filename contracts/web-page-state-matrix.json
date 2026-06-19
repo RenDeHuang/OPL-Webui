@@ -5,8 +5,8 @@
     {
       "id": "chat",
       "hash": "",
-      "surface": "primary_workbench",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "sending", "runtime_required", "upstream_failed", "quota_exceeded"]
+      "surface": "research_capability_workbench",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "sending", "runtime_required", "upstream_failed", "quota_exceeded"]
     },
     {
       "id": "settings",
@@ -17,8 +17,8 @@
     {
       "id": "capabilities",
       "hash": "#capabilities",
-      "surface": "foundry_catalog",
-      "states": ["readonly_catalog", "runtime_required"]
+      "surface": "research_capability_catalog",
+      "states": ["readonly_catalog", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "runtime_required"]
     },
     {
       "id": "medopl",
@@ -30,6 +30,10 @@
   "accountStates": ["anonymous", "authenticated_unbound", "authenticated_bound"],
   "chatStates": [
     "idle",
+    "research_entry_selected",
+    "paper_entry_selected",
+    "grant_entry_selected",
+    "materials_refs_pending",
     "sending",
     "runtime_required",
     "upstream_failed",
@@ -49,7 +53,27 @@
     {
       "when": "authenticated_bound",
       "requiredApi": ["/api/session/current", "/api/settings/model-provider", "/api/chat/conversations"],
-      "allowedAction": "allow_ordinary_chat"
+      "allowedAction": "allow_research_capability_entry"
+    },
+    {
+      "when": "research_entry_selected",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "send_research_capability_prompt"
+    },
+    {
+      "when": "paper_entry_selected",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "show_runtime_gate_for_paper_workflow"
+    },
+    {
+      "when": "grant_entry_selected",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "show_runtime_gate_for_grant_workflow"
+    },
+    {
+      "when": "materials_refs_pending",
+      "requiredApi": ["/api/medopl/materials-deliverables/projection"],
+      "allowedAction": "show_refs_only_material_projection"
     },
     {
       "when": "runtime_required",
@@ -66,7 +90,10 @@
       "[data-login-button]",
       "[data-provider-form]",
       "[data-settings-panel]",
-      "[data-runtime-gate]"
+      "[data-runtime-gate]",
+      "[data-research-launcher]",
+      "[data-capability-marker]",
+      "[data-capability-mode]"
     ],
     "steps": [
       {
@@ -111,7 +138,13 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
-        "id": "ordinary_chat",
+        "id": "research_capability_launcher",
+        "route": "chat",
+        "expectedState": "research_entry_selected",
+        "evidence": "tests/smoke/web-shell.test.mjs"
+      },
+      {
+        "id": "ordinary_chat_fallback",
         "route": "chat",
         "requiredApi": "/api/chat",
         "expectedState": "idle",
@@ -125,7 +158,14 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
-        "id": "runtime_gate",
+        "id": "paper_runtime_gate",
+        "route": "chat",
+        "requiredApi": "/api/chat",
+        "expectedState": "runtime_required",
+        "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "grant_runtime_gate",
         "route": "chat",
         "requiredApi": "/api/chat",
         "expectedState": "runtime_required",

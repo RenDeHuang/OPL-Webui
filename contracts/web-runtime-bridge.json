@@ -5,7 +5,35 @@
   "mode": "gate_and_readonly_projection_v1",
   "webuiRuntimeExecution": "forbidden",
   "medoplDeepLink": "https://medopl.medopl.cn",
-  "runtimeRequiredMarkers": ["@基金", "@论文", "@综述", "@长任务", "@文件"],
+  "runtimeRequiredMarkers": ["@论文", "@基金", "@综述", "@文件"],
+  "lightweightMarkers": ["@科研"],
+  "markerSemantics": [
+    {
+      "marker": "@科研",
+      "workflow": "research_planning",
+      "runtimePolicy": "ordinary_chat_fallback"
+    },
+    {
+      "marker": "@论文",
+      "workflow": "paper_review_workflow",
+      "runtimePolicy": "runtime_gate"
+    },
+    {
+      "marker": "@基金",
+      "workflow": "grant_workflow",
+      "runtimePolicy": "runtime_gate"
+    },
+    {
+      "marker": "@综述",
+      "workflow": "review_workflow",
+      "runtimePolicy": "runtime_gate"
+    },
+    {
+      "marker": "@文件",
+      "workflow": "materials_refs_workflow",
+      "runtimePolicy": "runtime_gate"
+    }
+  ],
   "forbiddenActions": [
     "opl_install",
     "opl_repair",

@@ -17,16 +17,16 @@
         <a class="new-chat-button" href="#chat">New Chat</a>
         <nav class="sidebar-nav" aria-label="主导航">
           <a href="#home" aria-current="page">首页</a>
-          <a href="#capabilities">Skills</a>
-          <a href="#capabilities">Foundry</a>
-          <a href="#chat">工作流</a>
-          <a href="https://medopl.medopl.cn">MedOPL</a>
+          <a href="#capabilities">科研能力</a>
+          <a href="#capabilities">论文</a>
+          <a href="#capabilities">基金</a>
+          <a href="#settings">账号</a>
         </nav>
         <div class="conversation-list" aria-label="最近对话">
           <p>最近对话</p>
-          <button type="button" data-prompt="帮我规划基金申请书">帮我规划基金申请书</button>
-          <button type="button" data-prompt="规划可视化交付方案">RCA 可视化交付方案</button>
+          <button type="button" data-prompt="@科研 帮我拆解研究方向">研究方向拆解</button>
           <button type="button" data-prompt="@论文 拆解研究问题">论文研究问题拆解</button>
+          <button type="button" data-prompt="@基金 帮我规划申请书">基金申请书规划</button>
         </div>
         <div class="account-dock">
           <button type="button" data-account-toggle aria-expanded="false" aria-controls="account-popover">
@@ -57,55 +57,41 @@
         <section class="runtime-card" aria-label="MedOPL Runtime gate">
           <p class="panel-kicker">MedOPL Runtime</p>
           <h2>开通托管运行环境</h2>
-          <p>涉及长任务、托管资源或 node pool 时，WebUI 只打开 MedOPL 授权入口。</p>
+          <p>涉及托管资源或 node pool 时，Web 只打开授权入口。</p>
           <a href="https://medopl.medopl.cn">去 MedOPL</a>
         </section>
 
         <section class="hero-shell" id="home" aria-label="Figma Make one-person-lab-web shell">
           <div class="hero-copy">
-            <p class="eyebrow">Research / Grant / Presentation Foundry</p>
-            <h1>One Person Lab</h1>
-            <p>严肃工作的 AI 工作台。从普通聊天进入 Research、Grant、Presentation 等专业工作流，专业能力先经过 MedOPL Runtime gate。</p>
+            <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
+            <h1>One Person Lab Web</h1>
+            <p>面向科研工作人员、硕博、PI 与科研团队的 Web 版 One Person Lab。用户从 @科研、@论文、@基金 等科研能力入口进入，普通聊天是 fallback。</p>
           </div>
 
-          <form class="prompt-console prompt-command-center" id="chat" data-chat-form aria-label="普通聊天">
-            <label for="chat-input">普通聊天</label>
-            <textarea id="chat-input" name="message" rows="4" placeholder="问一个问题，启动一个 OPL 工作流"></textarea>
+          <form class="prompt-console prompt-command-center" id="chat" data-chat-form aria-label="科研能力入口">
+            <label for="chat-input">输入科研问题或 @能力入口</label>
+            <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入科研问题或 @能力入口"></textarea>
             <div class="prompt-footer">
               <span class="gateway-pill">Model gateway: https://gflabtoken.cn/v1</span>
               <button class="primary-button" type="submit" data-chat-submit>登录/注册后开始</button>
             </div>
           </form>
 
-          <div class="skill-launcher" aria-label="技能启动器">
+          <div class="skill-launcher" data-research-launcher aria-label="科研能力启动器">
             <section>
-              <h2>OPL</h2>
-              <button type="button" data-prompt="@论文 生成研究选题和证据计划">MAS 论文</button>
-              <button type="button" data-prompt="@基金 帮我拆解标书结构">MAG 基金</button>
-              <button type="button" data-prompt="生成可视化交付物方案">RCA 可视化</button>
+              <h2>科研入口</h2>
+              <button type="button" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">@科研</button>
+              <button type="button" data-capability-marker="@论文" data-capability-mode="runtime_gate" data-prompt="@论文 生成研究选题和证据计划">@论文</button>
+              <button type="button" data-capability-marker="@基金" data-capability-mode="runtime_gate" data-prompt="@基金 帮我拆解标书结构">@基金</button>
             </section>
             <section>
-              <h2>办公套件</h2>
-              <button type="button" data-prompt="生成一页汇报 PPT 大纲">AI 幻灯片</button>
-              <button type="button" data-prompt="创建一个数据表格模板">AI 表格</button>
-              <button type="button" data-prompt="起草一份结构化文档">AI 文档</button>
+              <h2>产物入口</h2>
+              <button type="button" data-capability-marker="@综述" data-capability-mode="runtime_gate" data-prompt="@综述 帮我整理综述结构和证据线索">@综述</button>
+              <button type="button" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">@文件</button>
             </section>
             <section>
-              <h2>设计与代码</h2>
-              <button type="button" data-prompt="帮我设计一个界面原型方案">设计</button>
-              <button type="button" data-prompt="帮我编写并解释一段代码">代码</button>
-              <button type="button" data-prompt="搭建一个仪表盘与 CRM 数据视图">仪表盘与 CRM</button>
-            </section>
-            <section>
-              <h2>内容创作</h2>
-              <button type="button" data-prompt="开始一次 AI 对话">AI 聊天</button>
-              <button type="button" data-prompt="规划一张图片的生成提示词">AI 图片</button>
-              <button type="button" data-prompt="规划一个视频脚本">AI 视频</button>
-            </section>
-            <section>
-              <h2>工具</h2>
-              <button type="button" data-prompt="整理会议纪要和行动项">会议纪要</button>
-              <button type="button" data-prompt="解释 OPL 如何帮助复杂知识工作">所有 Skills</button>
+              <h2>辅助入口</h2>
+              <button type="button" data-capability-marker="普通问答" data-capability-mode="ordinary_chat_fallback" data-prompt="解释 OPL 如何帮助复杂知识工作">普通问答</button>
             </section>
           </div>
         </section>
@@ -123,7 +109,7 @@
               </article>
               <article class="message assistant-message">
                 <span>OPL</span>
-                <p>输入 @基金、@论文、@综述、@长任务、@文件 时，会先检查 MedOPL 资源状态，不会伪造执行。</p>
+                <p>普通聊天是 fallback。输入 @论文、@基金、@综述、@文件 时，会先检查 MedOPL 资源状态，不会伪造执行。</p>
               </article>
             </div>
           </section>
@@ -171,19 +157,19 @@
         <section class="capability-section foundry-section" id="capabilities" aria-labelledby="capabilities-title">
           <div class="section-heading">
             <p class="panel-kicker">Capabilities</p>
-            <h2 id="capabilities-title">Foundry 启动中心</h2>
-            <p>选择一个专业入口；contract-defined runtime markers 只打开 MedOPL Runtime gate。</p>
+            <h2 id="capabilities-title">科研能力入口</h2>
+            <p>选择一个科研入口；contract-defined runtime markers 只打开 MedOPL Runtime gate。</p>
           </div>
           <div class="foundry-grid">
-            <article class="foundry-card">
+            <article class="foundry-card" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback">
               <span>01</span>
               <div>
-                <h3>普通问答</h3>
-                <p>低门槛解释、整理和改写，直接走用户自己的 API Key。</p>
+                <h3>科研规划</h3>
+                <p>@科研 帮助拆解研究方向、问题、材料和下一步计划。</p>
               </div>
               <strong>Chat-ready</strong>
             </article>
-            <article class="foundry-card">
+            <article class="foundry-card" data-capability-marker="@论文" data-capability-mode="runtime_gate">
               <span>02</span>
               <div>
                 <h3>论文/综述</h3>
@@ -191,7 +177,7 @@
               </div>
               <strong>Runtime gate</strong>
             </article>
-            <article class="foundry-card">
+            <article class="foundry-card" data-capability-marker="@基金" data-capability-mode="runtime_gate">
               <span>03</span>
               <div>
                 <h3>基金</h3>
@@ -199,29 +185,29 @@
               </div>
               <strong>Runtime gate</strong>
             </article>
-            <article class="foundry-card">
+            <article class="foundry-card" data-capability-marker="@综述" data-capability-mode="runtime_gate">
               <span>04</span>
               <div>
-                <h3>PPT</h3>
-                <p>生成汇报叙事、页面顺序和可继续打磨的交付物草稿。</p>
-              </div>
-              <strong>Chat-ready</strong>
-            </article>
-            <article class="foundry-card">
-              <span>05</span>
-              <div>
-                <h3>数据分析</h3>
-                <p>把数据问题转成分析计划、检验路径和可验证步骤。</p>
-              </div>
-              <strong>Plan-ready</strong>
-            </article>
-            <article class="foundry-card">
-              <span>06</span>
-              <div>
-                <h3>长任务</h3>
-                <p>涉及托管资源时停止在 MedOPL 开通入口，不伪造执行。</p>
+                <h3>综述</h3>
+                <p>从研究主题进入综述结构、证据线索和引用计划。</p>
               </div>
               <strong>Runtime gate</strong>
+            </article>
+            <article class="foundry-card" data-capability-marker="@文件" data-capability-mode="runtime_gate">
+              <span>05</span>
+              <div>
+                <h3>材料/文件</h3>
+                <p>围绕材料、引用和交付物 refs 组织输入与输出。</p>
+              </div>
+              <strong>Runtime gate</strong>
+            </article>
+            <article class="foundry-card" data-capability-marker="普通问答" data-capability-mode="ordinary_chat_fallback">
+              <span>06</span>
+              <div>
+                <h3>普通问答</h3>
+                <p>低门槛解释、整理和改写，直接走用户自己的 API Key。</p>
+              </div>
+              <strong>Chat-ready</strong>
             </article>
           </div>
         </section>
@@ -229,11 +215,11 @@
         <aside class="workbench-card" aria-labelledby="workbench-title">
           <h2 id="workbench-title">OPL WebUI 应承接的五件事</h2>
           <ol class="workbench-steps">
-            <li><span>1</span><div><h3>选择专业工作</h3><p>Foundry 启动中心，不是泛 Agent 列表。</p></div></li>
+            <li><span>1</span><div><h3>选择专业工作</h3><p>科研能力入口，不是泛 Agent 列表。</p></div></li>
             <li><span>2</span><div><h3>绑定真实材料</h3><p>围绕材料、引用和版本组织输入，不伪造文件能力。</p></div></li>
-            <li><span>3</span><div><h3>推进长任务</h3><p>展示阶段、进度和人工确认，不假装后台已经执行。</p></div></li>
+            <li><span>3</span><div><h3>进入科研工作流</h3><p>用 @科研、@论文、@基金、@综述 和 @文件 表达科研意图。</p></div></li>
             <li><span>4</span><div><h3>沉淀交付物</h3><p>面向证据包、申请书、PPT 和修回材料的交付闭环。</p></div></li>
-            <li><span>5</span><div><h3>管理运行时</h3><p>只展示 readiness 与 MedOPL 开通入口。</p></div></li>
+            <li><span>5</span><div><h3>保留普通聊天</h3><p>普通聊天是 fallback，用于解释、整理和低风险问答。</p></div></li>
           </ol>
         </aside>
 

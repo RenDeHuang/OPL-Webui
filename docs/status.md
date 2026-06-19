@@ -7,9 +7,9 @@
 
 ## Current State
 
-One Person Lab Web is the SaaS Web edition of One Person Lab App. The repo currently owns the public Web product surface, Go control plane API, account/session path, BYOK binding, ordinary chat entry, page state, sanitized audit projection, release/deploy evidence, and MedOPL Runtime gate projection.
+One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. The repo currently owns the public Web product surface, Go control plane API, multi-tenant account/session path, tenant isolation, BYOK binding, research capability entry, ordinary chat fallback, page state, sanitized audit projection, and release/deploy evidence.
 
-The current stage is development-system realignment landing. New product expansion should pause only until this fixed-truth workflow diff is reviewed and landed; after that, product work should resume one gap at a time through contracts, source, tests, and fresh evidence.
+The current stage is research SaaS product-truth alignment. Product work should now resume one gap at a time through contracts, source, tests, cleanup, and fresh evidence.
 
 ## Machine Truth
 
@@ -32,11 +32,13 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Can Claim
 
-- One Person Lab Web is the public SaaS Web edition of One Person Lab App at `opl.medopl.cn`.
+- One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab at `opl.medopl.cn`.
+- Research staff, master's students, PhD students, principal investigators, and research teams enter through `@科研`, `@论文`, `@基金`, `@综述`, and `@文件`.
+- Ordinary chat is a fallback entry, not the primary product positioning.
 - The Web UI calls only the same-origin Go control plane HTTP API.
 - Users bind their own API Key while provider `base_url` remains fixed at `https://gflabtoken.cn/v1`.
-- Runtime, node pool, storage, billing, API gateway, OPL execution, artifact body authority, and MAS/MAG/RCA domain judgment are not owned by this repo.
-- Runtime-requiring markers such as `@基金` and `@论文` stop at a MedOPL Runtime gate unless future Go-side contract, eval, whitelist, and authorization boundaries admit more.
+- Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
+- Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
 - Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract plus static shell evidence.
 
 ## Cannot Claim
@@ -50,6 +52,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Land the fixed-truth workflow diff after review.
-2. Resume product work one gap at a time: contract first, tests registered, cleanup complete, verification fresh.
-3. Production authenticated dogfood e2e evidence when manually enabled with approved secrets.
+1. Add browser-level e2e for the research SaaS main path: register, login, bind API Key, ordinary chat fallback, `@论文`/`@基金` gate, and audit evidence.
+2. Decide whether the next product gap is production authenticated dogfood evidence or richer research capability UX.
+3. Keep production dogfood e2e behind approved secrets and explicit switches.
