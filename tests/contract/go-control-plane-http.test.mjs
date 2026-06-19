@@ -34,6 +34,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/billing-summary', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/account/commercial-status', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/materials-deliverables/projection', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
@@ -239,6 +240,39 @@ test('billing summary endpoint is authenticated readonly projection', async () =
   } finally {
     await stopGoServer(child);
     await upstream.close();
+  }
+});
+
+test('commercial account lifecycle endpoint is authenticated readonly projection', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  try {
+    const unauth = await jsonFetch(`${baseUrl}/api/account/commercial-status`);
+    assert.equal(unauth.response.status, 401);
+    assert.equal(unauth.body.errorCode, 'AUTH_REQUIRED');
+
+    const session = await register(baseUrl, 'commercial-user@example.com');
+    const status = await jsonFetch(`${baseUrl}/api/account/commercial-status`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(status.response.status, 200);
+    assert.equal(status.body.ok, true);
+    assert.equal(status.body.owner, 'OnePersonLabWeb');
+    assert.equal(status.body.productId, 'one-person-lab-web');
+    assert.equal(status.body.accountType, 'personal');
+    assert.equal(status.body.lifecycleState, 'active');
+    assert.equal(status.body.tenantId, session.body.tenantId);
+    assert.equal(status.body.tenantRole, 'owner');
+    assert.equal(status.body.webuiTeamMutation, 'forbidden');
+    assert.equal(status.body.webuiInviteMutation, 'forbidden');
+    assert.equal(status.body.webuiPaymentMutation, 'forbidden');
+    assert.equal(status.body.webuiBillingSourceOfTruth, 'forbidden');
+    assertNoSensitiveMaterial(status.body);
+    assert.doesNotMatch(JSON.stringify(status.body), /workspaceId|passwordHash|rawApiKey|encryptedApiKey|nodePool|storage|runtimeRef|paymentToken|invoiceBody/i);
+
+    const post = await fetch(`${baseUrl}/api/account/commercial-status`, { method: 'POST', headers: { cookie: session.cookieHeader } });
+    assert.equal(post.status, 405);
+  } finally {
+    await stopGoServer(child);
   }
 });
 

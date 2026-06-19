@@ -242,6 +242,22 @@
         }
       }
     },
+    "/api/account/commercial-status": {
+      "get": {
+        "summary": "Read current user's commercial account lifecycle projection.",
+        "responses": {
+          "200": {
+            "description": "Readonly commercial account lifecycle projection."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
     "/api/medopl/runtime/status": {
       "get": {
         "summary": "Read sanitized MedOPL runtime status projection.",

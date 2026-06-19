@@ -40,10 +40,30 @@ func (server Server) HandleBillingSummary(response http.ResponseWriter, request 
 	quota := server.Store.ChatQuotaStatus(user.ID, limit)
 	writeJSON(response, http.StatusOK, map[string]any{
 		"ok": true, "owner": "MedOPL", "deepLink": MedOPLURL + "/billing",
-		"quota": quota,
-		"audit": map[string]any{"eventCount": len(events), "latestEventKind": latestEventKind},
+		"quota":                     quota,
+		"audit":                     map[string]any{"eventCount": len(events), "latestEventKind": latestEventKind},
 		"webuiBillingSourceOfTruth": "forbidden",
-		"webuiPaymentMutation":       "forbidden",
+		"webuiPaymentMutation":      "forbidden",
+	})
+}
+
+func (server Server) HandleCommercialStatus(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	writeJSON(response, http.StatusOK, map[string]any{
+		"ok": true, "owner": "OnePersonLabWeb", "productId": "one-person-lab-web",
+		"accountType": "personal", "lifecycleState": "active",
+		"tenantId": user.TenantID, "tenantRole": "owner",
+		"webuiTeamMutation":         "forbidden",
+		"webuiInviteMutation":       "forbidden",
+		"webuiPaymentMutation":      "forbidden",
+		"webuiBillingSourceOfTruth": "forbidden",
 	})
 }
 
@@ -113,7 +133,7 @@ func runtimeStatusProjection() map[string]any {
 	return map[string]any{
 		"ok": true, "owner": "MedOPL", "state": state,
 		"deepLink": MedOPLURL + "/runtime",
-		"refs": refs, "counts": counts,
+		"refs":     refs, "counts": counts,
 		"webuiRuntimeExecution": "forbidden",
 	}
 }
@@ -140,11 +160,11 @@ func materialsDeliverablesProjection() map[string]any {
 	}
 	return map[string]any{
 		"ok": true, "owner": "MedOPL",
-		"deepLink":              MedOPLURL + "/materials",
-		"materials":             materials,
-		"deliverables":          deliverables,
-		"webuiStorageMutation":  "forbidden",
-		"webuiArtifactBody":     "forbidden",
+		"deepLink":             MedOPLURL + "/materials",
+		"materials":            materials,
+		"deliverables":         deliverables,
+		"webuiStorageMutation": "forbidden",
+		"webuiArtifactBody":    "forbidden",
 	}
 }
 

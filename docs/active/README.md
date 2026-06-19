@@ -20,8 +20,9 @@ Current product work is moving from fixed truth into engineering evidence:
 3. Production authenticated dogfood HTTP evidence passed in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2`; user confirmed `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, so this run includes production real ordinary chat completion and `chat.completed` audit evidence. It remains secret-gated, not browser e2e, and not MedOPL runtime execution.
 4. Production dogfood now has an optional readonly projection lane: set `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` to verify runtime status, materials/deliverables, and billing summary projections after apply/canary/smoke. It only proves sanitized readonly projection availability and forbidden mutation flags.
 5. Production availability probe now has a no-secret lane: set `availability_probe=true` in Cloud Rollout or run `node scripts/cloud-rollout.mjs --availability-probe` to sample `/healthz`, `/readyz`, `/metricsz`, and `/` repeatedly. It is not authenticated dogfood, not production browser e2e, not multi-node HA, and not production-ready SaaS evidence until a real run is folded back.
-6. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
-7. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
+6. Commercial account lifecycle is now a readonly Web account projection: `GET /api/account/commercial-status` returns personal account, tenant role, active lifecycle state, and forbidden mutation flags. It must not grow into team invite, RBAC, payment, billing owner, workspace-visible UI, storage, node pool, or runtime ownership without a new owner/consumer/test gate.
+7. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
+8. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
 
 ## Worktree Lane Model
 

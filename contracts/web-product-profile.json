@@ -29,6 +29,7 @@
     "web_control_plane_api",
     "web_release_deploy",
     "sanitized_audit_projection",
+    "commercial_account_lifecycle_projection",
     "runtime_gate_projection"
   ],
   "consumedAuthorities": [

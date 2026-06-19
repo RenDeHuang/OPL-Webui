@@ -76,11 +76,12 @@ export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const session = shouldProbeSession ? await readJSON(fetchRef, '/api/session/current') : { ok: false };
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
+  const commercialStatus = session.ok ? await readJSON(fetchRef, '/api/account/commercial-status') : commercialStatusFallback();
   const billingSummary = session.ok ? await readJSON(fetchRef, '/api/account/billing-summary') : billingSummaryFallback();
   const runtimeStatus = await readJSON(fetchRef, '/api/medopl/runtime/status');
   const materialsDeliverables = await readJSON(fetchRef, '/api/medopl/materials-deliverables/projection');
   const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
-  return createOnePersonLabViewModel({ session, provider, conversations, billingSummary, runtimeStatus, materialsDeliverables, oplSnapshot });
+  return createOnePersonLabViewModel({ session, provider, conversations, commercialStatus, billingSummary, runtimeStatus, materialsDeliverables, oplSnapshot });
 }
 
 export async function registerAccount(fetchRef, email, password) {
@@ -164,6 +165,7 @@ export function createOnePersonLabViewModel(state) {
       maskedKey: provider.maskedKey ?? '',
     },
     conversations: state.conversations?.conversations ?? [],
+    commercialStatus: commercialStatusFallback(state.commercialStatus),
     billingSummary: billingSummaryFallback(state.billingSummary),
     capabilitySource: OPL_CAPABILITY_MANIFEST.source,
     researchTaskIntents: RESEARCH_TASK_INTENTS,
@@ -196,6 +198,7 @@ export function createInitialOnePersonLabViewModel() {
     session: { ok: false },
     provider: providerFallback(),
     conversations: { conversations: [] },
+    commercialStatus: commercialStatusFallback(),
     billingSummary: billingSummaryFallback(),
     runtimeStatus: runtimeStatusFallback(),
     materialsDeliverables: materialsDeliverablesFallback(),
@@ -256,6 +259,22 @@ function billingSummaryFallback(summary = {}) {
     audit: summary.audit || { eventCount: 0, latestEventKind: '' },
     webuiBillingSourceOfTruth: 'forbidden',
     webuiPaymentMutation: 'forbidden',
+  };
+}
+
+function commercialStatusFallback(status = {}) {
+  return {
+    ok: Boolean(status.ok),
+    owner: status.owner || 'OnePersonLabWeb',
+    productId: status.productId || 'one-person-lab-web',
+    accountType: status.accountType || 'personal',
+    lifecycleState: status.lifecycleState || 'active',
+    tenantId: status.tenantId || '',
+    tenantRole: status.tenantRole || 'owner',
+    webuiTeamMutation: 'forbidden',
+    webuiInviteMutation: 'forbidden',
+    webuiPaymentMutation: 'forbidden',
+    webuiBillingSourceOfTruth: 'forbidden',
   };
 }
 

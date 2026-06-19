@@ -31,6 +31,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   for (const owned of ['multi_tenant_saas_product', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api']) {
     assert.equal(product.ownedSurfaces.includes(owned), true, `missing owned surface: ${owned}`);
   }
+  assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.publicUi.primarySurface, 'research_capability_first_web_workbench');
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
@@ -87,6 +88,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     '/api/chat',
     '/api/chat/conversations',
     '/api/account/audit-events',
+    '/api/account/commercial-status',
   ]) {
     assert.ok(api.paths[path], `missing API path: ${path}`);
   }
@@ -162,6 +164,19 @@ test('web data module calls session provider and chat APIs only', async () => {
       maskedKey: 'sk-***1234',
     });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/commercial-status') return response({
+      ok: true,
+      owner: 'OnePersonLabWeb',
+      productId: 'one-person-lab-web',
+      accountType: 'personal',
+      lifecycleState: 'active',
+      tenantId: 'tenant_123',
+      tenantRole: 'owner',
+      webuiTeamMutation: 'forbidden',
+      webuiInviteMutation: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+      webuiBillingSourceOfTruth: 'forbidden',
+    });
     if (url === '/api/account/billing-summary') return response({
       ok: true,
       owner: 'MedOPL',
@@ -197,6 +212,9 @@ test('web data module calls session provider and chat APIs only', async () => {
   assert.equal(state.session.email, 'user@example.com');
   assert.equal(state.provider.baseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(state.provider.apiKeyConfigured, true);
+  assert.equal(state.commercialStatus.accountType, 'personal');
+  assert.equal(state.commercialStatus.lifecycleState, 'active');
+  assert.equal(state.commercialStatus.webuiTeamMutation, 'forbidden');
 
   const chat = await web.sendChatMessage(fetchRef, '普通问题');
   assert.equal(chat.assistantMessage.content, '你好');
@@ -204,6 +222,7 @@ test('web data module calls session provider and chat APIs only', async () => {
     '/api/session/current',
     '/api/settings/model-provider',
     '/api/chat/conversations',
+    '/api/account/commercial-status',
     '/api/account/billing-summary',
     '/api/medopl/runtime/status',
     '/api/medopl/materials-deliverables/projection',
@@ -346,6 +365,19 @@ test('web data module loads sanitized MedOPL runtime status projection', async (
     if (url === '/api/session/current') return response({ ok: true, email: 'runtime@example.com' });
     if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/commercial-status') return response({
+      ok: true,
+      owner: 'OnePersonLabWeb',
+      productId: 'one-person-lab-web',
+      accountType: 'personal',
+      lifecycleState: 'active',
+      tenantId: 'tenant_runtime',
+      tenantRole: 'owner',
+      webuiTeamMutation: 'forbidden',
+      webuiInviteMutation: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+      webuiBillingSourceOfTruth: 'forbidden',
+    });
     if (url === '/api/medopl/runtime/status') return response({
       ok: true,
       owner: 'MedOPL',
@@ -372,6 +404,19 @@ test('web data module loads sanitized materials and deliverables projection', as
     if (url === '/api/session/current') return response({ ok: true, email: 'materials@example.com' });
     if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/commercial-status') return response({
+      ok: true,
+      owner: 'OnePersonLabWeb',
+      productId: 'one-person-lab-web',
+      accountType: 'personal',
+      lifecycleState: 'active',
+      tenantId: 'tenant_materials',
+      tenantRole: 'owner',
+      webuiTeamMutation: 'forbidden',
+      webuiInviteMutation: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+      webuiBillingSourceOfTruth: 'forbidden',
+    });
     if (url === '/api/medopl/runtime/status') return response({ ok: true, owner: 'MedOPL', state: 'ready', webuiRuntimeExecution: 'forbidden' });
     if (url === '/api/medopl/materials-deliverables/projection') return response({
       ok: true,
@@ -400,6 +445,19 @@ test('web data module loads sanitized billing summary projection', async () => {
     if (url === '/api/session/current') return response({ ok: true, email: 'billing@example.com' });
     if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
     if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/commercial-status') return response({
+      ok: true,
+      owner: 'OnePersonLabWeb',
+      productId: 'one-person-lab-web',
+      accountType: 'personal',
+      lifecycleState: 'active',
+      tenantId: 'tenant_billing',
+      tenantRole: 'owner',
+      webuiTeamMutation: 'forbidden',
+      webuiInviteMutation: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+      webuiBillingSourceOfTruth: 'forbidden',
+    });
     if (url === '/api/account/billing-summary') return response({
       ok: true,
       owner: 'MedOPL',
@@ -422,6 +480,42 @@ test('web data module loads sanitized billing summary projection', async () => {
   assert.equal(view.billingSummary.webuiBillingSourceOfTruth, 'forbidden');
   assert.equal(view.billingSummary.webuiPaymentMutation, 'forbidden');
   assert.doesNotMatch(JSON.stringify(view.billingSummary), /secret|raw_provider_secret|paymentToken|ledger|invoiceBody|rawMetadata|private_state_path/i);
+});
+
+test('web data module loads commercial account lifecycle without team or billing mutation', async () => {
+  const view = await web.loadOnePersonLabWebState(async (url) => {
+    if (url === '/api/session/current') return response({ ok: true, email: 'commercial@example.com' });
+    if (url === '/api/settings/model-provider') return response({ ok: true, baseUrl: web.FIXED_BASE_URL, apiKeyConfigured: true });
+    if (url === '/api/chat/conversations') return response({ ok: true, conversations: [] });
+    if (url === '/api/account/commercial-status') return response({
+      ok: true,
+      owner: 'OnePersonLabWeb',
+      productId: 'one-person-lab-web',
+      accountType: 'personal',
+      lifecycleState: 'active',
+      tenantId: 'tenant_commercial',
+      tenantRole: 'owner',
+      webuiTeamMutation: 'forbidden',
+      webuiInviteMutation: 'forbidden',
+      webuiPaymentMutation: 'forbidden',
+      webuiBillingSourceOfTruth: 'forbidden',
+    });
+    if (url === '/api/account/billing-summary') return response({ ok: true, owner: 'MedOPL', quota: { limit: 3, used: 1, remaining: 2 } });
+    if (url === '/api/medopl/runtime/status') return response({ ok: true, owner: 'MedOPL', state: 'ready', webuiRuntimeExecution: 'forbidden' });
+    if (url === '/api/medopl/materials-deliverables/projection') return response({ ok: true, owner: 'MedOPL', materials: [], deliverables: [] });
+    if (url === '/api/opl/snapshot') return response({ ok: true, mode: 'readonly' });
+    return response({ ok: false }, 404);
+  });
+
+  assert.equal(view.commercialStatus.owner, 'OnePersonLabWeb');
+  assert.equal(view.commercialStatus.accountType, 'personal');
+  assert.equal(view.commercialStatus.lifecycleState, 'active');
+  assert.equal(view.commercialStatus.tenantRole, 'owner');
+  assert.equal(view.commercialStatus.webuiTeamMutation, 'forbidden');
+  assert.equal(view.commercialStatus.webuiInviteMutation, 'forbidden');
+  assert.equal(view.commercialStatus.webuiPaymentMutation, 'forbidden');
+  assert.equal(view.commercialStatus.webuiBillingSourceOfTruth, 'forbidden');
+  assert.doesNotMatch(JSON.stringify(view.commercialStatus), /workspace|teamInvite|paymentToken|invoiceBody|storage|nodePool|runtimeRef|rawApiKey|encryptedApiKey/i);
 });
 
 test('web view model keeps workspace hidden and exposes fixed provider surface', () => {

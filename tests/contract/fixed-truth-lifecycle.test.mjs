@@ -177,6 +177,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.ownedSurfaces.includes('research_capability_entry'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_fallback'), true);
   assert.equal(product.ownedSurfaces.includes('page_state'), true);
+  assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.nonOwnedTruth.includes('billing_source_of_truth'), true);
   assert.equal(product.nonOwnedTruth.includes('runtime_truth'), true);
@@ -184,6 +185,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
 
   assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
+  assert.equal(api.paths['/api/account/commercial-status'].get.responses['200'].description, 'Readonly commercial account lifecycle projection.');
   assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
   assert.equal(api.components.schemas.ChatErrorCode, undefined);
   assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
