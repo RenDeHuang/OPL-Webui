@@ -131,6 +131,14 @@
       "lifecycle": "durable"
     },
     {
+      "path": "contracts/web-gui-product-contract.json",
+      "type": "contract",
+      "ownerSurface": "gui-product",
+      "consumer": ["Figma design flow", "Web shell", "contract tests", "browser e2e"],
+      "machineBoundary": "GUI product grammar, object grammar, visual grammar, component grammar, and UI acceptance layers",
+      "lifecycle": "durable"
+    },
+    {
       "path": "contracts/web-page-state-matrix.json",
       "type": "contract",
       "ownerSurface": "page-state",
@@ -160,6 +168,14 @@
       "ownerSurface": "runtime-gate",
       "consumer": ["Go runtime gate", "OPL readonly bridge", "contract tests"],
       "machineBoundary": "runtime gate and refs-only projection boundary",
+      "lifecycle": "durable"
+    },
+    {
+      "path": "contracts/web-shell-adapter.json",
+      "type": "contract",
+      "ownerSurface": "web-shell",
+      "consumer": ["Web shell", "Figma code mapping", "contract tests", "smoke tests"],
+      "machineBoundary": "active shell carrier, shell ownership boundary, Figma-code mapping, and shell validation commands",
       "lifecycle": "durable"
     },
     {

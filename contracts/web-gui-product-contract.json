@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "owner": "one-person-lab-web",
+  "purpose": "web_gui_product_contract",
+  "state": "active",
+  "machineBoundary": "GUI product grammar for AI design, Figma generation, frontend implementation, and UI acceptance tests; source, API contracts, and release evidence remain authoritative for runtime behavior.",
+  "productTruthGate": {
+    "publicShell": "public_landing_then_auth",
+    "appShell": "chat_first_research_workspace",
+    "gensparkInfluence": "public_landing_only",
+    "codexInfluence": "app_workspace_shell",
+    "mustShow": [
+      "public_dashboard_before_auth",
+      "login_register_entry",
+      "chat_first_app_workspace_after_auth",
+      "project_session_history_as_secondary_navigation",
+      "right_inspector_on_user_request",
+      "api_key_required_before_chat_send_when_missing"
+    ],
+    "mustNotShow": [
+      "dashboard_first_app_home",
+      "explanatory_landing_inside_app_shell",
+      "raw_trace_console",
+      "runtime_truth_panel",
+      "billing_source_of_truth",
+      "node_pool_console",
+      "artifact_body_authority",
+      "multi_column_sidebar_sprawl",
+      "duplicated_files_progress_panels"
+    ]
+  },
+  "objectGrammar": {
+    "allowedPrimaryObjects": [
+      "Project",
+      "Session",
+      "Message",
+      "Skill",
+      "InputFile",
+      "OutputFile",
+      "ProgressStage",
+      "ApiKey",
+      "Model",
+      "Export"
+    ],
+    "allowedSecondaryObjects": [
+      "CloudDrive",
+      "FileReference",
+      "OutputVersion",
+      "AuditProjection",
+      "RuntimeGateProjection"
+    ],
+    "forbiddenPrimaryObjects": [
+      "RuntimeTruth",
+      "BillingSourceOfTruth",
+      "NodePool",
+      "RawTrace",
+      "CloudConsole",
+      "DomainVerdict",
+      "ArtifactBodyAuthority"
+    ],
+    "fileHierarchy": ["cloud_drive", "project", "session", "input_output_refs"],
+    "ownershipRules": [
+      "User owns projects.",
+      "Project owns sessions.",
+      "Session owns messages, input files, output files, and progress stages.",
+      "Web shell may display refs-only runtime and audit projections but must not own runtime truth or artifact bodies."
+    ]
+  },
+  "taskFlow": {
+    "primaryFlow": [
+      "public_dashboard",
+      "login_or_register",
+      "app_default_chat",
+      "project_or_session_select",
+      "compose_prompt",
+      "attach_input_files_optional",
+      "run_chat_or_runtime_gate",
+      "inspect_progress_files_output",
+      "export_or_continue"
+    ],
+    "apiKeyFlow": [
+      "api_key_optional_at_register",
+      "app_shell_access_allowed_without_api_key",
+      "chat_send_requires_api_key",
+      "api_key_required_modal",
+      "save_api_key",
+      "return_to_composer"
+    ],
+    "fileFlow": [
+      "open_right_inspector_files",
+      "select_cloud_drive_project",
+      "select_session",
+      "inspect_input_output_refs",
+      "preview_or_export_output"
+    ]
+  },
+  "informationArchitecture": {
+    "publicShell": ["landing_summary", "primary_start_action", "login_register"],
+    "appShell": ["left_rail", "workspace_sidebar", "chat_canvas", "right_inspector", "modal_layer"],
+    "leftRail": ["new_chat", "search", "history", "more", "projects", "settings"],
+    "rightInspector": ["files", "progress", "output"],
+    "modalLayer": ["login_register", "api_key_required", "confirm_destructive_action"]
+  },
+  "visualGrammar": {
+    "density": "quiet_dense_workspace",
+    "appCopyDensity": "low",
+    "publicCopyDensity": "moderate",
+    "longExplanatoryCopy": "forbidden_in_app_shell",
+    "maxPrimaryCtaPerView": 1,
+    "cardUse": "repeated_items_only",
+    "nestedCards": "forbidden",
+    "kpiCardDashboard": "forbidden_for_app_home",
+    "defaultPanelPolicy": "heavy_left_and_right_panels_hidden_until_user_action",
+    "layoutRules": [
+      "Public landing may use centered prompt-style composition.",
+      "Authenticated app shell must keep chat canvas primary.",
+      "Left sidebar expands from the rail; it must not create a second extra column.",
+      "Right inspector hosts files, progress, and output tabs in the same shell.",
+      "Files and progress must not be rendered as duplicate standalone page layouts."
+    ]
+  },
+  "semanticTokens": {
+    "resourceActive": "resource.active",
+    "resourceBlocked": "resource.blocked",
+    "billingWarning": "billing.warning",
+    "storageProtected": "storage.protected",
+    "releasePending": "release.pending",
+    "chatReady": "chat.ready",
+    "chatBlocked": "chat.blocked",
+    "runtimeGate": "runtime.gate",
+    "panelResizeHandle": "panel.resize_handle",
+    "focusRing": "focus.ring"
+  },
+  "components": [
+    {
+      "id": "PublicLanding",
+      "role": "public_product_entry",
+      "defaultState": "visible_before_auth",
+      "mustNotOwn": ["app_workspace_state"]
+    },
+    {
+      "id": "AuthCard",
+      "role": "login_register",
+      "fields": ["email", "password", "api_key_optional"],
+      "apiKeyRequired": false
+    },
+    {
+      "id": "AppShell",
+      "role": "authenticated_workspace_shell",
+      "defaultState": "chat_canvas_primary"
+    },
+    {
+      "id": "LeftRail",
+      "role": "global_app_navigation",
+      "defaultState": "collapsed",
+      "expandedComponent": "WorkspaceSidebar"
+    },
+    {
+      "id": "WorkspaceSidebar",
+      "role": "search_history_projects",
+      "defaultState": "hidden",
+      "resize": { "enabled": true, "minWidth": 260, "maxWidth": 420 }
+    },
+    {
+      "id": "ProjectTree",
+      "role": "project_session_navigation",
+      "hierarchy": ["project", "session"]
+    },
+    {
+      "id": "ConversationList",
+      "role": "recent_session_history",
+      "placement": "below_search"
+    },
+    {
+      "id": "ChatCanvas",
+      "role": "primary_work_area",
+      "composerPosition": "bottom"
+    },
+    {
+      "id": "Composer",
+      "role": "prompt_and_file_input",
+      "supports": ["model_select", "skill_mention", "file_attach"]
+    },
+    {
+      "id": "RightInspector",
+      "role": "secondary_context_surface",
+      "defaultState": "hidden",
+      "tabs": ["files", "progress", "output"],
+      "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "mustNotOwn": ["runtime_truth", "artifact_body_authority"]
+    },
+    {
+      "id": "FilesTree",
+      "role": "cloud_drive_project_session_files",
+      "hierarchy": ["cloud_drive", "project", "session", "input_output_refs"]
+    },
+    {
+      "id": "ProgressTimeline",
+      "role": "session_progress_projection",
+      "mustNotOwn": ["runtime_truth"]
+    },
+    {
+      "id": "OutputPreview",
+      "role": "output_ref_preview_export",
+      "mustNotOwn": ["artifact_body_authority"]
+    },
+    {
+      "id": "ApiKeyDialog",
+      "role": "chat_send_unblocker",
+      "primaryAction": "save",
+      "primaryActionLabel": "保存"
+    },
+    {
+      "id": "SkillPlaza",
+      "role": "skill_discovery_secondary_surface",
+      "defaultState": "inside_app_shell"
+    }
+  ],
+  "pageTemplates": [
+    "PublicLanding",
+    "Auth",
+    "DefaultAppShell",
+    "ExpandedSidebar",
+    "RightInspectorOpen",
+    "ModalOverlay",
+    "SkillPlaza",
+    "OutputPreview"
+  ],
+  "accessibility": {
+    "keyboardRequired": true,
+    "focusVisibleRequired": true,
+    "noHoverOnlyActions": true,
+    "modalFocusTrapRequired": true,
+    "touchTargetMinimum": "wcag_2_2_target_size_when_applicable",
+    "contrastMinimum": "wcag_2_2_aa"
+  },
+  "acceptanceLayers": ["contract", "component_state", "interaction", "visual"],
+  "cannotClaim": [
+    "pixel-perfect production UI from this contract alone",
+    "runtime execution ready",
+    "artifact body authority",
+    "full accessibility conformance without browser and assistive checks",
+    "visual quality without Figma and screenshot review"
+  ]
+}

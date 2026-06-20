@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "owner": "one-person-lab-web",
+  "purpose": "web_shell_adapter",
+  "state": "active",
+  "machineBoundary": "Active web shell carrier, shell ownership boundary, Figma-code mapping, and validation commands; product identity remains in web-product-profile and GUI grammar remains in web-gui-product-contract.",
+  "activeShell": {
+    "id": "opl_web_static_esm_shell",
+    "sourceRoot": "apps/web",
+    "entryHtml": "apps/web/index.html",
+    "entryModule": "apps/web/src/onePersonLabWeb.mjs",
+    "styleEntry": "apps/web/styles.css",
+    "runtime": "static_html_css_esm",
+    "framework": "none",
+    "migrationPolicy": "stay_static_until_component_state_or_visual_regression_evidence_requires_framework"
+  },
+  "candidateShells": [
+    {
+      "id": "react_typescript_shadcn_shell",
+      "state": "candidate_only",
+      "entryCondition": "accepted UI implementation plan with component-state tests and visual regression evidence need",
+      "mustNotEnterWithout": ["web-gui-product-contract", "web-page-state-matrix", "browser_e2e_plan"]
+    }
+  ],
+  "shellMayOwn": [
+    "renderer_components",
+    "layout_composition",
+    "responsive_breakpoints",
+    "panel_resize_behavior",
+    "focus_management",
+    "figma_code_mapping",
+    "component_props"
+  ],
+  "shellMustNotOwn": [
+    "product_truth",
+    "runtime_truth",
+    "domain_judgment_truth",
+    "artifact_body_authority",
+    "billing_source_of_truth",
+    "storage_truth",
+    "api_gateway_truth",
+    "model_provider_policy"
+  ],
+  "figmaCodeMapping": {
+    "sourceOfTruth": "contracts/web-gui-product-contract.json",
+    "figmaRole": "visual expression of contract states only",
+    "codeRole": "implementation of contract states only",
+    "requiredNodeMetadata": ["componentId", "variantProps", "stateId", "mustShow", "mustNotShow"],
+    "variantProps": {
+      "LeftRail": {
+        "state": ["collapsed", "expanded"]
+      },
+      "WorkspaceSidebar": {
+        "state": ["hidden", "expanded"],
+        "width": ["default", "narrow", "wide"]
+      },
+      "RightInspector": {
+        "state": ["hidden", "files", "progress", "output"],
+        "width": ["default", "narrow", "wide"]
+      },
+      "ApiKeyDialog": {
+        "state": ["closed", "open", "saving", "error"]
+      }
+    },
+    "namingPolicy": {
+      "componentNames": "PascalCase",
+      "variantNames": "lower_snake_case_or_contract_literal",
+      "tokenNames": "semantic_token_names_match_or_map_to_css_variables"
+    }
+  },
+  "codeProps": {
+    "LeftRail": {
+      "state": ["collapsed", "expanded"]
+    },
+    "WorkspaceSidebar": {
+      "state": ["hidden", "expanded"],
+      "resizable": true
+    },
+    "RightInspector": {
+      "state": ["hidden", "files", "progress", "output"],
+      "resizable": true
+    },
+    "ApiKeyDialog": {
+      "open": "boolean",
+      "primaryAction": "save"
+    }
+  },
+  "validationCommands": [
+    "npm run verify:contract",
+    "npm run verify:smoke",
+    "npm run verify:browser",
+    "npm run gate:review",
+    "npm run repo:bloat"
+  ],
+  "consumerTests": [
+    "tests/contract/one-person-lab-web-data.test.mjs",
+    "tests/smoke/web-shell.test.mjs",
+    "tests/browser/research-main-path.browser.test.mjs"
+  ],
+  "cannotClaim": [
+    "React or shadcn migration approved",
+    "Figma Code Connect records created",
+    "visual regression baseline exists",
+    "production UI rollout completed"
+  ]
+}
