@@ -10,5 +10,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .superpowers/
+.worktrees/
 .gstack/
 .sentrux/baseline.json
