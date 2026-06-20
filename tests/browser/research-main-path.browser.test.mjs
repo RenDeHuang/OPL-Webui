@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const runnerPath = 'tests/browser/research-main-path-runner.mjs';
+const cloudRolloutWorkflowPath = '.github/workflows/cloud-rollout.yml';
 
 test('research main path runs in a real browser and records page-state evidence', { timeout: 180000 }, () => {
   const result = spawnSync(process.execPath, [runnerPath], {
@@ -51,4 +52,16 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.doesNotMatch(runner, /requestSubmit\(\)/);
   assert.doesNotMatch(runner, /KUBECONFIG|kubectl|postgres:\/\//i);
   assert.doesNotMatch(runner, /console\.log[^\n]*(OPL_DOGFOOD_API_KEY|OPL_DOGFOOD_PASSWORD|config\.apiKey|config\.password)/);
+});
+
+test('production browser e2e installs browser dependencies and reports startup diagnostics', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+  const workflow = readFileSync(cloudRolloutWorkflowPath, 'utf8');
+
+  assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(runner, /browser exited before DevTools became available/);
+  assert.match(runner, /binary:/);
+  assert.match(runner, /exitCode:/);
+  assert.match(runner, /stderr:/);
+  assert.match(runner, /stdout:/);
 });

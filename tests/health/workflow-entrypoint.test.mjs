@@ -165,7 +165,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
 
   const productionBrowserJob = workflow.slice(workflow.indexOf('production-browser-e2e:'));
   assert.match(productionBrowserJob, /environment:\s*production/);
-  assert.match(productionBrowserJob, /npx --yes playwright install chromium/);
+  assert.match(productionBrowserJob, /npx --yes playwright install --with-deps chromium/);
   assert.match(productionBrowserJob, /OPL_PRODUCTION_BROWSER_E2E:\s*1/);
   assert.match(productionBrowserJob, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
   assert.match(productionBrowserJob, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);

@@ -267,13 +267,16 @@ async function startBrowser(binary) {
   state.cleanup.push(() => closeChildProcess(child, () => rmSync(userDataDir, { recursive: true, force: true })));
 
   let devtools = '';
+  const output = { stdout: [], stderr: [] };
+  child.stdout.on('data', (chunk) => output.stdout.push(String(chunk)));
   child.stderr.on('data', (chunk) => {
     const text = String(chunk);
+    output.stderr.push(text);
     const match = text.match(/DevTools listening on (ws:\/\/\S+)/);
     if (match) devtools = match[1];
   });
   await waitUntil(() => {
-    if (child.exitCode !== null) throw new Error('browser exited before DevTools became available');
+    if (child.exitCode !== null) throw new Error(browserStartupError(binary, child, output));
     return devtools;
   });
   const versionURL = devtools.replace(/^ws:\/\/([^/]+).*$/, 'http://$1/json/version');
@@ -283,6 +286,17 @@ async function startBrowser(binary) {
   return {
     devtoolsBaseUrl,
   };
+}
+
+function browserStartupError(binary, child, output) {
+  return [
+    'browser exited before DevTools became available',
+    `binary: ${binary}`,
+    `exitCode: ${child.exitCode}`,
+    `signalCode: ${child.signalCode || ''}`,
+    `stderr: ${trimProcessOutput(output.stderr.join(''))}`,
+    `stdout: ${trimProcessOutput(output.stdout.join(''))}`,
+  ].join('\n');
 }
 
 async function createPageTarget(devtoolsBaseUrl) {
@@ -561,4 +575,10 @@ function normalizeBaseUrl(value) {
 function sanitizeBaseUrl(value) {
   const url = new URL(value);
   return `${url.protocol}//${url.host}`;
+}
+
+function trimProcessOutput(text) {
+  const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return '(empty)';
+  return normalized.slice(-1200);
 }

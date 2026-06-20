@@ -183,7 +183,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Chromium for production browser e2e
-        run: npx --yes playwright install chromium
+        run: npx --yes playwright install --with-deps chromium
 
       - name: Mask browser e2e secrets
         shell: bash
