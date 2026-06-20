@@ -510,12 +510,17 @@
   },
   "productionHAReadiness": {
     "mode": "cloud_topology_readiness_contract",
-    "state": "manifest_ready_pending_cloud_execution",
+    "state": "paused_single_pod_launch_pending_second_node",
     "owner": "deploy/web-cloud",
     "consumer": "production_release_operator",
     "requiresKubeconfig": true,
     "requiresCloudOperator": true,
     "mutatesCluster": true,
+    "currentApplyManifest": {
+      "replicas": 1,
+      "reason": "single-node launch safety; avoid scheduling deadlock while only one TKE worker is available",
+      "haPaused": true
+    },
     "requiredEvidence": [
       "replicas_2",
       "two_ready_pods",

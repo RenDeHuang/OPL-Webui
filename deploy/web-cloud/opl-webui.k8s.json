@@ -23,14 +23,7 @@
         }
       },
       "spec": {
-        "replicas": 2,
-        "strategy": {
-          "type": "RollingUpdate",
-          "rollingUpdate": {
-            "maxUnavailable": 0,
-            "maxSurge": 1
-          }
-        },
+        "replicas": 1,
         "selector": {
           "matchLabels": {
             "app.kubernetes.io/name": "opl-webui"
@@ -50,35 +43,6 @@
             ],
             "nodeSelector": {
               "medopl.cn/workload": "webui"
-            },
-            "topologySpreadConstraints": [
-              {
-                "maxSkew": 1,
-                "topologyKey": "kubernetes.io/hostname",
-                "whenUnsatisfiable": "DoNotSchedule",
-                "labelSelector": {
-                  "matchLabels": {
-                    "app.kubernetes.io/name": "opl-webui"
-                  }
-                }
-              }
-            ],
-            "affinity": {
-              "podAntiAffinity": {
-                "preferredDuringSchedulingIgnoredDuringExecution": [
-                  {
-                    "weight": 100,
-                    "podAffinityTerm": {
-                      "topologyKey": "kubernetes.io/hostname",
-                      "labelSelector": {
-                        "matchLabels": {
-                          "app.kubernetes.io/name": "opl-webui"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
             },
             "containers": [
               {
@@ -177,22 +141,6 @@
                 }
               }
             ]
-          }
-        }
-      }
-    },
-    {
-      "apiVersion": "policy/v1",
-      "kind": "PodDisruptionBudget",
-      "metadata": {
-        "name": "opl-webui-control-plane",
-        "namespace": "opl-webui"
-      },
-      "spec": {
-        "minAvailable": 1,
-        "selector": {
-          "matchLabels": {
-            "app.kubernetes.io/name": "opl-webui"
           }
         }
       }

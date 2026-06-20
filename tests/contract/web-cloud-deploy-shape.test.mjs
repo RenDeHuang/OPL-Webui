@@ -60,55 +60,17 @@ test('web cloud fixture requires web_cloud runtime and readonly OPL CLI path', (
   assert.equal(container.livenessProbe.httpGet.path, '/healthz');
 });
 
-test('web cloud fixture declares the HA scheduling shape before cloud execution', () => {
+test('web cloud fixture stays single-node launch-safe while HA is paused', () => {
   const { items } = loadManifest();
   const deployment = findKind(items, 'Deployment');
   const pdb = findKind(items, 'PodDisruptionBudget');
   const podSpec = deployment.spec.template.spec;
 
-  assert.equal(deployment.spec.replicas, 2);
-  assert.deepEqual(deployment.spec.strategy, {
-    type: 'RollingUpdate',
-    rollingUpdate: {
-      maxUnavailable: 0,
-      maxSurge: 1,
-    },
-  });
-  assert.deepEqual(podSpec.topologySpreadConstraints, [
-    {
-      maxSkew: 1,
-      topologyKey: 'kubernetes.io/hostname',
-      whenUnsatisfiable: 'DoNotSchedule',
-      labelSelector: {
-        matchLabels: {
-          'app.kubernetes.io/name': 'opl-webui',
-        },
-      },
-    },
-  ]);
-  assert.deepEqual(podSpec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution, [
-    {
-      weight: 100,
-      podAffinityTerm: {
-        topologyKey: 'kubernetes.io/hostname',
-        labelSelector: {
-          matchLabels: {
-            'app.kubernetes.io/name': 'opl-webui',
-          },
-        },
-      },
-    },
-  ]);
-  assert.equal(pdb.metadata.name, 'opl-webui-control-plane');
-  assert.equal(pdb.metadata.namespace, 'opl-webui');
-  assert.deepEqual(pdb.spec, {
-    minAvailable: 1,
-    selector: {
-      matchLabels: {
-        'app.kubernetes.io/name': 'opl-webui',
-      },
-    },
-  });
+  assert.equal(deployment.spec.replicas, 1);
+  assert.equal(deployment.spec.strategy, undefined);
+  assert.equal(podSpec.topologySpreadConstraints, undefined);
+  assert.equal(podSpec.affinity, undefined);
+  assert.equal(pdb, undefined);
 });
 
 test('web cloud fixture references Postgres through a secret only', () => {
