@@ -11,12 +11,25 @@ const repoRoot = new URL('../../', import.meta.url).pathname;
 const state = {
   cleanup: [],
 };
+const mode = process.argv.includes('--production') ? 'production' : 'local';
 
 try {
+  if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1') {
+    console.log(JSON.stringify({
+      ok: true,
+      skipped: true,
+      mode,
+      reason: 'OPL_PRODUCTION_BROWSER_E2E is not enabled',
+    }));
+    process.exit(0);
+  }
+  const config = resolveRunConfig(mode);
   const browserBinary = findBrowserBinary();
-  const upstream = await startMockChatUpstream();
-  state.cleanup.push(() => upstream.close());
-  const app = await startControlPlane(upstream.baseUrl, state.cleanup);
+  const upstream = mode === 'local' ? await startMockChatUpstream() : undefined;
+  if (upstream) state.cleanup.push(() => upstream.close());
+  const app = mode === 'local'
+    ? await startControlPlane(upstream.baseUrl, state.cleanup)
+    : { baseUrl: config.baseUrl };
   const browser = await startBrowser(browserBinary);
 
   const pageWebSocketDebuggerUrl = await createPageTarget(browser.devtoolsBaseUrl);
@@ -27,22 +40,12 @@ try {
   await cdp.send('Runtime.enable');
   await cdp.send('Page.navigate', { url: app.baseUrl });
   await waitFor(cdp, 'document.readyState === "complete"');
-  await waitFor(cdp, 'document.body.dataset.authState === "anonymous"');
+  await waitFor(cdp, 'document.body.dataset.authState');
 
-  const email = `browser-${Date.now()}@example.test`;
-  const password = 'browser-e2e-password';
-  await typeInto(cdp, '#auth-email', email);
-  await typeInto(cdp, '#auth-password', password);
-  await activate(cdp, '[data-register-button]');
-  await waitForAuthState(cdp, 'authenticated_unbound', 'register');
-  await activate(cdp, '[data-logout-button]');
-  await waitForAuthState(cdp, 'anonymous', 'logout');
-  await typeInto(cdp, '#auth-email', email);
-  await typeInto(cdp, '#auth-password', password);
-  await activate(cdp, '[data-login-button]');
-  await waitForAuthState(cdp, 'authenticated_unbound', 'login');
+  if (mode === 'production') await resetSessionIfAuthenticated(cdp);
+  await authenticate(cdp, config);
 
-  await typeInto(cdp, '#api-key', 'sk-browser-e2e-secret');
+  await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
 
@@ -50,7 +53,9 @@ try {
   await assertPage(cdp, 'document.body.dataset.chatState === "research_entry_selected"', 'research task template selected');
   await assertPage(cdp, 'document.querySelector("#chat-input")?.value.includes("@科研")', 'research task template prompt');
   await activate(cdp, '[data-chat-submit]');
-  await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
+  if (mode === 'local') {
+    await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
+  }
   await waitForAuditKind(cdp, 'chat.completed');
 
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
@@ -79,13 +84,14 @@ try {
 
   console.log(JSON.stringify({
     ok: true,
+    mode,
     path: 'research-main-path',
     browser: browserBinary,
-    baseUrl: app.baseUrl,
+    baseUrl: sanitizeBaseUrl(app.baseUrl),
     pageStates,
     auditKinds: relevantAuditKinds,
     allAuditKinds: [...new Set(kinds)],
-    upstreamRequests: upstream.requests.length,
+    upstreamRequests: upstream?.requests.length ?? undefined,
   }));
 } catch (error) {
   console.error(error?.stack || error);
@@ -94,6 +100,53 @@ try {
   for (const cleanup of state.cleanup.reverse()) {
     await cleanup().catch?.(() => {});
   }
+}
+
+function resolveRunConfig(runMode) {
+  if (runMode === 'local') {
+    return {
+      baseUrl: '',
+      email: `browser-${Date.now()}@example.test`,
+      password: 'browser-e2e-password',
+      apiKey: 'sk-browser-e2e-secret',
+    };
+  }
+  const config = {
+    baseUrl: normalizeBaseUrl(process.env.OPL_BASE_URL || 'https://opl.medopl.cn'),
+    email: process.env.OPL_DOGFOOD_EMAIL || '',
+    password: process.env.OPL_DOGFOOD_PASSWORD || '',
+    apiKey: process.env.OPL_DOGFOOD_API_KEY || '',
+  };
+  const missing = [];
+  if (!config.email.includes('@')) missing.push('OPL_DOGFOOD_EMAIL');
+  if (config.password.length < 12) missing.push('OPL_DOGFOOD_PASSWORD');
+  if (!config.apiKey) missing.push('OPL_DOGFOOD_API_KEY');
+  if (missing.length > 0) {
+    throw new Error(`production browser e2e missing valid secret inputs: ${missing.join(', ')}`);
+  }
+  return config;
+}
+
+async function authenticate(cdp, config) {
+  await typeInto(cdp, '#auth-email', config.email);
+  await typeInto(cdp, '#auth-password', config.password);
+  await activate(cdp, '[data-register-button]');
+  const registered = await waitForAuthStateOrMessage(cdp, 'authenticated_unbound', /EMAIL_ALREADY_REGISTERED|already registered|已存在|已注册/i, 'register');
+  if (registered) {
+    await activate(cdp, '[data-logout-button]');
+    await waitForAuthState(cdp, 'anonymous', 'logout');
+  }
+  await typeInto(cdp, '#auth-email', config.email);
+  await typeInto(cdp, '#auth-password', config.password);
+  await activate(cdp, '[data-login-button]');
+  await waitForAuthState(cdp, 'authenticated_unbound', 'login');
+}
+
+async function resetSessionIfAuthenticated(cdp) {
+  const authState = await evaluateJSON(cdp, 'document.body.dataset.authState');
+  if (authState === 'anonymous') return;
+  await activate(cdp, '[data-logout-button]');
+  await waitForAuthState(cdp, 'anonymous', 'initial logout');
 }
 
 function findBrowserBinary() {
@@ -333,6 +386,20 @@ async function waitForAuthState(cdp, authState, label) {
   );
 }
 
+async function waitForAuthStateOrMessage(cdp, authState, messagePattern, label) {
+  const deadline = Date.now() + 30000;
+  while (Date.now() < deadline) {
+    const state = await evaluateJSON(cdp, `({
+      authState: document.body.dataset.authState,
+      settingsMessage: document.querySelector('[data-settings-message]')?.textContent || ''
+    })`);
+    if (state.authState === authState) return true;
+    if (messagePattern.test(state.settingsMessage)) return false;
+    await delay(100);
+  }
+  throw new Error(await describePageState(cdp, `${label} did not reach ${authState} or expected message`));
+}
+
 async function describePageState(cdp, message) {
   const state = await evaluateJSON(cdp, `({
     message: ${JSON.stringify(message)},
@@ -341,12 +408,12 @@ async function describePageState(cdp, message) {
     settingsMessage: document.querySelector('[data-settings-message]')?.textContent,
     sessionStatus: document.querySelector('[data-session-status]')?.textContent,
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
-    emailValue: document.querySelector('#auth-email')?.value,
+    emailLength: document.querySelector('#auth-email')?.value?.length,
     passwordLength: document.querySelector('#auth-password')?.value?.length,
     apiKeyLength: document.querySelector('#api-key')?.value?.length,
     activeElement: document.activeElement?.id || document.activeElement?.tagName,
     session: await fetch('/api/session/current')
-      .then(async (response) => ({ status: response.status, body: await response.text() }))
+      .then(async (response) => ({ status: response.status, ok: response.ok }))
       .catch((error) => ({ error: String(error) })),
   })`);
   return JSON.stringify(state);
@@ -469,4 +536,13 @@ async function closeChildProcess(child, afterClose = () => {}) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeBaseUrl(value) {
+  return String(value || '').replace(/\/+$/, '');
+}
+
+function sanitizeBaseUrl(value) {
+  const url = new URL(value);
+  return `${url.protocol}//${url.host}`;
 }

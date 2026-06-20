@@ -27,6 +27,12 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   const runner = readFileSync(runnerPath, 'utf8');
 
   for (const required of [
+    '--production',
+    'OPL_PRODUCTION_BROWSER_E2E',
+    'OPL_DOGFOOD_EMAIL',
+    'OPL_DOGFOOD_PASSWORD',
+    'OPL_DOGFOOD_API_KEY',
+    'https://opl.medopl.cn',
     'Input.dispatchMouseEvent',
     'Input.dispatchKeyEvent',
     'Input.insertText',
@@ -41,5 +47,6 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.doesNotMatch(runner, /\.value\s*=(?!=)/);
   assert.doesNotMatch(runner, /\.click\(\)/);
   assert.doesNotMatch(runner, /requestSubmit\(\)/);
-  assert.doesNotMatch(runner, /OPL_DOGFOOD_API_KEY|KUBECONFIG|kubectl|postgres:\/\//i);
+  assert.doesNotMatch(runner, /KUBECONFIG|kubectl|postgres:\/\//i);
+  assert.doesNotMatch(runner, /console\.log[^\n]*(OPL_DOGFOOD_API_KEY|OPL_DOGFOOD_PASSWORD|config\.apiKey|config\.password)/);
 });

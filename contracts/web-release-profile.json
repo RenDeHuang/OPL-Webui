@@ -237,6 +237,53 @@
       ]
     }
   },
+  "productionBrowserE2EReadiness": {
+    "mode": "secret_gated_chromium_research_main_path",
+    "state": "harness_ready_pending_first_run",
+    "defaultEnabled": false,
+    "requiresProductionSecrets": true,
+    "requiresSuccessfulRolloutEvidence": true,
+    "afterStage": "production_apply_canary_smoke",
+    "browserAutomation": true,
+    "automationLevel": "real_chromium_cdp_against_production_host",
+    "entrypoint": "node tests/browser/research-main-path-runner.mjs --production",
+    "workflow": ".github/workflows/cloud-rollout.yml",
+    "workflowInput": "production_browser_e2e",
+    "environment": "production",
+    "requiredSecrets": [
+      "OPL_DOGFOOD_EMAIL",
+      "OPL_DOGFOOD_PASSWORD",
+      "OPL_DOGFOOD_API_KEY"
+    ],
+    "requiredSwitches": [
+      "OPL_PRODUCTION_BROWSER_E2E"
+    ],
+    "forbiddenSecrets": [
+      "KUBECONFIG",
+      "OPL_DATABASE_URL",
+      "PGPASSWORD",
+      "MEDOPL_TOKEN",
+      "TCR_PASSWORD"
+    ],
+    "coverage": [
+      "real_browser_login",
+      "api_key_binding",
+      "research_task_template_selected",
+      "ordinary_chat_real_completion",
+      "chat_completed_audit",
+      "paper_runtime_gate",
+      "grant_runtime_gate",
+      "runtime_gate_audit",
+      "sanitized_browser_evidence"
+    ],
+    "cannotClaim": [
+      "multi-node HA",
+      "production-ready SaaS",
+      "MedOPL runtime execution",
+      "billing/payment/storage/node pool mutation",
+      "team invite or RBAC lifecycle"
+    ]
+  },
   "localNoSecretReadiness": {
     "requiresProductionSecrets": false,
     "browserAutomation": false,

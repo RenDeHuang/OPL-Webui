@@ -150,6 +150,20 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.requiredBeforeImageRelease, true);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
+  assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'harness_ready_pending_first_run');
+  assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
+  assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
+  assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
+  assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, [
+    'OPL_DOGFOOD_EMAIL',
+    'OPL_DOGFOOD_PASSWORD',
+    'OPL_DOGFOOD_API_KEY',
+  ]);
+  assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
+  assert.equal(release.productionBrowserE2EReadiness.coverage.includes('real_browser_login'), true);
+  assert.equal(release.productionBrowserE2EReadiness.coverage.includes('paper_runtime_gate'), true);
+  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);
   assert.equal(release.dogfood.rawApiKeyPrinted, false);

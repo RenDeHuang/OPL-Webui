@@ -162,6 +162,27 @@ coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
 cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
 ```
 
+Production browser e2e harness:
+
+- 在 `Cloud Rollout` 中设置 `apply=true` 且 `production_browser_e2e=true`，job 会在 `Production Apply` 后运行。
+- 该 lane 使用真实 Chromium/CDP 打开 `https://opl.medopl.cn`，通过生产 dogfood 账号执行登录、API Key 绑定、普通科研 chat、`@论文`/`@基金` runtime gate 和 audit evidence 检查。
+- 该 lane 需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，并在 job 中 mask password/API key。
+- 该 lane 不执行 kubectl，不读取 kubeconfig，不读取数据库 secret，不连接 MedOPL private API，不执行 OPL runtime mutation。
+- 本 harness 当前是 ready/pending-first-run；只有 GitHub job 成功后才能 fold back production browser e2e evidence。
+
+Production browser e2e closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password、email 或 request payload：
+
+```text
+run id:
+target host: https://opl.medopl.cn
+image:
+browser: chromium
+steps: real_browser_login,api_key_binding,research_task_template_selected,ordinary_chat,paper_runtime_gate,grant_runtime_gate,audit_events
+audit kinds: chat.completed,runtime_gate.required
+result:
+cannot claim: MedOPL runtime execution, billing/payment/storage/node pool mutation, team invite/RBAC/payment lifecycle, production-ready SaaS
+```
+
 ## 创建 Kubernetes Secret
 
 ```bash
