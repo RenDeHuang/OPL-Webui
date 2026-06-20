@@ -14,6 +14,7 @@
 - `AGENTS.md` 只约束工作方式、稳定边界和工程纪律，不承载完整项目知识。
 - 项目知识默认从 `README.md`、`TASTE.md`、`docs/project.md`、`docs/status.md`、`docs/decisions.md`、`docs/architecture.md`、`docs/invariants.md`、`docs/docs_portfolio_consolidation.md`、`docs/active/README.md` 和 `contracts/*.json` 读取。
 - 每次正式开发必须先确认固定 truth，再进入一个明确的 gap-driven phase；不要从临时过程文件推导当前事实。
+- 每次正式开发必须回答：claim 是什么、owner 是谁、consumer 是谁、contract 在哪里、哪个 test proof 证明它、proof level 到哪一层、不能 claim 什么、生产证据是否 foldback、新增 surface 能不能退役。
 
 ## 产品边界
 
@@ -34,12 +35,13 @@
 - 每次正式变更必须执行四个工作面：文档生命周期、代码清退、测试登记、机器 gate。
 - 每次正式变更必须同步清退被替代的旧代码、旧 route、旧 schema、旧测试、旧文档入口和旧命名；不能把清退留给未来。
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
-- 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers 和 verifySuites；registry 校验这些字段的枚举和值域。
+- 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers、verifySuites、testKind、proofLevel、claimScope、proves 和 doesNotProve；registry 校验这些字段的枚举和值域。
+- 新增长期 surface 必须登记在 `contracts/web-surface-inventory.json`，声明 path、type、ownerSurface、consumer、contract 或 machineBoundary、lifecycle；temporary/tombstone 必须声明 retirement。
 - 默认主验证入口是 `npm run verify`，即 `current = smoke + contract + health + go`；review gate 是 `npm run gate:review`。
-- AI 开发纪律由 `contracts/web-development-profile.json` 机器约束：正式开发按 direct / inline / durable 分级，顺序为 fixed truth -> one gap -> owner surface -> contract/page-state when needed -> registered tests -> implementation -> cleanup -> targeted lane -> current verify -> evidence foldback -> can/cannot claim。
+- AI 开发纪律由 `contracts/web-development-profile.json` 机器约束：正式开发按 direct / inline / durable 分级，顺序为 claim -> owner surface -> contract/page-state/API boundary -> proof taxonomy test -> implementation -> retire replaced surface -> targeted lane -> verify/gate -> production evidence if needed -> release/status foldback -> can/cannot claim。
 - `npm run gate:ai` 是正式开发的 AI workflow gate；`npm run gate:review` 必须包含它。它用于阻断 stale production claim、未登记测试、开发 workflow 变更缺少 contract/gate/registry 同步等问题。
 - 测试采用固定主 lane 加动态 targeted lane：`smoke` 守基础入口，`contract` 守 API/page-state/BYOK/tenant/OPL 边界，`health` 守治理和清退，`go` 守 Go control plane，`browser` 守浏览器主路径，`deploy` 守发布和云端形态，`regression` 守明确 bug 复现，`full` 用于发布和高风险合并。
-- 测试 taxonomy 由 registry 机器约束：`cost` 支持 `cheap`、`medium`、`heavy`、`soak`、`golden`；`lifecycleRole` 支持 `current-owner`、`integration`、`regression-guard`、`tombstone-guard`。`integration`、`heavy`、`soak`、`golden` 不默认进入 `current`；若必须进入，registry 必须写明 `currentSuiteReason`。
+- 测试 taxonomy 由 registry 机器约束：`cost` 支持 `cheap`、`medium`、`heavy`、`soak`、`golden`；`lifecycleRole` 支持 `current-owner`、`integration`、`regression-guard`、`tombstone-guard`；`testKind` 支持 `acceptance`、`contract`、`governance`、`regression`；`proofLevel` 支持 `static`、`unit`、`http`、`browser`、`production`；`claimScope` 支持 `repo`、`local`、`ci`、`production`。`doesNotProve` 是强制字段，用来阻断低层测试冒充生产证据。
 - `regression` lane 可以为空；一旦登记 `regression-guard`，必须声明 machine-readable `retirement` metadata。退役条件到期后，同一变更必须删除测试、删除 registry entry，并按需要写入 `docs/history/tombstones/` 防止复活。
 - 每次正式开发开始前必须根据改动面决定 targeted lane：`apps/web/**` 跑 `verify:smoke` 与 `verify:browser`；`contracts/web-page-state-matrix.json` 跑 `verify:contract` 与 `verify:browser`；`services/control-plane-go/**` 跑 `verify:contract` 与 `verify:go`；`deploy/**`、`.github/workflows/**`、`scripts/cloud-rollout.mjs` 跑 `verify:deploy` 与 `verify:health`；OPL bridge/runtime gate 变更跑 `verify:contract`、`verify:go` 和 `verify:full`。
 - 验证强度按风险分级：小型 docs/test/source 维护至少跑 targeted tests、对应 verify suite 和 `npm run verify`；用户可见、API、contract、runtime、billing、storage、deploy、OPL bridge 或 release claim 变更还必须跑对应 explicit lane、`npm run gate:review`、`npm run repo:bloat` 和 `sentrux check .`。
@@ -47,6 +49,7 @@
 - page-state-first：新增或修改页面/交互前，必须先更新 `contracts/web-page-state-matrix.json`。
 - browser-e2e-first：商业主路径变化必须有浏览器级或等价 smoke/e2e 计划；不能只靠文案声明。
 - release-evidence-foldback：每次 GitHub release/deploy/browser/dogfood/availability run 完成并改变 can/cannot claim 时，必须把压缩证据折返到 `contracts/web-release-profile.json`、`docs/status.md` 和 `docs/active/README.md`；不能把 active docs 留在旧状态。
+- release evidence 一等入口是 `npm run release:evidence -- --run-id <github-run-id>`；它只写压缩证据，不把 raw logs 放进 active docs。
 
 ## 理想态与清退
 
@@ -76,7 +79,7 @@
 ## 测试登记
 
 - 新增或移动测试文件必须先登记在 `scripts/test-classification.mjs`。
-- 测试登记必须说明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers 和 verifySuites；`scripts/test-classification.mjs` 是 taxonomy 和 lane membership 的机器入口。
+- 测试登记必须说明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers、verifySuites、testKind、proofLevel、claimScope、proves 和 doesNotProve；`scripts/test-classification.mjs` 是 taxonomy、proof boundary 和 lane membership 的机器入口。
 - 不能新增游离测试、散落 runner 或绕过 `npm run verify` 的单独验证入口。
 
 ## 机器 gate
@@ -89,11 +92,12 @@
 ## 防膨胀规则
 
 - 没有 consumer 的 contract 不新增。
+- 没有 ownerSurface 或 consumer 的长期 surface 不新增；scripts、contracts、tests、Go tests、recurring docs、workflows/deploy 和少量关键 source owner surface 必须登记在 `contracts/web-surface-inventory.json`。
 - 没有 eval/test 的 AI、OPL 或 control-plane 行为不算完成。
 - `scripts/` 只放 runner、classifier、gate；不要把业务逻辑塞进脚本。
 - `.runtime/`、日志、coverage、dist、截图、临时产物和 `.superpowers/` 不进 git。
 - 单文件行数只作为硬 hygiene 边界：默认上限为 `1000` 行；生成文件、fixture 和 schema 可豁免。不到上限时按职责边界和可维护性判断是否拆分，不为任意小阈值拆文件。
-- 仓库文件数量只作为 report-only portfolio signal；不能用固定文件数卡死产品开发。仓库接近或达到 bloat 信号时，新增业务能力前必须先判断是否存在无 owner、无 consumer、已退役或可合并 surface。
+- 仓库文件数量只作为 report-only portfolio signal；不能用固定文件数卡死产品开发。`npm run repo:bloat` 必须区分 owned growth 与 orphan growth：有 owner/consumer/contract 的增长是 report-only，无 owner 或无 consumer 的长期 surface 是 hard fail。
 
 ## worktree / subagent
 

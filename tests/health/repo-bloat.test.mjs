@@ -15,7 +15,7 @@ test('repo bloat audit reports JSON and treats file count as portfolio signal', 
   assert.equal(report.budgets.mode, 'report-only');
   assert.equal(report.portfolioPolicy.fileCountMode, 'report-only');
   assert.deepEqual(report.portfolioPolicy.hardFailures, [
-    'lineBudget', 'retiredSurface', 'testRegistry', 'contractViolation',
+    'lineBudget', 'retiredSurface', 'testRegistry', 'contractViolation', 'orphanSurface',
   ]);
   assert.ok(report.budgets.files > 0);
   assert.equal(report.budgets.maxFileLines, undefined);
@@ -37,6 +37,20 @@ test('repo bloat audit reports JSON and treats file count as portfolio signal', 
   assert.equal(report.counts.activeChangeDocs, undefined);
   assert.equal(report.counts.markdownDocs, durableMarkdownDocs.length);
   assert.equal(report.counts.files, report.files.length);
+  assert.ok(report.inventoryOwnership, 'bloat audit must include inventory ownership summary');
+  assert.equal(report.inventoryOwnership.inventoryPath, 'contracts/web-surface-inventory.json');
+  assert.ok(Array.isArray(report.inventoryOwnership.ownedGrowth));
+  assert.ok(Array.isArray(report.inventoryOwnership.orphanGrowth));
+  assert.equal(report.inventoryOwnership.orphanGrowth.length, 0);
+  assert.ok(
+    report.portfolioFindings.every((finding) => typeof finding.ownedCount === 'number' && typeof finding.orphanCount === 'number'),
+    'portfolio findings must distinguish owned and orphan growth',
+  );
+  assert.equal(
+    report.portfolioPolicy.hardFailures.includes('orphanSurface'),
+    true,
+    'orphan surfaces must be hard failures',
+  );
   assert.equal(Array.isArray(report.portfolioFindings), true);
   for (const finding of report.portfolioFindings) {
     assert.equal(finding.severity, 'report-only');

@@ -34,6 +34,10 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   ]), ['contract', 'health']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'contracts/web-surface-inventory.json',
+  ]), ['contract', 'health']);
+
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
     'scripts/release-evidence-sync.mjs',
     'contracts/web-release-profile.json',
   ]), ['contract', 'deploy', 'health']);

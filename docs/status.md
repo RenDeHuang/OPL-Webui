@@ -21,6 +21,7 @@ The current stage is research SaaS product engineering. Product work now moves o
 - Runtime gate and refs-only projection: `contracts/web-runtime-bridge.json`
 - Release readiness: `contracts/web-release-profile.json`
 - AI development discipline: `contracts/web-development-profile.json`
+- Long-lived surface ownership: `contracts/web-surface-inventory.json`
 - Historical process evidence: `docs/history/process/closeouts.md`
 - Active gap baton: `docs/active/README.md`
 - Retired surface tombstones: `docs/history/tombstones/README.md`
@@ -38,8 +39,12 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - `docs/history/tombstones/README.md` records retired surfaces and no-resurrection rules.
 - Test workflow now uses fixed main lanes plus dynamic targeted lane selection. `current = smoke + contract + health + go`; `browser`, `deploy`, `regression`, and `full` are explicit lanes for changed surfaces and release-risk work.
 - `scripts/test-classification.mjs` is the machine registry for lane membership, cost, lifecycle role, risk triggers, verify suites, and regression retirement metadata.
+- Test proof taxonomy is now mandatory in the registry: every test declares testKind, proofLevel, claimScope, proves, and doesNotProve. Static/unit/http/browser evidence cannot be used to claim production readiness unless production evidence is freshly folded back.
+- `contracts/web-surface-inventory.json` owns long-lived surface registration for scripts, contracts, tests, Go tests, recurring docs, workflows/deploy, and selected source owner surfaces. Ordinary implementation files are intentionally excluded so inventory does not become a second source tree.
+- `npm run repo:bloat` now reads the surface inventory. Owned growth is report-only; orphan growth without owner/consumer/contract or machine boundary is a hard failure.
 - `scripts/lane-advisory.mjs` maps changed files to targeted lanes for operator visibility; lane-check/gate evidence decides whether the required targeted lanes were actually run for the current diff.
 - `contracts/web-development-profile.json` defines the AI development order, anti-bloat policy, task tiers, and completion boundaries; `npm run gate:ai` enforces claim freshness and workflow hygiene, and `npm run gate:review` runs it before lane evidence and current verify.
+- Release evidence foldback is exposed as `npm run release:evidence -- --run-id <github-run-id>` so production rollout/browser/dogfood/availability evidence can update the release profile and status as a first-class workflow step.
 - `regression` can be empty. Active `regression-guard` tests must carry retirement metadata, and when the condition is met the test, registry entry, and any needed tombstone cleanup happen in the same change.
 
 ## Can Claim

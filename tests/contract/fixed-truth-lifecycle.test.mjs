@@ -26,6 +26,7 @@ const contractFiles = [
   'contracts/web-runtime-bridge.json',
   'contracts/web-release-profile.json',
   'contracts/web-development-profile.json',
+  'contracts/web-surface-inventory.json',
 ];
 
 function readJson(path) {

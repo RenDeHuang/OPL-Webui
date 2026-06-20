@@ -55,6 +55,7 @@ const RULES = Object.freeze([
       || file === 'scripts/lane-check.mjs'
       || file === 'scripts/ai-development-gate.mjs'
       || file === 'contracts/web-development-profile.json'
+      || file === 'contracts/web-surface-inventory.json'
       || file.startsWith('tests/health/'),
     targets: Object.freeze(['health']),
   }),

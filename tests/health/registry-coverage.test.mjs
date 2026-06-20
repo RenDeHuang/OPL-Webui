@@ -5,7 +5,15 @@ import test from 'node:test';
 
 import * as testClassification from '../../scripts/test-classification.mjs';
 
-const { LIFECYCLE_ROLES, TEST_COSTS, TEST_LANE_REGISTRY, VERIFY_SUITES } = testClassification;
+const {
+  CLAIM_SCOPES,
+  LIFECYCLE_ROLES,
+  PROOF_LEVELS,
+  TEST_COSTS,
+  TEST_KINDS,
+  TEST_LANE_REGISTRY,
+  VERIFY_SUITES,
+} = testClassification;
 
 test('registry covers the current lane model', () => {
   for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']) {
@@ -48,6 +56,13 @@ test('registry points only at existing test files', () => {
       }
       assert.ok(Array.isArray(entry.verifySuites));
       assert.ok(entry.verifySuites.length > 0, `${entry.file} must declare verify suites`);
+      assert.ok(TEST_KINDS.includes(entry.testKind), `${entry.file} must declare supported testKind`);
+      assert.ok(PROOF_LEVELS.includes(entry.proofLevel), `${entry.file} must declare supported proofLevel`);
+      assert.ok(CLAIM_SCOPES.includes(entry.claimScope), `${entry.file} must declare supported claimScope`);
+      assert.ok(Array.isArray(entry.proves), `${entry.file} must declare proves`);
+      assert.ok(entry.proves.length > 0, `${entry.file} must prove at least one claim`);
+      assert.ok(Array.isArray(entry.doesNotProve), `${entry.file} must declare doesNotProve`);
+      assert.ok(entry.doesNotProve.length > 0, `${entry.file} must declare at least one cannot-claim boundary`);
     }
   }
 
@@ -69,6 +84,18 @@ test('registry publishes the supported taxonomy values', () => {
 
   for (const role of ['current-owner', 'integration', 'regression-guard', 'tombstone-guard']) {
     assert.ok(LIFECYCLE_ROLES.includes(role), `missing lifecycle taxonomy: ${role}`);
+  }
+
+  for (const kind of ['acceptance', 'contract', 'governance', 'regression']) {
+    assert.ok(TEST_KINDS.includes(kind), `missing test kind taxonomy: ${kind}`);
+  }
+
+  for (const level of ['static', 'unit', 'http', 'browser', 'production']) {
+    assert.ok(PROOF_LEVELS.includes(level), `missing proof level taxonomy: ${level}`);
+  }
+
+  for (const scope of ['repo', 'local', 'ci', 'production']) {
+    assert.ok(CLAIM_SCOPES.includes(scope), `missing claim scope taxonomy: ${scope}`);
   }
 });
 

@@ -26,6 +26,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['lane:advisory'], 'node scripts/lane-advisory.mjs');
   assert.equal(pkg.scripts['lane:check'], 'node scripts/lane-check.mjs');
   assert.equal(pkg.scripts['gate:ai'], 'node scripts/ai-development-gate.mjs');
+  assert.equal(pkg.scripts['release:evidence'], 'node scripts/release-evidence-sync.mjs');
 });
 
 test('workflow gate script exists', () => {

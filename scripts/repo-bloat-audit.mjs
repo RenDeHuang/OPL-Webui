@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ignoredDirectories = ['.git', 'node_modules', '.runtime', '.superpowers'];
+const surfaceInventoryPath = 'contracts/web-surface-inventory.json';
 const portfolioSignals = {
   mode: 'report-only',
   files: 85,
@@ -16,6 +17,24 @@ const lineBudgetPolicy = {
   defaultMode: 'hard-cap',
   exemptions: ['generated', 'fixture', 'schema'],
 };
+const requiredRecurringDocs = Object.freeze([
+  'README.md',
+  'AGENTS.md',
+  'TASTE.md',
+  'docs/project.md',
+  'docs/status.md',
+  'docs/decisions.md',
+  'docs/architecture.md',
+  'docs/invariants.md',
+  'docs/docs_portfolio_consolidation.md',
+  'docs/active/README.md',
+  'docs/history/process/closeouts.md',
+  'docs/history/tombstones/README.md',
+]);
+const selectedOwnerSourceSurfaces = Object.freeze([
+  'apps/web/src/onePersonLabWeb.mjs',
+  'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+]);
 
 function gitFiles(args) {
   try {
@@ -50,6 +69,11 @@ const visibleFiles = new Set([...tracked, ...untracked].filter((path) => {
 
 const allFiles = walk().filter((path) => visibleFiles.has(path));
 const durableFiles = allFiles;
+const inventory = readSurfaceInventory();
+const inventoryPaths = new Set(inventory.surfaces.map((surface) => surface.path));
+const monitoredSurfaces = allFiles.filter(isMonitoredSurface);
+const ownedGrowth = monitoredSurfaces.filter((path) => inventoryPaths.has(path)).sort();
+const orphanGrowth = monitoredSurfaces.filter((path) => !inventoryPaths.has(path)).sort();
 const lineCounts = allFiles.map((path) => ({
   path,
   lines: readFileSync(path, 'utf8').split('\n').length,
@@ -69,14 +93,25 @@ const counts = {
 
 const violations = [];
 const portfolioFindings = [];
+for (const orphan of orphanGrowth) {
+  violations.push({
+    name: 'orphanSurface',
+    path: orphan,
+    message: 'Long-lived surface must be registered in contracts/web-surface-inventory.json with owner and consumer.',
+  });
+}
+
 for (const [name, budget] of Object.entries(portfolioSignals)) {
   if (name === 'mode') continue;
   if (counts[name] > budget) {
+    const ownership = ownershipForPortfolioSignal(name);
     portfolioFindings.push({
       name,
       count: counts[name],
       budget,
       severity: portfolioSignals.mode,
+      ownedCount: ownership.ownedCount,
+      orphanCount: ownership.orphanCount,
       message: 'Portfolio size signal only; inspect ownership, consumers, and retired surfaces before deleting files.',
     });
   }
@@ -105,7 +140,16 @@ const report = {
   budgets: portfolioSignals,
   portfolioPolicy: {
     fileCountMode: 'report-only',
-    hardFailures: ['lineBudget', 'retiredSurface', 'testRegistry', 'contractViolation'],
+    hardFailures: ['lineBudget', 'retiredSurface', 'testRegistry', 'contractViolation', 'orphanSurface'],
+  },
+  inventoryOwnership: {
+    inventoryPath: surfaceInventoryPath,
+    inventorySurfaceCount: inventory.surfaces.length,
+    monitoredSurfaceCount: monitoredSurfaces.length,
+    ownedCount: ownedGrowth.length,
+    orphanCount: orphanGrowth.length,
+    ownedGrowth,
+    orphanGrowth,
   },
   portfolioFindings,
   lineBudgetPolicy,
@@ -129,4 +173,48 @@ function isLineBudgetExempt(path) {
   return /(^|\/)(fixtures?|generated|schema)(\/|$)/i.test(path)
     || /\.(schema|fixture)\./i.test(path)
     || path.endsWith('.schema.json');
+}
+
+function readSurfaceInventory() {
+  if (!existsSync(surfaceInventoryPath)) {
+    return { surfaces: [] };
+  }
+  const parsed = JSON.parse(readFileSync(surfaceInventoryPath, 'utf8'));
+  if (!Array.isArray(parsed.surfaces)) {
+    return { surfaces: [] };
+  }
+  return parsed;
+}
+
+function isMonitoredSurface(path) {
+  return (path.startsWith('scripts/') && path.endsWith('.mjs'))
+    || (path.startsWith('contracts/') && path.endsWith('.json'))
+    || path.startsWith('tests/')
+    || (path.startsWith('services/') && path.endsWith('_test.go'))
+    || path.startsWith('.github/workflows/')
+    || path.startsWith('deploy/web-cloud/')
+    || requiredRecurringDocs.includes(path)
+    || selectedOwnerSourceSurfaces.includes(path)
+    || path === 'package.json';
+}
+
+function ownershipForPortfolioSignal(name) {
+  const paths = filesForPortfolioSignal(name);
+  return {
+    ownedCount: paths.filter((path) => inventoryPaths.has(path)).length,
+    orphanCount: paths.filter((path) => isMonitoredSurface(path) && !inventoryPaths.has(path)).length,
+  };
+}
+
+function filesForPortfolioSignal(name) {
+  if (name === 'markdownDocs') {
+    return allFiles.filter((path) => path.endsWith('.md'));
+  }
+  if (name === 'scripts') {
+    return allFiles.filter((path) => path.startsWith('scripts/'));
+  }
+  if (name === 'tests') {
+    return allFiles.filter((path) => path.startsWith('tests/') && statSync(path).isFile());
+  }
+  return durableFiles;
 }
