@@ -75,3 +75,12 @@ test('production browser e2e prepares a browser without sudo and reports startup
   assert.match(runner, /chrome-linux64/);
   assert.match(runner, /chrome-linux/);
 });
+
+test('production browser e2e accepts reusable dogfood accounts that are already key-bound', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /waitForBoundOrUnboundAuthState/);
+  assert.doesNotMatch(runner, /waitForAuthState\(cdp,\s*'authenticated_unbound',\s*'login'\)/);
+  assert.match(runner, /authenticated_unbound/);
+  assert.match(runner, /authenticated_bound/);
+});

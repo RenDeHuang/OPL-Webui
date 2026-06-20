@@ -155,7 +155,7 @@ async function authenticate(cdp, config) {
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-login-button]');
-  await waitForAuthState(cdp, 'authenticated_unbound', 'login');
+  await waitForBoundOrUnboundAuthState(cdp, 'login');
 }
 
 async function resetSessionIfAuthenticated(cdp) {
@@ -415,6 +415,14 @@ async function waitForAuthState(cdp, authState, label) {
     cdp,
     `document.body.dataset.authState === ${JSON.stringify(authState)}`,
     () => describePageState(cdp, `${label} did not reach ${authState}`),
+  );
+}
+
+async function waitForBoundOrUnboundAuthState(cdp, label) {
+  await waitFor(
+    cdp,
+    '["authenticated_unbound","authenticated_bound"].includes(document.body.dataset.authState)',
+    () => describePageState(cdp, `${label} did not reach authenticated_unbound or authenticated_bound`),
   );
 }
 
