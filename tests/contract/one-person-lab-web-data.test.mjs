@@ -39,6 +39,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.provider.defaultModel, 'gpt-5.5');
   assert.equal(product.provider.serviceTier, 'fast');
   assert.equal(product.provider.reasoningEffort, 'xhigh');
+  assert.equal(product.provider.upstreamTimeoutSeconds, 60);
+  assert.equal(product.provider.upstreamTimeoutEnv, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS');
   assert.equal(product.provider.userEditableBaseUrl, false);
   assert.equal(product.credential.rawKeyReturnedToBrowser, false);
   for (const hidden of ['workspace', 'runtime', 'nodePool', 'storage', 'billing']) {

@@ -12,6 +12,7 @@ const state = {
   cleanup: [],
 };
 const mode = process.argv.includes('--production') ? 'production' : 'local';
+const productionChatResultTimeoutMs = 120000;
 
 try {
   if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1') {
@@ -60,13 +61,13 @@ try {
     cdp,
     'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"',
     () => describeResearchResultState(cdp, 'structured research result marker missing'),
-    60000,
+    mode === 'production' ? productionChatResultTimeoutMs : 60000,
   );
   await waitFor(
     cdp,
     'document.querySelector("[data-research-result]")?.querySelectorAll("[data-research-result-section]").length === 3',
     () => describeResearchResultState(cdp, 'structured research result sections missing'),
-    60000,
+    mode === 'production' ? productionChatResultTimeoutMs : 60000,
   );
   await waitForAuditKind(cdp, 'chat.completed');
 

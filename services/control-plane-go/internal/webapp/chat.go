@@ -20,10 +20,19 @@ const (
 	ProviderName = "gflabtoken"
 	FixedBaseURL = "https://gflabtoken.cn/v1"
 	MedOPLURL    = "https://medopl.medopl.cn"
+
+	defaultChatUpstreamTimeout = 60 * time.Second
 )
 
 type ChatClient struct {
 	HTTPClient *http.Client
+}
+
+func (client ChatClient) HTTPTimeout() time.Duration {
+	if client.HTTPClient != nil && client.HTTPClient.Timeout > 0 {
+		return client.HTTPClient.Timeout
+	}
+	return chatUpstreamTimeout()
 }
 
 type UpstreamFailure struct {
@@ -38,6 +47,10 @@ func (failure UpstreamFailure) Error() string {
 		return fmt.Sprintf("chat upstream failed: %s status %d", failure.Kind, failure.Status)
 	}
 	return fmt.Sprintf("chat upstream failed: %s", failure.Kind)
+}
+
+func (failure UpstreamFailure) Timeout() bool {
+	return failure.Kind == "request_timeout" || failure.Kind == "response_header_timeout"
 }
 
 func (failure UpstreamFailure) Public() map[string]any {
@@ -87,7 +100,7 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 
 	httpClient := client.HTTPClient
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 20 * time.Second}
+		httpClient = &http.Client{Timeout: client.HTTPTimeout()}
 	}
 	response, err := httpClient.Do(request)
 	if err != nil {
@@ -116,6 +129,18 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 		return "", UpstreamFailure{Kind: "empty_response", Host: upstreamHost(), Model: modelName()}
 	}
 	return content, nil
+}
+
+func chatUpstreamTimeout() time.Duration {
+	value := strings.TrimSpace(os.Getenv("OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS"))
+	if value == "" {
+		return defaultChatUpstreamTimeout
+	}
+	seconds, err := strconv.Atoi(value)
+	if err != nil || seconds < 10 || seconds > 180 {
+		return defaultChatUpstreamTimeout
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func classifyUpstreamNetworkError(ctx context.Context, err error) string {

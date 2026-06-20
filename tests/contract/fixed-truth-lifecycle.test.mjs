@@ -178,6 +178,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.provider.defaultModel, 'gpt-5.5');
   assert.equal(product.provider.serviceTier, 'fast');
   assert.equal(product.provider.reasoningEffort, 'xhigh');
+  assert.equal(product.provider.upstreamTimeoutSeconds, 60);
+  assert.equal(product.provider.upstreamTimeoutEnv, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS');
   assert.equal(product.provider.userEditableBaseUrl, false);
   assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), true);
   assert.equal(product.ownedSurfaces.includes('web_product_surface'), true);
@@ -411,8 +413,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
   assert.match(status, /multi-tenant SaaS Web edition of One Person Lab/);
   assert.match(status, /Ordinary chat is a fallback entry/);
+  assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
   assert.match(status, /production real ordinary chat completion/);
+  assert.match(status, /run `27877811961` failed only at `Production Browser E2E`/);
+  assert.match(status, /`response_header_timeout` from `gflabtoken\.cn` on model `gpt-5\.5`/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.match(status, /Browser e2e is now a CI release gate/);
   assert.match(status, /Production availability probe executed successfully/);

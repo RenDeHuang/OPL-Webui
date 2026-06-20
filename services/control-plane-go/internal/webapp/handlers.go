@@ -208,13 +208,13 @@ func (server Server) HandleChat(response http.ResponseWriter, request *http.Requ
 		})
 		return
 	}
-	ctx, cancel := context.WithTimeout(request.Context(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(request.Context(), server.ChatClient.HTTPTimeout()+5*time.Second)
 	defer cancel()
 	content, err := server.ChatClient.Complete(ctx, apiKey, payload.Message)
 	if err != nil {
 		status := http.StatusBadGateway
 		var upstreamFailure UpstreamFailure
-		if errors.As(err, &upstreamFailure) && upstreamFailure.Kind == "timeout" {
+		if errors.As(err, &upstreamFailure) && upstreamFailure.Timeout() {
 			status = http.StatusGatewayTimeout
 		}
 		if !errors.As(err, &upstreamFailure) {

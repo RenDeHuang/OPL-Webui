@@ -56,6 +56,8 @@
     "defaultModel": "gpt-5.5",
     "serviceTier": "fast",
     "reasoningEffort": "xhigh",
+    "upstreamTimeoutSeconds": 60,
+    "upstreamTimeoutEnv": "OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS",
     "userEditableBaseUrl": false,
     "clientMaySendBaseUrl": false
   },
