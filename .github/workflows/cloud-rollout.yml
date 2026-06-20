@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: Full image tag or digest to deploy.
+        description: Full image tag/digest or release short commit tag to deploy.
         required: true
         type: string
       target_environment:
@@ -57,9 +57,15 @@ jobs:
       - name: Validate image allowlist
         shell: bash
         run: |
+          image="$(printf '%s' "$OPL_IMAGE" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          short_tag_pattern='^[0-9a-f]{7,40}$'
+          if [[ "$image" =~ $short_tag_pattern ]]; then
+            image="uswccr.ccs.tencentyun.com/webopl/opl-webui:$image"
+          fi
           tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
           digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
-          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+          if [[ "$image" =~ $tag_pattern || "$image" =~ $digest_pattern ]]; then
+            echo "OPL_IMAGE=$image" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
@@ -96,9 +102,15 @@ jobs:
       - name: Validate image allowlist
         shell: bash
         run: |
+          image="$(printf '%s' "$OPL_IMAGE" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          short_tag_pattern='^[0-9a-f]{7,40}$'
+          if [[ "$image" =~ $short_tag_pattern ]]; then
+            image="uswccr.ccs.tencentyun.com/webopl/opl-webui:$image"
+          fi
           tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
           digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
-          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+          if [[ "$image" =~ $tag_pattern || "$image" =~ $digest_pattern ]]; then
+            echo "OPL_IMAGE=$image" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
@@ -133,9 +145,15 @@ jobs:
       - name: Validate image allowlist
         shell: bash
         run: |
+          image="$(printf '%s' "$OPL_IMAGE" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          short_tag_pattern='^[0-9a-f]{7,40}$'
+          if [[ "$image" =~ $short_tag_pattern ]]; then
+            image="uswccr.ccs.tencentyun.com/webopl/opl-webui:$image"
+          fi
           tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
           digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
-          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+          if [[ "$image" =~ $tag_pattern || "$image" =~ $digest_pattern ]]; then
+            echo "OPL_IMAGE=$image" >> "$GITHUB_ENV"
             exit 0
           fi
           echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2

@@ -138,6 +138,7 @@ test('web cloud runbook covers handoff steps without storing secrets', () => {
     'image allowlist',
     'uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>',
     'uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>',
+    'release short commit tag',
     'opl-webui-postgres',
     'OPL_DATABASE_URL',
     'kubectl apply',
@@ -191,13 +192,16 @@ test('web cloud runbook covers handoff steps without storing secrets', () => {
   assert.match(runbook, /production-dry-run.*production-apply/is);
   assert.match(runbook, /dogfood job 依赖.*production-apply/is);
   assert.match(runbook, /apply=false.*dogfood.*fail-closed/is);
+  assert.match(runbook, /image=<short_commit>/);
+  assert.match(runbook, /短 tag 只会规范化到 `uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:<tag>`/);
+  assert.match(runbook, /floating `latest` 继续 fail-closed/);
   assert.match(runbook, /production.*Environment approval/is);
   assert.match(runbook, /Production 必需 Secret.*opl-webui-auth.*OPL_TENANT_AUTH_SECRET.*OPL_SESSION_SECRET/is);
   assert.match(runbook, /API Key[\s\S]{0,120}OPL_API_KEY_ENCRYPTION_SECRET/is);
   assert.match(runbook, /POST \/api\/chat[\s\S]{0,80}401 AUTH_REQUIRED/is);
   assert.match(runbook, /GET \/api\/session\/current[\s\S]{0,80}401 AUTH_REQUIRED/is);
-  assert.match(runbook, /OPL_IMAGE="uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:<tag-or-digest>" node scripts\/cloud-rollout\.mjs/);
-  assert.match(runbook, /OPL_IMAGE="uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:<tag-or-digest>"[\s\S]{0,100}node scripts\/cloud-rollout\.mjs --apply/);
+  assert.match(runbook, /OPL_IMAGE="<short-commit-or-full-tag-or-digest>" node scripts\/cloud-rollout\.mjs/);
+  assert.match(runbook, /OPL_IMAGE="<short-commit-or-full-tag-or-digest>"[\s\S]{0,100}node scripts\/cloud-rollout\.mjs --apply/);
   assert.match(runbook, /node scripts\/cloud-rollout\.mjs --dogfood-e2e/is);
   assert.match(runbook, /不连接 MedOPL production/is);
   assert.match(runbook, /不执行真实 OPL/is);

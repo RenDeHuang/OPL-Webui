@@ -11,7 +11,7 @@
 - 开源仓库 Actions 边界：`pull_request` CI test-only，PR 不拿 secrets，不使用 `pull_request_target`。
 - TCR/CCR 登录由 GitHub Actions secrets `TCR_USERNAME`、`TCR_PASSWORD` 注入；OPL build context 由 `OPL_BUILD_CONTEXT` 注入；production environment secrets 注入 `KUBECONFIG`。
 - build/push 必须在腾讯云 VPC self-hosted runner `[self-hosted, tencent-cloud, opl-webui]` 上运行。
-- Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。
+- Cloud Rollout image allowlist 只允许 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`、`uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`，或 release short commit tag（如 `4a9d439`，会规范化为本仓完整镜像）。
 - 当前是 `no-public-staging production-gated release`；还没有真实 `staging.opl.medopl.cn`、`opl-webui-staging` namespace、独立 staging DB/Secret/TLS/DNS。不要 fake staging；staging 不是镜像存储，TCR/CCR 才是版本存储。
 - TKE IngressClass 使用 `qcloud`；qcloud Ingress 需要后端 Service 为 `NodePort`。DNS 只改 `opl.medopl.cn` CNAME。
 - HTTPS 证书由 Opaque Secret `opl-webui-tls` 的 `qcloud_cert_id` 引用；不要直接在 CLB 控制台手工绑定证书。
@@ -40,7 +40,7 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 
 1. 本地开发验证：`npm run verify`、`npm run gate:review`。
 2. push/merge 到 `main` 后，`Release Image` 在 self-hosted Tencent runner build/push TCR/CCR，记录 image digest；Release Image 不执行 rollout。
-3. 手动运行 `Cloud Rollout`：`image=$OPL_IMAGE`，`target_environment=production`，`apply=false`。dry-run 不读取 kubeconfig、不改集群，只打印 rollout、evidence、canary 和 HTTPS smoke 命令。
+3. 手动运行 `Cloud Rollout`：`image=$OPL_IMAGE` 或 `image=<short_commit>`，`target_environment=production`，`apply=false`。dry-run 不读取 kubeconfig、不改集群，只打印 rollout、evidence、canary 和 HTTPS smoke 命令。
 4. dry-run 审计通过后，用同一 image 再运行 `Cloud Rollout`，`target_environment=production`，`apply=true`。同一次 workflow 会先执行 `production-dry-run`，再通过 GitHub `production` Environment approval 进入 `production-apply`，执行 `kubectl set image`、`rollout status`、`canary db`、`canary opl-cli` 和 HTTPS smoke。
 5. `authenticated_dogfood_e2e=true` 只能和 `apply=true` 一起使用；dogfood job 依赖 `production-apply`，因此只能在该 image 的 apply、canary、smoke 成功后运行。`apply=false` 时请求 dogfood 会 fail-closed。
 6. `availability_probe=true` 会运行 no-secret production availability probe。`apply=false` 时探测当前线上；`apply=true` 时在本次 rollout apply、canary、smoke 成功后探测新版本线上。该 probe 不读取 kubeconfig、image、DB、dogfood secret、MedOPL token 或 TCR 凭据。
@@ -61,13 +61,13 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 手工 fallback 由云端/VPC runner 执行：
 
 ```bash
-OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag-or-digest>" node scripts/cloud-rollout.mjs
+OPL_IMAGE="<short-commit-or-full-tag-or-digest>" node scripts/cloud-rollout.mjs
 KUBECONFIG=/external/path/to/tke-kubeconfig \
-OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag-or-digest>" \
+OPL_IMAGE="<short-commit-or-full-tag-or-digest>" \
 node scripts/cloud-rollout.mjs --apply
 ```
 
-helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>` 或 `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`。helper 必须只选择 Running、Ready、container image 等于本次 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
+helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`、`uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`，或 `^[0-9a-f]{7,40}$` release short commit tag。短 tag 只会规范化到 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`；外部 registry、未限定 repo 和 floating `latest` 继续 fail-closed。helper 必须只选择 Running、Ready、container image 等于本次规范化后 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
 
 ## Production availability probe
 

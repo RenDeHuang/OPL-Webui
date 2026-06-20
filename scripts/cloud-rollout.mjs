@@ -17,21 +17,23 @@ const podSelector = process.env.OPL_POD_SELECTOR ?? 'app.kubernetes.io/name=opl-
 const controlPlaneBin = process.env.OPL_CONTROL_PLANE_BIN ?? '/app/opl-webui-control-plane';
 
 const kubeconfig = process.env.KUBECONFIG ?? '$KUBECONFIG';
-const image = process.env.OPL_IMAGE ?? '$OPL_IMAGE';
 const configuredBaseUrl = process.env.OPL_BASE_URL?.trim();
 const baseUrl = (configuredBaseUrl || 'https://opl.medopl.cn').replace(/\/$/, '');
 const rolloutRevisionJsonpath = 'jsonpath={.metadata.annotations.deployment\\.kubernetes\\.io/revision}';
 const deploymentImageJsonpath = 'jsonpath={.spec.template.spec.containers[?(@.name=="control-plane")].image}';
 const podImageIdJsonpath = 'jsonpath={.status.containerStatuses[?(@.name=="control-plane")].imageID}';
+const imageRepository = 'uswccr.ccs.tencentyun.com/webopl/opl-webui';
 
 const healthUrl = `${baseUrl}/healthz`;
 const readyUrl = `${baseUrl}/readyz`;
 const metricsUrl = `${baseUrl}/metricsz`;
 const homeUrl = `${baseUrl}/`;
 const allowedImagePattern = /^uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}|@sha256:[0-9a-f]{64})$/;
+const releaseShortTagPattern = /^[0-9a-f]{7,40}$/;
 const kubectlRolloutTimeoutSeconds = boundedInt(process.env.OPL_KUBECTL_ROLLOUT_TIMEOUT_SECONDS, 150, 10, 600);
 const rolloutStatusTimeoutMs = boundedInt(process.env.OPL_ROLLOUT_STATUS_TIMEOUT_MS, (kubectlRolloutTimeoutSeconds + 10) * 1000, 100, 600000);
 const diagnosticTimeoutMs = boundedInt(process.env.OPL_ROLLOUT_DIAGNOSTIC_TIMEOUT_MS, 5000, 100, 60000);
+let image = normalizeImage(process.env.OPL_IMAGE ?? '$OPL_IMAGE');
 
 if (args.has('--help')) {
   printUsage();
@@ -51,22 +53,22 @@ if (args.has('--availability-probe')) {
 if (rollback) {
   requireEnv('KUBECONFIG');
   requireEnv('OPL_IMAGE');
-  validateImage(process.env.OPL_IMAGE);
+  setValidatedImage(process.env.OPL_IMAGE);
   runRollback();
   process.exit(0);
 }
 
 if (dryRun) {
-  validateImage(image);
+  setValidatedImage(image);
   printDryRun();
   process.exit(0);
 }
 
 requireEnv('KUBECONFIG');
 requireEnv('OPL_IMAGE');
-validateImage(process.env.OPL_IMAGE);
+setValidatedImage(process.env.OPL_IMAGE);
 
-run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${process.env.OPL_IMAGE}`]));
+run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${image}`]));
 runRolloutStatus();
 runPostRolloutChecks('rollout revision');
 
@@ -193,7 +195,7 @@ function runRollback() {
     targetHost: baseUrl,
     namespace,
     deployment,
-    image: process.env.OPL_IMAGE,
+    image,
     checks: ['rollout_undo', 'rollout_status', 'canary_db', 'canary_opl_cli', 'healthz', 'readyz', 'metricsz', 'home'],
     rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
   };
@@ -413,7 +415,7 @@ function capture(label, commandArgs) {
 function selectReadyPod() {
   const pods = JSON.parse(execFileSync('kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'json']), { encoding: 'utf8' }));
 
-  const expectedImage = process.env.OPL_IMAGE;
+  const expectedImage = image;
   const candidates = (pods.items ?? [])
     .filter((pod) => pod.status?.phase === 'Running')
     .filter((pod) => hasReadyCondition(pod))
@@ -478,15 +480,29 @@ function validateDogfoodCredentials() {
   }
 }
 
+function setValidatedImage(value) {
+  image = validateImage(value);
+  process.env.OPL_IMAGE = image;
+  return image;
+}
+
+function normalizeImage(value) {
+  const trimmed = (value ?? '').trim();
+  if (releaseShortTagPattern.test(trimmed)) return `${imageRepository}:${trimmed}`;
+  return trimmed;
+}
+
 function validateImage(value) {
-  if (!value || value === '$OPL_IMAGE') {
-    console.error('Missing required OPL_IMAGE. Set an allowed OPL-Webui image tag or digest.');
+  const normalized = normalizeImage(value);
+  if (!normalized || normalized === '$OPL_IMAGE') {
+    console.error('Missing required OPL_IMAGE. Set an allowed OPL-Webui image tag, digest, or release short commit tag.');
     process.exit(2);
   }
-  if (!allowedImagePattern.test(value)) {
+  if (!allowedImagePattern.test(normalized)) {
     console.error('OPL_IMAGE is outside the allowed OPL-Webui image registry.');
     process.exit(2);
   }
+  return normalized;
 }
 
 function boundedInt(value, fallback, min, max) {
@@ -541,10 +557,11 @@ function shellQuote(value) {
 function printUsage() {
   console.log(`Usage:
   node scripts/cloud-rollout.mjs
-  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
-  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback
+  OPL_IMAGE=4a9d439 node scripts/cloud-rollout.mjs
+  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:4a9d439 OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
+  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
   OPL_BASE_URL=https://opl.medopl.cn OPL_AVAILABILITY_PROBE_SAMPLES=3 node scripts/cloud-rollout.mjs --availability-probe
 
-Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
+Default mode prints a dry-run command plan. Short release commit tags are normalized to ${imageRepository}:<tag>. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }

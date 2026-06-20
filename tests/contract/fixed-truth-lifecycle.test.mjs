@@ -205,6 +205,16 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_REAL_CHAT'), true);
   assert.equal(release.dogfood.switches.includes('OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY'), true);
   assert.equal(release.rolloutPipeline.mode, 'dry_run_first_apply_canary_smoke_then_dogfood');
+  assert.deepEqual(release.rolloutPipeline.imageInputPolicy.allowedInputs, [
+    'full_tcr_tag',
+    'full_tcr_sha256_digest',
+    'release_short_commit_tag',
+  ]);
+  assert.equal(release.rolloutPipeline.imageInputPolicy.repository, 'uswccr.ccs.tencentyun.com/webopl/opl-webui');
+  assert.equal(release.rolloutPipeline.imageInputPolicy.shortCommitTagPattern, '^[0-9a-f]{7,40}$');
+  assert.match(release.rolloutPipeline.imageInputPolicy.normalization, /<tag>/);
+  assert.equal(release.rolloutPipeline.imageInputPolicy.forbiddenInputs.includes('external_registry'), true);
+  assert.equal(release.rolloutPipeline.imageInputPolicy.forbiddenInputs.includes('floating_latest_tag'), true);
   assert.deepEqual(release.rolloutPipeline.orderedStages, [
     'production_dry_run',
     'production_apply',

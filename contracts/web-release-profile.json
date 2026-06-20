@@ -31,6 +31,21 @@
   },
   "rolloutPipeline": {
     "mode": "dry_run_first_apply_canary_smoke_then_dogfood",
+    "imageInputPolicy": {
+      "allowedInputs": [
+        "full_tcr_tag",
+        "full_tcr_sha256_digest",
+        "release_short_commit_tag"
+      ],
+      "repository": "uswccr.ccs.tencentyun.com/webopl/opl-webui",
+      "shortCommitTagPattern": "^[0-9a-f]{7,40}$",
+      "normalization": "release_short_commit_tag maps to uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>",
+      "forbiddenInputs": [
+        "external_registry",
+        "unscoped_repository",
+        "floating_latest_tag"
+      ]
+    },
     "orderedStages": [
       "production_dry_run",
       "production_apply",
