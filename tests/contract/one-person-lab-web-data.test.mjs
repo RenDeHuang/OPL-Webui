@@ -145,15 +145,15 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   ]);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27853332374_real_chat_readonly_unconfirmed');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'b312f9c7af364c1ea2e9da5d57085279435f4a18');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27863328297_real_chat_readonly_unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '3725423dfa01ed67a2c2df9dd94863d920a972cf');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27853332374_after_apply');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27863328297_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage.includes('HTTPS /readyz'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
@@ -163,14 +163,15 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
-  assert.equal(release.productionBrowserE2EReadiness.state, 'attempted_failed_run_27862789365');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_27863328297');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27862789365);
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'failure');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, 'Production Browser E2E');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), true);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27863328297);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, null);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.canClaim.includes('production browser e2e executed against https://opl.medopl.cn'), true);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, [
     'OPL_DOGFOOD_EMAIL',
     'OPL_DOGFOOD_PASSWORD',
@@ -179,7 +180,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
   assert.equal(release.productionBrowserE2EReadiness.coverage.includes('real_browser_login'), true);
   assert.equal(release.productionBrowserE2EReadiness.coverage.includes('paper_runtime_gate'), true);
-  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
+  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);

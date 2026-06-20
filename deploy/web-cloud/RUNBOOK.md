@@ -136,11 +136,11 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/payment/storage/nod
 Latest compressed evidence:
 
 ```text
-run id: 27853332374
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374
-commit: b312f9c7af364c1ea2e9da5d57085279435f4a18
+run id: 27863328297
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
+commit: 3725423dfa01ed67a2c2df9dd94863d920a972cf
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
 real chat: true
 readonly projection: unconfirmed; public GitHub job metadata does not expose OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY or dogfood stdout
 stages: Production Dry Run success, Production Apply success, Production Availability Probe After Apply success, Production Authenticated Dogfood E2E success
@@ -148,15 +148,15 @@ steps: register_or_login,current_session,api_key_binding,ordinary_chat,runtime_g
 HTTP status summary: GitHub job success; raw response bodies are not stored in git
 audit kinds: chat.completed,runtime_gate.required validated by dogfood harness; raw audit payload is not stored in git
 result: production authenticated dogfood e2e passed
-cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence
+cannot claim: MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence
 ```
 
 Production availability probe closeout:
 
 ```text
-run id: 27853332374
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c
+run id: 27863328297
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
 stage: Production Availability Probe After Apply success
 coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
 cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
@@ -168,18 +168,20 @@ Production browser e2e harness:
 - 该 lane 使用真实 Chromium/CDP 打开 `https://opl.medopl.cn`，通过生产 dogfood 账号执行登录、API Key 绑定、普通科研 chat、`@论文`/`@基金` runtime gate 和 audit evidence 检查。
 - 该 lane 需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，并在 job 中 mask password/API key。
 - 该 lane 不执行 kubectl，不读取 kubeconfig，不读取数据库 secret，不连接 MedOPL private API，不执行 OPL runtime mutation。
-- 本 harness 当前是 ready/pending-first-run；只有 GitHub job 成功后才能 fold back production browser e2e evidence。
+- 本 harness 已在 GitHub Actions run `27863328297` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
 
 Production browser e2e closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password、email 或 request payload：
 
 ```text
-run id:
+run id: 27863328297
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
+job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297/job/82463070240
 target host: https://opl.medopl.cn
-image:
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
 browser: chromium
 steps: real_browser_login,api_key_binding,research_task_template_selected,ordinary_chat,paper_runtime_gate,grant_runtime_gate,audit_events
 audit kinds: chat.completed,runtime_gate.required
-result:
+result: production browser e2e passed
 cannot claim: MedOPL runtime execution, billing/payment/storage/node pool mutation, team invite/RBAC/payment lifecycle, production-ready SaaS
 ```
 

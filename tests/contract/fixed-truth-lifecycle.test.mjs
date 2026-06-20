@@ -113,11 +113,11 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   ]) {
     assert.match(active, new RegExp(required));
   }
-  assert.match(active, /27853332374/);
-  assert.match(active, /b312f9c7af364c1ea2e9da5d57085279435f4a18/);
+  assert.match(active, /27863328297/);
+  assert.match(active, /3725423dfa01ed67a2c2df9dd94863d920a972cf/);
   assert.match(active, /Production Availability Probe After Apply/);
   assert.match(active, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY.*not publicly confirmable/);
-  assert.match(active, /not browser e2e/);
+  assert.match(active, /Production browser e2e evidence passed/);
   assert.match(active, /not MedOPL runtime execution/);
   assert.doesNotMatch(active, /27823251419/);
 
@@ -218,10 +218,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27853332374_real_chat_readonly_unconfirmed');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27853332374);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'b312f9c7af364c1ea2e9da5d57085279435f4a18');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27863328297_real_chat_readonly_unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27863328297);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '3725423dfa01ed67a2c2df9dd94863d920a972cf');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, false);
@@ -252,10 +252,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionAvailabilityReadiness.mode, 'no_secret_public_http_probe');
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27853332374_after_apply');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 27853332374);
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, 'b312f9c7af364c1ea2e9da5d57085279435f4a18');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27863328297_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 27863328297);
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, '3725423dfa01ed67a2c2df9dd94863d920a972cf');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423');
   assert.deepEqual(release.productionAvailabilityReadiness.latestSuccessfulRun.statusSummary, [
     'Production Dry Run success',
     'Production Apply success',
@@ -289,10 +289,16 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('grant_runtime_gate'), true);
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('sanitized_audit'), true);
   assert.equal(release.localBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
+  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_27863328297');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27863328297);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
+  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
   assert.match(runbook, /OPL_SESSION_SECRET/);
   assert.match(runbook, /Production authenticated dogfood closeout/);
-  assert.match(runbook, /27853332374/);
-  assert.match(runbook, /b312f9c/);
+  assert.match(runbook, /27863328297/);
+  assert.match(runbook, /3725423/);
+  assert.match(runbook, /production browser e2e passed/);
   assert.match(runbook, /real chat: true/);
   assert.match(runbook, /readonly projection: unconfirmed/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
