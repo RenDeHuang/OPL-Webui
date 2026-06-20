@@ -474,17 +474,19 @@ async function describeResearchResultState(cdp, message) {
     audit: await fetch('/api/account/audit-events')
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
+        const eventMetadata = (body.events ?? []).slice(-20).map((event) => {
+          const allowed = ['conversationId', 'model', 'upstreamKind', 'upstreamStatus', 'upstreamHost', 'upstreamModel'];
+          return {
+            eventKind: event.eventKind,
+            metadata: Object.fromEntries(Object.entries(event.metadata ?? {}).filter(([key]) => allowed.includes(key))),
+          };
+        });
         return {
           status: response.status,
           ok: response.ok,
-          eventKinds: (body.events ?? []).map((event) => event.eventKind),
-          eventMetadata: (body.events ?? []).slice(-20).map((event) => {
-            const allowed = ['conversationId', 'model', 'upstreamKind', 'upstreamStatus', 'upstreamHost', 'upstreamModel'];
-            return {
-              eventKind: event.eventKind,
-              metadata: Object.fromEntries(Object.entries(event.metadata ?? {}).filter(([key]) => allowed.includes(key))),
-            };
-          }),
+          latestUpstreamFailure: [...eventMetadata].reverse().find((event) => event.eventKind === 'chat.upstream_failed') ?? null,
+          eventKinds: (body.events ?? []).slice(-12).map((event) => event.eventKind),
+          eventMetadata,
         };
       })
       .catch((error) => ({ error: String(error) })),

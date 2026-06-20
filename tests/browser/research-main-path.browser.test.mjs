@@ -107,3 +107,13 @@ test('production browser e2e preserves sanitized upstream failure audit metadata
   assert.match(runner, /upstreamModel/);
   assert.match(runner, /upstreamKind/);
 });
+
+test('production browser e2e reports latest upstream failure before verbose audit history', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /latestUpstreamFailure/);
+  assert.match(runner, /chat\.upstream_failed/);
+  assert.match(runner, /slice\(-20\)/);
+  assert.match(runner, /slice\(-12\)/);
+  assert.match(runner, /upstreamStatus/);
+});
