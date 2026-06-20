@@ -64,7 +64,7 @@ try {
   );
   await waitFor(
     cdp,
-    'document.querySelectorAll("[data-research-result-section]").length === 3',
+    'document.querySelector("[data-research-result]")?.querySelectorAll("[data-research-result-section]").length === 3',
     () => describeResearchResultState(cdp, 'structured research result sections missing'),
     60000,
   );
@@ -92,7 +92,7 @@ try {
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
     selectedTaskIntent: document.body.dataset.researchTaskIntent,
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
-    researchResultSections: document.querySelectorAll('[data-research-result-section]').length,
+    researchResultSections: document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length,
     runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
@@ -465,7 +465,8 @@ async function describeResearchResultState(cdp, message) {
     authState: document.body.dataset.authState,
     chatState: document.body.dataset.chatState,
     researchResultMarker: document.querySelector('[data-research-result]')?.dataset.researchResultMarker,
-    researchResultSections: document.querySelectorAll('[data-research-result-section]').length,
+    researchResultSections: document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length,
+    totalResearchResultSections: document.querySelectorAll('[data-research-result-section]').length,
     researchCardHTML: document.querySelector('[data-research-result]')?.outerHTML,
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
     runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
@@ -477,6 +478,13 @@ async function describeResearchResultState(cdp, message) {
           status: response.status,
           ok: response.ok,
           eventKinds: (body.events ?? []).map((event) => event.eventKind),
+          eventMetadata: (body.events ?? []).slice(-20).map((event) => {
+            const allowed = ['conversationId', 'model', 'upstreamKind', 'upstreamStatus', 'upstreamHost', 'upstreamModel'];
+            return {
+              eventKind: event.eventKind,
+              metadata: Object.fromEntries(Object.entries(event.metadata ?? {}).filter(([key]) => allowed.includes(key))),
+            };
+          }),
         };
       })
       .catch((error) => ({ error: String(error) })),

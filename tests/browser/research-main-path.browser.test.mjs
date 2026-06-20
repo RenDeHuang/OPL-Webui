@@ -97,3 +97,13 @@ test('production browser e2e waits for async research results and reports page e
   assert.match(runner, /researchResultMarker/);
   assert.match(runner, /\/api\/account\/audit-events/);
 });
+
+test('production browser e2e preserves sanitized upstream failure audit metadata', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /eventMetadata/);
+  assert.match(runner, /upstreamStatus/);
+  assert.match(runner, /upstreamHost/);
+  assert.match(runner, /upstreamModel/);
+  assert.match(runner, /upstreamKind/);
+});
