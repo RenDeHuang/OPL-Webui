@@ -213,11 +213,19 @@ func (server Server) HandleChat(response http.ResponseWriter, request *http.Requ
 	content, err := server.ChatClient.Complete(ctx, apiKey, payload.Message)
 	if err != nil {
 		status := http.StatusBadGateway
-		if errors.Is(err, context.DeadlineExceeded) {
+		var upstreamFailure UpstreamFailure
+		if errors.As(err, &upstreamFailure) && upstreamFailure.Kind == "timeout" {
 			status = http.StatusGatewayTimeout
 		}
-		server.recordAudit(user.ID, "chat.upstream_failed", map[string]string{"conversationId": conversation.ID})
-		writeError(response, status, "UPSTREAM_CHAT_FAILED", "chat upstream returned an error")
+		if !errors.As(err, &upstreamFailure) {
+			upstreamFailure = UpstreamFailure{Kind: "unknown", Host: upstreamHost(), Model: modelName()}
+		}
+		server.recordAudit(user.ID, "chat.upstream_failed", upstreamFailure.Metadata(conversation.ID))
+		writeJSON(response, status, map[string]any{
+			"ok": false, "errorCode": "UPSTREAM_CHAT_FAILED", "message": "chat upstream returned an error",
+			"conversationId": conversation.ID,
+			"upstream":       upstreamFailure.Public(),
+		})
 		return
 	}
 	assistant := ChatMessage{ConversationID: conversation.ID, UserID: user.ID, Role: "assistant", Content: content}

@@ -52,7 +52,7 @@ test('dogfood e2e readiness covers auth key binding chat quota audit and runtime
     const firstChat = await jsonFetch(`${baseUrl}/api/chat`, {
       method: 'POST',
       headers: { cookie: loggedIn.cookieHeader },
-      body: { message: '普通 dogfood 聊天' },
+      body: { message: '@科研 普通 dogfood 聊天' },
     });
     assert.equal(firstChat.response.status, 200);
     assert.equal(firstChat.body.assistantMessage.content, '上游响应');
@@ -87,6 +87,51 @@ test('dogfood e2e readiness covers auth key binding chat quota audit and runtime
       'chat.completed', 'chat.quota_exceeded', 'runtime_gate.required',
     ]));
     assertNoSensitiveMaterial(audit.body);
+  } finally {
+    await stopGoServer(child);
+    await upstream.close();
+  }
+});
+
+test('upstream chat failures return sanitized diagnostics for production dogfood', async () => {
+  const upstream = await startFakeUpstream({ status: 401, body: { error: { type: 'invalid_api_key', message: 'bad key' } } });
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+  });
+  try {
+    const session = await register(baseUrl, 'upstream-failure-user@example.com');
+    await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+      method: 'PUT',
+      headers: { cookie: session.cookieHeader },
+      body: { apiKey: 'sk-user-upstream-secret' },
+    });
+
+    const chat = await jsonFetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { message: '@科研 触发上游错误诊断' },
+    });
+
+    assert.equal(chat.response.status, 502);
+    assert.equal(chat.body.errorCode, 'UPSTREAM_CHAT_FAILED');
+    assert.equal(chat.body.upstream.status, 401);
+    assert.equal(chat.body.upstream.host, '127.0.0.1');
+    assert.equal(chat.body.upstream.model, 'gpt-4o-mini');
+    assert.equal(chat.body.upstream.kind, 'http_status');
+    assertNoSensitiveMaterial(chat.body);
+    assert.doesNotMatch(JSON.stringify(chat.body), /invalid_api_key|bad key|sk-user-upstream-secret/i);
+
+    const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    const failed = audit.body.events.find((event) => event.eventKind === 'chat.upstream_failed');
+    assert.equal(failed.metadata.upstreamStatus, '401');
+    assert.equal(failed.metadata.upstreamHost, '127.0.0.1');
+    assert.equal(failed.metadata.upstreamModel, 'gpt-4o-mini');
+    assert.equal(failed.metadata.upstreamKind, 'http_status');
+    assertNoSensitiveMaterial(audit.body);
+    assert.doesNotMatch(JSON.stringify(audit.body), /invalid_api_key|bad key|sk-user-upstream-secret/i);
   } finally {
     await stopGoServer(child);
     await upstream.close();
@@ -187,7 +232,9 @@ test('ordinary chat quota guard fails closed and writes sanitized audit events',
   }
 });
 
-async function startFakeUpstream() {
+async function startFakeUpstream(options = {}) {
+  const status = options.status ?? 200;
+  const body = options.body ?? { choices: [{ message: { content: '上游响应' } }] };
   const requests = [];
   const server = http.createServer(async (request, response) => {
     let raw = '';
@@ -197,8 +244,8 @@ async function startFakeUpstream() {
       authorization: request.headers.authorization,
       body: raw ? JSON.parse(raw) : {},
     });
-    response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ choices: [{ message: { content: '上游响应' } }] }));
+    response.writeHead(status, { 'content-type': 'application/json' });
+    response.end(JSON.stringify(body));
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();

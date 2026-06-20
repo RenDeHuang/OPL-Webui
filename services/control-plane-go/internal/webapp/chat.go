@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +22,45 @@ const (
 
 type ChatClient struct {
 	HTTPClient *http.Client
+}
+
+type UpstreamFailure struct {
+	Kind   string
+	Status int
+	Host   string
+	Model  string
+}
+
+func (failure UpstreamFailure) Error() string {
+	if failure.Status > 0 {
+		return fmt.Sprintf("chat upstream failed: %s status %d", failure.Kind, failure.Status)
+	}
+	return fmt.Sprintf("chat upstream failed: %s", failure.Kind)
+}
+
+func (failure UpstreamFailure) Public() map[string]any {
+	payload := map[string]any{
+		"kind":  failure.Kind,
+		"host":  failure.Host,
+		"model": failure.Model,
+	}
+	if failure.Status > 0 {
+		payload["status"] = failure.Status
+	}
+	return payload
+}
+
+func (failure UpstreamFailure) Metadata(conversationID string) map[string]string {
+	metadata := map[string]string{
+		"conversationId": conversationID,
+		"upstreamKind":   failure.Kind,
+		"upstreamHost":   failure.Host,
+		"upstreamModel":  failure.Model,
+	}
+	if failure.Status > 0 {
+		metadata["upstreamStatus"] = strconv.Itoa(failure.Status)
+	}
+	return metadata
 }
 
 func (client ChatClient) Complete(ctx context.Context, apiKey string, message string) (string, error) {
@@ -47,13 +88,13 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 	response, err := httpClient.Do(request)
 	if err != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return "", context.DeadlineExceeded
+			return "", UpstreamFailure{Kind: "timeout", Host: upstreamHost(), Model: modelName()}
 		}
-		return "", fmt.Errorf("%w: %v", errUpstreamUnavailable, err)
+		return "", UpstreamFailure{Kind: "network", Host: upstreamHost(), Model: modelName()}
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return "", fmt.Errorf("%w: status %d", errUpstreamUnavailable, response.StatusCode)
+		return "", UpstreamFailure{Kind: "http_status", Status: response.StatusCode, Host: upstreamHost(), Model: modelName()}
 	}
 	var payload struct {
 		Choices []struct {
@@ -66,7 +107,7 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 		return "", err
 	}
 	if len(payload.Choices) == 0 || strings.TrimSpace(payload.Choices[0].Message.Content) == "" {
-		return "", fmt.Errorf("%w: empty response", errUpstreamUnavailable)
+		return "", UpstreamFailure{Kind: "empty_response", Host: upstreamHost(), Model: modelName()}
 	}
 	return payload.Choices[0].Message.Content, nil
 }
@@ -86,6 +127,14 @@ func upstreamChatURL() string {
 		baseURL = os.Getenv("OPL_CHAT_TEST_UPSTREAM_BASE_URL")
 	}
 	return strings.TrimRight(baseURL, "/") + "/chat/completions"
+}
+
+func upstreamHost() string {
+	parsed, err := url.Parse(upstreamChatURL())
+	if err != nil || parsed.Hostname() == "" {
+		return "unknown"
+	}
+	return parsed.Hostname()
 }
 
 func modelName() string {
