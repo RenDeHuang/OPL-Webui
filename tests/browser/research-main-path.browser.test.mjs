@@ -84,3 +84,16 @@ test('production browser e2e accepts reusable dogfood accounts that are already 
   assert.match(runner, /authenticated_unbound/);
   assert.match(runner, /authenticated_bound/);
 });
+
+test('production browser e2e waits for async research results and reports page evidence', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+  const markerExpression = '\'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"\'';
+
+  assert.match(runner, /describeResearchResultState/);
+  assert.doesNotMatch(runner, new RegExp(`assertPage\\(cdp,\\s*${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.match(runner, new RegExp(`waitFor\\([\\s\\S]*?cdp,[\\s\\S]*?${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?60000`));
+  assert.match(runner, /structured research result marker missing/);
+  assert.match(runner, /chatLogText/);
+  assert.match(runner, /researchResultMarker/);
+  assert.match(runner, /\/api\/account\/audit-events/);
+});

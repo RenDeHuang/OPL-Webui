@@ -56,17 +56,17 @@ try {
   if (mode === 'local') {
     await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
   }
-  await assertPage(cdp, 'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"', 'structured research result marker');
+  await waitFor(
+    cdp,
+    'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"',
+    () => describeResearchResultState(cdp, 'structured research result marker missing'),
+    60000,
+  );
   await waitFor(
     cdp,
     'document.querySelectorAll("[data-research-result-section]").length === 3',
-    async () => {
-      const state = await evaluateJSON(cdp, `({
-        sectionCount: document.querySelectorAll('[data-research-result-section]').length,
-        cardHTML: document.querySelector('[data-research-result]')?.outerHTML,
-      })`);
-      return `structured research result sections missing: ${JSON.stringify(state)}`;
-    },
+    () => describeResearchResultState(cdp, 'structured research result sections missing'),
+    60000,
   );
   await waitForAuditKind(cdp, 'chat.completed');
 
@@ -459,6 +459,31 @@ async function describePageState(cdp, message) {
   return JSON.stringify(state);
 }
 
+async function describeResearchResultState(cdp, message) {
+  const state = await evaluateJSON(cdp, `({
+    message: ${JSON.stringify(message)},
+    authState: document.body.dataset.authState,
+    chatState: document.body.dataset.chatState,
+    researchResultMarker: document.querySelector('[data-research-result]')?.dataset.researchResultMarker,
+    researchResultSections: document.querySelectorAll('[data-research-result-section]').length,
+    researchCardHTML: document.querySelector('[data-research-result]')?.outerHTML,
+    runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
+    runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
+    chatLogText: document.querySelector('[data-chat-log]')?.textContent,
+    audit: await fetch('/api/account/audit-events')
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        return {
+          status: response.status,
+          ok: response.ok,
+          eventKinds: (body.events ?? []).map((event) => event.eventKind),
+        };
+      })
+      .catch((error) => ({ error: String(error) })),
+  })`);
+  return JSON.stringify(state);
+}
+
 async function selectAll(cdp) {
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Control', code: 'ControlLeft', windowsVirtualKeyCode: 17 });
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
@@ -471,12 +496,12 @@ async function keyPress(cdp, key) {
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
 }
 
-async function waitFor(cdp, expression, describeFailure) {
+async function waitFor(cdp, expression, describeFailure, timeoutMs = 30000) {
   await waitUntil(async () => Boolean((await cdp.send('Runtime.evaluate', {
     expression,
     returnByValue: true,
     awaitPromise: true,
-  })).result?.value), 30000, describeFailure);
+  })).result?.value), timeoutMs, describeFailure);
 }
 
 async function assertPage(cdp, expression, label) {
