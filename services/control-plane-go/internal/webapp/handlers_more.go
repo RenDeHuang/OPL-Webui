@@ -60,8 +60,15 @@ func (server Server) HandleCommercialStatus(response http.ResponseWriter, reques
 		"ok": true, "owner": "OnePersonLabWeb", "productId": "one-person-lab-web",
 		"accountType": "personal", "lifecycleState": "active",
 		"tenantId": user.TenantID, "tenantRole": "owner",
+		"teamReadiness": map[string]any{
+			"state":              "single_user_owner",
+			"owner":              "OnePersonLabWeb",
+			"consumer":           "settings_lifecycle_summary",
+			"allowedNextActions": []string{"view_medopl_billing"},
+		},
 		"webuiTeamMutation":         "forbidden",
 		"webuiInviteMutation":       "forbidden",
+		"webuiRBACMutation":         "forbidden",
 		"webuiPaymentMutation":      "forbidden",
 		"webuiBillingSourceOfTruth": "forbidden",
 	})

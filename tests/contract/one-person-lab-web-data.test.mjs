@@ -84,6 +84,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result-section]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-task-card]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-lifecycle-status]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-team-readiness-status]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-quota-status]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-audit-status]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-reliability-status]'), true);
@@ -111,6 +112,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     assert.ok(api.paths[path], `missing API path: ${path}`);
   }
   assert.equal(api.paths['/api/mvp/task'], undefined);
+  assert.equal(
+    api.paths['/api/account/commercial-status'].get.responses['200'].content['application/json'].schema.$ref,
+    '#/components/schemas/CommercialAccountStatus',
+  );
+  assert.equal(api.components.schemas.CommercialAccountStatus.additionalProperties, false);
+  assert.equal(api.components.schemas.CommercialAccountStatus.required.includes('teamReadiness'), true);
+  assert.equal(api.components.schemas.CommercialAccountStatus.required.includes('webuiRBACMutation'), true);
   assert.equal(api.components.schemas.ApiErrorCode.enum.includes('RUNTIME_REQUIRED'), true);
   assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
   assert.equal(api.components.schemas.ChatErrorCode, undefined);
@@ -151,17 +159,30 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   ]);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27863328297_real_chat_readonly_unconfirmed');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '3725423dfa01ed67a2c2df9dd94863d920a972cf');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27866718228_real_chat_readonly_unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '3e69e3d38ed60b9aea96bd7d9c76ad65fe481135');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27863328297_after_apply');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27866718228_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage.includes('HTTPS /readyz'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
+  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_27866718228_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'not_implemented_pending_ops_consumer');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary'), true);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('error_budget'), true);
+  assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
+  assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
+  assert.equal(release.productionHAReadiness.state, 'design_ready_pending_cloud_execution');
+  assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
+  assert.equal(release.productionHAReadiness.requiredEvidence.includes('two_ready_pods'), true);
+  assert.equal(release.productionHAReadiness.requiredEvidence.includes('distinct_nodes'), true);
+  assert.equal(release.productionHAReadiness.requiredEvidence.includes('ingress_backend_at_least_2'), true);
+  assert.equal(release.productionHAReadiness.cannotClaim.includes('multi-node HA'), true);
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
   assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');
@@ -169,11 +190,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
-  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_27863328297');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_27866718228');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27863328297);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27866718228);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, null);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.canClaim.includes('production browser e2e executed against https://opl.medopl.cn'), true);
@@ -214,8 +235,15 @@ test('web data module calls session provider and chat APIs only', async () => {
       lifecycleState: 'active',
       tenantId: 'tenant_123',
       tenantRole: 'owner',
+      teamReadiness: {
+        state: 'single_user_owner',
+        owner: 'OnePersonLabWeb',
+        consumer: 'settings_lifecycle_summary',
+        allowedNextActions: ['view_medopl_billing'],
+      },
       webuiTeamMutation: 'forbidden',
       webuiInviteMutation: 'forbidden',
+      webuiRBACMutation: 'forbidden',
       webuiPaymentMutation: 'forbidden',
       webuiBillingSourceOfTruth: 'forbidden',
     });
@@ -256,7 +284,10 @@ test('web data module calls session provider and chat APIs only', async () => {
   assert.equal(state.provider.apiKeyConfigured, true);
   assert.equal(state.commercialStatus.accountType, 'personal');
   assert.equal(state.commercialStatus.lifecycleState, 'active');
+  assert.equal(state.commercialStatus.teamReadiness.state, 'single_user_owner');
+  assert.deepEqual(state.commercialStatus.teamReadiness.allowedNextActions, ['view_medopl_billing']);
   assert.equal(state.commercialStatus.webuiTeamMutation, 'forbidden');
+  assert.equal(state.commercialStatus.webuiRBACMutation, 'forbidden');
 
   const chat = await web.sendChatMessage(fetchRef, '普通问题');
   assert.equal(chat.assistantMessage.content, '你好');
@@ -637,8 +668,15 @@ test('web data module loads commercial account lifecycle without team or billing
       lifecycleState: 'active',
       tenantId: 'tenant_commercial',
       tenantRole: 'owner',
+      teamReadiness: {
+        state: 'single_user_owner',
+        owner: 'OnePersonLabWeb',
+        consumer: 'settings_lifecycle_summary',
+        allowedNextActions: ['view_medopl_billing'],
+      },
       webuiTeamMutation: 'forbidden',
       webuiInviteMutation: 'forbidden',
+      webuiRBACMutation: 'forbidden',
       webuiPaymentMutation: 'forbidden',
       webuiBillingSourceOfTruth: 'forbidden',
     });
@@ -653,14 +691,19 @@ test('web data module loads commercial account lifecycle without team or billing
   assert.equal(view.commercialStatus.accountType, 'personal');
   assert.equal(view.commercialStatus.lifecycleState, 'active');
   assert.equal(view.commercialStatus.tenantRole, 'owner');
+  assert.equal(view.commercialStatus.teamReadiness.state, 'single_user_owner');
+  assert.equal(view.commercialStatus.teamReadiness.consumer, 'settings_lifecycle_summary');
+  assert.deepEqual(view.commercialStatus.teamReadiness.allowedNextActions, ['view_medopl_billing']);
   assert.equal(view.commercialStatus.webuiTeamMutation, 'forbidden');
   assert.equal(view.commercialStatus.webuiInviteMutation, 'forbidden');
+  assert.equal(view.commercialStatus.webuiRBACMutation, 'forbidden');
   assert.equal(view.commercialStatus.webuiPaymentMutation, 'forbidden');
   assert.equal(view.commercialStatus.webuiBillingSourceOfTruth, 'forbidden');
   assert.equal(view.accountLifecycle.lifecycleLabel, 'Personal / active');
   assert.equal(view.accountLifecycle.tenantRoleLabel, 'tenant role: owner');
+  assert.equal(view.accountLifecycle.teamReadinessLabel, 'team readiness: single_user_owner');
   assert.equal(view.accountLifecycle.quotaLabel, 'quota 1/3 used, 2 remaining');
-  assert.doesNotMatch(JSON.stringify(view.commercialStatus), /workspace|teamInvite|paymentToken|invoiceBody|storage|nodePool|runtimeRef|rawApiKey|encryptedApiKey/i);
+  assert.doesNotMatch(JSON.stringify(view.commercialStatus), /workspace|teamInvite|paymentToken|invoiceBody|storage|nodePool|runtimeRef|rawApiKey|encryptedApiKey|subscription|price/i);
 });
 
 test('web view model keeps workspace hidden and exposes fixed provider surface', () => {

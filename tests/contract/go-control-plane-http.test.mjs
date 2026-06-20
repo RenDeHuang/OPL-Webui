@@ -38,6 +38,21 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/materials-deliverables/projection', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
+  assert.equal(
+    api.paths['/api/account/commercial-status'].get.responses['200'].content['application/json'].schema.$ref,
+    '#/components/schemas/CommercialAccountStatus',
+  );
+  const commercialSchema = api.components.schemas.CommercialAccountStatus;
+  assert.equal(commercialSchema.additionalProperties, false);
+  assert.equal(commercialSchema.required.includes('teamReadiness'), true);
+  assert.equal(commercialSchema.required.includes('webuiRBACMutation'), true);
+  assert.deepEqual(commercialSchema.properties.teamReadiness.properties.state.enum, ['single_user_owner']);
+  assert.deepEqual(commercialSchema.properties.teamReadiness.properties.allowedNextActions.items.enum, ['view_medopl_billing']);
+  assert.equal(commercialSchema.properties.webuiTeamMutation.const, 'forbidden');
+  assert.equal(commercialSchema.properties.webuiInviteMutation.const, 'forbidden');
+  assert.equal(commercialSchema.properties.webuiRBACMutation.const, 'forbidden');
+  assert.equal(commercialSchema.properties.webuiPaymentMutation.const, 'forbidden');
+  assert.equal(commercialSchema.properties.webuiBillingSourceOfTruth.const, 'forbidden');
 
   const errorCodes = api.components.schemas.ApiErrorCode.enum;
   for (const code of [
@@ -262,12 +277,17 @@ test('commercial account lifecycle endpoint is authenticated readonly projection
     assert.equal(status.body.lifecycleState, 'active');
     assert.equal(status.body.tenantId, session.body.tenantId);
     assert.equal(status.body.tenantRole, 'owner');
+    assert.equal(status.body.teamReadiness.state, 'single_user_owner');
+    assert.equal(status.body.teamReadiness.owner, 'OnePersonLabWeb');
+    assert.equal(status.body.teamReadiness.consumer, 'settings_lifecycle_summary');
+    assert.deepEqual(status.body.teamReadiness.allowedNextActions, ['view_medopl_billing']);
     assert.equal(status.body.webuiTeamMutation, 'forbidden');
     assert.equal(status.body.webuiInviteMutation, 'forbidden');
+    assert.equal(status.body.webuiRBACMutation, 'forbidden');
     assert.equal(status.body.webuiPaymentMutation, 'forbidden');
     assert.equal(status.body.webuiBillingSourceOfTruth, 'forbidden');
     assertNoSensitiveMaterial(status.body);
-    assert.doesNotMatch(JSON.stringify(status.body), /workspaceId|passwordHash|rawApiKey|encryptedApiKey|nodePool|storage|runtimeRef|paymentToken|invoiceBody/i);
+    assert.doesNotMatch(JSON.stringify(status.body), /workspaceId|passwordHash|rawApiKey|encryptedApiKey|nodePool|storage|runtimeRef|paymentToken|invoiceBody|subscription|price/i);
 
     const post = await fetch(`${baseUrl}/api/account/commercial-status`, { method: 'POST', headers: { cookie: session.cookieHeader } });
     assert.equal(post.status, 405);

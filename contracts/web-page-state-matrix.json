@@ -150,6 +150,7 @@
       "[data-research-result-section]",
       "[data-runtime-task-card]",
       "[data-account-lifecycle-status]",
+      "[data-team-readiness-status]",
       "[data-quota-status]",
       "[data-account-audit-status]",
       "[data-reliability-status]",

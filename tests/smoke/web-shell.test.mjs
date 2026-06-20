@@ -70,6 +70,7 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /chat-log/);
   assert.match(html, /settings-panel/);
   assert.match(html, /data-account-lifecycle-status/);
+  assert.match(html, /data-team-readiness-status/);
   assert.match(html, /data-quota-status/);
   assert.match(html, /data-account-audit-status/);
   assert.match(html, /data-reliability-status/);
@@ -111,6 +112,7 @@ test('settings hash has a dedicated productized settings surface', () => {
   assert.match(html, /登录状态/);
   assert.match(html, /API Key 绑定状态/);
   assert.match(html, /账号生命周期/);
+  assert.match(html, /团队状态/);
   assert.match(html, /额度状态/);
   assert.match(html, /最近审计/);
   assert.match(html, /不可编辑/);

@@ -99,7 +99,16 @@ result:
 cannot claim: multi-node HA, production browser e2e, production authenticated dogfood, production-ready SaaS, MedOPL runtime execution, billing/payment/storage/node pool mutation
 ```
 
+## Production observability baseline v1
+
 Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboard 或 alerting surface。`/metricsz` 必须包含 `observabilitySchemaVersion=1`、`releaseProbeContract=production_observability_baseline_v1`、`publicProbeEndpoints=["/healthz","/readyz","/metricsz","/"]`；helper 输出每个 endpoint 的 `samples`、`successes`、`failures`、`maxDurationMs`，并继续不保存 raw response body、cookie 或 secret。
+
+Latest folded evidence is run `27866718228`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d`, after production apply. The required future evidence for long-term operations is not implemented yet:
+
+```text
+required future evidence: scheduled_canary, dashboard, alerting, error_budget, rollback_record
+cannot claim: long-term canary monitoring, dashboard, alerting, error budget enforcement, multi-node HA, production-ready SaaS
+```
 
 ## Production authenticated dogfood e2e
 
@@ -139,11 +148,11 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/payment/storage/nod
 Latest compressed evidence:
 
 ```text
-run id: 27863328297
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
-commit: 3725423dfa01ed67a2c2df9dd94863d920a972cf
+run id: 27866718228
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228
+commit: 3e69e3d38ed60b9aea96bd7d9c76ad65fe481135
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d
 real chat: true
 readonly projection: unconfirmed; public GitHub job metadata does not expose OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY or dogfood stdout
 stages: Production Dry Run success, Production Apply success, Production Availability Probe After Apply success, Production Authenticated Dogfood E2E success
@@ -157,9 +166,9 @@ cannot claim: MedOPL runtime execution, billing/storage/node pool mutation, quot
 Production availability probe closeout:
 
 ```text
-run id: 27863328297
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
+run id: 27866718228
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d
 stage: Production Availability Probe After Apply success
 coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
 cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
@@ -171,16 +180,16 @@ Production browser e2e harness:
 - 该 lane 使用真实 Chromium/CDP 打开 `https://opl.medopl.cn`，通过生产 dogfood 账号执行登录、API Key 绑定、普通科研 chat、`@论文`/`@基金` runtime gate 和 audit evidence 检查。
 - 该 lane 需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，并在 job 中 mask password/API key。
 - 该 lane 不执行 kubectl，不读取 kubeconfig，不读取数据库 secret，不连接 MedOPL private API，不执行 OPL runtime mutation。
-- 本 harness 已在 GitHub Actions run `27863328297` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
+- 本 harness 已在 GitHub Actions run `27866718228` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
 
 Production browser e2e closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password、email 或 request payload：
 
 ```text
-run id: 27863328297
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297
-job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27863328297/job/82463070240
+run id: 27866718228
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228
+job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228/job/82471983444
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3725423
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d
 browser: chromium
 steps: real_browser_login,api_key_binding,research_task_template_selected,ordinary_chat,paper_runtime_gate,grant_runtime_gate,audit_events
 audit kinds: chat.completed,runtime_gate.required
@@ -292,6 +301,8 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 
 当前风险是 `EnsureIngressWarning W1012`：只有一个后端节点。目标态是两个可调度 TKE node、两个 Ready Pod、CLB 至少两个健康 backend，公网入口只走 CLB `80,443`，NodePort `32258` 只接受 CLB 到节点访问。
 
+Production HA readiness contract is design-ready but not executed. It cannot be used as multi-node HA evidence until the cloud operator folds back the actual run, pod topology, and CLB backend result.
+
 1. HA：`replicas=2`、跨 `kubernetes.io/hostname` 分布、`topologySpreadConstraints maxSkew: 1`、`DoNotSchedule`、软 `podAntiAffinity`、`PDB minAvailable: 1`、滚动更新 `maxUnavailable: 0`。
 2. TKE node：新增或复用第二个 Ready worker node，并带 `medopl.cn/workload=webui`。
 3. 安全组：qcloud Ingress/CLB 只允许公网 `80,443`；节点安全组只允许 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证后删除公网到 NodePort 的临时规则。
@@ -299,6 +310,21 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 5. 验证：`kubectl get pod -o wide` 两 Pod 在不同 node；`kubectl get ingress` 有 `80,443`；跑 canary、`https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。
 6. 回滚：Pod 不 Ready 或 HTTPS/canary 失败时 `rollout undo` 或恢复 `replicas: 1`；安全组导致 504 时先恢复上一条 NodePort 规则。
 7. 腾讯云控制台事项：新增/复用第二 CVM/TKE worker、确认节点/CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；证书仍由 `opl-webui-tls` Secret 驱动。
+
+Production HA readiness contract closeout must include:
+
+```text
+replicas=2
+two Ready Pod: true|false
+distinct node: true|false
+PDB minAvailable=1: true|false
+topologySpreadConstraints: true|false
+rolling update maxUnavailable=0: true|false
+Ingress/CLB backend count:
+canary/smoke:
+production availability probe:
+cannot claim until all true: multi-node HA, CLB two-backend health, zero-downtime rolling update evidence
+```
 
 ## Rollback
 

@@ -247,7 +247,14 @@
         "summary": "Read current user's commercial account lifecycle projection.",
         "responses": {
           "200": {
-            "description": "Readonly commercial account lifecycle projection."
+            "description": "Readonly commercial account lifecycle projection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommercialAccountStatus"
+                }
+              }
+            }
           },
           "401": {
             "description": "Authentication required."
@@ -338,6 +345,53 @@
             "type": "string"
           }
         }
+      },
+      "CommercialAccountStatus": {
+        "type": "object",
+        "required": [
+          "ok",
+          "owner",
+          "productId",
+          "accountType",
+          "lifecycleState",
+          "tenantId",
+          "tenantRole",
+          "teamReadiness",
+          "webuiTeamMutation",
+          "webuiInviteMutation",
+          "webuiRBACMutation",
+          "webuiPaymentMutation",
+          "webuiBillingSourceOfTruth"
+        ],
+        "properties": {
+          "ok": { "type": "boolean" },
+          "owner": { "const": "OnePersonLabWeb" },
+          "productId": { "const": "one-person-lab-web" },
+          "accountType": { "enum": ["personal"] },
+          "lifecycleState": { "enum": ["active"] },
+          "tenantId": { "type": "string" },
+          "tenantRole": { "enum": ["owner"] },
+          "teamReadiness": {
+            "type": "object",
+            "required": ["state", "owner", "consumer", "allowedNextActions"],
+            "properties": {
+              "state": { "enum": ["single_user_owner"] },
+              "owner": { "const": "OnePersonLabWeb" },
+              "consumer": { "const": "settings_lifecycle_summary" },
+              "allowedNextActions": {
+                "type": "array",
+                "items": { "enum": ["view_medopl_billing"] }
+              }
+            },
+            "additionalProperties": false
+          },
+          "webuiTeamMutation": { "const": "forbidden" },
+          "webuiInviteMutation": { "const": "forbidden" },
+          "webuiRBACMutation": { "const": "forbidden" },
+          "webuiPaymentMutation": { "const": "forbidden" },
+          "webuiBillingSourceOfTruth": { "const": "forbidden" }
+        },
+        "additionalProperties": false
       }
     }
   }

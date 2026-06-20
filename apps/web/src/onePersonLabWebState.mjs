@@ -182,6 +182,7 @@ export function accountLifecycleSummary(commercialStatus = {}, billingSummary = 
   return {
     lifecycleLabel: `${capitalize(accountType)} / ${lifecycleState}`,
     tenantRoleLabel: `tenant role: ${tenantRole}`,
+    teamReadinessLabel: `team readiness: ${commercialStatus.teamReadiness?.state || 'single_user_owner'}`,
     quotaLabel: `quota ${Number(quota.used || 0)}/${Number(quota.limit || 0)} used, ${Number(quota.remaining || 0)} remaining`,
     auditLabel: `audit events: ${Number(audit.eventCount || 0)}, latest ${audit.latestEventKind || 'none'}`,
   };
@@ -401,6 +402,7 @@ function billingSummaryFallback(summary = {}) {
 }
 
 function commercialStatusFallback(status = {}) {
+  const teamReadiness = status.teamReadiness || {};
   return {
     ok: Boolean(status.ok),
     owner: status.owner || 'OnePersonLabWeb',
@@ -409,8 +411,15 @@ function commercialStatusFallback(status = {}) {
     lifecycleState: status.lifecycleState || 'active',
     tenantId: status.tenantId || '',
     tenantRole: status.tenantRole || 'owner',
+    teamReadiness: {
+      state: teamReadiness.state || 'single_user_owner',
+      owner: teamReadiness.owner || 'OnePersonLabWeb',
+      consumer: teamReadiness.consumer || 'settings_lifecycle_summary',
+      allowedNextActions: Array.isArray(teamReadiness.allowedNextActions) ? teamReadiness.allowedNextActions : ['view_medopl_billing'],
+    },
     webuiTeamMutation: 'forbidden',
     webuiInviteMutation: 'forbidden',
+    webuiRBACMutation: 'forbidden',
     webuiPaymentMutation: 'forbidden',
     webuiBillingSourceOfTruth: 'forbidden',
   };

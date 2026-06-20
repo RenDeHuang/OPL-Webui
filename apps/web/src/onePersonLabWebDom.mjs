@@ -145,6 +145,7 @@ function renderView(view) {
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
   setTextAll('[data-provider-status]', providerStatus);
   setTextAll('[data-account-lifecycle-status]', view.accountLifecycle.lifecycleLabel);
+  setTextAll('[data-team-readiness-status]', view.accountLifecycle.teamReadinessLabel);
   setTextAll('[data-quota-status]', view.accountLifecycle.quotaLabel);
   setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
   renderReliabilityStatus(view.reliabilityStatus);
