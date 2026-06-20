@@ -260,6 +260,22 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'go'],
   }),
   testEntry({
+    file: 'services/control-plane-go/internal/webapp/chat_test.go',
+    runner: 'go',
+    cwd: 'services/control-plane-go',
+    goPackage: './internal/webapp',
+    lane: 'go',
+    ownerSurface: 'control-plane-go',
+    lifecycleRole: 'current-owner',
+    contracts: [
+      'services/control-plane-go/internal/webapp/chat.go',
+      'services/control-plane-go/internal/webapp/handlers.go',
+      'contracts/web-product-profile.json',
+    ],
+    riskTriggers: ['control-plane-go', 'byok', 'public-api'],
+    verifySuites: ['current', 'go'],
+  }),
+  testEntry({
     file: 'services/control-plane-go/internal/oplbridge/snapshot_test.go',
     runner: 'go',
     cwd: 'services/control-plane-go',

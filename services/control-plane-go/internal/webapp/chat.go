@@ -3,9 +3,11 @@ package webapp
 import (
 	"bytes"
 	"context"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -89,10 +91,7 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 	}
 	response, err := httpClient.Do(request)
 	if err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return "", UpstreamFailure{Kind: "timeout", Host: upstreamHost(), Model: modelName()}
-		}
-		return "", UpstreamFailure{Kind: "network", Host: upstreamHost(), Model: modelName()}
+		return "", UpstreamFailure{Kind: classifyUpstreamNetworkError(ctx, err), Host: upstreamHost(), Model: modelName()}
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
@@ -117,6 +116,56 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 		return "", UpstreamFailure{Kind: "empty_response", Host: upstreamHost(), Model: modelName()}
 	}
 	return content, nil
+}
+
+func classifyUpstreamNetworkError(ctx context.Context, err error) string {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return "request_timeout"
+	}
+
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return "dns_error"
+	}
+
+	var unknownAuthority x509.UnknownAuthorityError
+	if errors.As(err, &unknownAuthority) {
+		return "tls_error"
+	}
+
+	var hostnameErr x509.HostnameError
+	if errors.As(err, &hostnameErr) {
+		return "tls_error"
+	}
+
+	var certificateInvalidErr x509.CertificateInvalidError
+	if errors.As(err, &certificateInvalidErr) {
+		return "tls_error"
+	}
+
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		if urlErr.Timeout() {
+			return "response_header_timeout"
+		}
+		if isConnectFailure(urlErr.Err) {
+			return "connect_error"
+		}
+	}
+
+	if isConnectFailure(err) {
+		return "connect_error"
+	}
+
+	return "network"
+}
+
+func isConnectFailure(err error) bool {
+	var opErr *net.OpError
+	if !errors.As(err, &opErr) {
+		return false
+	}
+	return opErr.Op == "dial" || opErr.Op == "connect"
 }
 
 func requiresRuntime(message string) bool {
