@@ -125,7 +125,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
-  assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
+  assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:ai', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
   assert.equal(release.localNoSecretReadiness.requiresProductionSecrets, false);
   assert.equal(release.localNoSecretReadiness.browserAutomation, false);
   assert.equal(release.localNoSecretReadiness.automationLevel, 'http_contract_and_static_shell');
@@ -163,10 +163,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
-  assert.equal(release.productionBrowserE2EReadiness.state, 'harness_ready_pending_first_run');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'attempted_failed_run_27862789365');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27862789365);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'failure');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, 'Production Browser E2E');
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), true);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, [
     'OPL_DOGFOOD_EMAIL',
     'OPL_DOGFOOD_PASSWORD',
@@ -175,6 +179,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
   assert.equal(release.productionBrowserE2EReadiness.coverage.includes('real_browser_login'), true);
   assert.equal(release.productionBrowserE2EReadiness.coverage.includes('paper_runtime_gate'), true);
+  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);

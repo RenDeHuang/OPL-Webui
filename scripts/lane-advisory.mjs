@@ -32,6 +32,7 @@ const RULES = Object.freeze([
     matches: (file) => file.startsWith('deploy/')
       || file.startsWith('.github/workflows/')
       || file === 'scripts/cloud-rollout.mjs'
+      || file === 'scripts/release-evidence-sync.mjs'
       || file === 'Dockerfile'
       || file === 'Dockerfile.cloud'
       || file === '.dockerignore'
@@ -51,6 +52,9 @@ const RULES = Object.freeze([
       || file === 'scripts/test-classification.mjs'
       || file === 'scripts/workflow-gate.mjs'
       || file === 'scripts/lane-advisory.mjs'
+      || file === 'scripts/lane-check.mjs'
+      || file === 'scripts/ai-development-gate.mjs'
+      || file === 'contracts/web-development-profile.json'
       || file.startsWith('tests/health/'),
     targets: Object.freeze(['health']),
   }),

@@ -36,6 +36,8 @@
 - 机器真相属于 source、contracts、tests、fixtures、scripts 和 API/CLI 行为；Markdown prose 只做人读入口。
 - 新增测试必须登记在 `scripts/test-classification.mjs`，声明 lane、ownerSurface、lifecycleRole、contracts、cost、riskTriggers 和 verifySuites；registry 校验这些字段的枚举和值域。
 - 默认主验证入口是 `npm run verify`，即 `current = smoke + contract + health + go`；review gate 是 `npm run gate:review`。
+- AI 开发纪律由 `contracts/web-development-profile.json` 机器约束：正式开发按 direct / inline / durable 分级，顺序为 fixed truth -> one gap -> owner surface -> contract/page-state when needed -> registered tests -> implementation -> cleanup -> targeted lane -> current verify -> evidence foldback -> can/cannot claim。
+- `npm run gate:ai` 是正式开发的 AI workflow gate；`npm run gate:review` 必须包含它。它用于阻断 stale production claim、未登记测试、开发 workflow 变更缺少 contract/gate/registry 同步等问题。
 - 测试采用固定主 lane 加动态 targeted lane：`smoke` 守基础入口，`contract` 守 API/page-state/BYOK/tenant/OPL 边界，`health` 守治理和清退，`go` 守 Go control plane，`browser` 守浏览器主路径，`deploy` 守发布和云端形态，`regression` 守明确 bug 复现，`full` 用于发布和高风险合并。
 - 测试 taxonomy 由 registry 机器约束：`cost` 支持 `cheap`、`medium`、`heavy`、`soak`、`golden`；`lifecycleRole` 支持 `current-owner`、`integration`、`regression-guard`、`tombstone-guard`。`integration`、`heavy`、`soak`、`golden` 不默认进入 `current`；若必须进入，registry 必须写明 `currentSuiteReason`。
 - `regression` lane 可以为空；一旦登记 `regression-guard`，必须声明 machine-readable `retirement` metadata。退役条件到期后，同一变更必须删除测试、删除 registry entry，并按需要写入 `docs/history/tombstones/` 防止复活。
@@ -44,6 +46,7 @@
 - contract-first：新增或修改用户可见功能、API、runtime gate、release claim 前，必须先更新对应 `contracts/*.json`。
 - page-state-first：新增或修改页面/交互前，必须先更新 `contracts/web-page-state-matrix.json`。
 - browser-e2e-first：商业主路径变化必须有浏览器级或等价 smoke/e2e 计划；不能只靠文案声明。
+- release-evidence-foldback：每次 GitHub release/deploy/browser/dogfood/availability run 完成并改变 can/cannot claim 时，必须把压缩证据折返到 `contracts/web-release-profile.json`、`docs/status.md` 和 `docs/active/README.md`；不能把 active docs 留在旧状态。
 
 ## 理想态与清退
 
@@ -79,7 +82,7 @@
 ## 机器 gate
 
 - 完成声明必须有新鲜验证证据；不能用“应该通过”代替命令输出。
-- 默认完成 gate 按风险分级；高风险、发布、deploy、public API、runtime、billing、storage、OPL bridge 或 release claim 变更必须覆盖 targeted lane、`npm run verify`、对应 explicit lane、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
+- 默认完成 gate 按风险分级；高风险、发布、deploy、public API、runtime、billing、storage、OPL bridge 或 release claim 变更必须覆盖 targeted lane、`npm run gate:ai`、`npm run verify`、对应 explicit lane、`npm run gate:review`、`npm run repo:bloat`、`sentrux check .`。
 - 修改 AI、OPL、runtime、billing、storage、deploy 或 public API 行为时，必须有对应 contract/eval；没有 eval/test 不算完成。
 - 当用户要求“彻底落地 / 全部落地 / 一步到位 / 完善后立刻吸收 / 持续推进直到完成 / 能做的都做掉”时，最终声明完成前必须执行 Plan Completion Audit：逐项列出 done / partial / not_started / blocked、证据、缺口和后续动作。
 

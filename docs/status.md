@@ -20,6 +20,7 @@ The current stage is research SaaS product engineering. Product work now moves o
 - HTTP API: `contracts/web-api.openapi.json`
 - Runtime gate and refs-only projection: `contracts/web-runtime-bridge.json`
 - Release readiness: `contracts/web-release-profile.json`
+- AI development discipline: `contracts/web-development-profile.json`
 - Historical process evidence: `docs/history/process/closeouts.md`
 - Active gap baton: `docs/active/README.md`
 - Retired surface tombstones: `docs/history/tombstones/README.md`
@@ -38,6 +39,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Test workflow now uses fixed main lanes plus dynamic targeted lane selection. `current = smoke + contract + health + go`; `browser`, `deploy`, `regression`, and `full` are explicit lanes for changed surfaces and release-risk work.
 - `scripts/test-classification.mjs` is the machine registry for lane membership, cost, lifecycle role, risk triggers, verify suites, and regression retirement metadata.
 - `scripts/lane-advisory.mjs` maps changed files to targeted lanes for operator visibility; lane-check/gate evidence decides whether the required targeted lanes were actually run for the current diff.
+- `contracts/web-development-profile.json` defines the AI development order, anti-bloat policy, task tiers, and completion boundaries; `npm run gate:ai` enforces claim freshness and workflow hygiene, and `npm run gate:review` runs it before lane evidence and current verify.
 - `regression` can be empty. Active `regression-guard` tests must carry retirement metadata, and when the condition is met the test, registry entry, and any needed tombstone cleanup happen in the same change.
 
 ## Can Claim
@@ -54,7 +56,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 - Browser e2e is now a CI release gate before image release: `.github/workflows/ci.yml` installs Chromium and runs `npm run verify:browser`; `Release Image` still depends on successful CI before pushing the cloud image.
 - Research-task-first UX is implemented in the browser shell and page-state contract: the first-screen task templates cover `research_direction`, `paper_question`, `grant_plan`, `review_map`, and `materials_refs`; `@科研` ordinary chat now renders a structured result view model with `research_plan`, `evidence_refs`, and `next_steps`; `@论文`/`@基金` runtime gates render a runtime task card with MedOPL deep link and forbidden Web execution metadata. This is UI view-model evidence only, not artifact body, storage, or runtime execution.
-- Production browser e2e harness is ready as a secret-gated real Chromium/CDP lane through `node tests/browser/research-main-path-runner.mjs --production` and the `Cloud Rollout` input `production_browser_e2e=true`. It runs after production apply and uses the production dogfood account to verify real browser login, API Key binding, ordinary research chat, `@论文`/`@基金` runtime gates, and sanitized audit evidence against `https://opl.medopl.cn`. It has not been executed yet, so it cannot claim production browser e2e evidence.
+- Production browser e2e harness is ready as a secret-gated real Chromium/CDP lane through `node tests/browser/research-main-path-runner.mjs --production` and the `Cloud Rollout` input `production_browser_e2e=true`. It runs after production apply and uses the production dogfood account to verify real browser login, API Key binding, ordinary research chat, `@论文`/`@基金` runtime gates, and sanitized audit evidence against `https://opl.medopl.cn`. It was attempted in GitHub Actions runs `27862151414` and `27862789365`; latest run `27862789365` failed at `Production Browser E2E`, so the repo still cannot claim production browser e2e evidence.
 - Production dogfood can optionally verify existing MedOPL-owned readonly projections with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`: runtime status, materials/deliverables projection, and billing summary. For run `27853332374`, `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY` is not publicly confirmable from GitHub job metadata, so MedOPL readonly production coverage remains unclaimed. This proves sanitized projection availability and forbidden Web mutation flags only when the switch evidence is folded back; it does not prove MedOPL runtime execution, payment, storage mutation, node lifecycle, or production MedOPL API integration.
 - Production availability probe executed successfully in GitHub Actions run `27853332374` after production apply on image `uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c`. The no-secret public HTTP probe checks `/healthz`, `/readyz`, `/metricsz`, and `/` repeatedly without kubeconfig, image, DB, dogfood secrets, MedOPL token, or TCR credentials.
 - Commercial account lifecycle projection is implemented as authenticated readonly Web account status: `GET /api/account/commercial-status` returns personal SaaS account state, tenant role, lifecycle state, and forbidden team/invite/payment/billing-source mutation flags. It reuses the existing account/session and tenant membership surface; it does not add team management, RBAC, invite, payment, plan, subscription, storage, node pool, or runtime ownership.
@@ -62,7 +64,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
-- 本阶段没有执行 production browser e2e；当前生产浏览器 lane 只是 harness ready，当前浏览器证据仍是 local/CI Chromium/CDP evidence。
+- Production browser e2e 已在 GitHub Actions runs `27862151414` 和 `27862789365` 尝试执行，但最新 run `27862789365` 失败于 `Production Browser E2E`；当前生产浏览器证据仍未通过，不能 claim production browser e2e evidence。
 - 本阶段没有可公开确认的 production readonly projection dogfood；run `27853332374` 的 dogfood job 成功，但公开 GitHub metadata 不暴露 `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY` 变量值或 dogfood stdout，因此不能 claim production readonly projection evidence。
 - 本阶段没有证明 multi-node HA；当前 availability probe 只证明 public HTTP endpoints 的重复可用性。
 - 本阶段没有新增 team invite、RBAC、pricing、subscription、payment mutation、billing source of truth、workspace-visible UI 或 commercial admin console。
@@ -72,6 +74,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Run the next real product rollout with `production_browser_e2e=true` after apply/canary/smoke, then fold back compressed production browser evidence if the GitHub job succeeds.
+1. Inspect the `Production Browser E2E` failure from GitHub Actions run `27862789365`, fix the browser/production mismatch, rerun the real product rollout with `production_browser_e2e=true`, then fold back compressed production browser evidence.
 2. If `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` is enabled in a future product rollout, fold back log or variable evidence; do not run readonly-only just to chase evidence.
 3. Add team/commercial account lifecycle expansion only after there is a real consumer for invite/RBAC/payment state and a contract that preserves MedOPL billing authority.

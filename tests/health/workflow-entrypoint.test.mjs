@@ -23,6 +23,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['test:deploy'], 'node scripts/verify.mjs suite deploy');
   assert.equal(pkg.scripts['lane:advisory'], 'node scripts/lane-advisory.mjs');
   assert.equal(pkg.scripts['lane:check'], 'node scripts/lane-check.mjs');
+  assert.equal(pkg.scripts['gate:ai'], 'node scripts/ai-development-gate.mjs');
 });
 
 test('workflow gate script exists', () => {
@@ -217,6 +218,7 @@ test('review gate includes diff hygiene, bloat, hard lane check, and current ver
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
     'diff hygiene',
     'repo bloat audit',
+    'ai development gate',
     'required lane evidence check',
     'current verify',
   ]);

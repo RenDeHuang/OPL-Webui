@@ -14,6 +14,11 @@ export const REVIEW_GATE_STEPS = Object.freeze([
     args: Object.freeze(['scripts/repo-bloat-audit.mjs']),
   }),
   Object.freeze({
+    label: 'ai development gate',
+    command: process.execPath,
+    args: Object.freeze(['scripts/ai-development-gate.mjs']),
+  }),
+  Object.freeze({
     label: 'required lane evidence check',
     command: process.execPath,
     args: Object.freeze(['scripts/lane-check.mjs']),

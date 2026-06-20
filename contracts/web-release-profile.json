@@ -12,6 +12,7 @@
   ],
   "requiredGates": [
     "npm run verify",
+    "npm run gate:ai",
     "npm run gate:review",
     "npm run repo:bloat",
     "sentrux check ."
@@ -239,7 +240,7 @@
   },
   "productionBrowserE2EReadiness": {
     "mode": "secret_gated_chromium_research_main_path",
-    "state": "harness_ready_pending_first_run",
+    "state": "attempted_failed_run_27862789365",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -276,7 +277,49 @@
       "runtime_gate_audit",
       "sanitized_browser_evidence"
     ],
+    "latestAttempt": {
+      "runId": 27862789365,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27862789365",
+      "commit": "b19bf01",
+      "workflow": "Cloud Rollout",
+      "targetHost": "https://opl.medopl.cn",
+      "status": "failure",
+      "failedStage": "Production Browser E2E",
+      "jobUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27862789365/job/82461569729",
+      "priorAttempts": [
+        {
+          "runId": 27862151414,
+          "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27862151414",
+          "status": "failure",
+          "failedStage": "Production Browser E2E"
+        }
+      ],
+      "passedStages": [
+        "production_dry_run",
+        "production_apply",
+        "production_availability_probe_after_apply",
+        "production_authenticated_dogfood"
+      ],
+      "canClaim": [
+        "production dry run executed in the same rollout",
+        "production apply executed in the same rollout",
+        "production availability probe executed in the same rollout",
+        "production authenticated dogfood executed in the same rollout"
+      ],
+      "cannotClaim": [
+        "production browser e2e",
+        "production-ready SaaS",
+        "MedOPL runtime execution",
+        "billing/payment/storage/node pool mutation",
+        "team invite or RBAC lifecycle"
+      ],
+      "rawLogPolicy": {
+        "storesRawLogs": false,
+        "storesSecretValues": false
+      }
+    },
     "cannotClaim": [
+      "production browser e2e",
       "multi-node HA",
       "production-ready SaaS",
       "MedOPL runtime execution",

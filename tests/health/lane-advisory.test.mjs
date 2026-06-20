@@ -27,6 +27,16 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'services/control-plane-go/internal/oplbridge/snapshot.go',
   ]), ['contract', 'go', 'full']);
+
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'contracts/web-development-profile.json',
+    'scripts/ai-development-gate.mjs',
+  ]), ['contract', 'health']);
+
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'scripts/release-evidence-sync.mjs',
+    'contracts/web-release-profile.json',
+  ]), ['contract', 'deploy', 'health']);
 });
 
 test('lane advisory CLI reports suggestions without failing the gate', () => {

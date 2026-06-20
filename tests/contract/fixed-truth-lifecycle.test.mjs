@@ -25,6 +25,7 @@ const contractFiles = [
   'contracts/web-api.openapi.json',
   'contracts/web-runtime-bridge.json',
   'contracts/web-release-profile.json',
+  'contracts/web-development-profile.json',
 ];
 
 function readJson(path) {
@@ -34,7 +35,7 @@ function readJson(path) {
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
     'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
-    'test:contract', 'test:regression', 'gate:review', 'repo:bloat', 'check:diff',
+    'test:contract', 'test:regression', 'gate:ai', 'gate:review', 'repo:bloat', 'check:diff',
   ]) {
     assert.ok(pkg.scripts[scriptName], `missing package script: ${scriptName}`);
   }
@@ -153,6 +154,7 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(status, /contracts\/web-product-profile\.json/);
   assert.match(status, /contracts\/web-api\.openapi\.json/);
   assert.match(status, /contracts\/web-release-profile\.json/);
+  assert.match(status, /contracts\/web-development-profile\.json/);
   assert.doesNotMatch(status, /one-person-lab-web-truth-reset/);
   assert.doesNotMatch(status, /repo-slimming-and-stale-name-retirement/);
 });
