@@ -177,7 +177,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('error_budget'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
-  assert.equal(release.productionHAReadiness.state, 'design_ready_pending_cloud_execution');
+  assert.equal(release.productionHAReadiness.state, 'manifest_ready_pending_cloud_execution');
   assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
   assert.equal(release.productionHAReadiness.requiredEvidence.includes('two_ready_pods'), true);
   assert.equal(release.productionHAReadiness.requiredEvidence.includes('distinct_nodes'), true);

@@ -314,7 +314,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     assert.equal(release.productionObservabilityBaseline.cannotClaim.includes(cannotClaim), true, `observability baseline must not claim ${cannotClaim}`);
   }
   assert.equal(release.productionHAReadiness.mode, 'cloud_topology_readiness_contract');
-  assert.equal(release.productionHAReadiness.state, 'design_ready_pending_cloud_execution');
+  assert.equal(release.productionHAReadiness.state, 'manifest_ready_pending_cloud_execution');
   assert.equal(release.productionHAReadiness.owner, 'deploy/web-cloud');
   assert.equal(release.productionHAReadiness.consumer, 'production_release_operator');
   assert.deepEqual(release.productionHAReadiness.requiredEvidence, [
@@ -383,7 +383,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Production availability probe executed successfully/);
   assert.match(status, /Production observability baseline v1 is now folded back to run `27866718228`/);
   assert.match(status, /Long-term operations readiness remains pending: scheduled canary, dashboard, alerting, error budget, and rollback record/);
-  assert.match(status, /Production HA readiness is design-ready but not executed/);
+  assert.match(status, /Production HA readiness manifest is ready but not cloud-executed/);
   assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY.*not publicly confirmable/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);

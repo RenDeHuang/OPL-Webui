@@ -510,7 +510,7 @@
   },
   "productionHAReadiness": {
     "mode": "cloud_topology_readiness_contract",
-    "state": "design_ready_pending_cloud_execution",
+    "state": "manifest_ready_pending_cloud_execution",
     "owner": "deploy/web-cloud",
     "consumer": "production_release_operator",
     "requiresKubeconfig": true,
