@@ -363,6 +363,137 @@ test('release evidence sync folds dogfood readonly and rollback evidence without
   assert.equal(profile.productionRollbackReadiness.cannotClaim.includes('production-ready SaaS'), true);
 });
 
+test('release evidence sync folds latest rollout dogfood availability browser and observability evidence', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Dry Run', conclusion: 'success', html_url: 'https://example.test/dry' },
+      { name: 'Production Apply', conclusion: 'success', html_url: 'https://example.test/apply' },
+      { name: 'Production Availability Probe After Apply', conclusion: 'success', html_url: 'https://example.test/availability' },
+      { name: 'Production Authenticated Dogfood E2E', conclusion: 'success', html_url: 'https://example.test/dogfood' },
+      { name: 'Production Browser E2E', conclusion: 'success', html_url: 'https://example.test/browser' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionDogfoodReadiness: {
+      state: 'executed_success_run_27866718228_real_chat_readonly_unconfirmed',
+      latestSuccessfulRun: {
+        runId: 27866718228,
+        realChat: true,
+        medoplReadonly: 'unconfirmed',
+        publicMetadataConfirmsReadonlySwitch: false,
+        coverage: ['register_or_login', 'ordinary_chat_real_completion'],
+      },
+      cannotClaim: ['browser e2e', 'MedOPL runtime execution'],
+    },
+    productionAvailabilityReadiness: {
+      state: 'executed_success_run_27866718228_after_apply',
+      latestSuccessfulRun: { runId: 27866718228 },
+    },
+    productionObservabilityBaseline: {
+      state: 'release_probe_executed_run_27866718228_pending_long_term_ops',
+      latestSuccessfulRun: { runId: 27866718228 },
+      nextReadiness: {
+        state: 'scheduled_canary_workflow_ready_pending_first_success_and_ops_consumer',
+        implementedEvidence: ['scheduled_canary_workflow'],
+        scheduledCanary: { state: 'configured_pending_first_success' },
+        requiredFutureEvidence: ['scheduled_canary_first_success', 'dashboard', 'alerting', 'error_budget', 'rollback_record'],
+      },
+    },
+    productionBrowserE2EReadiness: {
+      state: 'executed_success_run_27866718228',
+      cannotClaim: ['production-ready SaaS', 'MedOPL runtime execution'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '27876229568',
+    '--commit', 'a3f7c399872a70332bd9e9465c05d11c9c2bd4ad',
+    '--image', 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39',
+    '--jobs-json', jobsPath,
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionDogfoodReadiness.state, 'executed_success_run_27876229568_real_chat_readonly_unconfirmed');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.runId, 27876229568);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.commit, 'a3f7c399872a70332bd9e9465c05d11c9c2bd4ad');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.realChatEvidence, 'production_browser_e2e');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, false);
+  assert.equal(profile.productionAvailabilityReadiness.state, 'executed_success_run_27876229568_after_apply');
+  assert.equal(profile.productionAvailabilityReadiness.latestSuccessfulRun.runId, 27876229568);
+  assert.equal(profile.productionObservabilityBaseline.state, 'release_probe_executed_run_27876229568_pending_long_term_ops');
+  assert.equal(profile.productionObservabilityBaseline.latestSuccessfulRun.runId, 27876229568);
+  assert.equal(profile.productionBrowserE2EReadiness.state, 'executed_success_run_27876229568');
+  assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.runId, 27876229568);
+  assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39');
+  assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production-ready SaaS'), true);
+  assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('MedOPL runtime execution'), true);
+  assert.equal(profile.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
+});
+
+test('release evidence sync folds scheduled canary first success separately from dashboard readiness', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Scheduled Production Availability Probe', conclusion: 'success', html_url: 'https://example.test/canary' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionObservabilityBaseline: {
+      state: 'release_probe_executed_run_27876229568_pending_long_term_ops',
+      nextReadiness: {
+        state: 'scheduled_canary_workflow_ready_pending_first_success_and_ops_consumer',
+        implementedEvidence: ['scheduled_canary_workflow'],
+        scheduledCanary: {
+          workflow: '.github/workflows/production-canary.yml',
+          state: 'configured_pending_first_success',
+        },
+        requiredFutureEvidence: ['scheduled_canary_first_success', 'dashboard', 'alerting', 'error_budget', 'rollback_record'],
+      },
+      cannotClaim: ['dashboard', 'alerting', 'error budget enforcement', 'production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '27874732529',
+    '--commit', 'f3c7d10bebf6779b3bcfbaa6b1bd94fdd4e5cf6d',
+    '--jobs-json', jobsPath,
+    '--workflow', 'Production Canary',
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  const readiness = profile.productionObservabilityBaseline.nextReadiness;
+  assert.equal(readiness.state, 'scheduled_canary_first_success_run_27874732529_pending_ops_consumer');
+  assert.equal(readiness.implementedEvidence.includes('scheduled_canary_first_success'), true);
+  assert.equal(readiness.scheduledCanary.state, 'executed_success_run_27874732529');
+  assert.equal(readiness.scheduledCanary.latestSuccessfulRun.workflow, 'Production Canary');
+  assert.equal(readiness.scheduledCanary.latestSuccessfulRun.jobName, 'Scheduled Production Availability Probe');
+  assert.equal(readiness.requiredFutureEvidence.includes('scheduled_canary_first_success'), false);
+  assert.equal(readiness.requiredFutureEvidence.includes('dashboard'), true);
+  assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
+  assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
+  assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('production-ready SaaS'), true);
+});
+
 test('release evidence sync ignores skipped rollback jobs', () => {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
   const jobsPath = join(fixtureRoot, 'jobs.json');

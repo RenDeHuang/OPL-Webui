@@ -2,18 +2,21 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
+export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload, workflow }) {
   const jobs = Array.isArray(jobsPayload?.jobs) ? jobsPayload.jobs : [];
   const failedJob = jobs.find((job) => job.conclusion === 'failure');
   const dogfoodJob = jobs.find((job) => job.name === 'Production Authenticated Dogfood E2E');
   const browserJob = jobs.find((job) => job.name === 'Production Browser E2E');
   const rollbackJob = jobs.find((job) => job.name === 'Production Rollback');
+  const completedAt = latestCompletedAt(jobs);
 
   return {
     schemaVersion: 1,
     runId: Number(runId),
     runUrl: `https://github.com/RenDeHuang/OPL-Webui/actions/runs/${runId}`,
     commit: commit || null,
+    workflow: workflow || null,
+    completedAt,
     status: failedJob ? 'failure' : 'success',
     failedStage: failedJob?.name ?? null,
     stages: jobs.map((job) => ({
@@ -21,14 +24,17 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
       status: job.status ?? 'completed',
       conclusion: job.conclusion ?? null,
       url: job.html_url ?? null,
+      completedAt: job.completed_at ?? null,
     })),
     canClaim: {
       productionDryRun: stageSucceeded(jobs, 'Production Dry Run'),
       productionApply: stageSucceeded(jobs, 'Production Apply'),
       productionAuthenticatedDogfood: dogfoodJob?.conclusion === 'success',
       productionBrowserE2E: browserJob?.conclusion === 'success',
+      productionAvailabilityAfterApply: stageSucceeded(jobs, 'Production Availability Probe After Apply'),
       productionRollback: rollbackJob?.conclusion === 'success',
       productionAvailabilityAfterRollback: stageSucceeded(jobs, 'Production Availability Probe After Rollback'),
+      scheduledProductionAvailabilityProbe: stageSucceeded(jobs, 'Scheduled Production Availability Probe'),
     },
     browserJobObserved: Boolean(browserJob),
     cannotClaim: failedJob ? [
@@ -45,8 +51,10 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
 }
 
 export function foldSummaryIntoReleaseProfile({ profile, summary }) {
-  const nextProfile = foldDogfoodReadonlyIntoReleaseProfile({ profile, summary });
-  const withRollback = foldRollbackIntoReleaseProfile({ profile: nextProfile, summary });
+  const withDogfood = foldAuthenticatedDogfoodIntoReleaseProfile({ profile, summary });
+  const withAvailability = foldAvailabilityIntoReleaseProfile({ profile: withDogfood, summary });
+  const withScheduledCanary = foldScheduledCanaryIntoReleaseProfile({ profile: withAvailability, summary });
+  const withRollback = foldRollbackIntoReleaseProfile({ profile: withScheduledCanary, summary });
   const browser = withRollback.productionBrowserE2EReadiness ?? {};
   if (!summary.browserJobObserved) return withRollback;
 
@@ -72,21 +80,34 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   };
 }
 
-function foldDogfoodReadonlyIntoReleaseProfile({ profile, summary }) {
-  if (!summary.dogfoodReadonlyConfirmed || !summary.canClaim.productionAuthenticatedDogfood) return profile;
+function foldAuthenticatedDogfoodIntoReleaseProfile({ profile, summary }) {
+  if (!summary.canClaim.productionAuthenticatedDogfood) return profile;
   const dogfood = profile.productionDogfoodReadiness ?? {};
   const latest = dogfood.latestSuccessfulRun ?? {};
+  const readonlyConfirmed = summary.dogfoodReadonlyConfirmed === true;
   const coverage = uniqueStrings([
     ...(latest.coverage ?? []),
-    'medopl_readonly_runtime_status',
-    'medopl_readonly_materials_deliverables',
-    'medopl_readonly_billing_summary',
+    'register_or_login',
+    'current_session',
+    'api_key_binding',
+    'fixed_gateway',
+    'raw_api_key_not_returned',
+    ...(summary.canClaim.productionBrowserE2E ? ['ordinary_chat_real_completion', 'chat_completed_audit'] : []),
+    'runtime_gate_audit',
+    'sanitized_audit',
+    ...(readonlyConfirmed ? [
+      'medopl_readonly_runtime_status',
+      'medopl_readonly_materials_deliverables',
+      'medopl_readonly_billing_summary',
+    ] : []),
   ]);
   return {
     ...profile,
     productionDogfoodReadiness: {
       ...dogfood,
-      state: `executed_success_run_${summary.runId}_real_chat_readonly_confirmed`,
+      state: readonlyConfirmed
+        ? `executed_success_run_${summary.runId}_real_chat_readonly_confirmed`
+        : `executed_success_run_${summary.runId}_real_chat_readonly_unconfirmed`,
       latestSuccessfulRun: {
         ...latest,
         runId: summary.runId,
@@ -95,10 +116,146 @@ function foldDogfoodReadonlyIntoReleaseProfile({ profile, summary }) {
         image: summary.image ?? latest.image ?? null,
         workflow: 'Cloud Rollout',
         targetHost: 'https://opl.medopl.cn',
-        medoplReadonly: true,
-        publicMetadataConfirmsReadonlySwitch: true,
+        completedAt: summary.completedAt ?? latest.completedAt ?? null,
+        realChat: summary.canClaim.productionBrowserE2E ? true : latest.realChat ?? 'unconfirmed',
+        realChatEvidence: summary.canClaim.productionBrowserE2E ? 'production_browser_e2e' : latest.realChatEvidence ?? 'unconfirmed',
+        medoplReadonly: readonlyConfirmed ? true : 'unconfirmed',
+        publicMetadataConfirmsReadonlySwitch: readonlyConfirmed,
+        readonlyEvidenceBoundary: readonlyConfirmed
+          ? 'Folded evidence explicitly confirmed OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.'
+          : 'Public GitHub job metadata confirms Production Authenticated Dogfood E2E success but does not expose repository variable values or dogfood stdout; do not claim MedOPL readonly production coverage until log or variable evidence is folded back.',
+        stages: buildSuccessfulStageNames(summary, [
+          ['Production Dry Run', 'production_dry_run'],
+          ['Production Apply', 'production_apply'],
+          ['Production Availability Probe After Apply', 'production_availability_probe_after_apply'],
+          ['Production Authenticated Dogfood E2E', 'production_authenticated_dogfood'],
+          ['Production Browser E2E', 'production_browser_e2e'],
+        ]),
+        statusSummary: buildStatusSummary(summary, [
+          'Production Dry Run',
+          'Production Apply',
+          'Production Availability Probe After Apply',
+          'Production Authenticated Dogfood E2E',
+          'Production Browser E2E',
+        ]),
         coverage,
         rawLogPolicy: summary.rawLogPolicy,
+      },
+    },
+  };
+}
+
+function foldAvailabilityIntoReleaseProfile({ profile, summary }) {
+  if (!summary.canClaim.productionAvailabilityAfterApply) return profile;
+  const availability = profile.productionAvailabilityReadiness ?? {};
+  const observability = profile.productionObservabilityBaseline ?? {};
+  const scheduledCanarySucceeded = observability.nextReadiness?.implementedEvidence?.includes('scheduled_canary_first_success') === true;
+  return {
+    ...profile,
+    productionAvailabilityReadiness: {
+      ...availability,
+      state: `executed_success_run_${summary.runId}_after_apply`,
+      latestSuccessfulRun: {
+        ...(availability.latestSuccessfulRun ?? {}),
+        runId: summary.runId,
+        runUrl: summary.runUrl,
+        commit: summary.commit,
+        image: summary.image ?? availability.latestSuccessfulRun?.image ?? null,
+        targetHost: 'https://opl.medopl.cn',
+        workflow: 'Cloud Rollout',
+        completedAt: summary.completedAt ?? availability.latestSuccessfulRun?.completedAt ?? null,
+        afterStage: 'production_apply_canary_smoke',
+        samples: availability.latestSuccessfulRun?.samples ?? 3,
+        stages: buildSuccessfulStageNames(summary, [
+          ['Production Dry Run', 'production_dry_run'],
+          ['Production Apply', 'production_apply'],
+          ['Production Availability Probe After Apply', 'production_availability_probe_after_apply'],
+        ]),
+        statusSummary: buildStatusSummary(summary, [
+          'Production Dry Run',
+          'Production Apply',
+          'Production Availability Probe After Apply',
+        ]),
+        coverage: [
+          'HTTPS /healthz',
+          'HTTPS /readyz',
+          'HTTPS /metricsz',
+          'HTTPS /',
+        ],
+      },
+    },
+    productionObservabilityBaseline: {
+      ...observability,
+      state: scheduledCanarySucceeded
+        ? `release_probe_executed_run_${summary.runId}_scheduled_canary_success_pending_long_term_ops`
+        : `release_probe_executed_run_${summary.runId}_pending_long_term_ops`,
+      latestSuccessfulRun: {
+        ...(observability.latestSuccessfulRun ?? {}),
+        runId: summary.runId,
+        runUrl: summary.runUrl,
+        commit: summary.commit,
+        image: summary.image ?? observability.latestSuccessfulRun?.image ?? null,
+        targetHost: 'https://opl.medopl.cn',
+        workflow: 'Cloud Rollout',
+        completedAt: summary.completedAt ?? observability.latestSuccessfulRun?.completedAt ?? null,
+        coverage: [
+          '/healthz repeated samples',
+          '/readyz repeated samples',
+          '/metricsz repeated samples',
+          '/ repeated samples',
+          '/metricsz summary fields',
+        ],
+      },
+    },
+  };
+}
+
+function foldScheduledCanaryIntoReleaseProfile({ profile, summary }) {
+  if (!summary.canClaim.scheduledProductionAvailabilityProbe) return profile;
+  const observability = profile.productionObservabilityBaseline ?? {};
+  const nextReadiness = observability.nextReadiness ?? {};
+  const scheduledCanary = nextReadiness.scheduledCanary ?? {};
+  const job = summary.stages.find((stage) => stage.name === 'Scheduled Production Availability Probe');
+  const releaseProbeRunId = observability.latestSuccessfulRun?.runId;
+  const releaseProbePrefix = releaseProbeRunId ? `release_probe_executed_run_${releaseProbeRunId}` : 'release_probe_ready';
+
+  return {
+    ...profile,
+    productionObservabilityBaseline: {
+      ...observability,
+      state: `${releaseProbePrefix}_scheduled_canary_success_pending_long_term_ops`,
+      nextReadiness: {
+        ...nextReadiness,
+        state: `scheduled_canary_first_success_run_${summary.runId}_pending_ops_consumer`,
+        implementedEvidence: uniqueStrings([
+          ...(nextReadiness.implementedEvidence ?? []),
+          'scheduled_canary_workflow',
+          'scheduled_canary_first_success',
+        ]),
+        scheduledCanary: {
+          ...scheduledCanary,
+          state: `executed_success_run_${summary.runId}`,
+          latestSuccessfulRun: {
+            runId: summary.runId,
+            runUrl: summary.runUrl,
+            commit: summary.commit,
+            workflow: summary.workflow || 'Production Canary',
+            jobName: 'Scheduled Production Availability Probe',
+            jobUrl: job?.url ?? null,
+            completedAt: summary.completedAt ?? job?.completedAt ?? null,
+            targetHost: 'https://opl.medopl.cn',
+            samples: scheduledCanary.latestSuccessfulRun?.samples ?? 3,
+            coverage: [
+              'HTTPS /healthz',
+              'HTTPS /readyz',
+              'HTTPS /metricsz',
+              'HTTPS /',
+            ],
+            rawLogPolicy: summary.rawLogPolicy,
+          },
+        },
+        requiredFutureEvidence: (nextReadiness.requiredFutureEvidence ?? [])
+          .filter((item) => item !== 'scheduled_canary_first_success'),
       },
     },
   };
@@ -160,16 +317,25 @@ function buildBrowserLatestAttempt(summary) {
     passedStages.push('production_availability_probe_after_apply');
     canClaim.push('production availability probe executed in the same rollout');
   }
+  if (summary.canClaim.productionBrowserE2E) {
+    passedStages.push('production_browser_e2e');
+    canClaim.push('production browser e2e executed against https://opl.medopl.cn');
+  }
 
-  const cannotClaim = summary.canClaim.productionBrowserE2E ? [] : [
-    'production browser e2e',
+  const cannotClaim = uniqueStrings([
+    ...(summary.canClaim.productionBrowserE2E ? [] : ['production browser e2e']),
+    'multi-node HA',
     'production-ready SaaS',
-  ];
+    'MedOPL runtime execution',
+    'billing/payment/storage/node pool mutation',
+    'team invite or RBAC lifecycle',
+  ]);
 
   return {
     runId: summary.runId,
     runUrl: summary.runUrl,
     commit: summary.commit,
+    image: summary.image ?? null,
     workflow: 'Cloud Rollout',
     targetHost: 'https://opl.medopl.cn',
     status: summary.status,
@@ -181,8 +347,28 @@ function buildBrowserLatestAttempt(summary) {
   };
 }
 
+function buildSuccessfulStageNames(summary, stagePairs) {
+  return stagePairs
+    .filter(([jobName]) => summary.stages.some((stage) => stage.name === jobName && stage.conclusion === 'success'))
+    .map(([, stageName]) => stageName);
+}
+
+function buildStatusSummary(summary, stageNames) {
+  return stageNames
+    .filter((jobName) => summary.stages.some((stage) => stage.name === jobName && stage.conclusion === 'success'))
+    .map((jobName) => `${jobName} success`);
+}
+
 function stageSucceeded(jobs, stageName) {
   return jobs.some((job) => job.name === stageName && job.conclusion === 'success');
+}
+
+function latestCompletedAt(jobs) {
+  const completed = jobs
+    .map((job) => job.completed_at)
+    .filter((value) => typeof value === 'string' && value.length > 0)
+    .sort();
+  return completed.at(-1) ?? null;
 }
 
 function uniqueStrings(values) {
@@ -221,6 +407,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (token === '--workflow') {
+      options.workflow = value;
+      index += 1;
+      continue;
+    }
     if (token === '--output') {
       options.output = value;
       index += 1;
@@ -246,6 +437,7 @@ function runCli() {
     runId: options.runId,
     commit: options.commit,
     jobsPayload,
+    workflow: options.workflow,
   });
   summary.image = options.image ?? null;
   summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true;
