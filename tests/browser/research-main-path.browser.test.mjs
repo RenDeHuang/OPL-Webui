@@ -19,6 +19,8 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.match(evidence.browser, /chrome|chromium/i);
   assert.equal(evidence.pageStates.authState, 'authenticated_bound');
   assert.equal(evidence.pageStates.chatState, 'runtime_required');
+  assert.equal(evidence.pageStates.researchResultSections, 3);
+  assert.equal(evidence.pageStates.runtimeTaskMarker, '@基金');
   assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.ok(evidence.upstreamRequests >= 1);
 });

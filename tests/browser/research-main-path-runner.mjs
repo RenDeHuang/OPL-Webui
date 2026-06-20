@@ -56,14 +56,28 @@ try {
   if (mode === 'local') {
     await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
   }
+  await assertPage(cdp, 'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"', 'structured research result marker');
+  await waitFor(
+    cdp,
+    'document.querySelectorAll("[data-research-result-section]").length === 3',
+    async () => {
+      const state = await evaluateJSON(cdp, `({
+        sectionCount: document.querySelectorAll('[data-research-result-section]').length,
+        cardHTML: document.querySelector('[data-research-result]')?.outerHTML,
+      })`);
+      return `structured research result sections missing: ${JSON.stringify(state)}`;
+    },
+  );
   await waitForAuditKind(cdp, 'chat.completed');
 
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
   await waitForAuditKindCount(cdp, 'runtime_gate.required', 1);
   await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible")', 'paper runtime gate');
+  await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@论文"', 'paper runtime task card');
 
   await submitPrompt(cdp, '@基金 帮我拆解标书结构');
   await waitForAuditKindCount(cdp, 'runtime_gate.required', 2);
+  await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@基金"', 'grant runtime task card');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
   if (!kinds.includes('runtime_gate.required')) {
@@ -78,6 +92,8 @@ try {
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
     selectedTaskIntent: document.body.dataset.researchTaskIntent,
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
+    researchResultSections: document.querySelectorAll('[data-research-result-section]').length,
+    runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));

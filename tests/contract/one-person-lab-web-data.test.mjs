@@ -74,6 +74,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-marker]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-mode]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-task]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result-section]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-task-card]'), true);
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
     ['research_direction', '@科研', 'ordinary_chat_fallback'],
     ['paper_question', '@论文', 'runtime_gate'],
@@ -81,6 +84,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     ['review_map', '@综述', 'runtime_gate'],
     ['materials_refs', '@文件', 'runtime_gate'],
   ]);
+  assert.deepEqual(pageStates.structuredResultShape.sections, ['research_plan', 'evidence_refs', 'next_steps']);
+  assert.equal(pageStates.structuredResultShape.owner, 'one-person-lab-web');
+  assert.equal(pageStates.structuredResultShape.consumer, 'research_user_chat_result');
+  assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('artifact_body'), true);
+  assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('private_state_path'), true);
 
   for (const path of [
     '/api/session/current',
@@ -316,6 +324,35 @@ test('web data module implements the page-state chat matrix', () => {
   ]) {
     assert.equal(chatStates.includes(state), true, `chat state is outside contract: ${state}`);
   }
+});
+
+test('web data module builds structured research result and runtime task card view models', () => {
+  const pageStates = readJson('contracts/web-page-state-matrix.json');
+  assert.deepEqual(web.RESEARCH_RESULT_SECTIONS.map((section) => section.id), pageStates.structuredResultShape.sections);
+
+  const researchResult = web.researchResultForChat({
+    prompt: '@科研 帮我拆解研究方向、问题和下一步计划',
+    assistantMessage: { content: 'mock upstream response for research chat' },
+  });
+  assert.equal(researchResult.kind, 'structured_research_result');
+  assert.equal(researchResult.marker, '@科研');
+  assert.deepEqual(researchResult.sections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
+  assert.match(researchResult.sections.find((section) => section.id === 'research_plan').body, /mock upstream response/);
+  assert.doesNotMatch(JSON.stringify(researchResult), /artifact_body|private_state_path|mutation_result|workspace|nodePool|storage/i);
+
+  const ordinaryResult = web.researchResultForChat({
+    prompt: '普通问答',
+    assistantMessage: { content: 'ok' },
+  });
+  assert.equal(ordinaryResult, null);
+
+  const runtimeCard = web.runtimeTaskCardForPrompt('@论文 生成研究选题和证据计划');
+  assert.equal(runtimeCard.kind, 'runtime_task_card');
+  assert.equal(runtimeCard.marker, '@论文');
+  assert.equal(runtimeCard.requiredCapability, 'paper_review_workflow');
+  assert.equal(runtimeCard.deepLink, 'https://medopl.medopl.cn');
+  assert.equal(runtimeCard.webuiRuntimeExecution, 'forbidden');
+  assert.doesNotMatch(JSON.stringify(runtimeCard), /artifact_body|private_state_path|mutation_result|workspace|nodePool|storage/i);
 });
 
 test('anonymous users cannot save API keys from the web data module', async () => {
@@ -584,6 +621,7 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.runtimeGate.title, '需要 MedOPL 授权');
   assert.equal(view.runtimeGate.message, '该能力需要在 MedOPL 开通后继续');
   assert.doesNotMatch(JSON.stringify(view.runtimeGate), /MedOPL Runtime|node pool|托管运行环境|存储|无限计算资源|创始人计划|WebUI owns/i);
+  assert.deepEqual(view.researchResultSections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
   assert.deepEqual(view.workbenchSteps.map((item) => item.title), [
     '选择专业工作',
     '绑定真实材料',

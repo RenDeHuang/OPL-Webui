@@ -57,6 +57,23 @@ export const RESEARCH_TASK_INTENTS = [
     consumer: 'research_user_prompt',
   },
 ];
+export const RESEARCH_RESULT_SECTIONS = [
+  {
+    id: 'research_plan',
+    title: '研究计划',
+    fallback: '先把研究方向拆成问题、假设和可执行步骤。',
+  },
+  {
+    id: 'evidence_refs',
+    title: '证据线索',
+    fallback: '继续补充材料、引用和可核查来源。',
+  },
+  {
+    id: 'next_steps',
+    title: '下一步',
+    fallback: '选择一个问题进入论文、基金或综述工作流。',
+  },
+];
 export const OPL_CAPABILITY_MANIFEST = {
   source: { syncMode: 'source_path_pinned_manifest', dynamicSync: false, commitPin: 'blocked_by_github_tls_timeout',
     appContract: 'github.com/gaofeng21cn/one-person-lab-app/contracts/app-product-profile.json',
@@ -139,6 +156,39 @@ export function requiresRuntimeGate(message) {
   return RUNTIME_REQUIRED_MARKERS.some((marker) => String(message || '').includes(marker));
 }
 
+export function researchResultForChat(result = {}) {
+  const prompt = String(result.prompt || result.message || '');
+  if (!prompt.includes('@科研')) return null;
+  const content = String(result.assistantMessage?.content || result.content || result.message || '').trim();
+  const summary = content || RESEARCH_RESULT_SECTIONS[0].fallback;
+  return {
+    kind: 'structured_research_result',
+    marker: '@科研',
+    title: '@科研 研究计划草案',
+    mode: 'ui_view_model_only',
+    sections: RESEARCH_RESULT_SECTIONS.map((section) => ({
+      id: section.id,
+      title: section.title,
+      body: researchResultSectionBody(section.id, summary),
+    })),
+  };
+}
+
+export function runtimeTaskCardForPrompt(prompt = '') {
+  const text = String(prompt || '');
+  const semantic = CAPABILITY_MARKER_SEMANTICS.find((item) => RUNTIME_REQUIRED_MARKERS.includes(item.marker) && text.includes(item.marker));
+  if (!semantic) return null;
+  return {
+    kind: 'runtime_task_card',
+    marker: semantic.marker,
+    requiredCapability: semantic.workflow,
+    title: `${semantic.marker} 需要 MedOPL 授权`,
+    message: 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。',
+    deepLink: MEDOPL_DEEP_LINK,
+    webuiRuntimeExecution: 'forbidden',
+  };
+}
+
 export function createOnePersonLabViewModel(state) {
   const provider = state.provider?.ok ? state.provider : providerFallback();
   const session = state.session ?? { ok: false };
@@ -169,6 +219,7 @@ export function createOnePersonLabViewModel(state) {
     billingSummary: billingSummaryFallback(state.billingSummary),
     capabilitySource: OPL_CAPABILITY_MANIFEST.source,
     researchTaskIntents: RESEARCH_TASK_INTENTS,
+    researchResultSections: RESEARCH_RESULT_SECTIONS,
     capabilities: OPL_CAPABILITY_MANIFEST.capabilities.map(([label, prompt, runtimeRequired, sourceAssistant]) => ({
       label, prompt, runtimeRequired, sourceAssistant,
     })),
@@ -191,6 +242,12 @@ export function createOnePersonLabViewModel(state) {
       ok: Boolean(state.oplSnapshot?.ok),
     },
   };
+}
+
+function researchResultSectionBody(sectionID, summary) {
+  if (sectionID === 'research_plan') return summary;
+  if (sectionID === 'evidence_refs') return '把关键材料、引用和数据来源作为 refs 继续补充；当前不返回文件正文。';
+  return '下一步可继续 @科研 细化计划，或用 @论文、@基金 进入 MedOPL gate。';
 }
 
 export function createInitialOnePersonLabViewModel() {

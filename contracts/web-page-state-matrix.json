@@ -141,7 +141,10 @@
       "[data-research-launcher]",
       "[data-research-task]",
       "[data-capability-marker]",
-      "[data-capability-mode]"
+      "[data-capability-mode]",
+      "[data-research-result]",
+      "[data-research-result-section]",
+      "[data-runtime-task-card]"
     ],
     "steps": [
       {
@@ -233,5 +236,13 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       }
     ]
+  },
+  "structuredResultShape": {
+    "owner": "one-person-lab-web",
+    "consumer": "research_user_chat_result",
+    "mode": "ui_view_model_only",
+    "sections": ["research_plan", "evidence_refs", "next_steps"],
+    "runtimeGateCard": "refs_only_medopl_deeplink",
+    "forbiddenPayload": ["artifact_body", "private_state_path", "mutation_result", "raw_provider_secret"]
   }
 }

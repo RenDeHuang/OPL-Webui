@@ -4,7 +4,9 @@ import {
   loginAccount,
   logoutAccount,
   registerAccount,
+  researchResultForChat,
   requiresRuntimeGate,
+  runtimeTaskCardForPrompt,
   saveAPIKey,
   chatStateForResult,
   chatStateForPrompt,
@@ -49,7 +51,7 @@ function bindCapabilityButtons() {
         document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
       }
       document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
-      if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate();
+      if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate(button.dataset.prompt);
     });
   }
 }
@@ -87,8 +89,10 @@ function bindChatForm(getView) {
     document.body.dataset.chatState = chatStateForResult(null, true);
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
-    if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate();
+    if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
+    const researchResult = result.ok ? researchResultForChat({ ...result, prompt: message }) : null;
+    if (researchResult) appendResearchResult(researchResult);
   });
 }
 
@@ -150,8 +154,55 @@ function appendMessage(sender, content, className) {
   log.append(message);
 }
 
-function showRuntimeGate() {
-  document.querySelector('[data-runtime-gate]')?.classList.add('is-visible');
+function appendResearchResult(result) {
+  const log = document.querySelector('[data-chat-log]');
+  const card = document.createElement('article');
+  card.className = 'research-result-card';
+  card.dataset.researchResult = result.kind;
+  card.dataset.researchResultMarker = result.marker;
+  const title = document.createElement('h3');
+  title.textContent = result.title;
+  card.append(title);
+  const sectionList = document.createElement('div');
+  sectionList.className = 'research-result-sections';
+  for (const section of result.sections) {
+    const item = document.createElement('section');
+    item.dataset.researchResultSection = section.id;
+    const heading = document.createElement('h4');
+    heading.textContent = section.title;
+    const body = document.createElement('p');
+    body.textContent = section.body;
+    item.append(heading, body);
+    sectionList.append(item);
+  }
+  card.append(sectionList);
+  log.append(card);
+}
+
+function showRuntimeGate(prompt = '') {
+  const gate = document.querySelector('[data-runtime-gate]');
+  if (!gate) return;
+  gate.classList.add('is-visible');
+  const taskCard = runtimeTaskCardForPrompt(prompt);
+  if (!taskCard) return;
+  renderRuntimeTaskCard(gate, taskCard);
+}
+
+function renderRuntimeTaskCard(gate, taskCard) {
+  gate.querySelector('[data-runtime-task-card]')?.remove();
+  const card = document.createElement('article');
+  card.className = 'runtime-task-card';
+  card.dataset.runtimeTaskCard = taskCard.kind;
+  card.dataset.runtimeTaskMarker = taskCard.marker;
+  const title = document.createElement('h3');
+  title.textContent = taskCard.title;
+  const body = document.createElement('p');
+  body.textContent = taskCard.message;
+  const meta = document.createElement('p');
+  meta.className = 'runtime-task-meta';
+  meta.textContent = `required capability: ${taskCard.requiredCapability}; Web execution: ${taskCard.webuiRuntimeExecution}`;
+  card.append(title, body, meta);
+  gate.prepend(card);
 }
 
 function setSettingsMessage(message) {
