@@ -172,8 +172,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_27866718228_pending_long_term_ops');
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27866718228');
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'not_implemented_pending_ops_consumer');
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary'), true);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'scheduled_canary_workflow_ready_pending_first_success_and_ops_consumer');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary_first_success'), true);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('error_budget'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);

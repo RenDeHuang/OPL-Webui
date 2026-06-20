@@ -80,7 +80,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
         OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27',
       },
     }),
-    /--apply and --rollback are mutually exclusive/,
+    /--apply, --rollback, and --rollback-plan are mutually exclusive/,
   );
 });
 
@@ -223,6 +223,7 @@ test('cloud rollout helper supports manual approved rollback evidence without au
   const helper = readFileSync(helperPath, 'utf8');
   for (const required of [
     '--rollback',
+    '--rollback-plan',
     'OPL_ROLLBACK_REVISION',
     'kubectl rollout undo',
     'rollback revision',
@@ -230,9 +231,23 @@ test('cloud rollout helper supports manual approved rollback evidence without au
   ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
   assert.doesNotMatch(helper, /runRolloutStatus\(\);\n[\s\S]{0,120}kubectlArgs\(\['rollout', 'undo'/);
 
+  const rollbackPlan = execFileSync(process.execPath, [helperPath, '--rollback-plan'], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27',
+      OPL_BASE_URL: 'https://opl.medopl.cn',
+    },
+  });
+  assert.match(rollbackPlan, /rollbackPlan=true/);
+  assert.match(rollbackPlan, /rollout undo deployment\/opl-webui-control-plane/);
+  assert.match(rollbackPlan, /rollback revision/);
+  assert.doesNotMatch(rollbackPlan, /set image deployment\/opl-webui-control-plane/);
+
   const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-rollback-'));
   const commandLog = join(tempDir, 'commands.log');
   const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27';
+  const rollbackImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:previous1';
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
@@ -248,6 +263,7 @@ test('cloud rollout helper supports manual approved rollback evidence without au
         OPL_BASE_URL: 'https://opl.medopl.cn',
         OPL_NAMESPACE: 'opl-webui',
         TARGET_IMAGE: targetImage,
+        ROLLBACK_IMAGE: rollbackImage,
         COMMAND_LOG: commandLog,
       },
     });
@@ -263,6 +279,8 @@ test('cloud rollout helper supports manual approved rollback evidence without au
     assert.match(commands, /rollout status deployment\/opl-webui-control-plane/);
     assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary db/);
     assert.match(commands, /curl --http2 -fsS https:\/\/opl\.medopl\.cn\/readyz/);
+    assert.match(output, new RegExp(`deployment image\\n${rollbackImage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    assert.doesNotMatch(output, /No Running Ready pod found/);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
@@ -445,7 +463,9 @@ if (args[0] === 'get' && args[1] === 'deployment/opl-webui-control-plane') {
     process.stdout.write('NAME READY UP-TO-DATE AVAILABLE\\nopl-webui-control-plane 0/1 0 1\\n');
     process.exit(0);
   }
-  process.stdout.write(args.includes('containers') ? process.env.TARGET_IMAGE : '4');
+  const commandText = args.join(' ');
+  const deploymentImage = process.env.ROLLBACK_IMAGE || process.env.TARGET_IMAGE;
+  process.stdout.write(commandText.includes('containers') ? deploymentImage : '4');
   process.exit(0);
 }
 if (args[0] === 'describe' && args[1] === 'deployment/opl-webui-control-plane') {
@@ -500,12 +520,13 @@ process.stderr.write('unexpected kubectl args: ' + args.join(' ') + '\\n');
 process.exit(64);
 
 function pod(name, phase, ready) {
+  const image = process.env.ROLLBACK_IMAGE || process.env.TARGET_IMAGE;
   return {
     metadata: { name, creationTimestamp: ready ? '2026-06-17T08:01:00Z' : '2026-06-17T08:00:00Z' },
     status: {
       phase,
       conditions: [{ type: 'Ready', status: ready ? 'True' : 'False' }],
-      containerStatuses: [{ name: 'control-plane', ready, image: process.env.TARGET_IMAGE, imageID: name }],
+      containerStatuses: [{ name: 'control-plane', ready, image, imageID: name }],
     },
   };
 }

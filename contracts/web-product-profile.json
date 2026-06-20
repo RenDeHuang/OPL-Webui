@@ -69,6 +69,31 @@
     "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
     "visibleRoutes": ["chat", "settings", "capabilities", "medopl"]
   },
+  "commercialLifecycle": {
+    "mode": "authenticated_readonly_personal_status_projection",
+    "owner": "one-person-lab-web",
+    "consumer": "settings_lifecycle_summary",
+    "contract": "contracts/web-api.openapi.json#/paths/~1api~1account~1commercial-status",
+    "currentAccountType": "personal",
+    "currentLifecycleState": "active",
+    "projectionOnly": true,
+    "allowedCurrentActions": ["view_medopl_billing"],
+    "expansionRequires": [
+      "real_consumer",
+      "contract",
+      "registered_tests",
+      "MedOPL_billing_authority_preserved"
+    ],
+    "forbiddenExpansions": [
+      "team_invite",
+      "team_rbac",
+      "pricing",
+      "subscription",
+      "payment_mutation",
+      "billing_source_of_truth",
+      "commercial_admin_console"
+    ]
+  },
   "claims": {
     "canClaim": [
       "One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab.",
@@ -83,6 +108,11 @@
       "complete production-ready SaaS",
       "desktop App packaging or updater owner",
       "billing source of truth",
+      "team invite lifecycle",
+      "RBAC lifecycle",
+      "pricing lifecycle",
+      "subscription lifecycle",
+      "payment lifecycle",
       "runtime execution owner",
       "node pool lifecycle owner",
       "storage owner",

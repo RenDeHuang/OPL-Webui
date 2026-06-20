@@ -259,6 +259,14 @@
       "lifecycle": "integration"
     },
     {
+      "path": ".github/workflows/production-canary.yml",
+      "type": "workflow",
+      "ownerSurface": "production-observability",
+      "consumer": ["GitHub Actions", "production operations review"],
+      "contract": ["contracts/web-release-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
+      "lifecycle": "integration"
+    },
+    {
       "path": ".github/workflows/release-image.yml",
       "type": "workflow",
       "ownerSurface": "deploy",

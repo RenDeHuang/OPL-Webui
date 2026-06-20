@@ -45,7 +45,7 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 5. `authenticated_dogfood_e2e=true` 只能和 `apply=true` 一起使用；dogfood job 依赖 `production-apply`，因此只能在该 image 的 apply、canary、smoke 成功后运行。`apply=false` 时请求 dogfood 会 fail-closed。
 6. `availability_probe=true` 会运行 no-secret production availability probe。`apply=false` 时探测当前线上；`apply=true` 时在本次 rollout apply、canary、smoke 成功后探测新版本线上。该 probe 不读取 kubeconfig、image、DB、dogfood secret、MedOPL token 或 TCR 凭据。
 7. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
-8. 手动回滚也走同一个 helper：`Cloud Rollout` 设置 `rollback=true`、`apply=false`、`availability_probe=true`，通过 production Environment approval 后执行 `node scripts/cloud-rollout.mjs --rollback`，再运行 `Production Availability Probe After Rollback`。这是 manual environment-approved rollback evidence，不是自动失败回滚。
+8. 手动回滚也走同一个 helper：`Cloud Rollout` 设置 `rollback=true`、`apply=false`、`availability_probe=true`。同一次 workflow 的 dry-run 阶段会执行 `node scripts/cloud-rollout.mjs --rollback-plan`，只打印 `rollout undo` 和 post-rollback canary/smoke 计划，不打印 forward `set image`。通过 production Environment approval 后执行 `node scripts/cloud-rollout.mjs --rollback`，再运行 `Production Availability Probe After Rollback`。这是 manual environment-approved rollback evidence，不是自动失败回滚。
 
 如果 `rollout status` 超时或失败，helper 会在退出前打印 Deployment、ReplicaSet/Pod、Pod describe、Pod logs 和 events 摘要，并给出 `rollout likely cause`。分类只用于定位下一步排查，不改变集群状态：
 
@@ -67,7 +67,7 @@ OPL_IMAGE="<short-commit-or-full-tag-or-digest>" \
 node scripts/cloud-rollout.mjs --apply
 ```
 
-helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`、`uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`，或 `^[0-9a-f]{7,40}$` release short commit tag。短 tag 只会规范化到 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`；外部 registry、未限定 repo 和 floating `latest` 继续 fail-closed。helper 必须只选择 Running、Ready、container image 等于本次规范化后 `OPL_IMAGE` 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
+helper 必须先校验 `OPL_IMAGE` 属于 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`、`uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:<digest>`，或 `^[0-9a-f]{7,40}$` release short commit tag。短 tag 只会规范化到 `uswccr.ccs.tencentyun.com/webopl/opl-webui:<tag>`；外部 registry、未限定 repo 和 floating `latest` 继续 fail-closed。Forward apply 必须只选择 Running、Ready、container image 等于本次规范化后 `OPL_IMAGE` 的 Pod 执行 canary；rollback 必须读取 undo 后 Deployment image，再选择 Running、Ready、container image 等于 post-rollback Deployment image 的 Pod 执行 canary，不能对 Failed/Succeeded/Error 历史 Pod exec。`/readyz` 必须返回 `ok=true` 且 `missing=[]`；`/metricsz` 必须返回 `ok=true` 且 `missingDependencyCount=0`。恢复 automatic staging rollout 的条件：创建真实 `staging.opl.medopl.cn`、`opl-webui-staging`、独立 staging DB/Secret/TLS/DNS，并补 workflow contract、runbook、canary/smoke eval 和 rollback。
 
 ## Production availability probe
 
@@ -103,11 +103,11 @@ cannot claim: multi-node HA, production browser e2e, production authenticated do
 
 Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboard 或 alerting surface。`/metricsz` 必须包含 `observabilitySchemaVersion=1`、`releaseProbeContract=production_observability_baseline_v1`、`publicProbeEndpoints=["/healthz","/readyz","/metricsz","/"]`；helper 输出每个 endpoint 的 `samples`、`successes`、`failures`、`maxDurationMs`，并继续不保存 raw response body、cookie 或 secret。
 
-Latest folded evidence is run `27866718228`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d`, after production apply. The required future evidence for long-term operations is not implemented yet:
+Latest folded evidence is run `27866718228`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:3e69e3d`, after production apply. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. The remaining required future evidence for long-term operations is:
 
 ```text
-required future evidence: scheduled_canary, dashboard, alerting, error_budget, rollback_record
-cannot claim: long-term canary monitoring, dashboard, alerting, error budget enforcement, multi-node HA, production-ready SaaS
+required future evidence: scheduled_canary_first_success, dashboard, alerting, error_budget, rollback_record
+cannot claim: dashboard, alerting, error budget enforcement, automatic rollback, multi-node HA, production-ready SaaS
 ```
 
 ## Production authenticated dogfood e2e

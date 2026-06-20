@@ -55,6 +55,24 @@ test('github ci workflow runs local gates only', () => {
   assert.doesNotMatch(workflow, /KUBECONFIG|TCR_PASSWORD|TCR_USERNAME|secrets\./i);
 });
 
+test('github production canary workflow is no-secret availability only', () => {
+  const workflow = readFileSync('.github/workflows/production-canary.yml', 'utf8');
+
+  assert.match(workflow, /name:\s*Production Canary/);
+  assert.match(workflow, /schedule:/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /cron:\s*'17,47 \* \* \* \*'/);
+  assert.match(workflow, /runs-on:\s*ubuntu-latest/);
+  assert.match(workflow, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
+  assert.match(workflow, /OPL_AVAILABILITY_PROBE_SAMPLES:\s*3/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.match(workflow, /permissions:\s*\n\s*contents:\s*read/);
+
+  assert.doesNotMatch(workflow, /environment:\s*production/);
+  assert.doesNotMatch(workflow, /KUBECONFIG|kubectl|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|OPL_DOGFOOD|MEDOPL_TOKEN|TCR_PASSWORD|secrets\./i);
+  assert.doesNotMatch(workflow, /--apply|--rollback|--dogfood-e2e|research-main-path-runner/);
+});
+
 test('github release image workflow only builds and pushes after ci passes', () => {
   const workflow = readFileSync('.github/workflows/release-image.yml', 'utf8');
 
@@ -136,6 +154,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /Dogfood e2e requires apply=true so it can run after rollout canary\/smoke evidence\./);
   assert.match(workflow, /environment:\s*production/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --rollback-plan/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --rollback/);
   assert.match(workflow, /--apply/);
@@ -171,6 +190,8 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('production-apply:'));
   assert.doesNotMatch(dryRunJob, /environment:\s*production/);
   assert.doesNotMatch(dryRunJob, /KUBECONFIG/);
+  assert.match(dryRunJob, /inputs\.rollback/);
+  assert.match(dryRunJob, /node scripts\/cloud-rollout\.mjs --rollback-plan/);
 
   const applyJob = workflow.slice(workflow.indexOf('production-apply:'));
   assert.match(applyJob, /KUBECONFIG_CONTENT:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);

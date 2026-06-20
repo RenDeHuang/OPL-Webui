@@ -4,10 +4,11 @@ import { execFileSync, spawnSync } from 'node:child_process';
 const args = new Set(process.argv.slice(2));
 const apply = args.has('--apply');
 const rollback = args.has('--rollback');
-const dryRun = !apply && !rollback;
+const rollbackPlan = args.has('--rollback-plan');
+const dryRun = !apply && !rollback && !rollbackPlan;
 
-if (apply && rollback) {
-  throw new Error('--apply and --rollback are mutually exclusive');
+if ([apply, rollback, rollbackPlan].filter(Boolean).length > 1) {
+  throw new Error('--apply, --rollback, and --rollback-plan are mutually exclusive');
 }
 
 const namespace = process.env.OPL_NAMESPACE ?? 'opl-webui';
@@ -47,6 +48,12 @@ if (args.has('--dogfood-e2e')) {
 
 if (args.has('--availability-probe')) {
   await runAvailabilityProbe();
+  process.exit(0);
+}
+
+if (rollbackPlan) {
+  setValidatedImage(image);
+  printRollbackPlan();
   process.exit(0);
 }
 
@@ -188,14 +195,15 @@ function runRollback() {
   }
   run('kubectl rollout undo', 'kubectl', kubectlArgs(rollbackArgs));
   runRolloutStatus();
-  runPostRolloutChecks('rollback revision');
+  const rolledBackImage = runPostRolloutChecks('rollback revision');
   const summary = {
     schemaVersion: 1,
     mode: 'manual_environment_approved_rollback',
     targetHost: baseUrl,
     namespace,
     deployment,
-    image,
+    requestedImage: image,
+    image: rolledBackImage,
     checks: ['rollout_undo', 'rollout_status', 'canary_db', 'canary_opl_cli', 'healthz', 'readyz', 'metricsz', 'home'],
     rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
   };
@@ -205,9 +213,9 @@ function runRollback() {
 
 function runPostRolloutChecks(revisionLabel) {
   capture(revisionLabel, kubectlArgs(['get', deployment, '-o', rolloutRevisionJsonpath]));
-  capture('deployment image', kubectlArgs(['get', deployment, '-o', deploymentImageJsonpath]));
+  const deploymentImage = capture('deployment image', kubectlArgs(['get', deployment, '-o', deploymentImageJsonpath]));
 
-  const pod = selectReadyPod();
+  const pod = selectReadyPod(deploymentImage || image);
 
   run('pod status', 'kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'wide']));
   capture('pod imageID', kubectlArgs(['get', 'pod', pod, '-o', podImageIdJsonpath]));
@@ -217,6 +225,7 @@ function runPostRolloutChecks(revisionLabel) {
   semanticSmoke('readyz', readyUrl, (body) => body?.ok === true && Array.isArray(body.missing) && body.missing.length === 0);
   semanticSmoke('metricsz', metricsUrl, (body) => body?.ok === true && body?.missingDependencyCount === 0);
   run(`HTTPS smoke ${homeUrl}`, 'curl', ['--http2', '-fsS', homeUrl]);
+  return deploymentImage;
 }
 
 function buildObservabilityBaseline(summary) {
@@ -290,6 +299,31 @@ function printDryRun() {
   console.log(`# selected pod is resolved from Running + Ready pods on ${image}`);
   printKubectl(['get', 'pod', '-l', podSelector, '-o', 'json']);
   console.log('pod="<selected Running Ready pod matching OPL_IMAGE>"');
+  printKubectl(['get', 'pod', '-l', podSelector, '-o', 'wide']);
+  printKubectl(['get', 'pod', '$pod', '-o', podImageIdJsonpath]);
+  printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'db']);
+  printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'opl-cli']);
+  console.log(formatCommand('curl', ['--http2', '-fsS', healthUrl]));
+  console.log(formatCommand('curl', ['--http2', '-fsS', readyUrl]));
+  console.log(formatCommand('curl', ['--http2', '-fsS', metricsUrl]));
+  console.log(formatCommand('curl', ['--http2', '-fsS', homeUrl]));
+}
+
+function printRollbackPlan() {
+  console.log('[cloud-rollout] rollbackPlan=true; pass --rollback after production approval to undo the rollout.');
+  const rollbackArgs = ['rollout', 'undo', deployment];
+  if (process.env.OPL_ROLLBACK_REVISION) {
+    rollbackArgs.push(`--to-revision=${process.env.OPL_ROLLBACK_REVISION}`);
+  }
+  printKubectl(rollbackArgs);
+  printKubectl(['rollout', 'status', deployment, `--timeout=${kubectlRolloutTimeoutSeconds}s`]);
+  console.log('# rollback revision');
+  printKubectl(['get', deployment, '-o', rolloutRevisionJsonpath]);
+  console.log('# post-rollback deployment image');
+  printKubectl(['get', deployment, '-o', deploymentImageJsonpath]);
+  console.log('# selected pod is resolved from Running + Ready pods on the post-rollback Deployment image');
+  printKubectl(['get', 'pod', '-l', podSelector, '-o', 'json']);
+  console.log('pod="<selected Running Ready pod matching post-rollback deployment image>"');
   printKubectl(['get', 'pod', '-l', podSelector, '-o', 'wide']);
   printKubectl(['get', 'pod', '$pod', '-o', podImageIdJsonpath]);
   printKubectl(['exec', '$pod', '--', controlPlaneBin, 'canary', 'db']);
@@ -412,10 +446,9 @@ function capture(label, commandArgs) {
   return value;
 }
 
-function selectReadyPod() {
+function selectReadyPod(expectedImage = image) {
   const pods = JSON.parse(execFileSync('kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'json']), { encoding: 'utf8' }));
 
-  const expectedImage = image;
   const candidates = (pods.items ?? [])
     .filter((pod) => pod.status?.phase === 'Running')
     .filter((pod) => hasReadyCondition(pod))
@@ -559,9 +592,10 @@ function printUsage() {
   node scripts/cloud-rollout.mjs
   OPL_IMAGE=4a9d439 node scripts/cloud-rollout.mjs
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:4a9d439 OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
+  OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback-plan
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
   OPL_BASE_URL=https://opl.medopl.cn OPL_AVAILABILITY_PROBE_SAMPLES=3 node scripts/cloud-rollout.mjs --availability-probe
 
-Default mode prints a dry-run command plan. Short release commit tags are normalized to ${imageRepository}:<tag>. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
+Default mode prints a dry-run command plan. Short release commit tags are normalized to ${imageRepository}:<tag>. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback-plan prints the manual rollback plan without cluster mutation. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks against the post-rollback Deployment image. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }

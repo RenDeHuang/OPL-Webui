@@ -300,9 +300,17 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionObservabilityBaseline.owner, 'one-person-lab-web-release');
   assert.equal(release.productionObservabilityBaseline.consumer, 'cloud_rollout_closeout');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.owner, 'operations_owner');
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'not_implemented_pending_ops_consumer');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'scheduled_canary_workflow_ready_pending_first_success_and_ops_consumer');
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.implementedEvidence, [
+    'scheduled_canary_workflow',
+  ]);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.state, 'configured_pending_first_success');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresKubeconfig, false);
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.mutatesCluster, false);
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence, [
-    'scheduled_canary',
+    'scheduled_canary_first_success',
     'dashboard',
     'alerting',
     'error_budget',
@@ -332,6 +340,15 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   for (const cannotClaim of ['multi-node HA', 'CLB two-backend health', 'zero-downtime rolling update evidence']) {
     assert.equal(release.productionHAReadiness.cannotClaim.includes(cannotClaim), true, `HA readiness must not claim ${cannotClaim}`);
   }
+  assert.equal(release.productionRollbackReadiness.mode, 'manual_environment_approved_rollback');
+  assert.equal(release.productionRollbackReadiness.planEntrypoint, 'node scripts/cloud-rollout.mjs --rollback-plan');
+  assert.equal(release.productionRollbackReadiness.entrypoint, 'node scripts/cloud-rollout.mjs --rollback');
+  assert.equal(release.productionRollbackReadiness.dryRunPlanPolicy.mutatesCluster, false);
+  assert.equal(release.productionRollbackReadiness.dryRunPlanPolicy.printsForwardSetImage, false);
+  assert.equal(release.productionRollbackReadiness.dryRunPlanPolicy.printsRollbackUndo, true);
+  assert.equal(release.productionRollbackReadiness.canaryPodSelectionPolicy.forwardApply, 'Running Ready pod matching requested OPL_IMAGE');
+  assert.equal(release.productionRollbackReadiness.canaryPodSelectionPolicy.rollback, 'Running Ready pod matching post-rollback Deployment image');
+  assert.equal(release.productionRollbackReadiness.cannotClaim.includes('automatic rollback'), true);
   assert.equal(release.localBrowserE2EReadiness.mode, 'local_chromium_cdp_research_main_path');
   assert.equal(release.localBrowserE2EReadiness.state, 'executed_success_local_2026_06_19');
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
@@ -362,7 +379,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(runbook, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.match(runbook, /OPL_AVAILABILITY_PROBE_SAMPLES=3/);
   assert.match(runbook, /Production observability baseline v1/);
-  assert.match(runbook, /required future evidence: scheduled_canary, dashboard, alerting, error_budget, rollback_record/);
+  assert.match(runbook, /required future evidence: scheduled_canary_first_success, dashboard, alerting, error_budget, rollback_record/);
+  assert.match(runbook, /\.github\/workflows\/production-canary\.yml/);
   assert.match(runbook, /Production HA readiness contract/);
   assert.match(runbook, /HA is paused for the current single-node launch/);
   assert.match(runbook, /replicas=1/);
@@ -384,7 +402,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Browser e2e is now a CI release gate/);
   assert.match(status, /Production availability probe executed successfully/);
   assert.match(status, /Production observability baseline v1 is now folded back to run `27866718228`/);
-  assert.match(status, /Long-term operations readiness remains pending: scheduled canary, dashboard, alerting, error budget, and rollback record/);
+  assert.match(status, /A no-secret scheduled availability canary is configured/);
+  assert.match(status, /Long-term operations readiness remains pending: scheduled canary first success, dashboard, alerting, error budget, and rollback record/);
   assert.match(status, /Production HA is paused for the current single-node launch/);
   assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY.*not publicly confirmable/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
@@ -393,6 +412,61 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /本阶段没有执行 production availability probe/);
   assert.match(status, /Next Priorities/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
+});
+
+test('commercial lifecycle expansion stays a readonly personal projection until consumer contract and tests exist', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const release = readJson('contracts/web-release-profile.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+  const decisions = readFileSync('docs/decisions.md', 'utf8');
+
+  assert.equal(product.commercialLifecycle.mode, 'authenticated_readonly_personal_status_projection');
+  assert.equal(product.commercialLifecycle.owner, 'one-person-lab-web');
+  assert.equal(product.commercialLifecycle.consumer, 'settings_lifecycle_summary');
+  assert.equal(product.commercialLifecycle.contract, 'contracts/web-api.openapi.json#/paths/~1api~1account~1commercial-status');
+  assert.equal(product.commercialLifecycle.currentAccountType, 'personal');
+  assert.equal(product.commercialLifecycle.currentLifecycleState, 'active');
+  assert.equal(product.commercialLifecycle.projectionOnly, true);
+  assert.deepEqual(product.commercialLifecycle.allowedCurrentActions, ['view_medopl_billing']);
+  assert.deepEqual(product.commercialLifecycle.expansionRequires, [
+    'real_consumer',
+    'contract',
+    'registered_tests',
+    'MedOPL_billing_authority_preserved',
+  ]);
+  for (const forbiddenExpansion of [
+    'team_invite',
+    'team_rbac',
+    'pricing',
+    'subscription',
+    'payment_mutation',
+    'billing_source_of_truth',
+    'commercial_admin_console',
+  ]) {
+    assert.equal(
+      product.commercialLifecycle.forbiddenExpansions.includes(forbiddenExpansion),
+      true,
+      `commercial lifecycle must forbid ${forbiddenExpansion} expansion`,
+    );
+  }
+
+  for (const cannotClaim of [
+    'team invite lifecycle',
+    'RBAC lifecycle',
+    'pricing lifecycle',
+    'subscription lifecycle',
+    'payment lifecycle',
+  ]) {
+    assert.equal(release.cannotClaim.includes(cannotClaim), true, `release cannot claim ${cannotClaim}`);
+  }
+
+  assert.match(status, /authenticated readonly personal commercial status projection/);
+  assert.match(status, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires a real consumer, contract, and registered tests/);
+  assert.match(active, /authenticated readonly personal commercial status projection/);
+  assert.match(active, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires a real consumer, contract, and registered tests/);
+  assert.match(decisions, /Commercial lifecycle stays a readonly personal projection/);
+  assert.match(decisions, /team invite\/RBAC\/pricing\/subscription\/payment/i);
 });
 
 test('release automation evidence is historical after production-gated closeout', () => {

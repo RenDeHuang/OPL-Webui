@@ -72,7 +72,12 @@ jobs:
           exit 1
 
       - name: Rollout dry-run
-        run: node scripts/cloud-rollout.mjs
+        run: |
+          if [[ "${{ inputs.rollback }}" == "true" ]]; then
+            node scripts/cloud-rollout.mjs --rollback-plan
+          else
+            node scripts/cloud-rollout.mjs
+          fi
 
   rollout-mutation-guard:
     name: Rollout Mutation Guard

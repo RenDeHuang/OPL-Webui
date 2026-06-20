@@ -1,0 +1,29 @@
+name: Production Canary
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  availability:
+    name: Scheduled Production Availability Probe
+    runs-on: ubuntu-latest
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+      OPL_AVAILABILITY_PROBE_SAMPLES: 3
+      OPL_AVAILABILITY_PROBE_INTERVAL_MS: 1000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run no-secret availability probe
+        run: node scripts/cloud-rollout.mjs --availability-probe

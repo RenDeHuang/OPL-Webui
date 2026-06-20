@@ -389,7 +389,12 @@
     "complete production-ready SaaS",
     "real OPL runtime execution",
     "MedOPL runtime bridge implementation",
-    "billing source of truth"
+    "billing source of truth",
+    "team invite lifecycle",
+    "RBAC lifecycle",
+    "pricing lifecycle",
+    "subscription lifecycle",
+    "payment lifecycle"
   ],
   "localBrowserE2EReadiness": {
     "mode": "local_chromium_cdp_research_main_path",
@@ -490,9 +495,34 @@
     "nextReadiness": {
       "owner": "operations_owner",
       "consumer": "production_operations_review",
-      "state": "not_implemented_pending_ops_consumer",
+      "state": "scheduled_canary_workflow_ready_pending_first_success_and_ops_consumer",
+      "implementedEvidence": [
+        "scheduled_canary_workflow"
+      ],
+      "scheduledCanary": {
+        "workflow": ".github/workflows/production-canary.yml",
+        "state": "configured_pending_first_success",
+        "schedule": "17,47 * * * *",
+        "entrypoint": "node scripts/cloud-rollout.mjs --availability-probe",
+        "requiresProductionSecrets": false,
+        "requiresKubeconfig": false,
+        "mutatesCluster": false,
+        "coverage": [
+          "HTTPS /healthz",
+          "HTTPS /readyz",
+          "HTTPS /metricsz",
+          "HTTPS /"
+        ],
+        "cannotClaim": [
+          "dashboard",
+          "alerting",
+          "error budget enforcement",
+          "automatic rollback",
+          "production-ready SaaS"
+        ]
+      },
       "requiredFutureEvidence": [
-        "scheduled_canary",
+        "scheduled_canary_first_success",
         "dashboard",
         "alerting",
         "error_budget",
@@ -548,9 +578,19 @@
     "requiresEnvironmentApproval": true,
     "mutatesCluster": true,
     "automaticRollback": false,
+    "planEntrypoint": "node scripts/cloud-rollout.mjs --rollback-plan",
     "entrypoint": "node scripts/cloud-rollout.mjs --rollback",
     "workflow": ".github/workflows/cloud-rollout.yml",
     "workflowInput": "rollback",
+    "dryRunPlanPolicy": {
+      "mutatesCluster": false,
+      "printsForwardSetImage": false,
+      "printsRollbackUndo": true
+    },
+    "canaryPodSelectionPolicy": {
+      "forwardApply": "Running Ready pod matching requested OPL_IMAGE",
+      "rollback": "Running Ready pod matching post-rollback Deployment image"
+    },
     "orderedStages": [
       "production_dry_run",
       "production_rollback",
