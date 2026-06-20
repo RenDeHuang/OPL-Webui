@@ -139,8 +139,52 @@ export function chatStateForResult(result, pending = false) {
   if (result.errorCode === 'RUNTIME_REQUIRED') return 'runtime_required';
   if (result.errorCode === 'CHAT_QUOTA_EXCEEDED') return 'quota_exceeded';
   if (result.errorCode === 'UPSTREAM_CHAT_FAILED') return 'upstream_failed';
+  if (result.errorCode === 'AUTH_REQUIRED') return 'auth_required';
+  if (result.errorCode === 'API_KEY_REQUIRED') return 'api_key_required';
+  if (result.errorCode === 'SERVICE_UNAVAILABLE') return 'service_unavailable';
+  if (result.errorCode === 'NETWORK_UNREACHABLE') return 'network_unreachable';
   if (result.ok === false) return 'upstream_failed';
   return 'idle';
+}
+
+export function reliabilityStatusForResult(result) {
+  const state = chatStateForResult(result);
+  const diagnostics = result?.upstreamDiagnostics || result?.metadata || {};
+  const host = diagnostics.upstreamHost || diagnostics.host || '';
+  const model = diagnostics.upstreamModel || diagnostics.model || '';
+  const byState = {
+    idle: { title: '系统就绪', action: '继续输入', retryable: false },
+    sending: { title: '正在发送', action: '等待结果', retryable: false },
+    auth_required: { title: '需要登录', action: '去登录', retryable: false },
+    api_key_required: { title: '需要绑定 API Key', action: '绑定 API Key', retryable: false },
+    quota_exceeded: { title: '额度已用完', action: '查看额度', retryable: false },
+    runtime_required: { title: '需要 MedOPL 授权', action: '去 MedOPL', retryable: false },
+    upstream_failed: { title: '上游暂时不可用', action: '稍后重试', retryable: true },
+    service_unavailable: { title: '服务暂时不可用', action: '稍后重试', retryable: true },
+    network_unreachable: { title: '网络暂时不可达', action: '稍后重试', retryable: true },
+  };
+  const base = byState[state] || byState.upstream_failed;
+  return {
+    state,
+    title: base.title,
+    action: base.action,
+    retryable: base.retryable,
+    details: sanitizedDetails([host, model].filter(Boolean).join(' / ') || result?.message || result?.errorCode || ''),
+  };
+}
+
+export function accountLifecycleSummary(commercialStatus = {}, billingSummary = {}) {
+  const accountType = commercialStatus.accountType || 'personal';
+  const lifecycleState = commercialStatus.lifecycleState || 'active';
+  const tenantRole = commercialStatus.tenantRole || 'owner';
+  const quota = billingSummary.quota || { limit: 0, used: 0, remaining: 0 };
+  const audit = billingSummary.audit || { eventCount: 0, latestEventKind: '' };
+  return {
+    lifecycleLabel: `${capitalize(accountType)} / ${lifecycleState}`,
+    tenantRoleLabel: `tenant role: ${tenantRole}`,
+    quotaLabel: `quota ${Number(quota.used || 0)}/${Number(quota.limit || 0)} used, ${Number(quota.remaining || 0)} remaining`,
+    auditLabel: `audit events: ${Number(audit.eventCount || 0)}, latest ${audit.latestEventKind || 'none'}`,
+  };
 }
 
 export function chatStateForPrompt(message) {
@@ -217,6 +261,11 @@ export function createOnePersonLabViewModel(state) {
     conversations: state.conversations?.conversations ?? [],
     commercialStatus: commercialStatusFallback(state.commercialStatus),
     billingSummary: billingSummaryFallback(state.billingSummary),
+    accountLifecycle: accountLifecycleSummary(
+      commercialStatusFallback(state.commercialStatus),
+      billingSummaryFallback(state.billingSummary),
+    ),
+    reliabilityStatus: reliabilityStatusForResult(null),
     capabilitySource: OPL_CAPABILITY_MANIFEST.source,
     researchTaskIntents: RESEARCH_TASK_INTENTS,
     researchResultSections: RESEARCH_RESULT_SECTIONS,
@@ -269,12 +318,16 @@ function ctaForState(state) {
 }
 
 async function writeJSON(fetchRef, url, body, method = 'POST') {
-  const response = await fetchRef(url, {
-    method,
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  return readResponse(response);
+  try {
+    const response = await fetchRef(url, {
+      method,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return readResponse(response);
+  } catch (error) {
+    return sanitizedError('NETWORK_UNREACHABLE', error);
+  }
 }
 
 async function readJSON(fetchRef, url) {
@@ -286,9 +339,37 @@ async function readJSON(fetchRef, url) {
 }
 
 async function readResponse(response) {
-  const body = await response.json();
+  let body;
+  try {
+    body = await response.json();
+  } catch (error) {
+    return sanitizedError('SERVICE_UNAVAILABLE', error, response?.status);
+  }
   if (!response.ok && body && !body.ok) return body;
   return body;
+}
+
+function sanitizedError(errorCode, error, status = 0) {
+  return {
+    ok: false,
+    errorCode,
+    status,
+    message: errorCode === 'NETWORK_UNREACHABLE' ? '网络暂时不可达，请稍后重试。' : '服务暂时不可用，请稍后重试。',
+    diagnostics: sanitizedDetails(error?.name || ''),
+  };
+}
+
+function sanitizedDetails(value) {
+  return String(value || '')
+    .replace(/postgres(?:ql)?:\/\/\S+/gi, '[redacted-database-url]')
+    .replace(/sk-[A-Za-z0-9_-]+/g, '[redacted-api-key]')
+    .replace(/password\s*=\s*[^\s]+/gi, 'password=[redacted]')
+    .replace(/rawApiKey|encryptedApiKey/gi, '[redacted-field]');
+}
+
+function capitalize(value) {
+  const text = String(value || '');
+  return text ? text.slice(0, 1).toUpperCase() + text.slice(1) : '';
 }
 
 function providerFallback() {

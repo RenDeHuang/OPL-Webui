@@ -112,6 +112,11 @@
               <p class="panel-kicker">Chat</p>
               <h2 id="chat-title">从普通问题开始，逐步进入专业工作</h2>
             </div>
+            <aside class="reliability-status" data-reliability-status data-state="idle" aria-live="polite">
+              <strong data-reliability-title>系统就绪</strong>
+              <span data-reliability-action>继续输入</span>
+              <small data-reliability-details></small>
+            </aside>
             <div class="chat-log" data-chat-log aria-live="polite">
               <article class="message user-message">
                 <span>你</span>
@@ -137,6 +142,18 @@
               <div>
                 <dt>API Key 绑定状态</dt>
                 <dd data-provider-status>未绑定</dd>
+              </div>
+              <div>
+                <dt>账号生命周期</dt>
+                <dd data-account-lifecycle-status>Personal / active</dd>
+              </div>
+              <div>
+                <dt>额度状态</dt>
+                <dd data-quota-status>quota 0/0 used, 0 remaining</dd>
+              </div>
+              <div>
+                <dt>最近审计</dt>
+                <dd data-account-audit-status>audit events: 0, latest none</dd>
               </div>
               <div>
                 <dt>fixed base_url</dt>

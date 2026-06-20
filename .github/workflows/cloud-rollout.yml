@@ -18,6 +18,11 @@ on:
         required: true
         default: false
         type: boolean
+      rollback:
+        description: Run manual environment-approved rollback instead of forward apply.
+        required: true
+        default: false
+        type: boolean
       authenticated_dogfood_e2e:
         description: Run production authenticated dogfood e2e after approval.
         required: true
@@ -63,10 +68,21 @@ jobs:
       - name: Rollout dry-run
         run: node scripts/cloud-rollout.mjs
 
+  rollout-mutation-guard:
+    name: Rollout Mutation Guard
+    if: ${{ inputs.apply && inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject conflicting rollout mutations
+        shell: bash
+        run: |
+          echo "apply=true and rollback=true are mutually exclusive." >&2
+          exit 1
+
   production-apply:
     name: Production Apply
     needs: production-dry-run
-    if: ${{ inputs.apply }}
+    if: ${{ inputs.apply && !inputs.rollback }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     environment: production
     env:
@@ -100,10 +116,47 @@ jobs:
         shell: bash
         run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --apply
 
+  production-rollback:
+    name: Production Rollback
+    needs: production-dry-run
+    if: ${{ inputs.rollback && !inputs.apply }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    environment: production
+    env:
+      OPL_IMAGE: ${{ inputs.image }}
+      OPL_NAMESPACE: opl-webui
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate image allowlist
+        shell: bash
+        run: |
+          tag_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'
+          digest_pattern='^uswccr\.ccs\.tencentyun\.com/webopl/opl-webui@sha256:[0-9a-f]{64}$'
+          if [[ "$OPL_IMAGE" =~ $tag_pattern || "$OPL_IMAGE" =~ $digest_pattern ]]; then
+            exit 0
+          fi
+          echo "OPL_IMAGE is outside the allowed OPL-Webui image registry." >&2
+          exit 1
+
+      - name: Write kubeconfig file
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        shell: bash
+        run: |
+          printf '%s' "$KUBECONFIG_CONTENT" > "$RUNNER_TEMP/kubeconfig"
+          chmod 600 "$RUNNER_TEMP/kubeconfig"
+
+      - name: Rollout rollback
+        shell: bash
+        run: KUBECONFIG="$RUNNER_TEMP/kubeconfig" node scripts/cloud-rollout.mjs --rollback
+
   production-availability-probe-current:
     name: Production Availability Probe Current
     needs: production-dry-run
-    if: ${{ !inputs.apply && inputs.availability_probe }}
+    if: ${{ !inputs.apply && !inputs.rollback && inputs.availability_probe }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     env:
       OPL_BASE_URL: https://opl.medopl.cn
@@ -118,6 +171,20 @@ jobs:
     name: Production Availability Probe After Apply
     needs: production-apply
     if: ${{ inputs.apply && inputs.availability_probe }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run no-secret availability probe
+        run: node scripts/cloud-rollout.mjs --availability-probe
+
+  production-availability-probe-after-rollback:
+    name: Production Availability Probe After Rollback
+    needs: production-rollback
+    if: ${{ inputs.rollback && inputs.availability_probe }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     env:
       OPL_BASE_URL: https://opl.medopl.cn

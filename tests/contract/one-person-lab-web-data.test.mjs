@@ -68,6 +68,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'quota_exceeded',
     'paper_runtime_gate',
     'grant_runtime_gate',
+    'account_lifecycle_status_visible',
+    'reliability_status_visible',
     'sanitized_audit',
   ]);
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
@@ -81,6 +83,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result-section]'), true);
   assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-task-card]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-lifecycle-status]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-quota-status]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-audit-status]'), true);
+  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-reliability-status]'), true);
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
     ['research_direction', '@科研', 'ordinary_chat_fallback'],
     ['paper_question', '@论文', 'runtime_gate'],
@@ -298,6 +304,9 @@ test('web data module implements the page-state chat matrix', () => {
   for (const state of ['idle', 'sending', 'runtime_required', 'quota_exceeded', 'upstream_failed']) {
     assert.equal(chatStates.includes(state), true, `missing contract chat state: ${state}`);
   }
+  for (const state of ['auth_required', 'api_key_required', 'service_unavailable', 'network_unreachable']) {
+    assert.equal(chatStates.includes(state), true, `missing reliability contract state: ${state}`);
+  }
   for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending']) {
     assert.equal(chatStates.includes(state), true, `missing research contract state: ${state}`);
   }
@@ -307,6 +316,10 @@ test('web data module implements the page-state chat matrix', () => {
   assert.equal(web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }), 'runtime_required');
   assert.equal(web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }), 'quota_exceeded');
   assert.equal(web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }), 'upstream_failed');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }), 'auth_required');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }), 'api_key_required');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'SERVICE_UNAVAILABLE' }), 'service_unavailable');
+  assert.equal(web.chatStateForResult({ ok: false, errorCode: 'NETWORK_UNREACHABLE' }), 'network_unreachable');
   assert.equal(web.chatStateForResult({ ok: true, assistantMessage: { content: 'ok' } }), 'idle');
   assert.equal(web.chatStateForPrompt('@科研 帮我拆解研究方向'), 'research_entry_selected');
   assert.equal(web.chatStateForPrompt('@论文 生成研究选题'), 'paper_entry_selected');
@@ -327,6 +340,10 @@ test('web data module implements the page-state chat matrix', () => {
     web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }),
     web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }),
     web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }),
+    web.chatStateForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }),
+    web.chatStateForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }),
+    web.chatStateForResult({ ok: false, errorCode: 'SERVICE_UNAVAILABLE' }),
+    web.chatStateForResult({ ok: false, errorCode: 'NETWORK_UNREACHABLE' }),
     web.chatStateForPrompt('@科研 帮我拆解研究方向'),
     web.chatStateForPrompt('@论文 生成研究选题'),
     web.chatStateForPrompt('@基金 帮我拆解标书结构'),
@@ -334,6 +351,66 @@ test('web data module implements the page-state chat matrix', () => {
   ]) {
     assert.equal(chatStates.includes(state), true, `chat state is outside contract: ${state}`);
   }
+});
+
+test('web data module builds sanitized reliability and account lifecycle status view models', () => {
+  const reliability = web.reliabilityStatusForResult({
+    ok: false,
+    errorCode: 'UPSTREAM_CHAT_FAILED',
+    message: 'chat upstream returned an error',
+    upstreamDiagnostics: {
+      upstreamHost: 'gflabtoken.cn',
+      upstreamModel: 'gpt-5.5',
+      upstreamKind: 'network',
+      rawApiKey: 'sk-secret',
+    },
+  });
+  assert.equal(reliability.state, 'upstream_failed');
+  assert.equal(reliability.title, '上游暂时不可用');
+  assert.equal(reliability.action, '稍后重试');
+  assert.equal(reliability.retryable, true);
+  assert.equal(reliability.details.includes('gflabtoken.cn'), true);
+  assert.doesNotMatch(JSON.stringify(reliability), /sk-secret|rawApiKey|encryptedApiKey|password|postgres:\/\//i);
+
+  const account = web.accountLifecycleSummary({
+    ok: true,
+    accountType: 'personal',
+    lifecycleState: 'active',
+    tenantRole: 'owner',
+    tenantId: 'tenant_123',
+  }, {
+    ok: true,
+    quota: { limit: 100, used: 7, remaining: 93 },
+    audit: { eventCount: 12, latestEventKind: 'chat.completed' },
+  });
+  assert.equal(account.lifecycleLabel, 'Personal / active');
+  assert.equal(account.tenantRoleLabel, 'tenant role: owner');
+  assert.equal(account.quotaLabel, 'quota 7/100 used, 93 remaining');
+  assert.equal(account.auditLabel, 'audit events: 12, latest chat.completed');
+  assert.doesNotMatch(JSON.stringify(account), /tenant_123|workspace|runtimeRef|nodePool|storage|paymentToken|invoiceBody/i);
+});
+
+test('web data module converts network and malformed JSON failures into sanitized reliability errors', async () => {
+  const chatNetwork = await web.sendChatMessage(async () => {
+    throw new Error('connect ECONNRESET postgres://user:secret@example/oplweb sk-secret');
+  }, '普通问题');
+  assert.equal(chatNetwork.ok, false);
+  assert.equal(chatNetwork.errorCode, 'NETWORK_UNREACHABLE');
+  assert.equal(web.chatStateForResult(chatNetwork), 'network_unreachable');
+  assert.doesNotMatch(JSON.stringify(chatNetwork), /postgres:\/\//i);
+  assert.doesNotMatch(JSON.stringify(chatNetwork), /sk-secret/i);
+
+  const saveMalformed = await web.saveAPIKey(async () => ({
+    ok: false,
+    status: 502,
+    async json() {
+      throw new Error('html upstream error with password=secret');
+    },
+  }), 'sk-secret', { ok: true });
+  assert.equal(saveMalformed.ok, false);
+  assert.equal(saveMalformed.errorCode, 'SERVICE_UNAVAILABLE');
+  assert.equal(web.chatStateForResult(saveMalformed), 'service_unavailable');
+  assert.doesNotMatch(JSON.stringify(saveMalformed), /password=secret|sk-secret/i);
 });
 
 test('web data module builds structured research result and runtime task card view models', () => {
@@ -580,6 +657,9 @@ test('web data module loads commercial account lifecycle without team or billing
   assert.equal(view.commercialStatus.webuiInviteMutation, 'forbidden');
   assert.equal(view.commercialStatus.webuiPaymentMutation, 'forbidden');
   assert.equal(view.commercialStatus.webuiBillingSourceOfTruth, 'forbidden');
+  assert.equal(view.accountLifecycle.lifecycleLabel, 'Personal / active');
+  assert.equal(view.accountLifecycle.tenantRoleLabel, 'tenant role: owner');
+  assert.equal(view.accountLifecycle.quotaLabel, 'quota 1/3 used, 2 remaining');
   assert.doesNotMatch(JSON.stringify(view.commercialStatus), /workspace|teamInvite|paymentToken|invoiceBody|storage|nodePool|runtimeRef|rawApiKey|encryptedApiKey/i);
 });
 

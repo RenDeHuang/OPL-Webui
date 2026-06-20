@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import pkg from '../../package.json' with { type: 'json' };
@@ -92,16 +94,27 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /authenticated_dogfood_e2e:/);
   assert.match(workflow, /availability_probe:/);
   assert.match(workflow, /production_browser_e2e:/);
+  assert.match(workflow, /rollback:/);
   assert.match(workflow, /production/);
   assert.match(workflow, /options:\s*\n\s*- production/);
   assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
   assert.match(workflow, /production-dry-run:/);
   assert.match(workflow, /name:\s*Production Dry Run/);
   assert.doesNotMatch(workflow, /production-dry-run:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply\s*\}\}/);
+  assert.match(workflow, /rollout-mutation-guard:/);
+  assert.match(workflow, /name:\s*Rollout Mutation Guard/);
+  assert.match(workflow, /rollout-mutation-guard:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.rollback\s*\}\}/);
+  assert.match(workflow, /apply=true and rollback=true are mutually exclusive\./);
   assert.match(workflow, /production-apply:/);
   assert.match(workflow, /name:\s*Production Apply/);
-  assert.match(workflow, /if:\s*\$\{\{\s*inputs\.apply\s*\}\}/);
+  assert.match(workflow, /production-apply:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && !inputs\.rollback\s*\}\}/);
   assert.match(workflow, /production-apply:[\s\S]*?needs:\s*production-dry-run/);
+  assert.match(workflow, /production-rollback:/);
+  assert.match(workflow, /name:\s*Production Rollback/);
+  assert.match(workflow, /production-rollback:[\s\S]*?needs:\s*production-dry-run/);
+  assert.match(workflow, /production-rollback:[\s\S]*?if:\s*\$\{\{\s*inputs\.rollback && !inputs\.apply\s*\}\}/);
+  assert.match(workflow, /production-rollback:[\s\S]*?environment:\s*production/);
+  assert.match(workflow, /production-rollback:[\s\S]*?node scripts\/cloud-rollout\.mjs --rollback/);
   assert.match(workflow, /production-dogfood-e2e:/);
   assert.match(workflow, /production-dogfood-e2e:[\s\S]*?needs:\s*production-apply/);
   assert.match(workflow, /production-dogfood-e2e:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.authenticated_dogfood_e2e\s*\}\}/);
@@ -110,16 +123,20 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-browser-e2e:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.production_browser_e2e\s*\}\}/);
   assert.match(workflow, /production-availability-probe-current:/);
   assert.match(workflow, /production-availability-probe-current:[\s\S]*?needs:\s*production-dry-run/);
-  assert.match(workflow, /production-availability-probe-current:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && inputs\.availability_probe\s*\}\}/);
+  assert.match(workflow, /production-availability-probe-current:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && !inputs\.rollback && inputs\.availability_probe\s*\}\}/);
   assert.match(workflow, /production-availability-probe-after-apply:/);
   assert.match(workflow, /production-availability-probe-after-apply:[\s\S]*?needs:\s*production-apply/);
   assert.match(workflow, /production-availability-probe-after-apply:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.availability_probe\s*\}\}/);
+  assert.match(workflow, /production-availability-probe-after-rollback:/);
+  assert.match(workflow, /production-availability-probe-after-rollback:[\s\S]*?needs:\s*production-rollback/);
+  assert.match(workflow, /production-availability-probe-after-rollback:[\s\S]*?if:\s*\$\{\{\s*inputs\.rollback && inputs\.availability_probe\s*\}\}/);
   assert.match(workflow, /dogfood-request-guard:/);
   assert.match(workflow, /dogfood-request-guard:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && inputs\.authenticated_dogfood_e2e\s*\}\}/);
   assert.match(workflow, /Dogfood e2e requires apply=true so it can run after rollout canary\/smoke evidence\./);
   assert.match(workflow, /environment:\s*production/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --rollback/);
   assert.match(workflow, /--apply/);
   assert.match(workflow, /KUBECONFIG/);
   assert.match(workflow, /OPL_PRODUCTION_DOGFOOD_E2E:\s*1/);
@@ -164,6 +181,15 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(dogfoodJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
   assert.doesNotMatch(dogfoodJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
 
+  const rollbackJob = workflow.slice(
+    workflow.indexOf('production-rollback:'),
+    workflow.indexOf('production-availability-probe-after-rollback:'),
+  );
+  assert.match(rollbackJob, /environment:\s*production/);
+  assert.match(rollbackJob, /KUBECONFIG_CONTENT:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
+  assert.match(rollbackJob, /KUBECONFIG="\$RUNNER_TEMP\/kubeconfig" node scripts\/cloud-rollout\.mjs --rollback/);
+  assert.doesNotMatch(rollbackJob, /OPL_DOGFOOD_API_KEY|OPL_DATABASE_URL|PGPASSWORD|docker\s+push/i);
+
   const productionBrowserJob = workflow.slice(workflow.indexOf('production-browser-e2e:'));
   assert.match(productionBrowserJob, /environment:\s*production/);
   assert.match(productionBrowserJob, /runs-on:\s*ubuntu-latest/);
@@ -196,6 +222,15 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(availabilityAfterApplyJob, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
   assert.match(availabilityAfterApplyJob, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.doesNotMatch(availabilityAfterApplyJob, /KUBECONFIG|kubectl|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
+
+  const availabilityAfterRollbackJob = workflow.slice(
+    workflow.indexOf('production-availability-probe-after-rollback:'),
+    workflow.indexOf('dogfood-request-guard:'),
+  );
+  assert.match(availabilityAfterRollbackJob, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
+  assert.match(availabilityAfterRollbackJob, /node scripts\/cloud-rollout\.mjs --availability-probe/);
+  assert.doesNotMatch(availabilityAfterRollbackJob, /KUBECONFIG|kubectl|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
+  assert.doesNotMatch(workflow, /failure\(\)[\s\S]*?--rollback/);
 });
 
 test('current frontend engineering stays static until browser/product evidence requires migration', () => {
@@ -233,4 +268,108 @@ test('workflow gate can be imported without executing gate steps', () => {
   );
 
   assert.equal(stdout.trim(), 'imported');
+});
+
+test('release evidence sync folds dogfood readonly and rollback evidence without raw logs', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Dry Run', conclusion: 'success', html_url: 'https://example.test/dry' },
+      { name: 'Production Apply', conclusion: 'success', html_url: 'https://example.test/apply' },
+      { name: 'Production Availability Probe After Apply', conclusion: 'success', html_url: 'https://example.test/availability' },
+      { name: 'Production Authenticated Dogfood E2E', conclusion: 'success', html_url: 'https://example.test/dogfood' },
+      { name: 'Production Rollback', conclusion: 'success', html_url: 'https://example.test/rollback' },
+      { name: 'Production Availability Probe After Rollback', conclusion: 'success', html_url: 'https://example.test/rollback-availability' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionDogfoodReadiness: {
+      state: 'executed_success_run_27863328297_real_chat_readonly_unconfirmed',
+      latestSuccessfulRun: {
+        runId: 27863328297,
+        medoplReadonly: 'unconfirmed',
+        publicMetadataConfirmsReadonlySwitch: false,
+        coverage: ['register_or_login', 'runtime_gate_audit'],
+      },
+      cannotClaim: ['MedOPL runtime execution'],
+    },
+    productionRollbackReadiness: {
+      state: 'manual_harness_ready_pending_first_run',
+      latestAttempt: null,
+      cannotClaim: ['automatic rollback', 'production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '27890000000',
+    '--commit', 'fedcba9',
+    '--jobs-json', jobsPath,
+    '--dogfood-readonly-confirmed',
+    '--image', 'uswccr.ccs.tencentyun.com/webopl/opl-webui:fedcba9',
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionDogfoodReadiness.state, 'executed_success_run_27890000000_real_chat_readonly_confirmed');
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.runId, 27890000000);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('medopl_readonly_runtime_status'), true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('medopl_readonly_materials_deliverables'), true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('medopl_readonly_billing_summary'), true);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.rawLogPolicy.storesRawLogs, false);
+  assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.rawLogPolicy.storesSecretValues, false);
+  assert.equal(profile.productionRollbackReadiness.state, 'executed_success_run_27890000000');
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.runId, 27890000000);
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.status, 'success');
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.passedStages.includes('production_rollback'), true);
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.passedStages.includes('production_availability_probe_after_rollback'), true);
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.rawLogPolicy.storesRawLogs, false);
+  assert.equal(profile.productionRollbackReadiness.latestAttempt.rawLogPolicy.storesSecretValues, false);
+  assert.equal(profile.productionRollbackReadiness.cannotClaim.includes('automatic rollback'), true);
+  assert.equal(profile.productionRollbackReadiness.cannotClaim.includes('production-ready SaaS'), true);
+});
+
+test('release evidence sync ignores skipped rollback jobs', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Dry Run', conclusion: 'success', html_url: 'https://example.test/dry' },
+      { name: 'Production Apply', conclusion: 'success', html_url: 'https://example.test/apply' },
+      { name: 'Production Rollback', conclusion: 'skipped', html_url: 'https://example.test/rollback' },
+      { name: 'Production Availability Probe After Apply', conclusion: 'success', html_url: 'https://example.test/availability' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionRollbackReadiness: {
+      state: 'manual_harness_ready_pending_first_run',
+      latestAttempt: null,
+      cannotClaim: ['automatic rollback', 'production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '27891000000',
+    '--commit', 'abc1234',
+    '--jobs-json', jobsPath,
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionRollbackReadiness.state, 'manual_harness_ready_pending_first_run');
+  assert.equal(profile.productionRollbackReadiness.latestAttempt, null);
 });

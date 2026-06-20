@@ -2,7 +2,13 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 
 const args = new Set(process.argv.slice(2));
-const dryRun = !args.has('--apply');
+const apply = args.has('--apply');
+const rollback = args.has('--rollback');
+const dryRun = !apply && !rollback;
+
+if (apply && rollback) {
+  throw new Error('--apply and --rollback are mutually exclusive');
+}
 
 const namespace = process.env.OPL_NAMESPACE ?? 'opl-webui';
 const deployment = process.env.OPL_DEPLOYMENT ?? 'deployment/opl-webui-control-plane';
@@ -42,6 +48,14 @@ if (args.has('--availability-probe')) {
   process.exit(0);
 }
 
+if (rollback) {
+  requireEnv('KUBECONFIG');
+  requireEnv('OPL_IMAGE');
+  validateImage(process.env.OPL_IMAGE);
+  runRollback();
+  process.exit(0);
+}
+
 if (dryRun) {
   validateImage(image);
   printDryRun();
@@ -53,27 +67,8 @@ requireEnv('OPL_IMAGE');
 validateImage(process.env.OPL_IMAGE);
 
 run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${process.env.OPL_IMAGE}`]));
-
 runRolloutStatus();
-
-capture('rollout revision', kubectlArgs(['get', deployment, '-o', rolloutRevisionJsonpath]));
-
-capture('deployment image', kubectlArgs(['get', deployment, '-o', deploymentImageJsonpath]));
-
-const pod = selectReadyPod();
-
-run('pod status', 'kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'wide']));
-
-capture('pod imageID', kubectlArgs(['get', 'pod', pod, '-o', podImageIdJsonpath]));
-
-run('canary db', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'db']));
-
-run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'opl-cli']));
-
-run(`HTTPS smoke ${healthUrl}`, 'curl', ['--http2', '-fsS', healthUrl]);
-semanticSmoke('readyz', readyUrl, (body) => body?.ok === true && Array.isArray(body.missing) && body.missing.length === 0);
-semanticSmoke('metricsz', metricsUrl, (body) => body?.ok === true && body?.missingDependencyCount === 0);
-run(`HTTPS smoke ${homeUrl}`, 'curl', ['--http2', '-fsS', homeUrl]);
+runPostRolloutChecks('rollout revision');
 
 async function runDogfoodE2E() {
   if (process.env.OPL_PRODUCTION_DOGFOOD_E2E !== '1') {
@@ -117,6 +112,23 @@ async function runDogfoodE2E() {
     console.log('[cloud-rollout] MedOPL readonly projection dogfood skipped; set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to verify readonly projections.');
   }
   assertNoSensitive({ current: current.body, saved: saved.body, gated: gated.body, audit: audit.body });
+  const evidenceSummary = {
+    schemaVersion: 1,
+    mode: 'secret_gated_http_authenticated_e2e',
+    targetHost: baseUrl,
+    realChat: process.env.OPL_PRODUCTION_DOGFOOD_REAL_CHAT === '1',
+    medoplReadonly: process.env.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY === '1',
+    readonlyProjectionChecks: process.env.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY === '1'
+      ? ['runtime_status', 'materials_deliverables', 'billing_summary']
+      : [],
+    forbiddenMutationFlags: process.env.OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY === '1'
+      ? ['webuiRuntimeExecution', 'webuiStorageMutation', 'webuiArtifactBody', 'webuiBillingSourceOfTruth', 'webuiPaymentMutation']
+      : [],
+    auditKinds: [...new Set(kinds)].sort(),
+    rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
+  };
+  assertNoSensitive(evidenceSummary);
+  console.log(`[cloud-rollout] dogfood evidence summary ${JSON.stringify(evidenceSummary)}`);
   console.log(`[cloud-rollout] production authenticated dogfood e2e passed; audit kinds=${[...new Set(kinds)].join(',')}`);
 }
 
@@ -159,10 +171,70 @@ async function runAvailabilityProbe() {
   }
 
   summary.failures = summary.checks.filter((check) => !check.ok).length;
+  summary.observabilityBaseline = buildObservabilityBaseline(summary);
+  summary.rawLogPolicy = { storesRawLogs: false, storesSecretValues: false };
   assertNoSensitive(summary);
   console.log(`[cloud-rollout] availability probe summary ${JSON.stringify(summary)}`);
   if (summary.failures > 0) throw new Error(`availability probe failed: ${summary.failures} check(s) failed`);
   console.log('[cloud-rollout] availability probe passed');
+}
+
+function runRollback() {
+  const rollbackArgs = ['rollout', 'undo', deployment];
+  if (process.env.OPL_ROLLBACK_REVISION) {
+    rollbackArgs.push(`--to-revision=${process.env.OPL_ROLLBACK_REVISION}`);
+  }
+  run('kubectl rollout undo', 'kubectl', kubectlArgs(rollbackArgs));
+  runRolloutStatus();
+  runPostRolloutChecks('rollback revision');
+  const summary = {
+    schemaVersion: 1,
+    mode: 'manual_environment_approved_rollback',
+    targetHost: baseUrl,
+    namespace,
+    deployment,
+    image: process.env.OPL_IMAGE,
+    checks: ['rollout_undo', 'rollout_status', 'canary_db', 'canary_opl_cli', 'healthz', 'readyz', 'metricsz', 'home'],
+    rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
+  };
+  assertNoSensitive(summary);
+  console.log(`[cloud-rollout] rollback evidence summary ${JSON.stringify(summary)}`);
+}
+
+function runPostRolloutChecks(revisionLabel) {
+  capture(revisionLabel, kubectlArgs(['get', deployment, '-o', rolloutRevisionJsonpath]));
+  capture('deployment image', kubectlArgs(['get', deployment, '-o', deploymentImageJsonpath]));
+
+  const pod = selectReadyPod();
+
+  run('pod status', 'kubectl', kubectlArgs(['get', 'pod', '-l', podSelector, '-o', 'wide']));
+  capture('pod imageID', kubectlArgs(['get', 'pod', pod, '-o', podImageIdJsonpath]));
+  run('canary db', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'db']));
+  run('canary opl-cli', 'kubectl', kubectlArgs(['exec', pod, '--', controlPlaneBin, 'canary', 'opl-cli']));
+  run(`HTTPS smoke ${healthUrl}`, 'curl', ['--http2', '-fsS', healthUrl]);
+  semanticSmoke('readyz', readyUrl, (body) => body?.ok === true && Array.isArray(body.missing) && body.missing.length === 0);
+  semanticSmoke('metricsz', metricsUrl, (body) => body?.ok === true && body?.missingDependencyCount === 0);
+  run(`HTTPS smoke ${homeUrl}`, 'curl', ['--http2', '-fsS', homeUrl]);
+}
+
+function buildObservabilityBaseline(summary) {
+  const endpoints = {};
+  for (const label of ['healthz', 'readyz', 'metricsz', 'home']) {
+    const checks = summary.checks.filter((check) => check.label === label);
+    endpoints[label] = {
+      samples: checks.length,
+      successes: checks.filter((check) => check.ok).length,
+      failures: checks.filter((check) => !check.ok).length,
+      maxDurationMs: Math.max(0, ...checks.map((check) => check.durationMs ?? 0)),
+    };
+  }
+  return {
+    schemaVersion: 1,
+    contract: 'production_observability_baseline_v1',
+    targetHost: summary.targetHost,
+    samples: summary.samples,
+    endpoints,
+  };
 }
 
 async function availabilityCheck(label, url, validate) {
@@ -470,8 +542,9 @@ function printUsage() {
   console.log(`Usage:
   node scripts/cloud-rollout.mjs
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
+  KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=registry/repo:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
   OPL_BASE_URL=https://opl.medopl.cn OPL_AVAILABILITY_PROBE_SAMPLES=3 node scripts/cloud-rollout.mjs --availability-probe
 
-Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
+Default mode prints a dry-run command plan. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }

@@ -7,6 +7,7 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
   const failedJob = jobs.find((job) => job.conclusion === 'failure');
   const dogfoodJob = jobs.find((job) => job.name === 'Production Authenticated Dogfood E2E');
   const browserJob = jobs.find((job) => job.name === 'Production Browser E2E');
+  const rollbackJob = jobs.find((job) => job.name === 'Production Rollback');
 
   return {
     schemaVersion: 1,
@@ -26,6 +27,8 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
       productionApply: stageSucceeded(jobs, 'Production Apply'),
       productionAuthenticatedDogfood: dogfoodJob?.conclusion === 'success',
       productionBrowserE2E: browserJob?.conclusion === 'success',
+      productionRollback: rollbackJob?.conclusion === 'success',
+      productionAvailabilityAfterRollback: stageSucceeded(jobs, 'Production Availability Probe After Rollback'),
     },
     browserJobObserved: Boolean(browserJob),
     cannotClaim: failedJob ? [
@@ -42,10 +45,10 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload }) {
 }
 
 export function foldSummaryIntoReleaseProfile({ profile, summary }) {
-  const browser = profile.productionBrowserE2EReadiness ?? {};
-  if (!summary.browserJobObserved) {
-    return profile;
-  }
+  const nextProfile = foldDogfoodReadonlyIntoReleaseProfile({ profile, summary });
+  const withRollback = foldRollbackIntoReleaseProfile({ profile: nextProfile, summary });
+  const browser = withRollback.productionBrowserE2EReadiness ?? {};
+  if (!summary.browserJobObserved) return withRollback;
 
   const latestAttempt = buildBrowserLatestAttempt(summary);
   const preservedCannotClaim = summary.canClaim.productionBrowserE2E
@@ -57,7 +60,7 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   ]);
 
   return {
-    ...profile,
+    ...withRollback,
     productionBrowserE2EReadiness: {
       ...browser,
       state: summary.canClaim.productionBrowserE2E
@@ -65,6 +68,77 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
         : `attempted_failed_run_${summary.runId}`,
       latestAttempt,
       cannotClaim: nextCannotClaim,
+    },
+  };
+}
+
+function foldDogfoodReadonlyIntoReleaseProfile({ profile, summary }) {
+  if (!summary.dogfoodReadonlyConfirmed || !summary.canClaim.productionAuthenticatedDogfood) return profile;
+  const dogfood = profile.productionDogfoodReadiness ?? {};
+  const latest = dogfood.latestSuccessfulRun ?? {};
+  const coverage = uniqueStrings([
+    ...(latest.coverage ?? []),
+    'medopl_readonly_runtime_status',
+    'medopl_readonly_materials_deliverables',
+    'medopl_readonly_billing_summary',
+  ]);
+  return {
+    ...profile,
+    productionDogfoodReadiness: {
+      ...dogfood,
+      state: `executed_success_run_${summary.runId}_real_chat_readonly_confirmed`,
+      latestSuccessfulRun: {
+        ...latest,
+        runId: summary.runId,
+        runUrl: summary.runUrl,
+        commit: summary.commit,
+        image: summary.image ?? latest.image ?? null,
+        workflow: 'Cloud Rollout',
+        targetHost: 'https://opl.medopl.cn',
+        medoplReadonly: true,
+        publicMetadataConfirmsReadonlySwitch: true,
+        coverage,
+        rawLogPolicy: summary.rawLogPolicy,
+      },
+    },
+  };
+}
+
+function foldRollbackIntoReleaseProfile({ profile, summary }) {
+  const rollbackStage = summary.stages.find((stage) => stage.name === 'Production Rollback');
+  if (!rollbackStage || rollbackStage.conclusion === 'skipped') return profile;
+  const rollback = profile.productionRollbackReadiness ?? {};
+  const passedStages = [];
+  if (summary.canClaim.productionDryRun) passedStages.push('production_dry_run');
+  if (summary.canClaim.productionRollback) passedStages.push('production_rollback');
+  if (summary.canClaim.productionAvailabilityAfterRollback) passedStages.push('production_availability_probe_after_rollback');
+  const latestAttempt = {
+    runId: summary.runId,
+    runUrl: summary.runUrl,
+    commit: summary.commit,
+    image: summary.image ?? null,
+    workflow: 'Cloud Rollout',
+    targetHost: 'https://opl.medopl.cn',
+    status: summary.canClaim.productionRollback ? 'success' : 'failure',
+    failedStage: summary.canClaim.productionRollback ? null : summary.failedStage ?? 'Production Rollback',
+    passedStages,
+    canClaim: summary.canClaim.productionRollback ? ['manual environment-approved rollback executed'] : [],
+    cannotClaim: ['automatic rollback', 'production-ready SaaS'],
+    rawLogPolicy: summary.rawLogPolicy,
+  };
+  return {
+    ...profile,
+    productionRollbackReadiness: {
+      ...rollback,
+      state: summary.canClaim.productionRollback
+        ? `executed_success_run_${summary.runId}`
+        : `attempted_failed_run_${summary.runId}`,
+      latestAttempt,
+      cannotClaim: uniqueStrings([
+        ...(rollback.cannotClaim ?? []),
+        'automatic rollback',
+        'production-ready SaaS',
+      ]),
     },
   };
 }
@@ -119,6 +193,10 @@ function parseArgs(argv) {
   const options = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === '--dogfood-readonly-confirmed') {
+      options.dogfoodReadonlyConfirmed = true;
+      continue;
+    }
     const value = argv[index + 1];
     if (!value || value.startsWith('--')) {
       throw new Error(`Missing value for ${token}`);
@@ -135,6 +213,11 @@ function parseArgs(argv) {
     }
     if (token === '--jobs-json') {
       options.jobsJson = value;
+      index += 1;
+      continue;
+    }
+    if (token === '--image') {
+      options.image = value;
       index += 1;
       continue;
     }
@@ -164,6 +247,8 @@ function runCli() {
     commit: options.commit,
     jobsPayload,
   });
+  summary.image = options.image ?? null;
+  summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true;
   if (options.output) {
     writeFileSync(options.output, `${JSON.stringify(summary, null, 2)}\n`);
   }

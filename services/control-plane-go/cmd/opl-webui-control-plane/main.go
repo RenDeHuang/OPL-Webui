@@ -148,6 +148,9 @@ func handleMetricsz(response http.ResponseWriter, request *http.Request) {
 		"ready":                  status.OK,
 		"missingDependencyCount": len(status.Missing),
 		"missingDependencies":    status.Missing,
+		"observabilitySchemaVersion": 1,
+		"releaseProbeContract":       "production_observability_baseline_v1",
+		"publicProbeEndpoints":       []string{"/healthz", "/readyz", "/metricsz", "/"},
 	})
 }
 

@@ -45,6 +45,7 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 5. `authenticated_dogfood_e2e=true` 只能和 `apply=true` 一起使用；dogfood job 依赖 `production-apply`，因此只能在该 image 的 apply、canary、smoke 成功后运行。`apply=false` 时请求 dogfood 会 fail-closed。
 6. `availability_probe=true` 会运行 no-secret production availability probe。`apply=false` 时探测当前线上；`apply=true` 时在本次 rollout apply、canary、smoke 成功后探测新版本线上。该 probe 不读取 kubeconfig、image、DB、dogfood secret、MedOPL token 或 TCR 凭据。
 7. 发布日志必须记录 rollout revision、Deployment image、Pod imageID、Pod `-o wide`、`canary db`、`canary opl-cli`、HTTPS smoke。
+8. 手动回滚也走同一个 helper：`Cloud Rollout` 设置 `rollback=true`、`apply=false`、`availability_probe=true`，通过 production Environment approval 后执行 `node scripts/cloud-rollout.mjs --rollback`，再运行 `Production Availability Probe After Rollback`。这是 manual environment-approved rollback evidence，不是自动失败回滚。
 
 如果 `rollout status` 超时或失败，helper 会在退出前打印 Deployment、ReplicaSet/Pod、Pod describe、Pod logs 和 events 摘要，并给出 `rollout likely cause`。分类只用于定位下一步排查，不改变集群状态：
 
@@ -97,6 +98,8 @@ failures:
 result:
 cannot claim: multi-node HA, production browser e2e, production authenticated dogfood, production-ready SaaS, MedOPL runtime execution, billing/payment/storage/node pool mutation
 ```
+
+Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboard 或 alerting surface。`/metricsz` 必须包含 `observabilitySchemaVersion=1`、`releaseProbeContract=production_observability_baseline_v1`、`publicProbeEndpoints=["/healthz","/readyz","/metricsz","/"]`；helper 输出每个 endpoint 的 `samples`、`successes`、`failures`、`maxDurationMs`，并继续不保存 raw response body、cookie 或 secret。
 
 ## Production authenticated dogfood e2e
 
@@ -298,6 +301,40 @@ opl.medopl.cn CNAME <qcloud-clb-hostname>
 7. 腾讯云控制台事项：新增/复用第二 CVM/TKE worker、确认节点/CLB 安全组、记录 CLB 后端来源范围、绑定专用 CLB 安全组；证书仍由 `opl-webui-tls` Secret 驱动。
 
 ## Rollback
+
+首选 GitHub `Cloud Rollout` 手动回滚：
+
+```text
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:<previous-known-good-tag-or-digest>
+target_environment: production
+apply: false
+rollback: true
+availability_probe: true
+authenticated_dogfood_e2e: false
+production_browser_e2e: false
+```
+
+该路径会执行：
+
+```bash
+KUBECONFIG=/external/path/to/tke-kubeconfig \
+OPL_IMAGE="uswccr.ccs.tencentyun.com/webopl/opl-webui:<previous-known-good-tag-or-digest>" \
+node scripts/cloud-rollout.mjs --rollback
+```
+
+Rollback closeout 只记录压缩证据：
+
+```text
+run id:
+target host: https://opl.medopl.cn
+image:
+stages: Production Dry Run, Production Rollback, Production Availability Probe After Rollback
+checks: rollout_undo,rollout_status,canary_db,canary_opl_cli,healthz,readyz,metricsz,home
+result:
+cannot claim: automatic rollback, production-ready SaaS, data migration rollback
+```
+
+手工 kubectl fallback 仅在 GitHub workflow 不可用时由云端/VPC runner 执行：
 
 ```bash
 kubectl --kubeconfig "$KUBECONFIG" -n opl-webui rollout undo deployment/opl-webui-control-plane

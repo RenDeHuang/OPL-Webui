@@ -81,6 +81,25 @@ func TestHandleMetricszReportsReadinessWithoutLeakingSecrets(t *testing.T) {
 	if body["missingDependencyCount"] != float64(4) {
 		t.Fatalf("missingDependencyCount mismatch: %#v", body["missingDependencyCount"])
 	}
+	if body["observabilitySchemaVersion"] != float64(1) {
+		t.Fatalf("observability schema mismatch: %#v", body["observabilitySchemaVersion"])
+	}
+	if body["releaseProbeContract"] != "production_observability_baseline_v1" {
+		t.Fatalf("release probe contract mismatch: %#v", body["releaseProbeContract"])
+	}
+	endpoints, ok := body["publicProbeEndpoints"].([]any)
+	if !ok {
+		t.Fatalf("publicProbeEndpoints should be an array: %#v", body["publicProbeEndpoints"])
+	}
+	expectedEndpoints := []any{"/healthz", "/readyz", "/metricsz", "/"}
+	if len(endpoints) != len(expectedEndpoints) {
+		t.Fatalf("publicProbeEndpoints mismatch: %#v", endpoints)
+	}
+	for index, expected := range expectedEndpoints {
+		if endpoints[index] != expected {
+			t.Fatalf("publicProbeEndpoints mismatch: %#v", endpoints)
+		}
+	}
 	missing, ok := body["missingDependencies"].([]any)
 	expectedMissing := []any{
 		"OPL_API_KEY_ENCRYPTION_SECRET",
