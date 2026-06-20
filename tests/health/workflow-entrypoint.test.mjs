@@ -153,6 +153,10 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /OPL_NAMESPACE:\s*opl-webui/);
   assert.match(workflow, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
   assert.match(workflow, /Validate image allowlist/);
+  assert.match(workflow, /Full image tag\/digest or release short commit tag to deploy\./);
+  assert.match(workflow, /short_tag_pattern='\^\[0-9a-f\]\{7,40\}\$'/);
+  assert.match(workflow, /image="uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:\$image"/);
+  assert.match(workflow, /echo "OPL_IMAGE=\$image" >> "\$GITHUB_ENV"/);
   assert.match(workflow, /uswccr\\\.ccs\\\.tencentyun\\\.com\/webopl\/opl-webui/);
   assert.match(workflow, /sha256:\[0-9a-f\]\{64\}/);
   assert.match(workflow, /exit 1/);

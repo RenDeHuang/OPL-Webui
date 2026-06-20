@@ -38,6 +38,16 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
   assert.match(defaultDryRun, /https:\/\/opl\.medopl\.cn\//);
   assert.match(defaultDryRun, /--timeout=150s/);
 
+  const shortTagDryRun = execFileSync(process.execPath, [helperPath], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      OPL_IMAGE: '4a9d439',
+    },
+  });
+  assert.match(shortTagDryRun, /uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:4a9d439/);
+  assert.match(shortTagDryRun, /set image deployment\/opl-webui-control-plane control-plane=uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:4a9d439/);
+
   const configuredBaseUrlDryRun = execFileSync(process.execPath, [helperPath], {
     encoding: 'utf8',
     env: {
