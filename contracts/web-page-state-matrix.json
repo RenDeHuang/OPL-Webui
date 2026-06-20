@@ -37,7 +37,11 @@
     "sending",
     "runtime_required",
     "upstream_failed",
-    "quota_exceeded"
+    "quota_exceeded",
+    "auth_required",
+    "api_key_required",
+    "service_unavailable",
+    "network_unreachable"
   ],
   "researchTaskIntents": [
     {
@@ -144,7 +148,14 @@
       "[data-capability-mode]",
       "[data-research-result]",
       "[data-research-result-section]",
-      "[data-runtime-task-card]"
+      "[data-runtime-task-card]",
+      "[data-account-lifecycle-status]",
+      "[data-quota-status]",
+      "[data-account-audit-status]",
+      "[data-reliability-status]",
+      "[data-reliability-title]",
+      "[data-reliability-action]",
+      "[data-reliability-details]"
     ],
     "steps": [
       {
@@ -227,6 +238,19 @@
         "requiredApi": "/api/chat",
         "expectedState": "runtime_required",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
+      },
+      {
+        "id": "account_lifecycle_status_visible",
+        "route": "settings",
+        "requiredApi": "/api/account/commercial-status",
+        "expectedState": "authenticated_bound",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+      },
+      {
+        "id": "reliability_status_visible",
+        "route": "chat",
+        "expectedState": "upstream_failed",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
       },
       {
         "id": "sanitized_audit",

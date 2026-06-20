@@ -5,6 +5,7 @@ import {
   logoutAccount,
   registerAccount,
   researchResultForChat,
+  reliabilityStatusForResult,
   requiresRuntimeGate,
   runtimeTaskCardForPrompt,
   saveAPIKey,
@@ -77,18 +78,22 @@ function bindChatForm(getView) {
     document.body.dataset.chatState = chatStateForPrompt(message);
     appendMessage('你', message, 'user-message');
     if (view.accountState === 'anonymous') {
+      renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }));
       appendMessage('OPL', '请先登录/注册后开始聊天。', 'assistant-message');
       window.location.hash = 'settings';
       return;
     }
     if (view.accountState === 'authenticated_unbound') {
+      renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
       appendMessage('OPL', '请先在 Settings 绑定 API Key。', 'assistant-message');
       window.location.hash = 'settings';
       return;
     }
     document.body.dataset.chatState = chatStateForResult(null, true);
+    renderReliabilityStatus(reliabilityStatusForResult(null));
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
+    renderReliabilityStatus(reliabilityStatusForResult(result));
     if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
     const researchResult = result.ok ? researchResultForChat({ ...result, prompt: message }) : null;
@@ -111,6 +116,7 @@ function bindSettingsForms(getView, setView) {
     const result = await saveAPIKey(fetch, apiKey, view.session);
     if (!result.ok) {
       setSettingsMessage(result.message || result.errorCode || '保存失败。');
+      renderReliabilityStatus(reliabilityStatusForResult(result));
       return;
     }
     document.querySelector('#api-key').value = '';
@@ -126,6 +132,7 @@ async function authAction(kind, setView) {
     ? await registerAccount(fetch, email, password)
     : await loginAccount(fetch, email, password);
   setSettingsMessage(result.ok ? '账号已就绪。' : result.message || result.errorCode || '认证失败。');
+  if (!result.ok) renderReliabilityStatus(reliabilityStatusForResult(result));
   if (result.ok) setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
 }
 
@@ -137,6 +144,10 @@ function renderView(view) {
   setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
   setTextAll('[data-provider-status]', providerStatus);
+  setTextAll('[data-account-lifecycle-status]', view.accountLifecycle.lifecycleLabel);
+  setTextAll('[data-quota-status]', view.accountLifecycle.quotaLabel);
+  setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
+  renderReliabilityStatus(view.reliabilityStatus);
   document.querySelector('[data-account-hint]').textContent = view.primaryCTA;
 }
 
@@ -207,4 +218,13 @@ function renderRuntimeTaskCard(gate, taskCard) {
 
 function setSettingsMessage(message) {
   document.querySelector('[data-settings-message]').textContent = message;
+}
+
+function renderReliabilityStatus(status) {
+  const panel = document.querySelector('[data-reliability-status]');
+  if (!panel || !status) return;
+  panel.dataset.state = status.state;
+  panel.querySelector('[data-reliability-title]').textContent = status.title;
+  panel.querySelector('[data-reliability-action]').textContent = status.action;
+  panel.querySelector('[data-reliability-details]').textContent = status.details || '';
 }

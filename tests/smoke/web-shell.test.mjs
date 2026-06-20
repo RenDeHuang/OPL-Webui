@@ -69,6 +69,13 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /medopl\.medopl\.cn/);
   assert.match(html, /chat-log/);
   assert.match(html, /settings-panel/);
+  assert.match(html, /data-account-lifecycle-status/);
+  assert.match(html, /data-quota-status/);
+  assert.match(html, /data-account-audit-status/);
+  assert.match(html, /data-reliability-status/);
+  assert.match(html, /data-reliability-title/);
+  assert.match(html, /data-reliability-action/);
+  assert.match(html, /data-reliability-details/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
   assert.doesNotMatch(html, /styles\/v3\.css/);
   assert.doesNotMatch(html, /MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM/);
@@ -103,6 +110,9 @@ test('settings hash has a dedicated productized settings surface', () => {
   assert.match(html, /data-account-popover/);
   assert.match(html, /登录状态/);
   assert.match(html, /API Key 绑定状态/);
+  assert.match(html, /账号生命周期/);
+  assert.match(html, /额度状态/);
+  assert.match(html, /最近审计/);
   assert.match(html, /不可编辑/);
   assert.match(html, /保存\/更新 API Key/);
   assert.match(html, /退出登录/);

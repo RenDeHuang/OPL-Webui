@@ -426,5 +426,86 @@
       "storage or node pool mutation",
       "quota exhaustion production evidence"
     ]
+  },
+  "productionObservabilityBaseline": {
+    "mode": "no_secret_public_http_observability_baseline_v1",
+    "state": "harness_ready_pending_next_run",
+    "sourceEndpoint": "/metricsz",
+    "entrypoint": "node scripts/cloud-rollout.mjs --availability-probe",
+    "workflow": ".github/workflows/cloud-rollout.yml",
+    "workflowInput": "availability_probe",
+    "requiresProductionSecrets": false,
+    "requiresKubeconfig": false,
+    "mutatesCluster": false,
+    "contract": "production_observability_baseline_v1",
+    "endpoints": [
+      "/healthz",
+      "/readyz",
+      "/metricsz",
+      "/"
+    ],
+    "requiredSummaryFields": [
+      "samples",
+      "successes",
+      "failures",
+      "maxDurationMs"
+    ],
+    "rawLogPolicy": {
+      "storesRawLogs": false,
+      "storesSecretValues": false
+    },
+    "cannotClaim": [
+      "multi-node HA",
+      "long-term canary monitoring",
+      "error budget enforcement",
+      "production-ready SaaS"
+    ]
+  },
+  "productionRollbackReadiness": {
+    "mode": "manual_environment_approved_rollback",
+    "state": "manual_harness_ready_pending_first_run",
+    "defaultEnabled": false,
+    "requiresKubeconfig": true,
+    "requiresEnvironmentApproval": true,
+    "mutatesCluster": true,
+    "automaticRollback": false,
+    "entrypoint": "node scripts/cloud-rollout.mjs --rollback",
+    "workflow": ".github/workflows/cloud-rollout.yml",
+    "workflowInput": "rollback",
+    "orderedStages": [
+      "production_dry_run",
+      "production_rollback",
+      "canary_smoke",
+      "production_availability_probe_after_rollback"
+    ],
+    "checks": [
+      "kubectl rollout undo",
+      "kubectl rollout status",
+      "canary db",
+      "canary opl-cli",
+      "HTTPS /healthz",
+      "HTTPS /readyz",
+      "HTTPS /metricsz",
+      "HTTPS /"
+    ],
+    "forbiddenSecrets": [
+      "OPL_DOGFOOD_API_KEY",
+      "OPL_DOGFOOD_PASSWORD",
+      "OPL_DATABASE_URL",
+      "PGPASSWORD",
+      "MEDOPL_TOKEN",
+      "TCR_PASSWORD"
+    ],
+    "rawLogPolicy": {
+      "storesRawLogs": false,
+      "storesSecretValues": false
+    },
+    "latestAttempt": null,
+    "cannotClaim": [
+      "automatic rollback",
+      "production-ready SaaS",
+      "multi-node HA",
+      "data migration rollback"
+    ]
   }
 }

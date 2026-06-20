@@ -60,6 +60,18 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
     }),
     /outside the allowed OPL-Webui image registry/,
   );
+
+  assert.throws(
+    () => execFileSync(process.execPath, [helperPath, '--apply', '--rollback'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        KUBECONFIG: '/tmp/kubeconfig',
+        OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27',
+      },
+    }),
+    /--apply and --rollback are mutually exclusive/,
+  );
 });
 
 test('cloud rollout helper has a secret-gated production authenticated dogfood harness', async () => {
@@ -71,7 +83,7 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
     'https://gflabtoken.cn/v1', '@基金', 'RUNTIME_REQUIRED',
   ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
   assert.match(execFileSync(process.execPath, [helperPath, '--dogfood-e2e'], { encoding: 'utf8', timeout: 5000 }), /skipped/i);
-  const dogfoodCode = helper.slice(helper.indexOf('async function runDogfoodE2E'), helper.indexOf('function kubectlArgs'));
+  const dogfoodCode = helper.slice(helper.indexOf('async function runDogfoodE2E'), helper.indexOf('async function dogfoodSession'));
   assert.doesNotMatch(dogfoodCode, /OPL_DATABASE_URL|PGPASSWORD|KUBECONFIG_CONTENT|kubectl|console\.log\(`::add-mask::/);
 
   const fake = await startFakeProduction();
@@ -89,6 +101,11 @@ test('cloud rollout helper has a secret-gated production authenticated dogfood h
       },
     });
     assert.match(output, /register|login|current session|API Key binding|ordinary chat|runtime gate|audit events|runtime status|materials deliverables|billing summary/i);
+    assert.match(output, /dogfood evidence summary/);
+    assert.match(output, /"medoplReadonly":true/);
+    assert.match(output, /"readonlyProjectionChecks":\["runtime_status","materials_deliverables","billing_summary"\]/);
+    assert.match(output, /"forbiddenMutationFlags":\["webuiRuntimeExecution","webuiStorageMutation","webuiArtifactBody","webuiBillingSourceOfTruth","webuiPaymentMutation"\]/);
+    assert.match(output, /"rawLogPolicy":\{"storesRawLogs":false,"storesSecretValues":false\}/);
     assert.doesNotMatch(output, /sk-dogfood-production-secret|dogfood-password|opl_session=secret-session/i);
     assert.equal(fake.requests.find((request) => request.path === '/api/settings/model-provider').body.apiKey, 'sk-dogfood-production-secret');
     assert.equal(fake.requests.some((request) => request.path === '/api/chat' && request.body.message.includes('@基金')), true);
@@ -120,6 +137,12 @@ test('cloud rollout helper has a no-secret production availability probe', async
     assert.match(output, /availability probe passed/);
     assert.match(output, /"samples":2/);
     assert.match(output, /"failures":0/);
+    assert.match(output, /"observabilityBaseline":\{"schemaVersion":1/);
+    assert.match(output, /"healthz":\{"samples":2,"successes":2,"failures":0,"maxDurationMs":\d+\}/);
+    assert.match(output, /"readyz":\{"samples":2,"successes":2,"failures":0,"maxDurationMs":\d+\}/);
+    assert.match(output, /"metricsz":\{"samples":2,"successes":2,"failures":0,"maxDurationMs":\d+\}/);
+    assert.match(output, /"home":\{"samples":2,"successes":2,"failures":0,"maxDurationMs":\d+\}/);
+    assert.match(output, /"rawLogPolicy":\{"storesRawLogs":false,"storesSecretValues":false\}/);
     assert.doesNotMatch(output, /KUBECONFIG|OPL_IMAGE|OPL_DATABASE_URL|PGPASSWORD|opl_session/i);
     for (const path of ['/healthz', '/readyz', '/metricsz', '/']) {
       assert.equal(fake.requests.filter((request) => request.path === path).length, 2);
@@ -184,6 +207,55 @@ test('cloud rollout helper captures rollout state evidence for closeout', () => 
   assert.match(helper, /jsonpath=\{\.status\.containerStatuses\[\?\(@\.name=="control-plane"\)\]\.imageID\}/);
   assert.doesNotMatch(helper, /jsonpath=\{\.items\[0\]\.metadata\.name\}/);
   assert.match(helper, /'wide'/);
+});
+
+test('cloud rollout helper supports manual approved rollback evidence without automatic rollback', () => {
+  const helper = readFileSync(helperPath, 'utf8');
+  for (const required of [
+    '--rollback',
+    'OPL_ROLLBACK_REVISION',
+    'kubectl rollout undo',
+    'rollback revision',
+    'rollback evidence summary',
+  ]) assert.match(helper, new RegExp(required.replace(/[/-]/g, '\\$&')));
+  assert.doesNotMatch(helper, /runRolloutStatus\(\);\n[\s\S]{0,120}kubectlArgs\(\['rollout', 'undo'/);
+
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-rollback-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27';
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+
+  try {
+    const output = execFileSync(process.execPath, [helperPath, '--rollback'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        KUBECONFIG: join(tempDir, 'kubeconfig'),
+        OPL_IMAGE: targetImage,
+        OPL_BASE_URL: 'https://opl.medopl.cn',
+        OPL_NAMESPACE: 'opl-webui',
+        TARGET_IMAGE: targetImage,
+        COMMAND_LOG: commandLog,
+      },
+    });
+
+    assert.match(output, /rollback revision/);
+    assert.match(output, /rollback evidence summary/);
+    assert.match(output, /"mode":"manual_environment_approved_rollback"/);
+    assert.match(output, /"targetHost":"https:\/\/opl\.medopl\.cn"/);
+    assert.match(output, /"checks":\["rollout_undo","rollout_status","canary_db","canary_opl_cli","healthz","readyz","metricsz","home"\]/);
+    assert.doesNotMatch(output, /KUBECONFIG|OPL_DATABASE_URL|PGPASSWORD|secret-session/i);
+    const commands = readFileSync(commandLog, 'utf8');
+    assert.match(commands, /rollout undo deployment\/opl-webui-control-plane/);
+    assert.match(commands, /rollout status deployment\/opl-webui-control-plane/);
+    assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary db/);
+    assert.match(commands, /curl --http2 -fsS https:\/\/opl\.medopl\.cn\/readyz/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
 });
 
 test('cloud rollout helper execs the current Running Ready pod when old Error pods exist', () => {
@@ -355,6 +427,7 @@ if (args[0] === 'rollout') {
     process.stderr.write('error: timed out waiting for the condition\\n');
     process.exit(1);
   }
+  if (args[1] === 'undo') process.exit(0);
   process.exit(0);
 }
 if (args[0] === 'get' && args[1] === 'deployment/opl-webui-control-plane') {
