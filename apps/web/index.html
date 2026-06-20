@@ -7,15 +7,24 @@
     <link rel="stylesheet" href="./styles.css">
     <script type="module" src="./src/onePersonLabWeb.mjs"></script>
   </head>
-  <body data-view="chat" data-auth-state="anonymous">
-    <div class="app-shell figma-make-webui-alignment">
+  <body
+    data-view="chat"
+    data-auth-state="anonymous"
+    data-chat-state="idle"
+    data-shell-state="app_default_chat"
+    data-left-rail-state="collapsed"
+    data-right-inspector-state="hidden"
+    data-api-key-dialog-state="closed"
+  >
+    <div class="app-shell figma-make-webui-alignment" data-figma-source="E8nYfNFc2D9P01FYZ8UwBW">
       <aside class="sidebar-shell" aria-label="One Person Lab navigation">
         <a class="sidebar-brand" href="#home" aria-label="One Person Lab Web 首页">
           <span class="brand-mark">OPL</span>
           <span>One Person Lab</span>
         </a>
+        <button class="left-rail-toggle" type="button" data-left-rail-toggle aria-expanded="false" aria-controls="shell-sidebar">☰</button>
         <a class="new-chat-button" href="#chat">New Chat</a>
-        <nav class="sidebar-nav" aria-label="主导航">
+        <nav class="sidebar-nav" id="shell-sidebar" aria-label="主导航">
           <a href="#home" aria-current="page">首页</a>
           <a href="#capabilities">科研能力</a>
           <a href="#capabilities">论文</a>
@@ -106,6 +115,20 @@
           </div>
         </section>
 
+        <aside class="turn-state-strip" aria-label="任务状态">
+          <div data-running-turn hidden>
+            <strong>运行中</strong>
+            <span>正在等待科研结果。</span>
+          </div>
+          <div data-blocked-turn hidden>
+            <strong>已阻塞</strong>
+            <span>请先完成登录、API Key 或 MedOPL 授权。</span>
+          </div>
+          <button class="secondary-button" type="button" data-right-inspector-open="files">文件</button>
+          <button class="secondary-button" type="button" data-right-inspector-open="progress">进度</button>
+          <button class="secondary-button" type="button" data-right-inspector-open="output">输出</button>
+        </aside>
+
         <section class="product-grid" aria-label="One Person Lab Web 工作台">
           <section class="chat-panel" aria-labelledby="chat-title">
             <div class="section-heading">
@@ -185,6 +208,30 @@
           </aside>
         </section>
 
+        <aside class="right-inspector" data-right-inspector data-right-inspector-state="hidden" aria-label="文件、进度和输出检查器" hidden>
+          <div class="inspector-header">
+            <p class="panel-kicker">Inspector</p>
+            <button class="ghost-button" type="button" data-right-inspector-close>关闭</button>
+          </div>
+          <div class="inspector-tabs" role="tablist" aria-label="检查器视图">
+            <button type="button" data-right-inspector-tab="files" aria-selected="true">文件</button>
+            <button type="button" data-right-inspector-tab="progress" aria-selected="false">进度</button>
+            <button type="button" data-right-inspector-tab="output" aria-selected="false">输出</button>
+          </div>
+          <section class="inspector-panel" data-right-inspector-panel="files">
+            <h3>Files</h3>
+            <p>只显示输入、输出和交付物 refs；不返回 artifact body。</p>
+          </section>
+          <section class="inspector-panel" data-right-inspector-panel="progress" hidden>
+            <h3>Progress</h3>
+            <p>只显示阶段投影；不拥有 runtime truth。</p>
+          </section>
+          <section class="inspector-panel" data-right-inspector-panel="output" hidden>
+            <h3>Output</h3>
+            <p>只显示输出引用和导出入口；正文权威留在 MedOPL/OPL。</p>
+          </section>
+        </aside>
+
         <section class="capability-section foundry-section" id="capabilities" aria-labelledby="capabilities-title">
           <div class="section-heading">
             <p class="panel-kicker">Capabilities</p>
@@ -261,6 +308,16 @@
             <p>该能力需要在 MedOPL 开通后继续。当前只提供开通入口，不执行真实 OPL 任务。</p>
           </div>
           <a class="primary-button" href="https://medopl.medopl.cn">去 MedOPL 开通</a>
+        </aside>
+
+        <aside class="api-key-dialog" data-api-key-dialog data-api-key-dialog-state="closed" role="dialog" aria-modal="true" aria-labelledby="api-key-dialog-title" hidden>
+          <div class="api-key-dialog-panel">
+            <p class="panel-kicker">API Key</p>
+            <h2 id="api-key-dialog-title">发送前需要绑定 API Key</h2>
+            <p>用户填写自己的 API Key；base_url 固定为 https://gflabtoken.cn/v1，不允许自定义。</p>
+            <a class="primary-button full" href="#settings" data-api-key-dialog-primary>去绑定</a>
+            <button class="ghost-button full" type="button" data-api-key-dialog-close>稍后处理</button>
+          </div>
         </aside>
       </main>
     </div>

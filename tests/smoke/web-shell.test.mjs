@@ -9,8 +9,12 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /多租户 SaaS 版 One Person Lab/);
   assert.match(html, /科研工作人员、硕博、PI 与科研团队/);
   assert.match(html, /figma-make-webui-alignment/);
+  assert.match(html, /data-figma-source="E8nYfNFc2D9P01FYZ8UwBW"/);
   assert.match(html, /app-shell/);
+  assert.match(html, /data-shell-state="app_default_chat"/);
   assert.match(html, /sidebar-shell/);
+  assert.match(html, /data-left-rail-state="collapsed"/);
+  assert.match(html, /data-left-rail-toggle/);
   assert.match(html, /New Chat/);
   assert.match(html, /科研能力/);
   assert.match(html, /论文/);
@@ -20,6 +24,13 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /account-popover/);
   assert.match(html, /prompt-command-center/);
   assert.match(html, /skill-launcher/);
+  assert.match(html, /data-right-inspector/);
+  assert.match(html, /data-right-inspector-state="hidden"/);
+  assert.match(html, /data-right-inspector-tab="files"/);
+  assert.match(html, /data-right-inspector-tab="progress"/);
+  assert.match(html, /data-right-inspector-tab="output"/);
+  assert.match(html, /data-api-key-dialog/);
+  assert.match(html, /data-api-key-dialog-state="closed"/);
   assert.match(html, /data-research-launcher/);
   assert.match(html, /data-research-task/);
   assert.match(html, /data-research-task-intent/);
@@ -77,6 +88,8 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /data-reliability-title/);
   assert.match(html, /data-reliability-action/);
   assert.match(html, /data-reliability-details/);
+  assert.match(html, /data-running-turn/);
+  assert.match(html, /data-blocked-turn/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
   assert.doesNotMatch(html, /styles\/v3\.css/);
   assert.doesNotMatch(html, /MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM/);
@@ -94,11 +107,24 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
   assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(webSource, /dataset\.chatState/);
+  assert.match(webSource, /dataset\.shellState/);
+  assert.match(webSource, /dataset\.leftRailState/);
+  assert.match(webSource, /dataset\.rightInspectorState/);
+  assert.match(webSource, /dataset\.apiKeyDialogState/);
   assert.match(webSource, /chatStateForResult/);
   assert.match(webSource, /chatStateForPrompt/);
   assert.doesNotMatch(webSource, /if \(requiresRuntimeGate\(message\)\) \{\n\s+document\.body\.dataset\.chatState = chatStateForResult/);
   assert.match(webSource, /\/api\/chat/);
   assert.match(webSource, /\/api\/settings\/model-provider/);
+});
+
+test('hidden shell overlays cannot intercept browser input', () => {
+  const html = readFileSync('apps/web/index.html', 'utf8');
+  const css = readFileSync('apps/web/styles.css', 'utf8');
+
+  assert.match(html, /class="api-key-dialog"[\s\S]*hidden/);
+  assert.match(html, /class="right-inspector"[\s\S]*hidden/);
+  assert.match(css, /\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/);
 });
 
 test('settings hash has a dedicated productized settings surface', () => {

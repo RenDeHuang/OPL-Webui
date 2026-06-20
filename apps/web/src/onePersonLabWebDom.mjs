@@ -17,10 +17,15 @@ import {
 
 export async function initOnePersonLabWeb() {
   let view = createInitialOnePersonLabViewModel();
+  document.body.dataset.shellState = 'app_default_chat';
+  document.body.dataset.leftRailState = document.body.dataset.leftRailState || 'collapsed';
+  document.body.dataset.rightInspectorState = document.body.dataset.rightInspectorState || 'hidden';
+  document.body.dataset.apiKeyDialogState = document.body.dataset.apiKeyDialogState || 'closed';
   document.body.dataset.chatState = chatStateForResult(null);
 
   syncHashView();
   window.addEventListener('hashchange', syncHashView);
+  bindShellControls();
   bindCapabilityButtons();
   bindAccountPopover();
   bindChatForm(() => view);
@@ -78,27 +83,105 @@ function bindChatForm(getView) {
     document.body.dataset.chatState = chatStateForPrompt(message);
     appendMessage('你', message, 'user-message');
     if (view.accountState === 'anonymous') {
+      setShellTurnState('blocked_turn');
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }));
       appendMessage('OPL', '请先登录/注册后开始聊天。', 'assistant-message');
       window.location.hash = 'settings';
       return;
     }
     if (view.accountState === 'authenticated_unbound') {
+      setShellTurnState('blocked_turn');
+      openAPIKeyDialog();
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
       appendMessage('OPL', '请先在 Settings 绑定 API Key。', 'assistant-message');
       window.location.hash = 'settings';
       return;
     }
+    setShellTurnState('running_turn');
     document.body.dataset.chatState = chatStateForResult(null, true);
     renderReliabilityStatus(reliabilityStatusForResult(null));
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
+    setShellTurnState(result.ok ? 'app_default_chat' : 'blocked_turn');
     renderReliabilityStatus(reliabilityStatusForResult(result));
     if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
     const researchResult = result.ok ? researchResultForChat({ ...result, prompt: message }) : null;
     if (researchResult) appendResearchResult(researchResult);
   });
+}
+
+function bindShellControls() {
+  document.querySelector('[data-left-rail-toggle]')?.addEventListener('click', () => {
+    const expanded = document.body.dataset.leftRailState !== 'expanded';
+    document.body.dataset.leftRailState = expanded ? 'expanded' : 'collapsed';
+    document.body.dataset.shellState = expanded ? 'left_sidebar_expanded' : 'app_default_chat';
+    document.querySelector('[data-left-rail-toggle]')?.setAttribute('aria-expanded', String(expanded));
+  });
+
+  for (const button of document.querySelectorAll('[data-right-inspector-open]')) {
+    button.addEventListener('click', () => openRightInspector(button.dataset.rightInspectorOpen || 'files'));
+  }
+
+  for (const tab of document.querySelectorAll('[data-right-inspector-tab]')) {
+    tab.addEventListener('click', () => openRightInspector(tab.dataset.rightInspectorTab || 'files'));
+  }
+
+  document.querySelector('[data-right-inspector-close]')?.addEventListener('click', () => closeRightInspector());
+  document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
+  document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => closeAPIKeyDialog());
+}
+
+function openRightInspector(state = 'files') {
+  const inspector = document.querySelector('[data-right-inspector]');
+  if (!inspector) return;
+  const normalized = ['files', 'progress', 'output'].includes(state) ? state : 'files';
+  inspector.hidden = false;
+  inspector.dataset.rightInspectorState = normalized;
+  document.body.dataset.rightInspectorState = normalized;
+  document.body.dataset.shellState = 'right_inspector_open';
+  for (const tab of document.querySelectorAll('[data-right-inspector-tab]')) {
+    tab.setAttribute('aria-selected', String(tab.dataset.rightInspectorTab === normalized));
+  }
+  for (const panel of document.querySelectorAll('[data-right-inspector-panel]')) {
+    panel.hidden = panel.dataset.rightInspectorPanel !== normalized;
+  }
+}
+
+function closeRightInspector() {
+  const inspector = document.querySelector('[data-right-inspector]');
+  if (!inspector) return;
+  inspector.hidden = true;
+  inspector.dataset.rightInspectorState = 'hidden';
+  document.body.dataset.rightInspectorState = 'hidden';
+  document.body.dataset.shellState = 'app_default_chat';
+}
+
+function openAPIKeyDialog() {
+  const dialog = document.querySelector('[data-api-key-dialog]');
+  if (!dialog) return;
+  dialog.hidden = false;
+  dialog.dataset.apiKeyDialogState = 'open';
+  document.body.dataset.apiKeyDialogState = 'open';
+  document.body.dataset.shellState = 'api_key_required_modal';
+  dialog.querySelector('[data-api-key-dialog-primary]')?.focus({ preventScroll: true });
+}
+
+function closeAPIKeyDialog() {
+  const dialog = document.querySelector('[data-api-key-dialog]');
+  if (!dialog) return;
+  dialog.hidden = true;
+  dialog.dataset.apiKeyDialogState = 'closed';
+  document.body.dataset.apiKeyDialogState = 'closed';
+  if (document.body.dataset.shellState === 'api_key_required_modal') {
+    document.body.dataset.shellState = 'app_default_chat';
+  }
+}
+
+function setShellTurnState(state) {
+  document.querySelector('[data-running-turn]').hidden = state !== 'running_turn';
+  document.querySelector('[data-blocked-turn]').hidden = state !== 'blocked_turn';
+  document.body.dataset.shellState = state;
 }
 
 function bindSettingsForms(getView, setView) {

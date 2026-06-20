@@ -80,7 +80,7 @@ test('cloud rollout helper is a dry-run first VPC runner entrypoint', () => {
         OPL_IMAGE: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:e2c6b27',
       },
     }),
-    /--apply, --rollback, and --rollback-plan are mutually exclusive/,
+    /--apply, --rollback, --rollback-plan, and --image-preflight are mutually exclusive/,
   );
 });
 
@@ -251,6 +251,7 @@ test('cloud rollout helper supports manual approved rollback evidence without au
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
 
   try {
     const output = execFileSync(process.execPath, [helperPath, '--rollback'], {
@@ -286,6 +287,45 @@ test('cloud rollout helper supports manual approved rollback evidence without au
   }
 });
 
+test('cloud rollout helper preflights target image before mutating the deployment', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-image-preflight-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const targetImage = 'uswccr.ccs.tencentyun.com/webopl/opl-webui:80689b1';
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
+
+  try {
+    const result = spawnSync(process.execPath, [helperPath, '--apply'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        KUBECONFIG: join(tempDir, 'kubeconfig'),
+        OPL_IMAGE: targetImage,
+        OPL_BASE_URL: 'https://opl.medopl.cn',
+        OPL_NAMESPACE: 'opl-webui',
+        TARGET_IMAGE: targetImage,
+        COMMAND_LOG: commandLog,
+        FAKE_IMAGE_MISSING: '1',
+      },
+    });
+    const output = `${result.stdout}${result.stderr}`;
+    assert.notEqual(result.status, 0);
+    assert.match(output, /image preflight failed/i);
+    assert.match(output, /image_missing_rollout_order_issue/);
+    assert.match(output, /imagePullOccurred=false/);
+    assert.match(output, /uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:80689b1/);
+    assert.doesNotMatch(output, /kubectl set image|rollout status|ImagePullBackOff/);
+    const commands = readFileSync(commandLog, 'utf8');
+    assert.match(commands, /docker manifest inspect uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:80689b1/);
+    assert.doesNotMatch(commands, /set image deployment\/opl-webui-control-plane/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 test('cloud rollout helper execs the current Running Ready pod when old Error pods exist', () => {
   const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-'));
   const commandLog = join(tempDir, 'commands.log');
@@ -293,6 +333,7 @@ test('cloud rollout helper execs the current Running Ready pod when old Error po
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
 
   try {
     const output = execFileSync(process.execPath, [helperPath, '--apply'], {
@@ -327,6 +368,7 @@ test('cloud rollout helper fails closed on semantic smoke regressions', () => {
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
 
   try {
     assert.throws(
@@ -358,6 +400,7 @@ test('cloud rollout helper diagnoses rollout status failures before canary', () 
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
 
   try {
     const result = spawnSync(process.execPath, [helperPath, '--apply'], {
@@ -395,6 +438,7 @@ test('cloud rollout helper hard-times out hung kubectl rollout status and prints
 
   writeFakeKubectl(tempDir);
   writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
 
   try {
     const result = spawnSync(process.execPath, [helperPath, '--apply'], {
@@ -555,6 +599,17 @@ case "$url" in
     printf '<html>One Person Lab Web</html>\\n'
     ;;
 esac
+`, { mode: 0o755 });
+}
+
+function writeFakeDocker(tempDir) {
+  writeFileSync(join(tempDir, 'docker'), `#!/usr/bin/env bash
+printf 'docker %s\\n' "$*" >> "$COMMAND_LOG"
+if [ "$FAKE_IMAGE_MISSING" = "1" ]; then
+  printf 'manifest unknown: %s\\n' "$3" >&2
+  exit 1
+fi
+printf '{"schemaVersion":2}\\n'
 `, { mode: 0o755 });
 }
 

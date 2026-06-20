@@ -48,6 +48,7 @@
     },
     "orderedStages": [
       "production_dry_run",
+      "production_image_preflight",
       "production_apply",
       "canary_smoke",
       "production_authenticated_dogfood"
@@ -57,6 +58,16 @@
       "requiresImage": true,
       "requiresKubeconfig": false,
       "mutatesCluster": false
+    },
+    "imagePreflight": {
+      "entrypoint": "node scripts/cloud-rollout.mjs --image-preflight",
+      "requiresImage": true,
+      "requiresKubeconfig": false,
+      "mutatesCluster": false,
+      "afterStage": "production_dry_run",
+      "beforeStage": "production_apply",
+      "failureKind": "image_missing_rollout_order_issue",
+      "imagePullOccurredOnFailure": false
     },
     "apply": {
       "entrypoint": "node scripts/cloud-rollout.mjs --apply",
@@ -80,6 +91,33 @@
         "/metricsz ok=true missingDependencyCount=0"
       ]
     }
+  },
+  "productionReleaseFailures": {
+    "mode": "sanitized_failed_release_foldback",
+    "state": "latest_failed_run_27878485498_image_missing_rollout_order_issue",
+    "latestFailedRun": {
+      "runId": 27878485498,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27878485498",
+      "commit": "80689b1d2a139408f26fa8423df54795727e25b7",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:80689b1",
+      "workflow": "Cloud Rollout",
+      "targetHost": "https://opl.medopl.cn",
+      "status": "failure",
+      "failedStage": "Production Apply",
+      "failureKind": "image_missing_rollout_order_issue",
+      "imagePullOccurred": true,
+      "productFailure": false,
+      "rawLogPolicy": {
+        "storesRawLogs": false,
+        "storesSecretValues": false
+      }
+    },
+    "cannotClaim": [
+      "production-ready SaaS",
+      "successful rollout",
+      "new image serving production traffic",
+      "product runtime failure"
+    ]
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",

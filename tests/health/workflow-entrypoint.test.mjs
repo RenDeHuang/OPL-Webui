@@ -120,6 +120,10 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-dry-run:/);
   assert.match(workflow, /name:\s*Production Dry Run/);
   assert.doesNotMatch(workflow, /production-dry-run:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply\s*\}\}/);
+  assert.match(workflow, /production-image-preflight:/);
+  assert.match(workflow, /name:\s*Production Image Preflight/);
+  assert.match(workflow, /production-image-preflight:[\s\S]*?needs:\s*production-dry-run/);
+  assert.match(workflow, /production-image-preflight:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && !inputs\.rollback\s*\}\}/);
   assert.match(workflow, /rollout-mutation-guard:/);
   assert.match(workflow, /name:\s*Rollout Mutation Guard/);
   assert.match(workflow, /rollout-mutation-guard:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.rollback\s*\}\}/);
@@ -127,7 +131,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-apply:/);
   assert.match(workflow, /name:\s*Production Apply/);
   assert.match(workflow, /production-apply:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && !inputs\.rollback\s*\}\}/);
-  assert.match(workflow, /production-apply:[\s\S]*?needs:\s*production-dry-run/);
+  assert.match(workflow, /production-apply:[\s\S]*?needs:\s*production-image-preflight/);
   assert.match(workflow, /production-rollback:/);
   assert.match(workflow, /name:\s*Production Rollback/);
   assert.match(workflow, /production-rollback:[\s\S]*?needs:\s*production-dry-run/);
@@ -155,6 +159,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /environment:\s*production/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --rollback-plan/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --image-preflight/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --rollback/);
   assert.match(workflow, /--apply/);
@@ -187,11 +192,20 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action|OPL_DATABASE_URL|PGPASSWORD/i);
   assert.doesNotMatch(workflow, /KUBECONFIG:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
 
-  const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('production-apply:'));
+  const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('rollout-mutation-guard:'));
   assert.doesNotMatch(dryRunJob, /environment:\s*production/);
   assert.doesNotMatch(dryRunJob, /KUBECONFIG/);
   assert.match(dryRunJob, /inputs\.rollback/);
   assert.match(dryRunJob, /node scripts\/cloud-rollout\.mjs --rollback-plan/);
+
+  const imagePreflightJob = workflow.slice(
+    workflow.indexOf('production-image-preflight:'),
+    workflow.indexOf('production-apply:'),
+  );
+  assert.doesNotMatch(imagePreflightJob, /environment:\s*production/);
+  assert.doesNotMatch(imagePreflightJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
+  assert.match(imagePreflightJob, /OPL_IMAGE/);
+  assert.match(imagePreflightJob, /node scripts\/cloud-rollout\.mjs --image-preflight/);
 
   const applyJob = workflow.slice(workflow.indexOf('production-apply:'));
   assert.match(applyJob, /KUBECONFIG_CONTENT:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
@@ -492,6 +506,54 @@ test('release evidence sync folds scheduled canary first success separately from
   assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
   assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
   assert.equal(profile.productionObservabilityBaseline.cannotClaim.includes('production-ready SaaS'), true);
+});
+
+test('release evidence sync folds image-missing rollout order failures without treating them as product failures', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Dry Run', conclusion: 'success', html_url: 'https://example.test/dry' },
+      { name: 'Production Apply', conclusion: 'failure', html_url: 'https://example.test/apply' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    rolloutPipeline: {
+      imagePreflight: {
+        failureKind: 'image_missing_rollout_order_issue',
+        imagePullOccurredOnFailure: false,
+      },
+    },
+    productionReleaseFailures: {
+      latestFailedRun: null,
+      cannotClaim: ['production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '27878485498',
+    '--commit', '80689b1d2a139408f26fa8423df54795727e25b7',
+    '--image', 'uswccr.ccs.tencentyun.com/webopl/opl-webui:80689b1',
+    '--jobs-json', jobsPath,
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.runId, 27878485498);
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.failedStage, 'Production Apply');
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.failureKind, 'image_missing_rollout_order_issue');
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.imagePullOccurred, true);
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.productFailure, false);
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:80689b1');
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.rawLogPolicy.storesRawLogs, false);
+  assert.equal(profile.productionReleaseFailures.latestFailedRun.rawLogPolicy.storesSecretValues, false);
+  assert.equal(profile.productionReleaseFailures.cannotClaim.includes('production-ready SaaS'), true);
 });
 
 test('release evidence sync ignores skipped rollback jobs', () => {

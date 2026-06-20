@@ -51,7 +51,8 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload, workfl
 }
 
 export function foldSummaryIntoReleaseProfile({ profile, summary }) {
-  const withDogfood = foldAuthenticatedDogfoodIntoReleaseProfile({ profile, summary });
+  const withFailures = foldReleaseFailureIntoProfile({ profile, summary });
+  const withDogfood = foldAuthenticatedDogfoodIntoReleaseProfile({ profile: withFailures, summary });
   const withAvailability = foldAvailabilityIntoReleaseProfile({ profile: withDogfood, summary });
   const withScheduledCanary = foldScheduledCanaryIntoReleaseProfile({ profile: withAvailability, summary });
   const withRollback = foldRollbackIntoReleaseProfile({ profile: withScheduledCanary, summary });
@@ -78,6 +79,49 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
       cannotClaim: nextCannotClaim,
     },
   };
+}
+
+function foldReleaseFailureIntoProfile({ profile, summary }) {
+  if (summary.status !== 'failure') return profile;
+  const failures = profile.productionReleaseFailures ?? {};
+  const failureKind = classifyReleaseFailure(summary);
+  const latestFailedRun = {
+    runId: summary.runId,
+    runUrl: summary.runUrl,
+    commit: summary.commit,
+    image: summary.image ?? null,
+    workflow: summary.workflow ?? 'Cloud Rollout',
+    targetHost: 'https://opl.medopl.cn',
+    status: 'failure',
+    failedStage: summary.failedStage,
+    failureKind,
+    imagePullOccurred: failureKind === 'image_missing_rollout_order_issue'
+      ? summary.failedStage === 'Production Apply'
+      : null,
+    productFailure: failureKind === 'image_missing_rollout_order_issue' ? false : 'unconfirmed',
+    rawLogPolicy: summary.rawLogPolicy,
+  };
+  return {
+    ...profile,
+    productionReleaseFailures: {
+      ...failures,
+      latestFailedRun,
+      cannotClaim: uniqueStrings([
+        ...(failures.cannotClaim ?? []),
+        'production-ready SaaS',
+      ]),
+    },
+  };
+}
+
+function classifyReleaseFailure(summary) {
+  if (summary.failedStage === 'Production Apply' && typeof summary.image === 'string' && summary.image.length > 0) {
+    return 'image_missing_rollout_order_issue';
+  }
+  if (summary.failedStage === 'Production Image Preflight') {
+    return 'image_missing_rollout_order_issue';
+  }
+  return 'release_stage_failed';
 }
 
 function foldAuthenticatedDogfoodIntoReleaseProfile({ profile, summary }) {

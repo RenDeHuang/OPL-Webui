@@ -90,9 +90,25 @@ jobs:
           echo "apply=true and rollback=true are mutually exclusive." >&2
           exit 1
 
+  production-image-preflight:
+    name: Production Image Preflight
+    needs: production-dry-run
+    if: ${{ inputs.apply && !inputs.rollback }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    env:
+      OPL_IMAGE: ${{ inputs.image }}
+      OPL_NAMESPACE: opl-webui
+      OPL_BASE_URL: https://opl.medopl.cn
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target image exists
+        run: node scripts/cloud-rollout.mjs --image-preflight
+
   production-apply:
     name: Production Apply
-    needs: production-dry-run
+    needs: production-image-preflight
     if: ${{ inputs.apply && !inputs.rollback }}
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     environment: production

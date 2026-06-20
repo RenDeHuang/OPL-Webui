@@ -225,8 +225,30 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(release.rolloutPipeline.imageInputPolicy.normalization, /<tag>/);
   assert.equal(release.rolloutPipeline.imageInputPolicy.forbiddenInputs.includes('external_registry'), true);
   assert.equal(release.rolloutPipeline.imageInputPolicy.forbiddenInputs.includes('floating_latest_tag'), true);
+  assert.equal(release.rolloutPipeline.imagePreflight.entrypoint, 'node scripts/cloud-rollout.mjs --image-preflight');
+  assert.equal(release.rolloutPipeline.imagePreflight.requiresImage, true);
+  assert.equal(release.rolloutPipeline.imagePreflight.requiresKubeconfig, false);
+  assert.equal(release.rolloutPipeline.imagePreflight.mutatesCluster, false);
+  assert.equal(release.rolloutPipeline.imagePreflight.afterStage, 'production_dry_run');
+  assert.equal(release.rolloutPipeline.imagePreflight.beforeStage, 'production_apply');
+  assert.equal(release.rolloutPipeline.imagePreflight.failureKind, 'image_missing_rollout_order_issue');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.runId, 27878485498);
+  assert.equal(release.productionReleaseFailures.latestFailedRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27878485498');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.commit, '80689b1d2a139408f26fa8423df54795727e25b7');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:80689b1');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.workflow, 'Cloud Rollout');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.targetHost, 'https://opl.medopl.cn');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.status, 'failure');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.failedStage, 'Production Apply');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.failureKind, 'image_missing_rollout_order_issue');
+  assert.equal(release.productionReleaseFailures.latestFailedRun.imagePullOccurred, true);
+  assert.equal(release.productionReleaseFailures.latestFailedRun.productFailure, false);
+  assert.equal(release.productionReleaseFailures.latestFailedRun.rawLogPolicy.storesRawLogs, false);
+  assert.equal(release.productionReleaseFailures.latestFailedRun.rawLogPolicy.storesSecretValues, false);
+  assert.equal(release.productionReleaseFailures.cannotClaim.includes('production-ready SaaS'), true);
   assert.deepEqual(release.rolloutPipeline.orderedStages, [
     'production_dry_run',
+    'production_image_preflight',
     'production_apply',
     'canary_smoke',
     'production_authenticated_dogfood',

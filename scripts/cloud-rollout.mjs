@@ -5,10 +5,11 @@ const args = new Set(process.argv.slice(2));
 const apply = args.has('--apply');
 const rollback = args.has('--rollback');
 const rollbackPlan = args.has('--rollback-plan');
-const dryRun = !apply && !rollback && !rollbackPlan;
+const imagePreflight = args.has('--image-preflight');
+const dryRun = !apply && !rollback && !rollbackPlan && !imagePreflight;
 
-if ([apply, rollback, rollbackPlan].filter(Boolean).length > 1) {
-  throw new Error('--apply, --rollback, and --rollback-plan are mutually exclusive');
+if ([apply, rollback, rollbackPlan, imagePreflight].filter(Boolean).length > 1) {
+  throw new Error('--apply, --rollback, --rollback-plan, and --image-preflight are mutually exclusive');
 }
 
 const namespace = process.env.OPL_NAMESPACE ?? 'opl-webui';
@@ -51,6 +52,13 @@ if (args.has('--availability-probe')) {
   process.exit(0);
 }
 
+if (imagePreflight) {
+  requireEnv('OPL_IMAGE');
+  setValidatedImage(process.env.OPL_IMAGE);
+  assertImageExists(image);
+  process.exit(0);
+}
+
 if (rollbackPlan) {
   setValidatedImage(image);
   printRollbackPlan();
@@ -74,6 +82,7 @@ if (dryRun) {
 requireEnv('KUBECONFIG');
 requireEnv('OPL_IMAGE');
 setValidatedImage(process.env.OPL_IMAGE);
+assertImageExists(image);
 
 run('kubectl set image', 'kubectl', kubectlArgs(['set', 'image', deployment, `${container}=${image}`]));
 runRolloutStatus();
@@ -346,6 +355,27 @@ function run(label, command, commandArgs) {
   }
 }
 
+function assertImageExists(targetImage) {
+  console.log(`[cloud-rollout] image preflight ${targetImage}`);
+  const result = spawnSync('docker', ['manifest', 'inspect', targetImage], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: diagnosticTimeoutMs,
+    killSignal: 'SIGTERM',
+  });
+  if (result.status === 0) {
+    console.log('[cloud-rollout] image preflight passed');
+    return;
+  }
+  const reason = result.error?.code === 'ETIMEDOUT'
+    ? `docker manifest inspect timed out after ${diagnosticTimeoutMs}ms`
+    : (result.stderr || result.stdout || `docker manifest inspect exited ${result.status ?? 1}`).trim();
+  console.error(`[cloud-rollout] image preflight failed: ${targetImage}`);
+  console.error(`[cloud-rollout] failureKind=image_missing_rollout_order_issue imagePullOccurred=false`);
+  if (reason) console.error(reason);
+  process.exit(result.status || 1);
+}
+
 function runRolloutStatus() {
   console.log('[cloud-rollout] kubectl rollout status');
   const result = spawnSync('kubectl', kubectlArgs(['rollout', 'status', deployment, `--timeout=${kubectlRolloutTimeoutSeconds}s`]), {
@@ -591,11 +621,12 @@ function printUsage() {
   console.log(`Usage:
   node scripts/cloud-rollout.mjs
   OPL_IMAGE=4a9d439 node scripts/cloud-rollout.mjs
+  OPL_IMAGE=4a9d439 node scripts/cloud-rollout.mjs --image-preflight
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:4a9d439 OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --apply
   OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback-plan
   KUBECONFIG=/path/to/kubeconfig OPL_IMAGE=uswccr.ccs.tencentyun.com/webopl/opl-webui:previous-tag OPL_BASE_URL=https://opl.medopl.cn node scripts/cloud-rollout.mjs --rollback
   OPL_PRODUCTION_DOGFOOD_E2E=1 OPL_DOGFOOD_EMAIL=... OPL_DOGFOOD_PASSWORD=... OPL_DOGFOOD_API_KEY=... node scripts/cloud-rollout.mjs --dogfood-e2e
   OPL_BASE_URL=https://opl.medopl.cn OPL_AVAILABILITY_PROBE_SAMPLES=3 node scripts/cloud-rollout.mjs --availability-probe
 
-Default mode prints a dry-run command plan. Short release commit tags are normalized to ${imageRepository}:<tag>. --apply runs kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback-plan prints the manual rollback plan without cluster mutation. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks against the post-rollback Deployment image. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
+Default mode prints a dry-run command plan. Short release commit tags are normalized to ${imageRepository}:<tag>. --image-preflight checks that the target image manifest exists before cluster mutation. --apply runs image preflight, kubectl rollout, pod canaries, and HTTPS smoke checks. --rollback-plan prints the manual rollback plan without cluster mutation. --rollback runs manual environment-approved kubectl rollout undo and the same canary/smoke checks against the post-rollback Deployment image. --dogfood-e2e verifies production auth/key/chat/gate paths without kubectl. --availability-probe repeatedly checks public availability without secrets or cluster mutation. Set OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 to include readonly projection checks.`);
 }
