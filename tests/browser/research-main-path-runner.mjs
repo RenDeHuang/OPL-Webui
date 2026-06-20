@@ -210,7 +210,7 @@ async function startMockChatUpstream() {
     requests.push({ path: request.url, body });
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({
-      choices: [{ message: { content: 'mock upstream response for research chat' } }],
+      output_text: 'mock upstream response for research chat',
     }));
   });
   await listen(server);

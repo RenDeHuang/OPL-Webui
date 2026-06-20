@@ -9,7 +9,7 @@ const secureEnv = {
   OPL_WEBUI_ENV: 'development',
   OPL_SESSION_SECRET: 'test-session-secret-32-bytes-minimum',
   OPL_API_KEY_ENCRYPTION_SECRET: 'test-api-key-secret-32-bytes-min',
-  OPL_CHAT_MODEL: 'gpt-4o-mini',
+  OPL_CHAT_MODEL: 'gpt-5.5',
 };
 
 function readApiContract() {
@@ -306,12 +306,13 @@ test('chat API requires auth and user API key, rejects client base_url override,
     const uncontractedAtMention = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@RCA 规划可视化交付方案' });
     assert.equal(uncontractedAtMention.response.status, 200);
     assert.equal(upstream.requests.length, 1);
-    assert.equal(upstream.requests[0].body.messages[0].content, '@RCA 规划可视化交付方案');
+    assert.equal(upstream.requests[0].url, '/v1/responses');
+    assert.equal(upstream.requests[0].body.input, '@RCA 规划可视化交付方案');
 
     const retiredRuntimeMarker = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@长任务 规划一个普通研究排期' });
     assert.equal(retiredRuntimeMarker.response.status, 200);
     assert.equal(upstream.requests.length, 2);
-    assert.equal(upstream.requests[1].body.messages[0].content, '@长任务 规划一个普通研究排期');
+    assert.equal(upstream.requests[1].body.input, '@长任务 规划一个普通研究排期');
   } finally {
     await stopGoServer(child);
     await upstream.close();
@@ -392,7 +393,7 @@ async function startFakeUpstream() {
       body: raw ? JSON.parse(raw) : {},
     });
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ choices: [{ message: { content: '上游响应' } }] }));
+    response.end(JSON.stringify({ output_text: '上游响应' }));
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();

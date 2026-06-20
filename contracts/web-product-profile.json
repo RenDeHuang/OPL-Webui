@@ -52,6 +52,10 @@
   "provider": {
     "id": "gflabtoken",
     "fixedBaseUrl": "https://gflabtoken.cn/v1",
+    "wireApi": "responses",
+    "defaultModel": "gpt-5.5",
+    "serviceTier": "fast",
+    "reasoningEffort": "xhigh",
     "userEditableBaseUrl": false,
     "clientMaySendBaseUrl": false
   },

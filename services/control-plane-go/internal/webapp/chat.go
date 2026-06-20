@@ -65,9 +65,11 @@ func (failure UpstreamFailure) Metadata(conversationID string) map[string]string
 
 func (client ChatClient) Complete(ctx context.Context, apiKey string, message string) (string, error) {
 	body := map[string]any{
-		"model": modelName(),
-		"messages": []map[string]string{
-			{"role": "user", "content": message},
+		"model":        modelName(),
+		"input":        message,
+		"service_tier": "fast",
+		"reasoning": map[string]string{
+			"effort": "xhigh",
 		},
 	}
 	encoded, err := json.Marshal(body)
@@ -97,19 +99,24 @@ func (client ChatClient) Complete(ctx context.Context, apiKey string, message st
 		return "", UpstreamFailure{Kind: "http_status", Status: response.StatusCode, Host: upstreamHost(), Model: modelName()}
 	}
 	var payload struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+		OutputText string `json:"output_text"`
+		Output     []struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"output"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
 		return "", err
 	}
-	if len(payload.Choices) == 0 || strings.TrimSpace(payload.Choices[0].Message.Content) == "" {
+	content := strings.TrimSpace(payload.OutputText)
+	if content == "" {
+		content = responseOutputText(payload.Output)
+	}
+	if content == "" {
 		return "", UpstreamFailure{Kind: "empty_response", Host: upstreamHost(), Model: modelName()}
 	}
-	return payload.Choices[0].Message.Content, nil
+	return content, nil
 }
 
 func requiresRuntime(message string) bool {
@@ -126,7 +133,7 @@ func upstreamChatURL() string {
 	if os.Getenv("OPL_WEBUI_ENV") == "development" && os.Getenv("OPL_CHAT_TEST_UPSTREAM_BASE_URL") != "" {
 		baseURL = os.Getenv("OPL_CHAT_TEST_UPSTREAM_BASE_URL")
 	}
-	return strings.TrimRight(baseURL, "/") + "/chat/completions"
+	return strings.TrimRight(baseURL, "/") + "/responses"
 }
 
 func upstreamHost() string {
@@ -141,5 +148,20 @@ func modelName() string {
 	if model := strings.TrimSpace(os.Getenv("OPL_CHAT_MODEL")); model != "" {
 		return model
 	}
-	return "gpt-4o-mini"
+	return "gpt-5.5"
+}
+
+func responseOutputText(output []struct {
+	Content []struct {
+		Text string `json:"text"`
+	} `json:"content"`
+}) string {
+	for _, item := range output {
+		for _, content := range item.Content {
+			if text := strings.TrimSpace(content.Text); text != "" {
+				return text
+			}
+		}
+	}
+	return ""
 }

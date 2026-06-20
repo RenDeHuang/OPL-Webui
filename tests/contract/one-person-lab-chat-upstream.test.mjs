@@ -8,7 +8,7 @@ const secureEnv = {
   OPL_WEBUI_ENV: 'development',
   OPL_SESSION_SECRET: 'test-session-secret-32-bytes-minimum',
   OPL_API_KEY_ENCRYPTION_SECRET: 'test-api-key-secret-32-bytes-min',
-  OPL_CHAT_MODEL: 'gpt-4o-mini',
+  OPL_CHAT_MODEL: 'gpt-5.5',
 };
 
 test('dogfood e2e readiness covers auth key binding chat quota audit and runtime gate', async () => {
@@ -117,7 +117,7 @@ test('upstream chat failures return sanitized diagnostics for production dogfood
     assert.equal(chat.body.errorCode, 'UPSTREAM_CHAT_FAILED');
     assert.equal(chat.body.upstream.status, 401);
     assert.equal(chat.body.upstream.host, '127.0.0.1');
-    assert.equal(chat.body.upstream.model, 'gpt-4o-mini');
+    assert.equal(chat.body.upstream.model, 'gpt-5.5');
     assert.equal(chat.body.upstream.kind, 'http_status');
     assertNoSensitiveMaterial(chat.body);
     assert.doesNotMatch(JSON.stringify(chat.body), /invalid_api_key|bad key|sk-user-upstream-secret/i);
@@ -128,7 +128,7 @@ test('upstream chat failures return sanitized diagnostics for production dogfood
     const failed = audit.body.events.find((event) => event.eventKind === 'chat.upstream_failed');
     assert.equal(failed.metadata.upstreamStatus, '401');
     assert.equal(failed.metadata.upstreamHost, '127.0.0.1');
-    assert.equal(failed.metadata.upstreamModel, 'gpt-4o-mini');
+    assert.equal(failed.metadata.upstreamModel, 'gpt-5.5');
     assert.equal(failed.metadata.upstreamKind, 'http_status');
     assertNoSensitiveMaterial(audit.body);
     assert.doesNotMatch(JSON.stringify(audit.body), /invalid_api_key|bad key|sk-user-upstream-secret/i);
@@ -161,10 +161,13 @@ test('ordinary chat calls OpenAI-compatible upstream with the user API key', asy
     assert.equal(chat.response.status, 200);
     assert.equal(chat.body.assistantMessage.content, '上游响应');
     assert.equal(upstream.requests.length, 1);
-    assert.equal(upstream.requests[0].url, '/v1/chat/completions');
+    assert.equal(upstream.requests[0].url, '/v1/responses');
     assert.equal(upstream.requests[0].authorization, 'Bearer sk-user-upstream-secret');
-    assert.equal(upstream.requests[0].body.model, 'gpt-4o-mini');
-    assert.equal(upstream.requests[0].body.messages[0].content, '你好，帮我总结 OPL 是什么');
+    assert.equal(upstream.requests[0].body.model, 'gpt-5.5');
+    assert.equal(upstream.requests[0].body.input, '你好，帮我总结 OPL 是什么');
+    assert.equal(upstream.requests[0].body.service_tier, 'fast');
+    assert.deepEqual(upstream.requests[0].body.reasoning, { effort: 'xhigh' });
+    assert.equal('messages' in upstream.requests[0].body, false);
     assert.doesNotMatch(JSON.stringify(chat.body), /sk-user-upstream-secret|base_url/i);
   } finally {
     await stopGoServer(child);
@@ -234,11 +237,16 @@ test('ordinary chat quota guard fails closed and writes sanitized audit events',
 
 async function startFakeUpstream(options = {}) {
   const status = options.status ?? 200;
-  const body = options.body ?? { choices: [{ message: { content: '上游响应' } }] };
+  const body = options.body ?? { output_text: '上游响应' };
   const requests = [];
   const server = http.createServer(async (request, response) => {
     let raw = '';
     for await (const chunk of request) raw += chunk;
+    if (!options.acceptAnyPath && request.url !== '/v1/responses') {
+      response.writeHead(404, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ error: { message: 'unexpected upstream path' } }));
+      return;
+    }
     requests.push({
       url: request.url,
       authorization: request.headers.authorization,
