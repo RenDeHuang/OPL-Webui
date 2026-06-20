@@ -170,7 +170,7 @@ jobs:
     name: Production Browser E2E
     needs: production-apply
     if: ${{ inputs.apply && inputs.production_browser_e2e }}
-    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    runs-on: ubuntu-latest
     environment: production
     env:
       OPL_BASE_URL: https://opl.medopl.cn
@@ -182,41 +182,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Prepare Chromium for production browser e2e
         shell: bash
         run: |
           set -euo pipefail
-          record_browser() {
-            local browser="$1"
-            if "$browser" --version >/dev/null 2>&1; then
-              "$browser" --version
-              echo "OPL_BROWSER_BINARY=$browser" >> "$GITHUB_ENV"
-              return 0
-            fi
-            return 1
-          }
-
-          for candidate in chromium chromium-browser google-chrome google-chrome-stable chrome; do
-            if command -v "$candidate" >/dev/null 2>&1; then
-              if record_browser "$(command -v "$candidate")"; then
-                exit 0
-              fi
-            fi
-          done
-
           npx --yes playwright install chromium
           browser=''
           if [[ -n "${PLAYWRIGHT_BROWSERS_PATH:-}" ]]; then
-            browser="$(find "$PLAYWRIGHT_BROWSERS_PATH" -path '*/chrome-linux64/chrome' -type f | sort -r | head -n 1 || true)"
+            browser="$(find "$PLAYWRIGHT_BROWSERS_PATH" -path '*/chrome-linux*/chrome' -type f | sort -r | head -n 1 || true)"
           fi
           if [[ -z "$browser" && -d "$HOME/.cache/ms-playwright" ]]; then
-            browser="$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux64/chrome' -type f | sort -r | head -n 1 || true)"
+            browser="$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux*/chrome' -type f | sort -r | head -n 1 || true)"
           fi
           if [[ -z "$browser" ]]; then
             echo "No Chromium binary found after Playwright browser download." >&2
             exit 1
           fi
-          record_browser "$browser"
+          "$browser" --version
+          echo "OPL_BROWSER_BINARY=$browser" >> "$GITHUB_ENV"
 
       - name: Mask browser e2e secrets
         shell: bash

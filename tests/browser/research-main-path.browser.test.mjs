@@ -58,9 +58,12 @@ test('production browser e2e prepares a browser without sudo and reports startup
   const runner = readFileSync(runnerPath, 'utf8');
   const workflow = readFileSync(cloudRolloutWorkflowPath, 'utf8');
 
+  assert.match(workflow, /production-browser-e2e:[\s\S]*?runs-on:\s*ubuntu-latest/);
+  assert.match(workflow, /production-browser-e2e:[\s\S]*?actions\/setup-node@v4/);
   assert.match(workflow, /playwright install chromium/);
   assert.match(workflow, /OPL_BROWSER_BINARY/);
   assert.match(workflow, /GITHUB_ENV/);
+  assert.match(workflow, /chrome-linux\*\/chrome/);
   assert.doesNotMatch(workflow, /--with-deps|sudo|apt-get|apt install/);
   assert.match(runner, /browser exited before DevTools became available/);
   assert.match(runner, /binary:/);
@@ -69,4 +72,6 @@ test('production browser e2e prepares a browser without sudo and reports startup
   assert.match(runner, /stdout:/);
   assert.match(runner, /OPL_BROWSER_BINARY/);
   assert.match(runner, /preinstall Chrome\/Chromium/);
+  assert.match(runner, /chrome-linux64/);
+  assert.match(runner, /chrome-linux/);
 });

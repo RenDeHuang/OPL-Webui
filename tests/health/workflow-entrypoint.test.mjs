@@ -165,6 +165,8 @@ test('github cloud rollout workflow manually gates production rollout', () => {
 
   const productionBrowserJob = workflow.slice(workflow.indexOf('production-browser-e2e:'));
   assert.match(productionBrowserJob, /environment:\s*production/);
+  assert.match(productionBrowserJob, /runs-on:\s*ubuntu-latest/);
+  assert.match(productionBrowserJob, /actions\/setup-node@v4/);
   assert.match(productionBrowserJob, /npx --yes playwright install chromium/);
   assert.match(productionBrowserJob, /OPL_BROWSER_BINARY/);
   assert.match(productionBrowserJob, /GITHUB_ENV/);
@@ -175,7 +177,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(productionBrowserJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
   assert.match(productionBrowserJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
   assert.match(productionBrowserJob, /::add-mask::\$\{OPL_DOGFOOD_PASSWORD\}/);
-  assert.doesNotMatch(productionBrowserJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
+  assert.doesNotMatch(productionBrowserJob, /self-hosted|tencent-cloud|KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
 
   const availabilityCurrentJob = workflow.slice(
     workflow.indexOf('production-availability-probe-current:'),

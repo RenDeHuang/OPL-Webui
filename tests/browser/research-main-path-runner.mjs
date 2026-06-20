@@ -192,8 +192,10 @@ function findPlaywrightChromiumBinary() {
       .sort()
       .reverse();
     for (const dir of browserDirs) {
-      const binary = join(root, dir, 'chrome-linux64', 'chrome');
-      if (existsSync(binary)) return binary;
+      for (const chromeDir of ['chrome-linux64', 'chrome-linux']) {
+        const binary = join(root, dir, chromeDir, 'chrome');
+        if (existsSync(binary)) return binary;
+      }
     }
   }
   return '';
