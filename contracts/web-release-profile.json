@@ -548,6 +548,17 @@
     "mutatesCluster": true,
     "currentApplyManifest": {
       "replicas": 1,
+      "nodeSelector": {
+        "medopl.cn/webui": "true"
+      },
+      "nodeLabelPolicy": {
+        "preserve": {
+          "medopl.cn/workload": "medopl"
+        },
+        "webuiScheduling": {
+          "medopl.cn/webui": "true"
+        }
+      },
       "reason": "single-node launch safety; avoid scheduling deadlock while only one TKE worker is available",
       "haPaused": true
     },

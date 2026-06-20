@@ -325,6 +325,17 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
   assert.equal(release.productionHAReadiness.owner, 'deploy/web-cloud');
   assert.equal(release.productionHAReadiness.consumer, 'production_release_operator');
+  assert.equal(release.productionHAReadiness.currentApplyManifest.replicas, 1);
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, {
+    'medopl.cn/webui': 'true',
+  });
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.preserve, {
+    'medopl.cn/workload': 'medopl',
+  });
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.webuiScheduling, {
+    'medopl.cn/webui': 'true',
+  });
+  assert.equal(release.productionHAReadiness.currentApplyManifest.haPaused, true);
   assert.deepEqual(release.productionHAReadiness.requiredEvidence, [
     'replicas_2',
     'two_ready_pods',

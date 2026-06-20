@@ -49,7 +49,7 @@ CI -> Release Image -> manual production dry-run -> Environment approval -> prod
 
 如果 `rollout status` 超时或失败，helper 会在退出前打印 Deployment、ReplicaSet/Pod、Pod describe、Pod logs 和 events 摘要，并给出 `rollout likely cause`。分类只用于定位下一步排查，不改变集群状态：
 
-- `scheduling_or_node_resources`：调度、nodeSelector、taint、CPU/内存资源不足。
+- `scheduling_or_node_resources`：调度、nodeSelector、taint、CPU/内存资源不足。WebUI 当前使用 `medopl.cn/webui=true`，不能要求节点把 `medopl.cn/workload=medopl` 改成 `webui`。
 - `image_pull`：镜像 tag、TCR 权限或 `imagePullSecrets` 问题。
 - `missing_kubernetes_secret_or_config`：Secret/ConfigMap 或 key 缺失。
 - `container_startup_or_crash`：容器启动失败或 CrashLoop。
@@ -305,7 +305,7 @@ HA is paused for the current single-node launch. The apply manifest intentionall
 
 1. 当前 launch-safe 形态：`replicas=1`，不启用 `topologySpreadConstraints`、`podAntiAffinity` 或 `PDB`，避免单节点集群调度卡住。
 2. 未来 HA 形态：`replicas=2`、跨 `kubernetes.io/hostname` 分布、`topologySpreadConstraints maxSkew: 1`、`DoNotSchedule`、软 `podAntiAffinity`、`PDB minAvailable: 1`、滚动更新 `maxUnavailable: 0`。
-3. TKE node：新增或复用第二个 Ready worker node，并带 `medopl.cn/workload=webui`。
+3. TKE node：新增或复用第二个 Ready worker node，保留 `medopl.cn/workload=medopl` 作为 MedOPL 节点身份，并额外带 `medopl.cn/webui=true` 供 WebUI 调度。
 4. 安全组：qcloud Ingress/CLB 只允许公网 `80,443`；节点安全组只允许 CLB 安全组或 CLB 后端网段到 NodePort `32258`，验证后删除公网到 NodePort 的临时规则。
 5. HA 恢复执行：确认第二 node -> 打 label -> 改为 HA manifest -> rollout -> 确认 Ingress backend 节点数 -> 收敛安全组。
 6. 验证：`kubectl get pod -o wide` 两 Pod 在不同 node；`kubectl get ingress` 有 `80,443`；跑 canary、`https://opl.medopl.cn/{healthz,readyz}` 和首页 smoke；确认 W1012 消失或 backend 不再是单节点。

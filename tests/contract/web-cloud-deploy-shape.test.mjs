@@ -50,7 +50,7 @@ test('web cloud fixture requires web_cloud runtime and readonly OPL CLI path', (
 
   assert.equal(deployment.metadata.namespace, 'opl-webui');
   assert.deepEqual(podSpec.imagePullSecrets, [{ name: 'tcr-pull-secret' }]);
-  assert.deepEqual(podSpec.nodeSelector, { 'medopl.cn/workload': 'webui' });
+  assert.deepEqual(podSpec.nodeSelector, { 'medopl.cn/webui': 'true' });
   assert.equal(container.ports[0].containerPort, 4173);
   assert.equal(containerEnv(container, 'OPL_WEBUI_ENV').value, 'web_cloud');
   assert.equal(containerEnv(container, 'OPL_CLI_PATH').value, '/opt/opl/bin/opl');
@@ -179,7 +179,8 @@ test('web cloud runbook covers handoff steps without storing secrets', () => {
     'PDB',
     'minAvailable: 1',
     'DoNotSchedule',
-    'medopl.cn/workload=webui',
+    'medopl.cn/workload=medopl',
+    'medopl.cn/webui=true',
     '80,443',
     '32258',
     '腾讯云控制台',

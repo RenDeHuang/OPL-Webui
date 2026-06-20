@@ -42,7 +42,7 @@
               }
             ],
             "nodeSelector": {
-              "medopl.cn/workload": "webui"
+              "medopl.cn/webui": "true"
             },
             "containers": [
               {

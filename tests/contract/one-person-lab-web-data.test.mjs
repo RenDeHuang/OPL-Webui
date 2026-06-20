@@ -180,6 +180,12 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, {
+    'medopl.cn/webui': 'true',
+  });
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.preserve, {
+    'medopl.cn/workload': 'medopl',
+  });
   assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
   assert.equal(release.productionHAReadiness.requiredEvidence.includes('two_ready_pods'), true);
   assert.equal(release.productionHAReadiness.requiredEvidence.includes('distinct_nodes'), true);
