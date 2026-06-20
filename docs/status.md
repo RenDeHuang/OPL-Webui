@@ -50,20 +50,19 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
 - Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and browser e2e evidence. The explicit browser lane ran real Chromium/CDP automation through `npm run verify:browser`.
-- Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27833052951` for commit `116a56ce18e14c730be10628731d1a5fff9591c2` after dry-run, production apply, and canary/smoke success. With `OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1`, this run includes production real ordinary chat completion and `chat.completed` audit evidence. It is not browser e2e and not MedOPL runtime execution evidence.
+- Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `27853332374` for commit `b312f9c7af364c1ea2e9da5d57085279435f4a18`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c`, after dry-run, production apply, canary/smoke, and availability probe success. This run includes production real ordinary chat completion and `chat.completed` audit evidence. It is not browser e2e and not MedOPL runtime execution evidence.
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
 - Browser e2e is now a CI release gate before image release: `.github/workflows/ci.yml` installs Chromium and runs `npm run verify:browser`; `Release Image` still depends on successful CI before pushing the cloud image.
 - Research-task-first UX is implemented in the browser shell and page-state contract: the first-screen task templates cover `research_direction`, `paper_question`, `grant_plan`, `review_map`, and `materials_refs`; `npm run verify:browser` clicks the `research_direction` template before ordinary chat fallback and still verifies `@论文`/`@基金` runtime gates.
-- Production dogfood can optionally verify existing MedOPL-owned readonly projections with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`: runtime status, materials/deliverables projection, and billing summary. This proves sanitized projection availability and forbidden Web mutation flags only; it does not prove MedOPL runtime execution, payment, storage mutation, node lifecycle, or production MedOPL API integration.
-- Production availability probe harness is ready as a no-secret public HTTP probe through `node scripts/cloud-rollout.mjs --availability-probe` and the `Cloud Rollout` input `availability_probe=true`. It checks `/healthz`, `/readyz`, `/metricsz`, and `/` repeatedly without kubeconfig, image, DB, dogfood secrets, MedOPL token, or TCR credentials.
+- Production dogfood can optionally verify existing MedOPL-owned readonly projections with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`: runtime status, materials/deliverables projection, and billing summary. For run `27853332374`, `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY` is not publicly confirmable from GitHub job metadata, so MedOPL readonly production coverage remains unclaimed. This proves sanitized projection availability and forbidden Web mutation flags only when the switch evidence is folded back; it does not prove MedOPL runtime execution, payment, storage mutation, node lifecycle, or production MedOPL API integration.
+- Production availability probe executed successfully in GitHub Actions run `27853332374` after production apply on image `uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c`. The no-secret public HTTP probe checks `/healthz`, `/readyz`, `/metricsz`, and `/` repeatedly without kubeconfig, image, DB, dogfood secrets, MedOPL token, or TCR credentials.
 - Commercial account lifecycle projection is implemented as authenticated readonly Web account status: `GET /api/account/commercial-status` returns personal SaaS account state, tenant role, lifecycle state, and forbidden team/invite/payment/billing-source mutation flags. It reuses the existing account/session and tenant membership surface; it does not add team management, RBAC, invite, payment, plan, subscription, storage, node pool, or runtime ownership.
 
 ## Cannot Claim
 
 - 还不是完整 production-ready SaaS。
 - 本阶段没有执行 production browser e2e；当前浏览器证据是 local no-secret Chromium/CDP evidence。
-- 本阶段没有执行 production readonly projection dogfood；需要用新镜像部署后设置 `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` 才能 claim production readonly projection evidence。
-- 本阶段没有执行 production availability probe；需要用新镜像运行 `availability_probe=true` 后才能 claim current-image production availability probe evidence。
+- 本阶段没有可公开确认的 production readonly projection dogfood；run `27853332374` 的 dogfood job 成功，但公开 GitHub metadata 不暴露 `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY` 变量值或 dogfood stdout，因此不能 claim production readonly projection evidence。
 - 本阶段没有证明 multi-node HA；当前 availability probe 只证明 public HTTP endpoints 的重复可用性。
 - 本阶段没有新增 team invite、RBAC、pricing、subscription、payment mutation、billing source of truth、workspace-visible UI 或 commercial admin console。
 - 本阶段没有新增 billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
@@ -72,6 +71,6 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Next Priorities
 
-1. Run Cloud Rollout with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` on the next deployed image, then fold back compressed production readonly projection evidence.
-2. Run Cloud Rollout with `availability_probe=true` on the next deployed image, then fold back compressed production availability probe evidence.
+1. If `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` was enabled for run `27853332374`, fold back log or variable evidence; otherwise run a readonly-only dogfood pass and fold back compressed production readonly projection evidence.
+2. Design production browser e2e only after deciding how secrets and real user sessions are safely scoped for `opl.medopl.cn`.
 3. Add team/commercial account lifecycle expansion only after there is a real consumer for invite/RBAC/payment state and a contract that preserves MedOPL billing authority.

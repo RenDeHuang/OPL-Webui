@@ -136,18 +136,30 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/payment/storage/nod
 Latest compressed evidence:
 
 ```text
-run id: 27833052951
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27833052951
-commit: 116a56ce18e14c730be10628731d1a5fff9591c2
+run id: 27853332374
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374
+commit: b312f9c7af364c1ea2e9da5d57085279435f4a18
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c
 real chat: true
-stages: Production Dry Run success, Production Apply success, Production Authenticated Dogfood E2E success
+readonly projection: unconfirmed; public GitHub job metadata does not expose OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY or dogfood stdout
+stages: Production Dry Run success, Production Apply success, Production Availability Probe After Apply success, Production Authenticated Dogfood E2E success
 steps: register_or_login,current_session,api_key_binding,ordinary_chat,runtime_gate,audit_events
 HTTP status summary: GitHub job success; raw response bodies are not stored in git
 audit kinds: chat.completed,runtime_gate.required validated by dogfood harness; raw audit payload is not stored in git
 result: production authenticated dogfood e2e passed
 cannot claim: browser e2e, MedOPL runtime execution, billing/storage/node pool mutation, quota exhaustion production evidence
+```
+
+Production availability probe closeout:
+
+```text
+run id: 27853332374
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c
+stage: Production Availability Probe After Apply success
+coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
+cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
 ```
 
 ## 创建 Kubernetes Secret

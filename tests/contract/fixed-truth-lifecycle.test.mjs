@@ -112,9 +112,10 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   ]) {
     assert.match(active, new RegExp(required));
   }
-  assert.match(active, /27833052951/);
-  assert.match(active, /116a56ce18e14c730be10628731d1a5fff9591c2/);
-  assert.match(active, /OPL_PRODUCTION_DOGFOOD_REAL_CHAT=1/);
+  assert.match(active, /27853332374/);
+  assert.match(active, /b312f9c7af364c1ea2e9da5d57085279435f4a18/);
+  assert.match(active, /Production Availability Probe After Apply/);
+  assert.match(active, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY.*not publicly confirmable/);
   assert.match(active, /not browser e2e/);
   assert.match(active, /not MedOPL runtime execution/);
   assert.doesNotMatch(active, /27823251419/);
@@ -211,11 +212,13 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27833052951_real_chat');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27833052951);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '116a56ce18e14c730be10628731d1a5fff9591c2');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27853332374_real_chat_readonly_unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 27853332374);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'b312f9c7af364c1ea2e9da5d57085279435f4a18');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, false);
   assert.equal(release.productionDogfoodReadiness.defaultEnabled, false);
   assert.equal(release.productionDogfoodReadiness.requiresProductionSecrets, true);
   assert.equal(release.productionDogfoodReadiness.requiresSuccessfulRolloutEvidence, true);
@@ -243,7 +246,15 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionAvailabilityReadiness.mode, 'no_secret_public_http_probe');
-  assert.equal(release.productionAvailabilityReadiness.state, 'harness_ready_pending_next_cloud_rollout_run');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27853332374_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 27853332374);
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, 'b312f9c7af364c1ea2e9da5d57085279435f4a18');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c');
+  assert.deepEqual(release.productionAvailabilityReadiness.latestSuccessfulRun.statusSummary, [
+    'Production Dry Run success',
+    'Production Apply success',
+    'Production Availability Probe After Apply success',
+  ]);
   assert.equal(release.productionAvailabilityReadiness.defaultEnabled, false);
   assert.equal(release.productionAvailabilityReadiness.requiresProductionSecrets, false);
   assert.equal(release.productionAvailabilityReadiness.requiresKubeconfig, false);
@@ -274,10 +285,12 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.localBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
   assert.match(runbook, /OPL_SESSION_SECRET/);
   assert.match(runbook, /Production authenticated dogfood closeout/);
-  assert.match(runbook, /27833052951/);
-  assert.match(runbook, /116a56c/);
+  assert.match(runbook, /27853332374/);
+  assert.match(runbook, /b312f9c/);
   assert.match(runbook, /real chat: true/);
+  assert.match(runbook, /readonly projection: unconfirmed/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
+  assert.match(runbook, /Production availability probe closeout/);
   assert.match(runbook, /Production availability probe/);
   assert.match(runbook, /node scripts\/cloud-rollout\.mjs --availability-probe/);
   assert.match(runbook, /OPL_AVAILABILITY_PROBE_SAMPLES=3/);
@@ -293,10 +306,12 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /production real ordinary chat completion/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.match(status, /Browser e2e is now a CI release gate/);
-  assert.match(status, /Production availability probe harness is ready/);
+  assert.match(status, /Production availability probe executed successfully/);
+  assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY.*not publicly confirmable/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
+  assert.doesNotMatch(status, /本阶段没有执行 production availability probe/);
   assert.match(status, /Next Priorities/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
 });

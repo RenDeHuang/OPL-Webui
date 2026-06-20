@@ -67,7 +67,7 @@
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
-    "state": "executed_success_run_27833052951_real_chat",
+    "state": "executed_success_run_27853332374_real_chat_readonly_unconfirmed",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -121,23 +121,28 @@
       "storage or node pool mutation"
     ],
     "latestSuccessfulRun": {
-      "runId": 27833052951,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27833052951",
-      "commit": "116a56ce18e14c730be10628731d1a5fff9591c2",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:116a56c",
+      "runId": 27853332374,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374",
+      "commit": "b312f9c7af364c1ea2e9da5d57085279435f4a18",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-19T14:58:46Z",
+      "completedAt": "2026-06-19T23:48:45Z",
       "realChat": true,
+      "medoplReadonly": "unconfirmed",
+      "publicMetadataConfirmsReadonlySwitch": false,
+      "readonlyEvidenceBoundary": "Public GitHub job metadata confirms Production Authenticated Dogfood E2E success but does not expose repository variable values or dogfood stdout; do not claim MedOPL readonly production coverage until log or variable evidence is folded back.",
       "stages": [
         "production_dry_run",
         "production_apply",
         "canary_smoke",
+        "production_availability_probe_after_apply",
         "production_authenticated_dogfood"
       ],
       "statusSummary": [
         "Production Dry Run success",
         "Production Apply success",
+        "Production Availability Probe After Apply success",
         "Production Authenticated Dogfood E2E success"
       ],
       "coverage": [
@@ -155,7 +160,7 @@
   },
   "productionAvailabilityReadiness": {
     "mode": "no_secret_public_http_probe",
-    "state": "harness_ready_pending_next_cloud_rollout_run",
+    "state": "executed_success_run_27853332374_after_apply",
     "defaultEnabled": false,
     "requiresProductionSecrets": false,
     "requiresKubeconfig": false,
@@ -202,7 +207,35 @@
       "production-ready SaaS",
       "MedOPL runtime execution",
       "billing/payment/storage/node pool mutation"
-    ]
+    ],
+    "latestSuccessfulRun": {
+      "runId": 27853332374,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/27853332374",
+      "commit": "b312f9c7af364c1ea2e9da5d57085279435f4a18",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b312f9c",
+      "targetHost": "https://opl.medopl.cn",
+      "workflow": "Cloud Rollout",
+      "completedAt": "2026-06-19T23:48:45Z",
+      "afterStage": "production_apply_canary_smoke",
+      "samples": 3,
+      "stages": [
+        "production_dry_run",
+        "production_apply",
+        "canary_smoke",
+        "production_availability_probe_after_apply"
+      ],
+      "statusSummary": [
+        "Production Dry Run success",
+        "Production Apply success",
+        "Production Availability Probe After Apply success"
+      ],
+      "coverage": [
+        "HTTPS /healthz",
+        "HTTPS /readyz",
+        "HTTPS /metricsz",
+        "HTTPS /"
+      ]
+    }
   },
   "localNoSecretReadiness": {
     "requiresProductionSecrets": false,
