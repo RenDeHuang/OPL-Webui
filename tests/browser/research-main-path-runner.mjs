@@ -172,7 +172,7 @@ function findBrowserBinary() {
   }
   const playwrightChromium = findPlaywrightChromiumBinary();
   if (playwrightChromium) return playwrightChromium;
-  throw new Error('No browser binary found. Install Chromium or run with OPL_BROWSER_BINARY=/path/to/chrome. Playwright users can run `npx playwright install chromium` and re-run npm run verify:browser.');
+  throw new Error('No browser binary found. Set OPL_BROWSER_BINARY=/path/to/chrome, preinstall Chrome/Chromium on the runner, or run `npx playwright install chromium` without --with-deps before npm run verify:browser.');
 }
 
 function spawnSyncStatus(command, args) {

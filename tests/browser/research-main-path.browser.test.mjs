@@ -54,14 +54,19 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.doesNotMatch(runner, /console\.log[^\n]*(OPL_DOGFOOD_API_KEY|OPL_DOGFOOD_PASSWORD|config\.apiKey|config\.password)/);
 });
 
-test('production browser e2e installs browser dependencies and reports startup diagnostics', () => {
+test('production browser e2e prepares a browser without sudo and reports startup diagnostics', () => {
   const runner = readFileSync(runnerPath, 'utf8');
   const workflow = readFileSync(cloudRolloutWorkflowPath, 'utf8');
 
-  assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /playwright install chromium/);
+  assert.match(workflow, /OPL_BROWSER_BINARY/);
+  assert.match(workflow, /GITHUB_ENV/);
+  assert.doesNotMatch(workflow, /--with-deps|sudo|apt-get|apt install/);
   assert.match(runner, /browser exited before DevTools became available/);
   assert.match(runner, /binary:/);
   assert.match(runner, /exitCode:/);
   assert.match(runner, /stderr:/);
   assert.match(runner, /stdout:/);
+  assert.match(runner, /OPL_BROWSER_BINARY/);
+  assert.match(runner, /preinstall Chrome\/Chromium/);
 });
