@@ -43,6 +43,53 @@
     "service_unavailable",
     "network_unreachable"
   ],
+  "shellStates": {
+    "requiredStates": [
+      "public_landing",
+      "auth_login_register",
+      "app_default_chat",
+      "left_sidebar_expanded",
+      "right_inspector_files",
+      "right_inspector_progress",
+      "right_inspector_output",
+      "api_key_required_modal",
+      "skill_plaza",
+      "running_turn",
+      "blocked_turn"
+    ],
+    "defaultAppState": "app_default_chat",
+    "leftRail": {
+      "defaultState": "collapsed",
+      "expandedState": "left_sidebar_expanded",
+      "resize": {
+        "enabled": true,
+        "minWidth": 260,
+        "maxWidth": 420
+      }
+    },
+    "rightInspector": {
+      "defaultState": "hidden",
+      "tabs": ["files", "progress", "output"],
+      "resize": {
+        "enabled": true,
+        "minWidth": 320,
+        "maxWidth": 520
+      }
+    },
+    "modals": {
+      "apiKeyRequired": {
+        "state": "api_key_required_modal",
+        "primaryAction": "save",
+        "primaryActionLabel": "保存",
+        "requiredBefore": "chat_send_when_provider_unbound"
+      }
+    },
+    "evidence": {
+      "contract": "contracts/web-gui-product-contract.json",
+      "shellAdapter": "contracts/web-shell-adapter.json",
+      "test": "tests/contract/one-person-lab-web-data.test.mjs"
+    }
+  },
   "researchTaskIntents": [
     {
       "id": "research_direction",

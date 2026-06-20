@@ -14,6 +14,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   const api = readJson('contracts/web-api.openapi.json');
   const runtime = readJson('contracts/web-runtime-bridge.json');
   const release = readJson('contracts/web-release-profile.json');
+  const gui = readJson('contracts/web-gui-product-contract.json');
+  const shell = readJson('contracts/web-shell-adapter.json');
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.canonicalProductName, 'One Person Lab Web');
@@ -102,6 +104,27 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.structuredResultShape.consumer, 'research_user_chat_result');
   assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('private_state_path'), true);
+  assert.deepEqual(pageStates.shellStates.requiredStates, [
+    'public_landing',
+    'auth_login_register',
+    'app_default_chat',
+    'left_sidebar_expanded',
+    'right_inspector_files',
+    'right_inspector_progress',
+    'right_inspector_output',
+    'api_key_required_modal',
+    'skill_plaza',
+    'running_turn',
+    'blocked_turn',
+  ]);
+  assert.equal(pageStates.shellStates.defaultAppState, 'app_default_chat');
+  assert.equal(pageStates.shellStates.leftRail.defaultState, 'collapsed');
+  assert.equal(pageStates.shellStates.leftRail.expandedState, 'left_sidebar_expanded');
+  assert.equal(pageStates.shellStates.rightInspector.defaultState, 'hidden');
+  assert.deepEqual(pageStates.shellStates.rightInspector.tabs, ['files', 'progress', 'output']);
+  assert.deepEqual(pageStates.shellStates.rightInspector.resize, { enabled: true, minWidth: 320, maxWidth: 520 });
+  assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryAction, 'save');
+  assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryActionLabel, '保存');
 
   for (const path of [
     '/api/session/current',
@@ -224,6 +247,86 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);
   assert.equal(release.dogfood.rawApiKeyPrinted, false);
+
+  assert.equal(gui.owner, 'one-person-lab-web');
+  assert.equal(gui.purpose, 'web_gui_product_contract');
+  assert.equal(gui.state, 'active');
+  assert.equal(gui.productTruthGate.publicShell, 'public_landing_then_auth');
+  assert.equal(gui.productTruthGate.appShell, 'chat_first_research_workspace');
+  assert.equal(gui.productTruthGate.gensparkInfluence, 'public_landing_only');
+  assert.equal(gui.productTruthGate.codexInfluence, 'app_workspace_shell');
+  for (const forbidden of ['dashboard_first_app_home', 'raw_trace_console', 'runtime_truth_panel', 'billing_source_of_truth', 'node_pool_console']) {
+    assert.equal(gui.productTruthGate.mustNotShow.includes(forbidden), true, `GUI contract must forbid ${forbidden}`);
+  }
+  assert.deepEqual(gui.objectGrammar.allowedPrimaryObjects, [
+    'Project',
+    'Session',
+    'Message',
+    'Skill',
+    'InputFile',
+    'OutputFile',
+    'ProgressStage',
+    'ApiKey',
+    'Model',
+    'Export',
+  ]);
+  assert.deepEqual(gui.objectGrammar.fileHierarchy, ['cloud_drive', 'project', 'session', 'input_output_refs']);
+  assert.deepEqual(gui.taskFlow.primaryFlow, [
+    'public_dashboard',
+    'login_or_register',
+    'app_default_chat',
+    'project_or_session_select',
+    'compose_prompt',
+    'attach_input_files_optional',
+    'run_chat_or_runtime_gate',
+    'inspect_progress_files_output',
+    'export_or_continue',
+  ]);
+  assert.deepEqual(gui.informationArchitecture.appShell, ['left_rail', 'workspace_sidebar', 'chat_canvas', 'right_inspector', 'modal_layer']);
+  assert.equal(gui.visualGrammar.maxPrimaryCtaPerView, 1);
+  assert.equal(gui.visualGrammar.longExplanatoryCopy, 'forbidden_in_app_shell');
+  assert.equal(gui.semanticTokens.resourceActive, 'resource.active');
+  assert.equal(gui.semanticTokens.billingWarning, 'billing.warning');
+  assert.equal(gui.components.find((component) => component.id === 'RightInspector').defaultState, 'hidden');
+  assert.deepEqual(gui.components.find((component) => component.id === 'RightInspector').tabs, ['files', 'progress', 'output']);
+  assert.equal(gui.components.find((component) => component.id === 'RightInspector').resize.enabled, true);
+  assert.equal(gui.components.find((component) => component.id === 'ApiKeyDialog').primaryActionLabel, '保存');
+  assert.deepEqual(gui.pageTemplates, [
+    'PublicLanding',
+    'Auth',
+    'DefaultAppShell',
+    'ExpandedSidebar',
+    'RightInspectorOpen',
+    'ModalOverlay',
+    'SkillPlaza',
+    'OutputPreview',
+  ]);
+  assert.equal(gui.accessibility.keyboardRequired, true);
+  assert.equal(gui.acceptanceLayers.includes('contract'), true);
+  assert.equal(gui.acceptanceLayers.includes('component_state'), true);
+  assert.equal(gui.acceptanceLayers.includes('interaction'), true);
+  assert.equal(gui.acceptanceLayers.includes('visual'), true);
+
+  assert.equal(shell.owner, 'one-person-lab-web');
+  assert.equal(shell.purpose, 'web_shell_adapter');
+  assert.equal(shell.state, 'active');
+  assert.equal(shell.activeShell.id, 'opl_web_static_esm_shell');
+  assert.equal(shell.activeShell.migrationPolicy, 'stay_static_until_component_state_or_visual_regression_evidence_requires_framework');
+  for (const owned of ['renderer_components', 'layout_composition', 'panel_resize_behavior', 'figma_code_mapping']) {
+    assert.equal(shell.shellMayOwn.includes(owned), true, `shell may own ${owned}`);
+  }
+  for (const forbidden of ['product_truth', 'runtime_truth', 'domain_judgment_truth', 'artifact_body_authority', 'billing_source_of_truth']) {
+    assert.equal(shell.shellMustNotOwn.includes(forbidden), true, `shell must not own ${forbidden}`);
+  }
+  assert.deepEqual(shell.figmaCodeMapping.variantProps.RightInspector, {
+    state: ['hidden', 'files', 'progress', 'output'],
+    width: ['default', 'narrow', 'wide'],
+  });
+  assert.equal(shell.figmaCodeMapping.requiredNodeMetadata.includes('componentId'), true);
+  assert.equal(shell.figmaCodeMapping.requiredNodeMetadata.includes('variantProps'), true);
+  assert.equal(shell.codeProps.RightInspector.state.includes('files'), true);
+  assert.equal(shell.validationCommands.includes('npm run verify:contract'), true);
+  assert.equal(shell.validationCommands.includes('npm run verify:smoke'), true);
 });
 
 test('web data module calls session provider and chat APIs only', async () => {
