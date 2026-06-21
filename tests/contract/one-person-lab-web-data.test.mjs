@@ -35,14 +35,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
   assert.deepEqual(product.visionGaps.items.map((gap) => [gap.id, gap.ownerSurface, gap.disposition]), [
-    ['ui_ux_product_depth', 'apps-web', 'repo_local_contract_ready_pending_visual_baseline'],
+    ['ui_ux_product_depth', 'apps-web', 'repo_local_visual_baseline_captured_pending_responsive_visual_qa'],
     ['medopl_readonly_evidence', 'release-evidence', 'awaiting_secret_gated_foldback'],
     ['runtime_execution_boundary', 'runtime-gate', 'fail_closed_until_admission_contract'],
     ['commercial_saas_depth', 'product-boundary', 'readonly_personal_projection_only'],
     ['operations_maturity', 'release-evidence', 'baseline_plus_next_evidence_contracts'],
   ]);
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
-  assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e']);
+  assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_mobile_visual_baseline_browser_evidence']);
   assert.equal(visionGap('ui_ux_product_depth').acceptanceContract, 'contracts/web-gui-product-contract.json');
   assert.equal(visionGap('medopl_readonly_evidence').acceptanceContract, 'contracts/web-release-profile.json#/productionDogfoodReadiness');
   assert.equal(visionGap('runtime_execution_boundary').acceptanceContract, 'contracts/web-runtime-bridge.json');
@@ -283,15 +283,28 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['collapsed_expanded_left_rail', 'account_popover_status', 'missing_api_key_resource_gate', 'prompt_command_center', 'research_skill_launcher', 'chat_task_view', 'right_inspector_tabs_files_progress_output', 'running_blocked_turn_state']);
   assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_code_video_skills']);
-  assert.equal(gui.visualQualityGate.state, 'repo_local_contract_ready_pending_visual_baseline');
-  assert.equal(gui.visualQualityGate.currentPhase, 'visual_baseline');
-  assert.equal(gui.visualQualityGate.nextPhase, 'responsive_visual_qa');
-  assert.deepEqual(gui.visualQualityGate.ownerReceipt, { required: false, source: 'repo_local' });
-  assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, ['Figma MCP source context refreshed', 'desktop screenshot reviewed', 'mobile screenshot reviewed', 'browser interaction e2e passed', 'no hidden overlay intercepts input']);
-  assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'mobile_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check']);
+  assert.equal(gui.visualQualityGate.state, 'repo_local_visual_baseline_captured_pending_responsive_visual_qa');
+  assert.equal(gui.visualQualityGate.completedPhase, 'visual_baseline');
+  assert.equal(gui.visualQualityGate.currentPhase, 'responsive_visual_qa');
+  assert.equal(gui.visualQualityGate.nextPhase, 'production_ui_quality_claim');
+  assert.equal(gui.visualQualityGate.ownerReceipt.required, true);
+  assert.equal(gui.visualQualityGate.ownerReceipt.source, 'human_owner_receipt');
+  assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, [
+    'Figma MCP source context refreshed',
+    'desktop screenshot captured and layout-reviewed in local browser',
+    'mobile screenshot captured and layout-reviewed in local browser',
+    'browser interaction e2e passed',
+    'no hidden overlay intercepts input',
+    'full responsive visual QA and production UI owner receipt completed',
+  ]);
+  assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'mobile_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check', 'responsive_visual_qa_closeout']);
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'figma_mcp_source_context').state, 'done');
-  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'desktop_screenshot_review').state, 'pending');
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'desktop_screenshot_review').state, 'done');
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'mobile_screenshot_review').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'browser_interaction_e2e').command, 'npm run verify:browser');
+  assert.equal(gui.visualQualityGate.baselineEvidence.command, 'npm run verify:browser');
+  assert.deepEqual(gui.visualQualityGate.baselineEvidence.viewports, ['desktop', 'mobile']);
+  assert.equal(gui.visualQualityGate.baselineEvidence.screenshotPathPattern, '.runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png');
   assert.equal(gui.visualQualityGate.cannotClaim.includes('complete UI/UX design system'), true);
   assert.deepEqual(gui.pageTemplates, ['PublicLanding', 'Auth', 'DefaultAppShell', 'ExpandedSidebar', 'RightInspectorOpen', 'ModalOverlay', 'SkillPlaza', 'OutputPreview']);
   assert.equal(gui.accessibility.keyboardRequired, true);

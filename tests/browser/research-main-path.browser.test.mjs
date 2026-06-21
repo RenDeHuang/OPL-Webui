@@ -24,6 +24,22 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.pageStates.runtimeTaskMarker, '@基金');
   assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.ok(evidence.upstreamRequests >= 1);
+  assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');
+  assert.deepEqual(evidence.visualQuality.figmaSource, {
+    fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
+    nodeId: '0:1',
+  });
+  for (const viewport of ['desktop', 'mobile']) {
+    const visual = evidence.visualQuality.viewports[viewport];
+    assert.equal(visual.screenshot.captured, true);
+    assert.match(visual.screenshot.path, /^\.runtime\/browser-visual\/research-main-path-local-/);
+    assert.equal(visual.layout.horizontalOverflowPx, 0);
+    assert.equal(visual.layout.rightInspector.visible, true);
+    assert.equal(visual.layout.rightInspector.withinViewport, true);
+    assert.equal(visual.layout.activeInspectorPanel.visible, true);
+    assert.equal(visual.layout.hiddenOverlayInterceptsInput, false);
+    assert.equal(visual.layout.chatInputHitTarget, true);
+  }
 });
 
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {
@@ -41,6 +57,8 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'Input.insertText',
     'getBoundingClientRect',
     'Page.navigate',
+    'Page.captureScreenshot',
+    'Emulation.setDeviceMetricsOverride',
     'webSocketDebuggerUrl',
     'document.readyState === "complete"',
   ]) {

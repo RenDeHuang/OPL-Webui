@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -98,6 +98,7 @@ try {
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));
+  const visualQuality = await captureVisualQualityEvidence(cdp, mode);
 
   console.log(JSON.stringify({
     ok: true,
@@ -109,6 +110,7 @@ try {
     auditKinds: relevantAuditKinds,
     allAuditKinds: [...new Set(kinds)],
     upstreamRequests: upstream?.requests.length ?? undefined,
+    visualQuality,
   }));
 } catch (error) {
   console.error(error?.stack || error);
@@ -543,6 +545,146 @@ async function waitForAuditKindCount(cdp, eventKind, count) {
     const actual = (audit.events ?? []).filter((event) => event.eventKind === eventKind).length;
     return actual >= count;
   }, 60000);
+}
+
+async function captureVisualQualityEvidence(cdp, runMode) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const runtimeDir = join(repoRoot, '.runtime', 'browser-visual');
+  mkdirSync(runtimeDir, { recursive: true });
+
+  const viewports = {};
+  for (const viewport of [
+    { id: 'desktop', width: 1440, height: 1200, deviceScaleFactor: 1, mobile: false },
+    { id: 'mobile', width: 390, height: 1200, deviceScaleFactor: 2, mobile: true },
+  ]) {
+    await setViewport(cdp, viewport);
+    await waitFor(cdp, 'document.readyState === "complete"');
+    await activate(cdp, '[data-right-inspector-open="files"]');
+    const path = join('.runtime', 'browser-visual', `research-main-path-${runMode}-${viewport.id}-${stamp}.png`);
+    await captureScreenshot(cdp, path);
+    const layout = await readVisualLayout(cdp);
+    viewports[viewport.id] = {
+      viewport: {
+        width: viewport.width,
+        height: viewport.height,
+        deviceScaleFactor: viewport.deviceScaleFactor,
+        mobile: viewport.mobile,
+      },
+      screenshot: {
+        captured: true,
+        path,
+      },
+      layout,
+    };
+  }
+
+  return {
+    state: 'repo_local_visual_baseline_captured',
+    source: 'browser_cdp',
+    figmaSource: {
+      fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
+      nodeId: '0:1',
+    },
+    viewports,
+    cannotClaim: [
+      'complete UI/UX design system',
+      'production visual polish complete',
+    ],
+  };
+}
+
+async function setViewport(cdp, viewport) {
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: viewport.deviceScaleFactor,
+    mobile: viewport.mobile,
+  });
+  await cdp.send('Runtime.evaluate', {
+    expression: 'window.scrollTo(0, 0)',
+    awaitPromise: true,
+  });
+  await delay(150);
+}
+
+async function readVisualLayout(cdp) {
+  return evaluateJSON(cdp, `(async () => {
+    const rectJSON = (element) => {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        top: Math.round(rect.top),
+        right: Math.round(rect.right),
+        bottom: Math.round(rect.bottom),
+        left: Math.round(rect.left),
+      };
+    };
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scrollWidth: document.documentElement.scrollWidth,
+      scrollHeight: document.documentElement.scrollHeight,
+    };
+    const inspector = document.querySelector('[data-right-inspector]');
+    const inspectorRect = inspector?.getBoundingClientRect();
+    const activeInspectorPanel = document.querySelector('[data-right-inspector-panel]:not([hidden])');
+    const chatInput = document.querySelector('#chat-input');
+    chatInput?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const chatInputRect = chatInput?.getBoundingClientRect();
+    const chatInputPoint = chatInputRect
+      ? {
+        x: chatInputRect.left + Math.min(chatInputRect.width / 2, 40),
+        y: chatInputRect.top + Math.min(chatInputRect.height / 2, 24),
+      }
+      : null;
+    const chatInputHit = chatInputPoint
+      ? document.elementFromPoint(chatInputPoint.x, chatInputPoint.y)
+      : null;
+    const blockingOverlay = Array.from(document.querySelectorAll('[data-api-key-dialog], [data-account-popover]'))
+      .find((element) => {
+        if (element.hidden) return false;
+        const rect = element.getBoundingClientRect();
+        if (!chatInputPoint) return false;
+        return chatInputPoint.x >= rect.left
+          && chatInputPoint.x <= rect.right
+          && chatInputPoint.y >= rect.top
+          && chatInputPoint.y <= rect.bottom;
+      });
+    return {
+      viewport,
+      horizontalOverflowPx: Math.max(0, viewport.scrollWidth - viewport.width),
+      chatInputHitTarget: Boolean(chatInputHit && (chatInputHit === chatInput || chatInput.contains(chatInputHit))),
+      hiddenOverlayInterceptsInput: Boolean(blockingOverlay),
+      rightInspector: {
+        visible: Boolean(inspector && !inspector.hidden && inspectorRect && inspectorRect.width > 0 && inspectorRect.height > 0),
+        state: inspector?.dataset.rightInspectorState || '',
+        withinViewport: Boolean(inspectorRect
+          && inspectorRect.left >= 0
+          && inspectorRect.right <= viewport.width
+          && inspectorRect.width <= viewport.width),
+        rect: rectJSON(inspector),
+      },
+      activeInspectorPanel: {
+        visible: Boolean(activeInspectorPanel && !activeInspectorPanel.hidden),
+        panel: activeInspectorPanel?.dataset.rightInspectorPanel || '',
+        rect: rectJSON(activeInspectorPanel),
+      },
+    };
+  })()`);
+}
+
+async function captureScreenshot(cdp, relativePath) {
+  const result = await cdp.send('Page.captureScreenshot', {
+    format: 'png',
+    captureBeyondViewport: true,
+  });
+  if (!result.data) throw new Error(`Page.captureScreenshot did not return data for ${relativePath}`);
+  writeFileSync(join(repoRoot, relativePath), Buffer.from(result.data, 'base64'));
 }
 
 async function waitUntil(check, timeoutMs = 30000, describeFailure) {

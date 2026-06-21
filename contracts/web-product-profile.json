@@ -82,12 +82,13 @@
         "id": "ui_ux_product_depth",
         "ownerSurface": "apps-web",
         "acceptanceContract": "contracts/web-gui-product-contract.json",
-        "disposition": "repo_local_contract_ready_pending_visual_baseline",
+        "disposition": "repo_local_visual_baseline_captured_pending_responsive_visual_qa",
         "evidenceRequired": [
           "figma_mcp_source_context",
           "component_state_contract",
           "responsive_shell_smoke",
-          "browser_interaction_e2e"
+          "browser_interaction_e2e",
+          "desktop_mobile_visual_baseline_browser_evidence"
         ]
       },
       {

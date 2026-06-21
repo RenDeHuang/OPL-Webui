@@ -375,7 +375,7 @@
       "type": "test",
       "ownerSurface": "browser-e2e",
       "consumer": ["tests/browser/research-main-path.browser.test.mjs", "Cloud Rollout production browser e2e"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json"],
+      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-gui-product-contract.json"],
       "lifecycle": "integration"
     },
     {
@@ -383,7 +383,7 @@
       "type": "test",
       "ownerSurface": "browser-e2e",
       "consumer": ["npm run verify:browser", "CI"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json"],
+      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-gui-product-contract.json"],
       "lifecycle": "integration"
     },
     {

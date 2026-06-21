@@ -263,20 +263,39 @@
     ]
   },
   "visualQualityGate": {
-    "state": "repo_local_contract_ready_pending_visual_baseline",
-    "currentPhase": "visual_baseline",
-    "nextPhase": "responsive_visual_qa",
+    "state": "repo_local_visual_baseline_captured_pending_responsive_visual_qa",
+    "completedPhase": "visual_baseline",
+    "currentPhase": "responsive_visual_qa",
+    "nextPhase": "production_ui_quality_claim",
     "ownerReceipt": {
-      "required": false,
-      "source": "repo_local"
+      "required": true,
+      "source": "human_owner_receipt",
+      "reason": "repo-local baseline screenshots prove mechanics, but responsive visual QA and production UI quality need owner review"
     },
     "requiredBeforeProductionUiClaim": [
       "Figma MCP source context refreshed",
-      "desktop screenshot reviewed",
-      "mobile screenshot reviewed",
+      "desktop screenshot captured and layout-reviewed in local browser",
+      "mobile screenshot captured and layout-reviewed in local browser",
       "browser interaction e2e passed",
-      "no hidden overlay intercepts input"
+      "no hidden overlay intercepts input",
+      "full responsive visual QA and production UI owner receipt completed"
     ],
+    "baselineEvidence": {
+      "command": "npm run verify:browser",
+      "runner": "tests/browser/research-main-path-runner.mjs",
+      "test": "tests/browser/research-main-path.browser.test.mjs",
+      "viewports": ["desktop", "mobile"],
+      "screenshotPathPattern": ".runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png",
+      "layoutChecks": [
+        "horizontalOverflowPx=0",
+        "rightInspector.visible=true",
+        "rightInspector.withinViewport=true",
+        "activeInspectorPanel.visible=true",
+        "hiddenOverlayInterceptsInput=false",
+        "chatInputHitTarget=true"
+      ],
+      "artifactPolicy": "screenshots are temporary .runtime artifacts and are not git-tracked"
+    },
     "acceptance": [
       {
         "id": "figma_mcp_source_context",
@@ -285,23 +304,28 @@
       },
       {
         "id": "desktop_screenshot_review",
-        "state": "pending",
-        "evidence": "desktop screenshot review not folded back"
+        "state": "done",
+        "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-desktop-*.png"
       },
       {
         "id": "mobile_screenshot_review",
-        "state": "pending",
-        "evidence": "mobile screenshot review not folded back"
+        "state": "done",
+        "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-mobile-*.png"
       },
       {
         "id": "browser_interaction_e2e",
-        "state": "available",
+        "state": "done",
         "command": "npm run verify:browser"
       },
       {
         "id": "hidden_overlay_input_check",
-        "state": "available",
+        "state": "done",
         "command": "npm run verify:smoke"
+      },
+      {
+        "id": "responsive_visual_qa_closeout",
+        "state": "pending",
+        "evidence": "full responsive visual QA, accessibility review, and owner receipt are not folded back"
       }
     ],
     "cannotClaim": [
