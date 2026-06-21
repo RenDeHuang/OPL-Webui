@@ -120,9 +120,9 @@ function bindChatForm(getView) {
     setShellTurnState(result.ok ? 'home_default' : 'blocked_turn');
     renderReliabilityStatus(reliabilityStatusForResult(result));
     if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
-    appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
     const researchResult = result.ok ? researchResultForChat({ ...result, prompt: message }) : null;
     if (researchResult) appendResearchResult(researchResult);
+    else appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
   });
 }
 

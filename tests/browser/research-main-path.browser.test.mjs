@@ -64,6 +64,13 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.visualQuality.accessibilityChecks.contrastPass, true);
   assert.equal(evidence.visualQuality.visualFitChecks.noTextOverflow, true);
   assert.equal(evidence.visualQuality.visualFitChecks.noHorizontalOverflow, true);
+  assert.deepEqual(evidence.visualQuality.artifactChecks, {
+    researchArtifactDensityPass: true,
+    rawAssistantTranscriptCount: 0,
+    researchArtifactCardCount: 1,
+  });
+  assert.equal(evidence.visualQuality.inspectorChecks.desktopStablePanelPass, true);
+  assert.equal(evidence.visualQuality.inspectorChecks.mobileSheetPressurePass, true);
 });
 
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {

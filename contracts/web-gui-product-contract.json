@@ -17,7 +17,10 @@
       "starter_chips",
       "project_session_history_as_secondary_surface",
       "inspector_on_user_request",
-      "api_key_required_before_chat_send_when_missing"
+      "api_key_required_before_chat_send_when_missing",
+      "structured_research_artifact_result_stream",
+      "desktop_inspector_stable_work_panel",
+      "lightweight_mobile_inspector_sheet"
     ],
     "mustNotShow": [
       "dashboard_first_app_home",
@@ -30,7 +33,10 @@
       "node_pool_console",
       "artifact_body_authority",
       "multi_column_sidebar_sprawl",
-      "duplicated_files_progress_panels"
+      "duplicated_files_progress_panels",
+      "raw_upstream_transcript_for_structured_research_result",
+      "floating_desktop_inspector_overlay",
+      "heavy_mobile_inspector_sheet"
     ]
   },
   "objectGrammar": {
@@ -167,6 +173,9 @@
       "launcher": "right_utility_rail",
       "tabs": ["files", "progress", "output"],
       "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "desktopBehavior": "stable_right_work_panel_without_main_overlap",
+      "mobileBehavior": "light_bottom_sheet_with_rail_yield",
+      "mobileMaxHeightVh": 64,
       "responsivePlacement": {
         "desktop": "right_resizable_panel",
         "tablet": "right_sheet",
@@ -207,6 +216,25 @@
       "homeFirstViewMaxCards": 0,
       "secondarySurfaceMaxCards": 6
     },
+    "resultStreamContract": {
+      "primaryResearchResultSurface": "structured_research_artifact_card",
+      "rawAssistantTranscriptForStructuredResult": "forbidden",
+      "maxRawAssistantMessagesPerStructuredResult": 0,
+      "researchArtifactSectionCount": 3,
+      "density": "artifact_first_not_test_log"
+    },
+    "inspectorSurfaceContract": {
+      "desktop": {
+        "behavior": "stable_right_work_panel",
+        "overlapWithMainContent": "forbidden",
+        "reservedMainLayout": "required"
+      },
+      "mobile": {
+        "behavior": "light_bottom_sheet",
+        "maxHeightVh": 64,
+        "railYieldWhileOpen": "required"
+      }
+    },
     "styleTokens": {
       "colorRoles": ["canvas", "surface", "elevatedSurface", "border", "text", "mutedText", "accent", "success", "warning", "danger", "focusRing"],
       "typeScale": ["caption", "label", "body", "bodyStrong", "title", "display"],
@@ -235,9 +263,9 @@
       "disabledSelectors": [":disabled", "[aria-disabled=\"true\"]"]
     },
     "responsiveTopology": {
-      "desktop": ["side_nav_visible", "center_composer_primary", "secondary_surfaces_below_fold", "right_inspector_on_request"],
+      "desktop": ["side_nav_visible", "center_composer_primary", "secondary_surfaces_below_fold", "stable_right_inspector_on_request"],
       "tablet": ["side_nav_compact", "center_composer_primary", "secondary_surfaces_single_column", "inspector_sheet"],
-      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "settings_and_inspector_as_bottom_sheets"],
+      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_settings_and_inspector_bottom_sheets"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
     "layoutRules": [
@@ -245,7 +273,8 @@
       "Side navigation hosts New Chat, Projects, Skill, 工作流, Search, and More; each primary item owns exactly one task class.",
       "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.",
       "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.",
-      "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; they must not appear as primary navigation items.",
+      "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.",
+      "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.",
       "Search opens a secondary sheet; More routes to the settings/account status page and must not create a workspace column.",
       "The first viewport must not show summary strips, settings forms, chat history, or card grids.",
       "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.",
@@ -523,9 +552,11 @@
       "interactive touch targets and named controls pass registered browser checks",
       "keyboard focus ring is visible on the primary chat submit control",
       "repo-local keyboard path, API key modal focus trap, and contrast closeout pass browser evidence",
+      "structured @科研 result stream is artifact-first without duplicated raw upstream assistant transcript",
+      "desktop inspector is verified as a stable right work panel without overlapping main content",
       "OPL green token guard rejects default tech blue or purple primary palette",
       "prefers-reduced-motion path is implemented for UI motion",
-      "mobile inspector is verified as a bottom sheet",
+      "mobile inspector is verified as a lightweight bottom sheet within height budget",
       "production UI owner receipt completed"
     ],
     "baselineEvidence": {
@@ -539,6 +570,9 @@
         "inspector.visible=true",
         "inspector.withinViewport=true",
         "inspector.mobileBottomSheet=true on mobile and compact viewports",
+        "inspector.desktopStablePanel=true on desktop viewport",
+        "inspector.mobileSheetHeightRatio<=0.64 on mobile and compact viewports",
+        "artifactChecks.researchArtifactDensityPass=true",
         "activeInspectorPanel.visible=true",
         "hiddenOverlayInterceptsInput=false",
         "chatInputHitTarget=true",
@@ -573,7 +607,10 @@
         "contrastPass",
         "oplGreenTokenGuard",
         "prefersReducedMotionPresent",
-        "mobileInspectorBottomSheet"
+        "mobileInspectorBottomSheet",
+        "desktopInspectorStablePanel",
+        "lightweightMobileInspectorSheet",
+        "researchArtifactDensity"
       ],
       "doesNotProve": [
         "human owner accepted production UI quality",

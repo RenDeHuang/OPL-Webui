@@ -121,6 +121,8 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /该能力需要在 MedOPL 开通后继续/);
   assert.match(html, /medopl\.medopl\.cn/);
   assert.match(html, /chat-log/);
+  assert.match(html, /data-result-stream-contract="artifact_first_not_test_log"/);
+  assert.match(html, /data-research-artifact-policy="no_raw_assistant_transcript"/);
   assert.match(html, /settings-panel/);
   assert.match(html, /data-account-lifecycle-status/);
   assert.match(html, /data-team-readiness-status/);
@@ -196,6 +198,10 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
   assert.match(css, /body\[data-view="more"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="more"\]\)/);
   assert.match(css, /\.side-navigation/);
   assert.match(css, /\.right-inspector-rail/);
+  assert.match(css, /body\[data-inspector-state="files"\]\s+\.main-stage/);
+  assert.match(css, /body\[data-inspector-state="progress"\]\s+\.main-stage/);
+  assert.match(css, /body\[data-inspector-state="output"\]\s+\.main-stage/);
+  assert.match(css, /body\[data-inspector-state(?!="hidden")[\s\S]*\.right-inspector-rail/);
   assert.match(css, /\.home-first-view/);
   assert.match(css, /\.starter-chips/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
@@ -205,6 +211,8 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
   assert.match(css, /\[aria-disabled="true"\]/);
   assert.match(css, /\[data-loading="true"\]/);
   assert.match(css, /\.inspector-sheet\[data-responsive-placement="bottom_sheet"\]/);
+  assert.match(css, /max-height:\s*64vh/);
+  assert.doesNotMatch(css, /max-height:\s*78vh/);
   assert.doesNotMatch(css, /left-rail|sidebar-shell|conversation-list|quiet_dense_workbench|clean_workbench_v1/);
   assert.match(css, /@media \(max-width:\s*1040px\)/);
   assert.match(css, /@media \(max-width:\s*760px\)/);

@@ -119,7 +119,13 @@
             <span data-reliability-action>继续输入</span>
             <small data-reliability-details></small>
           </aside>
-          <div class="chat-log" data-chat-log aria-live="polite">
+          <div
+            class="chat-log"
+            data-chat-log
+            data-result-stream-contract="artifact_first_not_test_log"
+            data-research-artifact-policy="no_raw_assistant_transcript"
+            aria-live="polite"
+          >
             <article class="message assistant-message">
               <span>OPL</span>
               <p>普通聊天可以先整理问题；需要 MedOPL 的能力只显示授权入口和 refs，不伪造执行。</p>

@@ -195,6 +195,9 @@
         "maxWidth": 520
       },
       "placement": "right_resizable_panel",
+      "desktopBehavior": "stable_right_work_panel_without_main_overlap",
+      "mobileBehavior": "light_bottom_sheet_with_rail_yield",
+      "mobileMaxHeightVh": 64,
       "responsivePlacement": {
         "desktop": "right_resizable_panel",
         "tablet": "right_sheet",
@@ -448,6 +451,9 @@
     "consumer": "research_user_chat_result",
     "mode": "ui_view_model_only",
     "sections": ["research_plan", "evidence_refs", "next_steps"],
+    "primarySurface": "structured_research_artifact_card",
+    "rawAssistantTranscriptForStructuredResult": "forbidden",
+    "maxRawAssistantMessagesPerStructuredResult": 0,
     "runtimeGateCard": "refs_only_medopl_deeplink",
     "forbiddenPayload": ["artifact_body", "private_state_path", "mutation_result", "raw_provider_secret"]
   }

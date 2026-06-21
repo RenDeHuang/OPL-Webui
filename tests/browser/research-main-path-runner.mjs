@@ -396,7 +396,6 @@ async function userClick(cdp, selector) {
 async function activate(cdp, selector) {
   await userClick(cdp, selector);
   await focusElement(cdp, selector);
-  await keyPress(cdp, { key: ' ', code: 'Space', windowsVirtualKeyCode: 32, nativeVirtualKeyCode: 32 });
   await delay(50);
 }
 
@@ -572,13 +571,9 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
   mkdirSync(runtimeDir, { recursive: true });
 
   const viewports = {};
-  const viewportSpecs = [
-    { id: 'desktop', width: 1440, height: 1200, deviceScaleFactor: 1, mobile: false },
-    { id: 'tablet', width: 834, height: 1200, deviceScaleFactor: 2, mobile: true },
-    { id: 'mobile', width: 390, height: 1200, deviceScaleFactor: 2, mobile: true },
-    { id: 'compact', width: 360, height: 1200, deviceScaleFactor: 3, mobile: true },
-  ];
+  const viewportSpecs = [{ id: 'desktop', width: 1440, height: 1200, deviceScaleFactor: 1, mobile: false }, { id: 'tablet', width: 834, height: 1200, deviceScaleFactor: 2, mobile: true }, { id: 'mobile', width: 390, height: 1200, deviceScaleFactor: 2, mobile: true }, { id: 'compact', width: 360, height: 1200, deviceScaleFactor: 3, mobile: true }];
   for (const viewport of viewportSpecs) {
+    await keyPress(cdp, { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
     await setViewport(cdp, viewport);
     await waitFor(cdp, 'document.readyState === "complete"');
     await activate(cdp, '[data-inspector-open="files"]');
@@ -586,19 +581,17 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     await captureScreenshot(cdp, path);
     const layout = await readVisualLayout(cdp);
     viewports[viewport.id] = {
-      viewport: {
-        width: viewport.width,
-        height: viewport.height,
-        deviceScaleFactor: viewport.deviceScaleFactor,
-        mobile: viewport.mobile,
-      },
-      screenshot: {
-        captured: true,
-        path,
-      },
+      viewport: { width: viewport.width, height: viewport.height, deviceScaleFactor: viewport.deviceScaleFactor, mobile: viewport.mobile },
+      screenshot: { captured: true, path },
       layout,
     };
   }
+  const artifactChecks = await evaluateJSON(cdp, `(() => {
+    const raw = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;
+    const cards = document.querySelectorAll('[data-research-result]').length;
+    const sections = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0;
+    return { researchArtifactDensityPass: raw === 0 && cards === 1 && sections === 3, rawAssistantTranscriptCount: raw, researchArtifactCardCount: cards };
+  })()`);
 
   return {
     state: 'repo_local_visual_baseline_captured',
@@ -612,6 +605,11 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     accessibilityChecks: summarizeAccessibilityChecks(viewports, accessibilityCloseout),
     accessibilityCloseout,
     visualFitChecks: summarizeVisualFitChecks(viewports),
+    artifactChecks,
+    inspectorChecks: {
+      desktopStablePanelPass: viewports.desktop.layout.inspector.desktopStablePanel === true,
+      mobileSheetPressurePass: ['mobile', 'compact'].every((id) => viewports[id].layout.inspector.mobileSheetHeightRatio <= 0.64),
+    },
     ownerReceipt: {
       required: true,
       status: 'pending',
@@ -750,6 +748,8 @@ async function setViewport(cdp, viewport) {
 }
 
 async function readVisualLayout(cdp) {
+  await focusElement(cdp, '#chat-input');
+  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
   return evaluateJSON(cdp, `(async () => {
     const rectJSON = (element) => {
       if (!element) return null;
@@ -774,6 +774,9 @@ async function readVisualLayout(cdp) {
     const inspector = document.querySelector('[data-inspector-sheet]');
     const inspectorRect = inspector?.getBoundingClientRect();
     const inspectorStyle = inspector ? getComputedStyle(inspector) : null;
+    const mainRect = document.querySelector('.main-stage')?.getBoundingClientRect();
+    const desktopStablePanel = Boolean(inspectorRect && mainRect && viewport.width > 1040 && mainRect.right <= inspectorRect.left);
+    const mobileSheetHeightRatio = inspectorRect ? Number((inspectorRect.height / viewport.height).toFixed(2)) : 0;
     const mobileBottomSheet = Boolean(inspectorRect
       && viewport.width <= 760
       && inspectorRect.left <= 1
@@ -784,7 +787,6 @@ async function readVisualLayout(cdp) {
     const activeInspectorPanel = document.querySelector('[data-inspector-panel]:not([hidden])');
     const chatInput = document.querySelector('#chat-input');
     const focusProbe = document.querySelector('[data-chat-submit]');
-    focusProbe?.focus();
     await new Promise((resolve) => requestAnimationFrame(resolve));
     const focusProbeStyle = focusProbe ? getComputedStyle(focusProbe) : null;
     chatInput?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
@@ -866,7 +868,9 @@ async function readVisualLayout(cdp) {
           && inspectorRect.left >= 0
           && inspectorRect.right <= viewport.width
           && inspectorRect.width <= viewport.width),
+        desktopStablePanel,
         mobileBottomSheet,
+        mobileSheetHeightRatio,
         rect: rectJSON(inspector),
       },
       activeInspectorPanel: {
