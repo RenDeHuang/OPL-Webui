@@ -16,6 +16,7 @@ One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. It ow
 Current product work is moving from fixed truth into engineering evidence:
 
 0. The active non-HA gap set is `contracts/web-product-profile.json#/visionGaps`: UI/UX Product Depth, MedOPL readonly evidence, runtime execution boundary, commercial SaaS depth, and operations maturity. HA is paused for single-node launch safety. These gaps advance through contracts, source, tests, and foldback evidence; production deploy is not the default next action unless the user explicitly asks for release evidence.
+0a. Goal execution is now gated by `contracts/web-gap-phase-registry.json`: each gap exposes a current phase, required evals, evidence sources, typed blockers, and cannot-claim boundaries. `npm run gap:phase` reports status and may write temporary summaries to `.runtime/phase-runs`; those files are git-ignored, TTL/count/size capped, and cleaned by `node scripts/gap-phase-runner.mjs cleanup`.
 
 1. Browser-level e2e runner executed successfully through `npm run verify:browser` with real Chromium/CDP for register, login, API Key binding, ordinary chat fallback, `@论文`/`@基金` gate, and sanitized audit evidence. It is now a CI release gate before image release; future non-CI hosts still need Chrome/Chromium via `OPL_BROWSER_BINARY` or system discovery.
 2. Research-task-first UX state is owned by the page-state contract, `RESEARCH_TASK_INTENTS`, `RESEARCH_RESULT_SECTIONS`, and `chatStateForPrompt`; the browser runner now clicks the `research_direction` task template before ordinary chat fallback, verifies the structured `@科研` result sections, and verifies `@论文`/`@基金` runtime task cards. This remains a browser UI view model and must not become artifact body, storage, or runtime execution.
@@ -66,6 +67,8 @@ Start from:
 10. `contracts/*.json`
 
 Then pick exactly one gap. Do not create `changes/active` packages. Do not add new recurring docs directories unless the new area has a stable owner, purpose, state, machine boundary, and active consumer.
+
+For goal-driven work, check `contracts/web-gap-phase-registry.json` before editing. If the current phase is blocked by production evidence, owner receipt, or missing contract/eval, record `blocked` instead of claiming completion.
 
 ## Foldback Rules
 

@@ -22,6 +22,7 @@ The current non-HA gap set is now machine-owned by `contracts/web-product-profil
 - HTTP API: `contracts/web-api.openapi.json`
 - Runtime gate and refs-only projection: `contracts/web-runtime-bridge.json`
 - Release readiness: `contracts/web-release-profile.json`
+- Gap phase queues and runtime cleanup policy: `contracts/web-gap-phase-registry.json`
 - AI development discipline: `contracts/web-development-profile.json`
 - Long-lived surface ownership: `contracts/web-surface-inventory.json`
 - Historical process evidence: `docs/history/process/closeouts.md`
@@ -45,6 +46,8 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - `contracts/web-surface-inventory.json` owns long-lived surface registration for scripts, contracts, tests, Go tests, recurring docs, workflows/deploy, and selected source owner surfaces. Ordinary implementation files are intentionally excluded so inventory does not become a second source tree.
 - `npm run repo:bloat` now reads the surface inventory. Owned growth is report-only; orphan growth without owner/consumer/contract or machine boundary is a hard failure.
 - `scripts/lane-advisory.mjs` maps changed files to targeted lanes for operator visibility; lane-check/gate evidence decides whether the required targeted lanes were actually run for the current diff.
+- `contracts/web-gap-phase-registry.json` turns broad goals into phase queues with owner surfaces, required evals, evidence sources, typed blockers, and cannot-claim boundaries. `npm run gap:phase` reports `done` / `partial` / `blocked` / `not_started` status and can write temporary summaries under `.runtime/phase-runs`.
+- Gap phase run artifacts are not durable truth. `.runtime/phase-runs` is git-ignored, capped by TTL/count/size policy, and cleaned with `node scripts/gap-phase-runner.mjs cleanup`; only sanitized evidence summaries may fold back into contracts or status.
 - `contracts/web-development-profile.json` defines the AI development order, anti-bloat policy, task tiers, and completion boundaries; `npm run gate:ai` enforces claim freshness and workflow hygiene, and `npm run gate:review` runs it before lane evidence and current verify.
 - Release evidence foldback is exposed as `npm run release:evidence -- --run-id <github-run-id>` so production rollout/browser/dogfood/availability evidence can update the release profile and status as a first-class workflow step.
 - `regression` can be empty. Active `regression-guard` tests must carry retirement metadata, and when the condition is met the test, registry entry, and any needed tombstone cleanup happen in the same change.

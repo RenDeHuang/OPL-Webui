@@ -139,6 +139,14 @@
       "lifecycle": "durable"
     },
     {
+      "path": "contracts/web-gap-phase-registry.json",
+      "type": "contract",
+      "ownerSurface": "workflow",
+      "consumer": ["gap phase runner", "health gate", "AI agent"],
+      "machineBoundary": "lightweight gap phase queues, eval requirements, typed blockers, cannot-claim boundaries, and runtime artifact cleanup policy",
+      "lifecycle": "durable"
+    },
+    {
       "path": "contracts/web-page-state-matrix.json",
       "type": "contract",
       "ownerSurface": "page-state",
@@ -216,6 +224,14 @@
       "ownerSurface": "workflow",
       "consumer": ["npm run lane:check", "npm run gate:review"],
       "contract": ["contracts/web-development-profile.json", "tests/health/lane-check.test.mjs"],
+      "lifecycle": "durable"
+    },
+    {
+      "path": "scripts/gap-phase-runner.mjs",
+      "type": "script",
+      "ownerSurface": "workflow",
+      "consumer": ["npm run gap:phase", "health gate", "AI agent"],
+      "contract": ["contracts/web-gap-phase-registry.json", "tests/health/gap-phase-system.test.mjs"],
       "lifecycle": "durable"
     },
     {
@@ -456,6 +472,14 @@
       "ownerSurface": "repo-governance",
       "consumer": ["npm run verify:health"],
       "contract": ["AGENTS.md", "TASTE.md", "docs/status.md"],
+      "lifecycle": "durable"
+    },
+    {
+      "path": "tests/health/gap-phase-system.test.mjs",
+      "type": "test",
+      "ownerSurface": "workflow",
+      "consumer": ["npm run verify:health"],
+      "contract": ["contracts/web-gap-phase-registry.json", "scripts/gap-phase-runner.mjs"],
       "lifecycle": "durable"
     },
     {

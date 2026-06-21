@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "owner": "product-engineering owner",
+  "purpose": "machine-readable lightweight gap phase registry that turns broad goals into bounded phase queues without adding durable process logs",
+  "state": "active_policy",
+  "machineBoundary": ".runtime phase run artifacts are temporary; durable truth stays in contracts, registered tests, source, and sanitized foldback summaries",
+  "runtimeArtifactPolicy": {
+    "directory": ".runtime/phase-runs",
+    "gitTracked": false,
+    "ttlDays": 7,
+    "maxRunDirectories": 20,
+    "maxRunBytes": 10485760,
+    "rawLogs": "forbidden_in_git",
+    "screenshots": "ci_artifact_or_runtime_only",
+    "foldback": "sanitized_summary_only",
+    "cleanupCommand": "node scripts/gap-phase-runner.mjs cleanup"
+  },
+  "statusValues": ["done", "partial", "blocked", "not_started"],
+  "evidenceSources": ["repo_local", "browser", "production_secret_gated", "external_owner", "human_owner_receipt"],
+  "blockerTypes": ["missing_eval", "missing_contract", "missing_production_evidence", "missing_owner_receipt", "missing_product_decision"],
+  "gaps": [
+    {
+      "id": "ui_ux_product_depth",
+      "ownerSurface": "apps-web",
+      "state": "active",
+      "currentPhaseId": "visual_baseline",
+      "currentStatus": "partial",
+      "cannotClaim": ["complete UI/UX design system", "production visual polish complete"],
+      "phases": [
+        {
+          "id": "visual_baseline",
+          "objective": "Close repo-local Figma-backed shell depth and define the remaining visual QA gate.",
+          "entryCriteria": ["Figma MCP source context available", "web GUI product contract exists"],
+          "exitCriteria": ["desktop screenshot reviewed", "mobile screenshot reviewed", "browser interaction e2e passed"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval"],
+          "requiredEvals": [
+            {
+              "id": "ui_visual_baseline_eval",
+              "contract": "contracts/web-gui-product-contract.json#/visualQualityGate",
+              "proves": ["Figma-backed shell visual baseline is ready for production UI claim"],
+              "doesNotProve": ["complete UI/UX design system", "long-term production usability"],
+              "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "medopl_readonly_evidence",
+      "ownerSurface": "release-evidence",
+      "state": "active",
+      "currentPhaseId": "production_readonly_foldback",
+      "currentStatus": "blocked",
+      "cannotClaim": ["production MedOPL readonly projection dogfood"],
+      "phases": [
+        {
+          "id": "production_readonly_foldback",
+          "objective": "Confirm readonly projection with secret-gated production dogfood and fold back only sanitized evidence.",
+          "entryCriteria": ["production dogfood workflow available", "readonly foldback policy exists"],
+          "exitCriteria": ["OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 confirmed", "sanitized dogfood stdout folded back", "raw secret absence confirmed"],
+          "evidenceSources": ["production_secret_gated"],
+          "blockerTypes": ["missing_production_evidence"],
+          "requiredEvals": [
+            {
+              "id": "medopl_readonly_foldback_eval",
+              "contract": "contracts/web-release-profile.json#/productionDogfoodReadiness/readonlyFoldbackPolicy",
+              "proves": ["production readonly projection dogfood confirmed"],
+              "doesNotProve": ["runtime execution correctness", "billing source of truth", "long-term production stability"],
+              "failureBlocks": ["production MedOPL readonly projection dogfood"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runtime_execution_boundary",
+      "ownerSurface": "runtime-gate",
+      "state": "active",
+      "currentPhaseId": "execution_admission",
+      "currentStatus": "blocked",
+      "cannotClaim": ["OPL runtime execution from Web", "artifact body authority"],
+      "phases": [
+        {
+          "id": "execution_admission",
+          "objective": "Keep runtime mutation fail-closed until Go-side execution contract, eval, allowlist, and human authorization exist.",
+          "entryCriteria": ["runtime bridge contract exists", "Go control plane remains only backend business entry"],
+          "exitCriteria": ["Go-side execution contract exists", "registered eval covers command allowlist", "human authorization boundary exists", "tenant-scoped audit events exist"],
+          "evidenceSources": ["repo_local", "human_owner_receipt"],
+          "blockerTypes": ["missing_contract", "missing_eval", "missing_owner_receipt"],
+          "requiredEvals": [
+            {
+              "id": "runtime_execution_admission_eval",
+              "contract": "contracts/web-runtime-bridge.json#/executionAdmission",
+              "proves": ["runtime execution admission is either fully satisfied or fail-closed"],
+              "doesNotProve": ["MedOPL runtime execution", "artifact body authority"],
+              "failureBlocks": ["OPL runtime execution from Web", "artifact body authority"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "commercial_saas_depth",
+      "ownerSurface": "product-boundary",
+      "state": "active",
+      "currentPhaseId": "commercial_contract",
+      "currentStatus": "blocked",
+      "cannotClaim": ["complete commercial SaaS lifecycle", "billing source of truth", "payment readiness"],
+      "phases": [
+        {
+          "id": "commercial_contract",
+          "objective": "Keep commercial lifecycle as readonly personal projection until team, RBAC, billing, and payment consumers have contracts and tests.",
+          "entryCriteria": ["commercial lifecycle projection contract exists"],
+          "exitCriteria": ["real consumer exists", "contract exists", "registered tests exist", "MedOPL billing authority preserved"],
+          "evidenceSources": ["repo_local", "external_owner"],
+          "blockerTypes": ["missing_contract", "missing_product_decision", "missing_owner_receipt"],
+          "requiredEvals": [
+            {
+              "id": "commercial_saas_readiness_eval",
+              "contract": "contracts/web-product-profile.json#/commercialLifecycle",
+              "proves": ["commercial lifecycle claims stay readonly until real SaaS contracts and tests exist"],
+              "doesNotProve": ["billing source of truth", "payment readiness", "team RBAC readiness"],
+              "failureBlocks": ["complete commercial SaaS lifecycle", "billing source of truth", "payment readiness"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operations_maturity",
+      "ownerSurface": "release-evidence",
+      "state": "active",
+      "currentPhaseId": "ops_evidence_contracts",
+      "currentStatus": "partial",
+      "cannotClaim": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"],
+      "phases": [
+        {
+          "id": "ops_evidence_contracts",
+          "objective": "Preserve current observability baseline and require explicit contracts before dashboard, alerting, error budget, or automatic rollback claims.",
+          "entryCriteria": ["/metricsz exists", "availability probe exists", "manual rollback harness exists"],
+          "exitCriteria": ["dashboard contract exists", "alerting contract exists", "error budget contract exists", "rollback record contract exists"],
+          "evidenceSources": ["repo_local", "production_secret_gated"],
+          "blockerTypes": ["missing_contract", "missing_production_evidence"],
+          "requiredEvals": [
+            {
+              "id": "ops_maturity_eval",
+              "contract": "contracts/web-release-profile.json#/productionObservabilityBaseline",
+              "proves": ["operations maturity claims are limited to existing baseline until future evidence contracts land"],
+              "doesNotProve": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"],
+              "failureBlocks": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
