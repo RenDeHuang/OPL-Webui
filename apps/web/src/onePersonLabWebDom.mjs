@@ -41,10 +41,16 @@ export async function initOnePersonLabWeb() {
 function syncHashView() {
   const view = viewFromHash(window.location.hash);
   document.body.dataset.view = view;
+  syncRailCurrent(view);
   if (view === 'settings') {
     document.querySelector('[data-settings-panel]')?.setAttribute('tabindex', '-1');
     document.querySelector('[data-settings-panel]')?.focus({ preventScroll: true });
   }
+  if (view === 'skill') {
+    document.querySelector('#skill')?.setAttribute('tabindex', '-1');
+    document.querySelector('#skill')?.focus({ preventScroll: true });
+  }
+  if (view === 'medopl') showRuntimeGate();
 }
 
 function bindCapabilityButtons() {
@@ -119,6 +125,13 @@ function bindShellControls() {
     document.querySelector('[data-left-rail-toggle]')?.setAttribute('aria-expanded', String(expanded));
   });
 
+  for (const action of document.querySelectorAll('[data-shell-action]')) {
+    action.addEventListener('click', (event) => {
+      const handled = runShellAction(action.dataset.shellAction);
+      if (handled) event.preventDefault();
+    });
+  }
+
   for (const button of document.querySelectorAll('[data-right-inspector-open]')) {
     button.addEventListener('click', () => openRightInspector(button.dataset.rightInspectorOpen || 'files'));
   }
@@ -130,6 +143,78 @@ function bindShellControls() {
   document.querySelector('[data-right-inspector-close]')?.addEventListener('click', () => closeRightInspector());
   document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
   document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => closeAPIKeyDialog());
+  document.querySelector('[data-local-search]')?.addEventListener('input', (event) => filterLocalSidebar(event.currentTarget.value));
+}
+
+function runShellAction(action) {
+  const input = document.querySelector('#chat-input');
+  if (action === 'new_chat') {
+    setHashView('chat');
+    openLocalSidebarPanel('recent');
+    document.body.dataset.shellState = 'app_default_chat';
+    input?.focus({ preventScroll: true });
+    return true;
+  }
+  if (action === 'projects') {
+    setHashView('chat');
+    openLocalSidebarPanel('projects');
+    focusLocalSidebar('[data-project-panel] button');
+    return true;
+  }
+  if (action === 'skill') {
+    setHashView('skill');
+    openLocalSidebarPanel('recent');
+    return true;
+  }
+  if (action === 'search') {
+    setHashView('chat');
+    openLocalSidebarPanel('search');
+    document.querySelector('[data-local-search]')?.focus({ preventScroll: true });
+    return true;
+  }
+  if (action === 'more') {
+    setHashView('settings');
+    openLocalSidebarPanel('more');
+    focusLocalSidebar('[data-more-panel] a');
+    return true;
+  }
+  return false;
+}
+
+function setHashView(view) {
+  const nextHash = view === 'chat' ? '#chat' : `#${view}`;
+  if (window.location.hash === nextHash) syncHashView();
+  else window.location.hash = nextHash;
+}
+
+function openLocalSidebarPanel(panelName) {
+  document.body.dataset.leftRailState = 'expanded';
+  document.querySelector('[data-left-rail-toggle]')?.setAttribute('aria-expanded', 'true');
+  document.body.dataset.shellState = panelName === 'recent' ? 'app_default_chat' : 'left_sidebar_expanded';
+  for (const panel of document.querySelectorAll('[data-local-sidebar-panel]')) {
+    panel.hidden = panel.dataset.localSidebarPanel !== panelName;
+  }
+}
+
+function focusLocalSidebar(selector) {
+  document.querySelector(selector)?.focus({ preventScroll: true });
+}
+
+function filterLocalSidebar(query) {
+  const normalized = String(query || '').trim().toLowerCase();
+  for (const entry of document.querySelectorAll('[data-local-search-entry]')) {
+    const matches = !normalized || entry.textContent.toLowerCase().includes(normalized) || (entry.dataset.prompt || '').toLowerCase().includes(normalized);
+    entry.hidden = !matches;
+  }
+}
+
+function syncRailCurrent(view) {
+  const currentByView = { chat: 'new_chat', settings: 'more', skill: 'skill', medopl: 'more' };
+  const currentID = currentByView[view] || 'new_chat';
+  for (const item of document.querySelectorAll('[data-left-rail-item]')) {
+    if (item.dataset.leftRailItem === currentID) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  }
 }
 
 function openRightInspector(state = 'files') {

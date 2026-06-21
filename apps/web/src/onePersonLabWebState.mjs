@@ -124,7 +124,7 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
 
 export function viewFromHash(hash) {
   const normalized = String(hash || '').replace(/^#/, '');
-  return ['settings', 'capabilities', 'medopl'].includes(normalized) ? normalized : 'chat';
+  return ['settings', 'skill', 'medopl'].includes(normalized) ? normalized : 'chat';
 }
 
 export function accountState(session, provider) {
@@ -240,16 +240,17 @@ export function createOnePersonLabViewModel(state) {
   const currentAccountState = accountState(session, provider);
   return {
     title: '科研人员的 One Person Lab Web',
-    subtitle: '面向科研工作人员、硕博、PI 与科研团队；从 @科研、@论文、@基金 进入多租户 SaaS 版 One Person Lab。',
+    subtitle: '面向科研工作人员、硕博、PI 与科研团队；从研究问题、项目和 Skill 进入多租户 SaaS 版 One Person Lab。',
     figmaMakeSource: FIGMA_MAKE_SOURCE,
     shell: { leftSidebar: true, accountDock: true, promptCommandCenter: true },
     navItems: [
-      { label: '首页', href: '#home' },
-      { label: '科研能力', href: '#capabilities' },
-      { label: '论文', href: '#capabilities' },
-      { label: '基金', href: '#capabilities' },
-      { label: '账号', href: '#settings' },
+      { id: 'new_chat', label: '新建对话', href: '#chat' },
+      { id: 'projects', label: '项目', href: '#projects' },
+      { id: 'skill', label: 'Skill', href: '#skill' },
+      { id: 'search', label: '搜索', href: '#search' },
+      { id: 'more', label: '更多', href: '#more' },
     ],
+    accountEntry: 'bottom_avatar_popover',
     session,
     accountState: currentAccountState,
     primaryCTA: ctaForState(currentAccountState),
@@ -274,11 +275,11 @@ export function createOnePersonLabViewModel(state) {
       label, prompt, runtimeRequired, sourceAssistant,
     })),
     workbenchSteps: [
-      { title: '选择专业工作', description: '科研能力入口，不是泛 Agent 列表。' },
+      { title: '选择 Skill', description: '从科研任务入口进入，不是泛 Agent 列表。' },
       { title: '绑定真实材料', description: '围绕材料、引用和版本组织输入，不伪造文件能力。' },
       { title: '进入科研工作流', description: '用 @科研、@论文、@基金、@综述 和 @文件 表达科研意图。' },
       { title: '沉淀交付物', description: '面向证据包、申请书、PPT 和修回材料的交付闭环。' },
-      { title: '保留普通聊天', description: '普通聊天是 fallback，用于解释、整理和低风险问答。' },
+      { title: '保留普通聊天', description: '普通聊天用于解释、整理和低风险问答。' },
     ],
     runtimeGate: {
       title: '需要 MedOPL 授权',

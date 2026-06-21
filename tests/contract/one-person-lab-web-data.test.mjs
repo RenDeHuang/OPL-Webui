@@ -75,7 +75,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assertIncludesAll(product.publicUi.hiddenConcepts, ['workspace', 'runtime', 'nodePool', 'storage', 'billing'], 'hidden concept');
   assertIncludesAll(product.nonOwnedTruth, ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth'], 'non-owned truth');
 
-  assert.deepEqual(pageStates.routes.map((route) => route.id), ['chat', 'settings', 'capabilities', 'medopl']);
+  assert.deepEqual(pageStates.routes.map((route) => route.id), ['chat', 'settings', 'skill', 'medopl']);
   assert.equal(pageStates.routes.find((route) => route.id === 'chat').surface, 'research_capability_workbench');
   assert.deepEqual(pageStates.accountStates, ['anonymous', 'authenticated_unbound', 'authenticated_bound']);
   for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending']) {
@@ -89,7 +89,16 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(reliabilityStates.every((state) => pageStates.routes.find((route) => route.id === 'chat').states.includes(state)), true);
   assert.deepEqual(reliability.allowedFields, ['state', 'title', 'action', 'retryable', 'details']);
   assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
-  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_capability_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'account_lifecycle_status_visible', 'reliability_status_visible', 'sanitized_audit']);
+  const expectedRouteScope = { chat: ['workbench_command', 'turn_state', 'chat_canvas'], settings: ['settings_panel'], skill: ['skill_plaza', 'workbench_steps'], medopl: ['runtime_gate'] };
+  assert.deepEqual(pageStates.shellStates.routeScopedSurfaces, expectedRouteScope);
+  assert.deepEqual(pageStates.shellStates.leftRail.actions.map(({ id, label, kind, targetView, localOnly, consumer, forbiddenApis }) => [id, label, kind, targetView, localOnly, consumer, forbiddenApis.join('|')]), [
+    ['new_chat', '新建对话', 'route', 'chat', true, 'composer_focus', ''],
+    ['projects', '项目', 'local_sidebar_panel', 'chat', true, 'recent_project_session_refs', '/api/projects'],
+    ['skill', 'Skill', 'route', 'skill', true, 'research_skill_plaza', ''],
+    ['search', '搜索', 'local_sidebar_panel', 'chat', true, 'local_prompt_and_recent_session_filter', '/api/search'],
+    ['more', '更多', 'local_sidebar_panel', 'settings', true, 'settings_and_medopl_shortcuts', ''],
+  ]);
+  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_skill_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'account_lifecycle_status_visible', 'reliability_status_visible', 'sanitized_audit']);
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
   assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-chat-log]', '[data-runtime-gate]', '[data-settings-panel]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-account-lifecycle-status]', '[data-team-readiness-status]', '[data-quota-status]', '[data-account-audit-status]', '[data-reliability-status]'], 'observable selector');
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
@@ -267,11 +276,35 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.productTruthGate.codexInfluence, 'app_workspace_shell');
   assertIncludesAll(gui.productTruthGate.mustNotShow, ['dashboard_first_app_home', 'raw_trace_console', 'runtime_truth_panel', 'billing_source_of_truth', 'node_pool_console'], 'forbidden GUI surface');
   assert.deepEqual(gui.objectGrammar.allowedPrimaryObjects, ['Project', 'Session', 'Message', 'Skill', 'InputFile', 'OutputFile', 'ProgressStage', 'ApiKey', 'Model', 'Export']);
-  assert.deepEqual(gui.objectGrammar.fileHierarchy, ['cloud_drive', 'project', 'session', 'input_output_refs']);
+  assert.deepEqual(gui.objectGrammar.fileHierarchy, ['project', 'session', 'input_output_refs']);
   assert.deepEqual(gui.taskFlow.primaryFlow, ['public_dashboard', 'login_or_register', 'app_default_chat', 'project_or_session_select', 'compose_prompt', 'attach_input_files_optional', 'run_chat_or_runtime_gate', 'inspect_progress_files_output', 'export_or_continue']);
   assert.deepEqual(gui.informationArchitecture.appShell, ['left_rail', 'workspace_sidebar', 'chat_canvas', 'right_inspector', 'modal_layer']);
+  assert.deepEqual(gui.informationArchitecture.leftRail, ['new_chat', 'projects', 'skill', 'search', 'more']);
+  assert.deepEqual(gui.informationArchitecture.leftRailLabels, ['新建对话', '项目', 'Skill', '搜索', '更多']);
+  assert.deepEqual(gui.informationArchitecture.leftRailActionMap, {
+    new_chat: { action: 'route_chat_and_focus_composer', targetView: 'chat', ownerSurface: 'browser_shell', consumer: 'composer_focus' },
+    projects: { action: 'open_local_project_refs_sidebar', targetView: 'chat', ownerSurface: 'browser_shell', consumer: 'recent_project_session_refs' },
+    skill: { action: 'route_skill_plaza', targetView: 'skill', ownerSurface: 'browser_shell', consumer: 'research_skill_plaza' },
+    search: { action: 'open_local_search_sidebar', targetView: 'chat', ownerSurface: 'browser_shell', consumer: 'local_prompt_and_recent_session_filter' },
+    more: { action: 'open_local_more_sidebar', targetView: 'settings', ownerSurface: 'browser_shell', consumer: 'settings_and_medopl_shortcuts' },
+  });
+  assert.deepEqual(gui.informationArchitecture.routeScope, expectedRouteScope);
+  assert.equal(gui.informationArchitecture.accountEntry, 'bottom_avatar_popover');
+  assert.deepEqual(gui.informationArchitecture.forbiddenLeftRailItems, ['account_text_link', 'research_capability', 'paper', 'grant']);
   assert.equal(gui.visualGrammar.maxPrimaryCtaPerView, 1);
   assert.equal(gui.visualGrammar.longExplanatoryCopy, 'forbidden_in_app_shell');
+  assert.equal(gui.visualGrammar.aesthetic, 'calm_research_command_workspace');
+  assert.equal(gui.visualGrammar.mainstreamReference, 'ai_workspace_left_nav_center_composer_context_panel');
+  assert.deepEqual(gui.visualGrammar.styleTokens.colorRoles, ['canvas', 'surface', 'rail', 'border', 'text', 'mutedText', 'accent', 'success', 'warning', 'danger', 'focusRing']);
+  assert.deepEqual(gui.visualGrammar.styleTokens.typeScale, ['caption', 'label', 'body', 'bodyStrong', 'title', 'display']);
+  assert.deepEqual(gui.visualGrammar.styleTokens.spaceScale, ['4', '8', '12', '16', '24', '32']);
+  assert.deepEqual(gui.visualGrammar.styleTokens.radiusScale, ['6', '8', '12', 'pill']);
+  assert.deepEqual(gui.visualGrammar.responsiveTopology, {
+    desktop: ['left_rail_visible', 'center_composer_primary', 'right_inspector_on_request'],
+    tablet: ['left_rail_collapsed', 'center_composer_primary', 'right_inspector_overlay'],
+    mobile: ['top_identity_bar', 'composer_first', 'task_chips_before_history', 'settings_and_inspector_as_sheets'],
+    compact: ['composer_first', 'single_column', 'nonessential_status_collapsed'],
+  });
   assert.equal(gui.semanticTokens.resourceActive, 'resource.active');
   assert.equal(gui.semanticTokens.billingWarning, 'billing.warning');
   assert.equal(gui.components.find((component) => component.id === 'RightInspector').defaultState, 'hidden');
@@ -465,7 +498,8 @@ test('web data module exposes hash view and account state machine', () => {
   const pageStates = readJson('contracts/web-page-state-matrix.json');
 
   assert.equal(web.viewFromHash('#settings'), 'settings');
-  assert.equal(web.viewFromHash('#capabilities'), 'capabilities');
+  assert.equal(web.viewFromHash('#skill'), 'skill');
+  assert.equal(web.viewFromHash('#capabilities'), 'chat');
   assert.equal(web.viewFromHash('#medopl'), 'medopl');
   assert.equal(web.viewFromHash(''), 'chat');
   for (const route of pageStates.routes) {
@@ -878,12 +912,16 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   });
 
   assert.equal(view.title, '科研人员的 One Person Lab Web');
-  assert.match(view.subtitle, /@科研、@论文、@基金/);
+  assert.match(view.subtitle, /研究问题、项目和 Skill/);
   assert.equal(view.figmaMakeSource, 'E8nYfNFc2D9P01FYZ8UwBW');
   assert.equal(view.shell.leftSidebar, true);
   assert.equal(view.shell.accountDock, true);
   assert.equal(view.shell.promptCommandCenter, true);
-  assert.deepEqual(view.navItems.map((item) => item.label), ['首页', '科研能力', '论文', '基金', '账号']);
+  assert.deepEqual(view.navItems.map((item) => item.id), ['new_chat', 'projects', 'skill', 'search', 'more']);
+  assert.deepEqual(view.navItems.map((item) => item.label), ['新建对话', '项目', 'Skill', '搜索', '更多']);
+  assert.deepEqual(view.navItems.map((item) => item.href), ['#chat', '#projects', '#skill', '#search', '#more']);
+  assert.equal(view.accountEntry, 'bottom_avatar_popover');
+  assert.equal(view.navItems.some((item) => ['科研能力', '论文', '基金', '账号'].includes(item.label)), false);
   assert.equal(view.provider.baseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(view.provider.baseUrlEditable, false);
   assert.equal(view.accountState, 'authenticated_unbound');
@@ -901,7 +939,7 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.runtimeGate.message, '该能力需要在 MedOPL 开通后继续');
   assert.doesNotMatch(JSON.stringify(view.runtimeGate), /MedOPL Runtime|node pool|托管运行环境|存储|无限计算资源|创始人计划|WebUI owns/i);
   assert.deepEqual(view.researchResultSections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
-  assert.deepEqual(view.workbenchSteps.map((item) => item.title), ['选择专业工作', '绑定真实材料', '进入科研工作流', '沉淀交付物', '保留普通聊天']);
+  assert.deepEqual(view.workbenchSteps.map((item) => item.title), ['选择 Skill', '绑定真实材料', '进入科研工作流', '沉淀交付物', '保留普通聊天']);
   assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
 });
 

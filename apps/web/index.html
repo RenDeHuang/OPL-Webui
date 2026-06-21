@@ -21,24 +21,40 @@
   >
     <div class="app-shell figma-make-webui-alignment" data-figma-source="E8nYfNFc2D9P01FYZ8UwBW">
       <aside class="sidebar-shell" data-figma-pattern="collapsed_expanded_left_rail" aria-label="One Person Lab navigation">
-        <a class="sidebar-brand" href="#home" aria-label="One Person Lab Web 首页">
+        <a class="sidebar-brand" href="#chat" aria-label="One Person Lab Web">
           <span class="brand-mark">OPL</span>
           <span>One Person Lab</span>
         </a>
         <button class="left-rail-toggle" type="button" data-left-rail-toggle aria-expanded="false" aria-controls="shell-sidebar">☰</button>
-        <a class="new-chat-button" href="#chat">New Chat</a>
+        <a class="new-chat-button" href="#chat" data-left-rail-item="new_chat" data-shell-action="new_chat" aria-current="page">新建对话</a>
         <nav class="sidebar-nav" id="shell-sidebar" aria-label="主导航">
-          <a href="#home" aria-current="page">首页</a>
-          <a href="#capabilities">科研能力</a>
-          <a href="#capabilities">论文</a>
-          <a href="#capabilities">基金</a>
-          <a href="#settings">账号</a>
+          <a href="#projects" data-left-rail-item="projects" data-shell-action="projects">项目</a>
+          <a href="#skill" data-left-rail-item="skill" data-shell-action="skill">Skill</a>
+          <a href="#search" data-left-rail-item="search" data-shell-action="search">搜索</a>
+          <a href="#more" data-left-rail-item="more" data-shell-action="more">更多</a>
         </nav>
-        <div class="conversation-list" aria-label="最近对话">
-          <p>最近对话</p>
-          <button type="button" data-prompt="@科研 帮我拆解研究方向">研究方向拆解</button>
-          <button type="button" data-prompt="@论文 拆解研究问题">论文研究问题拆解</button>
-          <button type="button" data-prompt="@基金 帮我规划申请书">基金申请书规划</button>
+        <div class="conversation-list" data-local-sidebar aria-label="本地侧栏">
+          <section data-local-sidebar-panel="recent">
+            <p>最近对话</p>
+            <button type="button" data-prompt="@科研 帮我拆解研究方向" data-local-search-entry>研究方向拆解</button>
+            <button type="button" data-prompt="@论文 拆解研究问题" data-local-search-entry>论文研究问题拆解</button>
+            <button type="button" data-prompt="@基金 帮我规划申请书" data-local-search-entry>基金申请书规划</button>
+          </section>
+          <section data-local-sidebar-panel="projects" data-project-panel hidden>
+            <p>项目</p>
+            <button type="button" data-prompt="@科研 汇总当前项目研究问题" data-local-search-entry>当前项目</button>
+            <button type="button" data-prompt="@文件 整理项目材料引用" data-local-search-entry>材料引用</button>
+          </section>
+          <section data-local-sidebar-panel="search" data-search-panel hidden>
+            <p>搜索</p>
+            <label class="visually-hidden" for="local-shell-search">搜索本地入口</label>
+            <input id="local-shell-search" type="search" data-local-search placeholder="搜索对话和 Skill">
+          </section>
+          <section data-local-sidebar-panel="more" data-more-panel hidden>
+            <p>更多</p>
+            <a href="#settings" data-more-action="settings">设置</a>
+            <a href="https://medopl.medopl.cn" data-more-action="medopl">MedOPL</a>
+          </section>
         </div>
         <div class="account-dock" data-figma-pattern="account_popover_status">
           <button type="button" data-account-toggle aria-expanded="false" aria-controls="account-popover">
@@ -66,12 +82,12 @@
       </aside>
 
       <main class="main-stage">
-        <section class="workbench-command" id="home" aria-label="Figma Make one-person-lab-web shell">
+        <section class="workbench-command" id="home" data-route-surface="chat" aria-label="Figma Make one-person-lab-web shell">
           <div class="workbench-topline">
             <div>
               <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
               <h1>One Person Lab Web</h1>
-              <p>面向科研工作人员、硕博、PI 与科研团队的 Web 工作台。普通聊天是 fallback，科研任务从 @科研、@论文、@基金 等入口进入。</p>
+              <p>面向科研工作人员、硕博、PI 与科研团队的 Web 工作台。先输入研究问题，再用 @科研、@论文、@基金 等 Skill 进入专业工作。</p>
             </div>
             <a class="runtime-card" href="https://medopl.medopl.cn" aria-label="MedOPL 授权入口">
               <span>MedOPL</span>
@@ -89,18 +105,18 @@
             <section>
               <span>研究方向</span>
               <strong>@科研 可直接运行</strong>
-              <small>普通聊天 fallback 使用自己的 API Key。</small>
+              <small>普通聊天使用自己的 API Key。</small>
             </section>
             <section>
               <span>材料与输出</span>
               <strong>只显示 refs</strong>
-              <small>不返回 artifact body，不拥有 runtime truth。</small>
+              <small>只显示可核查引用和导出入口。</small>
             </section>
           </div>
 
-          <form class="prompt-console prompt-command-center research-command-band" id="chat" data-chat-form data-figma-pattern="prompt_command_center" aria-label="科研能力入口">
+          <form class="prompt-console prompt-command-center research-command-band" id="chat" data-chat-form data-figma-pattern="prompt_command_center" aria-label="Skill 入口">
             <label for="chat-input">输入研究问题，直接进入工作台</label>
-            <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入科研问题或 @能力入口"></textarea>
+            <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入研究问题或选择 Skill"></textarea>
             <div class="prompt-footer">
               <span class="gateway-pill">Model gateway: https://gflabtoken.cn/v1</span>
               <button class="primary-button" type="submit" data-chat-submit>登录/注册后开始</button>
@@ -136,7 +152,7 @@
           </div>
         </section>
 
-        <aside class="turn-state-strip" data-figma-pattern="running_blocked_turn_state" aria-label="任务状态">
+        <aside class="turn-state-strip" data-route-surface="chat" data-figma-pattern="running_blocked_turn_state" aria-label="任务状态">
           <div data-running-turn hidden>
             <strong>运行中</strong>
             <span>正在等待科研结果。</span>
@@ -150,8 +166,8 @@
           <button class="secondary-button" type="button" data-right-inspector-open="output">输出</button>
         </aside>
 
-        <section class="product-grid surface-stack" aria-label="One Person Lab Web 工作台">
-          <section class="chat-panel" aria-labelledby="chat-title">
+        <section class="product-grid surface-stack" data-route-surface="chat settings" aria-label="One Person Lab Web 工作台">
+          <section class="chat-panel" data-route-surface="chat" aria-labelledby="chat-title">
             <div class="section-heading">
               <p class="panel-kicker">Chat</p>
               <h2 id="chat-title">从普通问题开始，逐步进入专业工作</h2>
@@ -168,12 +184,12 @@
               </article>
               <article class="message assistant-message">
                 <span>OPL</span>
-                <p>普通聊天是 fallback。输入 @论文、@基金、@综述、@文件 时，会先检查 MedOPL 资源状态，不会伪造执行。</p>
+                <p>普通聊天可以先整理问题。输入 @论文、@基金、@综述、@文件 时，会先检查 MedOPL 授权状态，不会伪造执行。</p>
               </article>
             </div>
           </section>
 
-          <aside class="settings-panel credential-panel" id="settings" data-settings-panel aria-labelledby="settings-title">
+          <aside class="settings-panel credential-panel" id="settings" data-route-surface="settings" data-settings-panel aria-labelledby="settings-title">
             <div class="section-heading compact">
               <p class="panel-kicker">Settings</p>
               <h2 id="settings-title">账号与凭据状态</h2>
@@ -241,7 +257,7 @@
           </div>
           <section class="inspector-panel" data-right-inspector-panel="files" data-inspector-files-refs>
             <h3>Files</h3>
-            <p>只显示输入、输出和交付物 refs；不返回 artifact body。</p>
+            <p>只显示输入、输出和交付物引用。</p>
             <dl class="inspector-ref-list">
               <div><dt>input_ref</dt><dd>input_ref: protocol.pdf</dd></div>
               <div><dt>material_ref</dt><dd>material_ref: cohort-notes</dd></div>
@@ -250,7 +266,7 @@
           </section>
           <section class="inspector-panel" data-right-inspector-panel="progress" data-inspector-progress-projection hidden>
             <h3>Progress</h3>
-            <p>只显示阶段投影；不拥有 runtime truth。</p>
+            <p>只显示阶段进度和下一步阻塞原因。</p>
             <ol class="inspector-timeline">
               <li><span>1</span><strong>progress_ref: research_plan</strong><small>ready</small></li>
               <li><span>2</span><strong>progress_ref: evidence_refs</strong><small>pending refs</small></li>
@@ -268,11 +284,11 @@
           </section>
         </aside>
 
-        <section class="capability-section foundry-section" id="capabilities" aria-labelledby="capabilities-title">
+        <section class="capability-section foundry-section" id="skill" data-route-surface="skill" aria-labelledby="skill-title">
           <div class="section-heading">
-            <p class="panel-kicker">Capabilities</p>
-            <h2 id="capabilities-title">科研能力入口</h2>
-            <p>选择一个科研入口；需要云端能力的任务只打开 MedOPL 授权提示。</p>
+            <p class="panel-kicker">Skill</p>
+            <h2 id="skill-title">Skill 入口</h2>
+            <p>选择一个科研 Skill；需要云端能力的任务只打开 MedOPL 授权提示。</p>
           </div>
           <div class="foundry-grid">
             <article class="foundry-card" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback">
@@ -326,18 +342,18 @@
           </div>
         </section>
 
-        <aside class="workbench-card" aria-labelledby="workbench-title">
-          <h2 id="workbench-title">OPL WebUI 应承接的五件事</h2>
+        <aside class="workbench-card" data-route-surface="skill" aria-labelledby="workbench-title">
+          <h2 id="workbench-title">OPL Web 应承接的五件事</h2>
           <ol class="workbench-steps">
-            <li><span>1</span><div><h3>选择专业工作</h3><p>科研能力入口，不是泛 Agent 列表。</p></div></li>
+            <li><span>1</span><div><h3>选择 Skill</h3><p>从科研任务入口进入，不是泛 Agent 列表。</p></div></li>
             <li><span>2</span><div><h3>绑定真实材料</h3><p>围绕材料、引用和版本组织输入，不伪造文件能力。</p></div></li>
             <li><span>3</span><div><h3>进入科研工作流</h3><p>用 @科研、@论文、@基金、@综述 和 @文件 表达科研意图。</p></div></li>
             <li><span>4</span><div><h3>沉淀交付物</h3><p>面向证据包、申请书、PPT 和修回材料的交付闭环。</p></div></li>
-            <li><span>5</span><div><h3>保留普通聊天</h3><p>普通聊天是 fallback，用于解释、整理和低风险问答。</p></div></li>
+            <li><span>5</span><div><h3>保留普通聊天</h3><p>普通聊天用于解释、整理和低风险问答。</p></div></li>
           </ol>
         </aside>
 
-        <aside class="runtime-gate" data-runtime-gate aria-label="MedOPL 授权提示">
+        <aside class="runtime-gate" data-route-surface="chat medopl" data-runtime-gate aria-label="MedOPL 授权提示">
           <div>
             <p class="panel-kicker">RUNTIME_REQUIRED</p>
             <h2>需要 MedOPL 授权</h2>

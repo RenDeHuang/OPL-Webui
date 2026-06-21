@@ -15,9 +15,9 @@
       "states": ["anonymous", "authenticated_unbound", "authenticated_bound"]
     },
     {
-      "id": "capabilities",
-      "hash": "#capabilities",
-      "surface": "research_capability_catalog",
+      "id": "skill",
+      "hash": "#skill",
+      "surface": "research_skill_plaza",
       "states": ["readonly_catalog", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "runtime_required"]
     },
     {
@@ -110,11 +110,64 @@
     "leftRail": {
       "defaultState": "collapsed",
       "expandedState": "left_sidebar_expanded",
+      "actions": [
+        {
+          "id": "new_chat",
+          "label": "新建对话",
+          "kind": "route",
+          "targetView": "chat",
+          "localOnly": true,
+          "consumer": "composer_focus",
+          "forbiddenApis": []
+        },
+        {
+          "id": "projects",
+          "label": "项目",
+          "kind": "local_sidebar_panel",
+          "targetView": "chat",
+          "localOnly": true,
+          "consumer": "recent_project_session_refs",
+          "forbiddenApis": ["/api/projects"]
+        },
+        {
+          "id": "skill",
+          "label": "Skill",
+          "kind": "route",
+          "targetView": "skill",
+          "localOnly": true,
+          "consumer": "research_skill_plaza",
+          "forbiddenApis": []
+        },
+        {
+          "id": "search",
+          "label": "搜索",
+          "kind": "local_sidebar_panel",
+          "targetView": "chat",
+          "localOnly": true,
+          "consumer": "local_prompt_and_recent_session_filter",
+          "forbiddenApis": ["/api/search"]
+        },
+        {
+          "id": "more",
+          "label": "更多",
+          "kind": "local_sidebar_panel",
+          "targetView": "settings",
+          "localOnly": true,
+          "consumer": "settings_and_medopl_shortcuts",
+          "forbiddenApis": []
+        }
+      ],
       "resize": {
         "enabled": true,
         "minWidth": 260,
         "maxWidth": 420
       }
+    },
+    "routeScopedSurfaces": {
+      "chat": ["workbench_command", "turn_state", "chat_canvas"],
+      "settings": ["settings_panel"],
+      "skill": ["skill_plaza", "workbench_steps"],
+      "medopl": ["runtime_gate"]
     },
     "rightInspector": {
       "defaultState": "hidden",
@@ -303,7 +356,7 @@
         "evidence": "tests/browser/research-main-path.browser.test.mjs"
       },
       {
-        "id": "research_capability_launcher",
+        "id": "research_skill_launcher",
         "route": "chat",
         "expectedState": "research_entry_selected",
         "evidence": "tests/smoke/web-shell.test.mjs"

@@ -445,7 +445,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
   assert.match(status, /multi-tenant SaaS Web edition of One Person Lab/);
-  assert.match(status, /Ordinary chat is a fallback entry/);
+  assert.match(JSON.stringify(product.claims.canClaim), /research Skill entry remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
   assert.match(status, /production real ordinary chat completion/);

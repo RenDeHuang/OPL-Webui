@@ -69,7 +69,7 @@
   "publicUi": {
     "primarySurface": "research_capability_first_web_workbench",
     "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
-    "visibleRoutes": ["chat", "settings", "capabilities", "medopl"]
+    "visibleRoutes": ["chat", "settings", "skill", "medopl"]
   },
   "visionGaps": {
     "state": "active_non_ha_gap_acceptance",
@@ -187,9 +187,9 @@
       "Researchers, graduate students, PhD students, principal investigators, and research teams can enter OPL through Web research capability markers.",
       "Web UI calls the same-origin Go control plane HTTP API.",
       "Users bind their own provider key while base_url remains fixed.",
-      "Ordinary chat is a fallback entry, not the primary product positioning.",
+      "Ordinary chat is available for low-risk explanation and organization, while research Skill entry remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
-      "WebUI owns product surface, page state, account/session, and sanitized projections only."
+      "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only."
     ],
     "cannotClaim": [
       "complete production-ready SaaS",

@@ -49,6 +49,7 @@ try {
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
+  await openChatRoute(cdp);
 
   await userClick(cdp, '[data-research-task-intent="research_direction"]');
   await assertPage(cdp, 'document.body.dataset.chatState === "research_entry_selected"', 'research task template selected');
@@ -147,6 +148,7 @@ function resolveRunConfig(runMode) {
 }
 
 async function authenticate(cdp, config) {
+  await openSettingsRoute(cdp);
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-register-button]');
@@ -159,6 +161,24 @@ async function authenticate(cdp, config) {
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-login-button]');
   await waitForBoundOrUnboundAuthState(cdp, 'login');
+}
+
+async function openSettingsRoute(cdp) {
+  await activate(cdp, '[data-shell-action="more"]');
+  await waitFor(
+    cdp,
+    'document.body.dataset.view === "settings" && document.querySelector("#auth-email")?.offsetParent !== null',
+    () => describePageState(cdp, 'settings route did not expose auth form'),
+  );
+}
+
+async function openChatRoute(cdp) {
+  await activate(cdp, '[data-shell-action="new_chat"]');
+  await waitFor(
+    cdp,
+    'document.body.dataset.view === "chat" && document.querySelector("[data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
+    () => describePageState(cdp, 'chat route did not expose research launcher'),
+  );
 }
 
 async function resetSessionIfAuthenticated(cdp) {

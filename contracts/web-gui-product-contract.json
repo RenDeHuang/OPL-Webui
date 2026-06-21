@@ -44,7 +44,7 @@
       "Export"
     ],
     "allowedSecondaryObjects": [
-      "CloudDrive",
+      "ProjectFileRefs",
       "FileReference",
       "OutputVersion",
       "AuditProjection",
@@ -59,12 +59,12 @@
       "DomainVerdict",
       "ArtifactBodyAuthority"
     ],
-    "fileHierarchy": ["cloud_drive", "project", "session", "input_output_refs"],
+    "fileHierarchy": ["project", "session", "input_output_refs"],
     "ownershipRules": [
       "User owns projects.",
       "Project owns sessions.",
       "Session owns messages, input files, output files, and progress stages.",
-      "Web shell may display refs-only runtime and audit projections but must not own runtime truth or artifact bodies."
+      "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."
     ]
   },
   "taskFlow": {
@@ -89,7 +89,7 @@
     ],
     "fileFlow": [
       "open_right_inspector_files",
-      "select_cloud_drive_project",
+      "select_project",
       "select_session",
       "inspect_input_output_refs",
       "preview_or_export_output"
@@ -98,13 +98,56 @@
   "informationArchitecture": {
     "publicShell": ["landing_summary", "primary_start_action", "login_register"],
     "appShell": ["left_rail", "workspace_sidebar", "chat_canvas", "right_inspector", "modal_layer"],
-    "leftRail": ["new_chat", "search", "history", "more", "projects", "settings"],
+    "leftRail": ["new_chat", "projects", "skill", "search", "more"],
+    "accountEntry": "bottom_avatar_popover",
+    "forbiddenLeftRailItems": ["account_text_link", "research_capability", "paper", "grant"],
+    "leftRailActionMap": {
+      "new_chat": {
+        "action": "route_chat_and_focus_composer",
+        "targetView": "chat",
+        "ownerSurface": "browser_shell",
+        "consumer": "composer_focus"
+      },
+      "projects": {
+        "action": "open_local_project_refs_sidebar",
+        "targetView": "chat",
+        "ownerSurface": "browser_shell",
+        "consumer": "recent_project_session_refs"
+      },
+      "skill": {
+        "action": "route_skill_plaza",
+        "targetView": "skill",
+        "ownerSurface": "browser_shell",
+        "consumer": "research_skill_plaza"
+      },
+      "search": {
+        "action": "open_local_search_sidebar",
+        "targetView": "chat",
+        "ownerSurface": "browser_shell",
+        "consumer": "local_prompt_and_recent_session_filter"
+      },
+      "more": {
+        "action": "open_local_more_sidebar",
+        "targetView": "settings",
+        "ownerSurface": "browser_shell",
+        "consumer": "settings_and_medopl_shortcuts"
+      }
+    },
+    "routeScope": {
+      "chat": ["workbench_command", "turn_state", "chat_canvas"],
+      "settings": ["settings_panel"],
+      "skill": ["skill_plaza", "workbench_steps"],
+      "medopl": ["runtime_gate"]
+    },
     "rightInspector": ["files", "progress", "output"],
+    "leftRailLabels": ["新建对话", "项目", "Skill", "搜索", "更多"],
     "modalLayer": ["login_register", "api_key_required", "confirm_destructive_action"]
   },
   "visualGrammar": {
     "density": "quiet_dense_workspace",
     "currentUiVariant": "clean_workbench_v1",
+    "aesthetic": "calm_research_command_workspace",
+    "mainstreamReference": "ai_workspace_left_nav_center_composer_context_panel",
     "appCopyDensity": "low",
     "publicCopyDensity": "moderate",
     "longExplanatoryCopy": "forbidden_in_app_shell",
@@ -113,10 +156,24 @@
     "nestedCards": "forbidden",
     "kpiCardDashboard": "forbidden_for_app_home",
     "defaultPanelPolicy": "heavy_left_and_right_panels_hidden_until_user_action",
+    "styleTokens": {
+      "colorRoles": ["canvas", "surface", "rail", "border", "text", "mutedText", "accent", "success", "warning", "danger", "focusRing"],
+      "typeScale": ["caption", "label", "body", "bodyStrong", "title", "display"],
+      "spaceScale": ["4", "8", "12", "16", "24", "32"],
+      "radiusScale": ["6", "8", "12", "pill"]
+    },
+    "responsiveTopology": {
+      "desktop": ["left_rail_visible", "center_composer_primary", "right_inspector_on_request"],
+      "tablet": ["left_rail_collapsed", "center_composer_primary", "right_inspector_overlay"],
+      "mobile": ["top_identity_bar", "composer_first", "task_chips_before_history", "settings_and_inspector_as_sheets"],
+      "compact": ["composer_first", "single_column", "nonessential_status_collapsed"]
+    },
     "layoutRules": [
       "Public landing may use centered prompt-style composition.",
       "Authenticated app shell must keep the research command workbench and chat canvas primary.",
       "Left sidebar expands from the rail; it must not create a second extra column.",
+      "Left rail hosts only New Chat, Projects, Skill, Search, and More; account access is a bottom avatar popover.",
+      "Research, paper, and grant skills are invoked from the composer, command palette, task chips, or result follow-up actions rather than shown as primary left-rail navigation.",
       "Right inspector hosts files, progress, and output tabs in the same shell.",
       "Files and progress must not be rendered as duplicate standalone page layouts.",
       "The clean_workbench_v1 shell must not use the retired hero-shell section."
@@ -194,8 +251,8 @@
     },
     {
       "id": "FilesTree",
-      "role": "cloud_drive_project_session_files",
-      "hierarchy": ["cloud_drive", "project", "session", "input_output_refs"]
+      "role": "project_session_file_refs",
+      "hierarchy": ["project", "session", "input_output_refs"]
     },
     {
       "id": "ProgressTimeline",

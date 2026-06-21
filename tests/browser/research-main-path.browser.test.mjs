@@ -74,6 +74,10 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'Emulation.setDeviceMetricsOverride',
     'webSocketDebuggerUrl',
     'document.readyState === "complete"',
+    'openSettingsRoute',
+    '[data-shell-action="more"]',
+    'openChatRoute',
+    '[data-shell-action="new_chat"]',
   ]) {
     assert.match(runner, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
