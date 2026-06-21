@@ -492,8 +492,12 @@ test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
   assert.equal(gui.figmaSource.nodeId, '0:1');
   assert.equal(gui.figmaSource.rejectedPatterns.includes('runtime_truth_ownership'), true);
   assert.equal(gui.figmaSource.rejectedPatterns.includes('unlimited_compute_claim'), true);
-  assert.equal(gui.visualQualityGate.state, 'repo_local_responsive_visual_qa_captured_pending_owner_receipt');
-  assert.equal(gui.visualQualityGate.currentPhase, 'responsive_visual_qa');
+  assert.equal(gui.visualQualityGate.state, 'production_ui_quality_claim_pending_owner_receipt_and_production_evidence');
+  assert.equal(gui.visualQualityGate.completedPhase, 'responsive_visual_qa');
+  assert.equal(gui.visualQualityGate.currentPhase, 'production_ui_quality_claim');
+  assert.equal(gui.visualQualityGate.ownerReceipt.acceptedClaim, null);
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.lifecycle.temporaryArtifacts.includes('.runtime/browser-visual/*'), true);
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.productionEvidence.rawArtifactsInGit, false);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
   assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('registered eval covering command allowlist'), true);
 

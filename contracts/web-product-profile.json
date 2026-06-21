@@ -82,14 +82,17 @@
         "id": "ui_ux_product_depth",
         "ownerSurface": "apps-web",
         "acceptanceContract": "contracts/web-gui-product-contract.json",
-        "disposition": "repo_local_responsive_visual_qa_captured_pending_owner_receipt",
+        "disposition": "production_ui_quality_claim_pending_owner_receipt_and_production_evidence",
         "evidenceRequired": [
           "figma_mcp_source_context",
           "component_state_contract",
           "responsive_shell_smoke",
           "browser_interaction_e2e",
           "desktop_tablet_mobile_compact_visual_qa_browser_evidence",
-          "human_owner_receipt_before_production_ui_claim"
+          "human_owner_receipt_before_production_ui_claim",
+          "production_browser_e2e_or_screenshot_evidence",
+          "accessibility_closeout_boundary",
+          "sanitized_foldback"
         ]
       },
       {

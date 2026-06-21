@@ -263,14 +263,16 @@
     ]
   },
   "visualQualityGate": {
-    "state": "repo_local_responsive_visual_qa_captured_pending_owner_receipt",
-    "completedPhase": "visual_baseline",
-    "currentPhase": "responsive_visual_qa",
-    "nextPhase": "production_ui_quality_claim",
+    "state": "production_ui_quality_claim_pending_owner_receipt_and_production_evidence",
+    "completedPhase": "responsive_visual_qa",
+    "currentPhase": "production_ui_quality_claim",
+    "nextPhase": null,
     "ownerReceipt": {
       "required": true,
       "status": "pending",
       "source": "human_owner_receipt",
+      "acceptedClaim": null,
+      "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"],
       "reason": "repo-local baseline and responsive screenshots prove mechanics, but production UI quality needs owner review"
     },
     "requiredBeforeProductionUiClaim": [
@@ -331,6 +333,61 @@
         "complete UI/UX design system",
         "assistive technology conformance"
       ]
+    },
+    "productionUiQualityClaim": {
+      "phaseId": "production_ui_quality_claim",
+      "targetClaim": "ui_ux_v1_production_accepted",
+      "status": "pending_owner_receipt_and_production_evidence",
+      "designSystemBoundary": {
+        "claimed": "ui_ux_v1_product_surface",
+        "notClaimed": "complete_ui_ux_design_system"
+      },
+      "requiredEvidence": [
+        "owner_receipt",
+        "production_browser_e2e_or_screenshot_evidence",
+        "accessibility_closeout_boundary",
+        "sanitized_foldback"
+      ],
+      "lifecycle": {
+        "longTermTruth": [
+          "contracts/web-gui-product-contract.json",
+          "contracts/web-gap-phase-registry.json",
+          "contracts/web-product-profile.json",
+          "registered tests",
+          "docs/status.md",
+          "docs/active/README.md"
+        ],
+        "temporaryArtifacts": [
+          ".runtime/browser-visual/*",
+          ".runtime/phase-runs/*",
+          "production raw logs",
+          "raw screenshots",
+          "CI raw output"
+        ]
+      },
+      "productionEvidence": {
+        "status": "pending",
+        "requiredHost": "https://opl.medopl.cn",
+        "acceptedSources": ["production_browser_e2e", "production_screenshot_evidence"],
+        "rawArtifactsInGit": false,
+        "foldback": "sanitized_summary_only"
+      },
+      "accessibilityCloseout": {
+        "status": "partial_repo_local_only",
+        "completedRepoLocalChecks": [
+          "touchTargetsPass",
+          "namedControlsPass",
+          "keyboardFocusVisible",
+          "noStaticTextOverflow",
+          "hiddenOverlayDoesNotInterceptInput"
+        ],
+        "requiredBeforeFullA11yClaim": [
+          "contrast_review",
+          "keyboard_path_review",
+          "modal_focus_trap_review",
+          "assistive_technology_review"
+        ]
+      }
     },
     "acceptance": [
       {

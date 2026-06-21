@@ -24,7 +24,7 @@
       "id": "ui_ux_product_depth",
       "ownerSurface": "apps-web",
       "state": "active",
-      "currentPhaseId": "responsive_visual_qa",
+      "currentPhaseId": "production_ui_quality_claim",
       "currentStatus": "partial",
       "cannotClaim": ["complete UI/UX design system", "production visual polish complete"],
       "phases": [
@@ -82,7 +82,7 @@
             "next production UI claim remains blocked until owner receipt is folded back"
           ],
           "nextStepOpeners": [
-            "Open production_ui_quality_claim only after product owner receipt passes",
+            "Open production_ui_quality_claim after repo-local responsive visual QA is folded back and the human owner approves opening the claim phase",
             "Keep this gap partial while complete design system, assistive technology conformance, and production visual polish evidence is missing",
             "Do not deploy solely to satisfy repo-local visual QA"
           ],
@@ -97,6 +97,73 @@
               "contract": "contracts/web-gui-product-contract.json#/visualQualityGate",
               "proves": ["repo-local responsive visual QA is ready for owner review"],
               "doesNotProve": ["complete UI/UX design system", "production visual polish complete"],
+              "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
+            }
+          ]
+        },
+        {
+          "id": "production_ui_quality_claim",
+          "objective": "Claim UI/UX v1 production acceptance only after human owner receipt and sanitized production evidence exist, without claiming a complete design system.",
+          "entryCriteria": [
+            "repo-local responsive_visual_qa evidence exists",
+            "Figma MCP source context remains pinned",
+            "human owner approved opening the claim phase but has not signed acceptance"
+          ],
+          "exitCriteria": [
+            "human owner receipt acceptedClaim=ui_ux_v1_production_accepted",
+            "production browser e2e or production screenshot evidence is folded back as sanitized summary",
+            "accessibility closeout boundary is folded back",
+            "complete design system remains explicitly not claimed"
+          ],
+          "evidenceSources": ["browser", "production_secret_gated", "human_owner_receipt"],
+          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
+          "acceptance": [
+            "owner receipt remains pending until the human owner explicitly accepts ui_ux_v1_production_accepted",
+            "production UI evidence must be folded back as a sanitized summary, not raw logs or screenshots in git",
+            "accessibility closeout may claim repo-local browser checks only until contrast, keyboard path, modal focus trap, and assistive technology reviews exist",
+            "complete UI/UX design system remains cannot-claim"
+          ],
+          "nextStepOpeners": [
+            "Close production_ui_quality_claim only after owner receipt and sanitized production evidence exist",
+            "Open complete design system work only after a separate owner, consumer, contract, and eval are approved",
+            "Keep this gap partial while owner receipt, production evidence, or accessibility closeout is missing"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "human_owner_receipt",
+            "status": "pending",
+            "acceptedClaim": null,
+            "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"]
+          },
+          "artifactLifecycle": {
+            "longTermTruth": [
+              "contracts/web-gui-product-contract.json",
+              "contracts/web-gap-phase-registry.json",
+              "contracts/web-product-profile.json",
+              "registered tests",
+              "docs/status.md",
+              "docs/active/README.md"
+            ],
+            "temporaryArtifacts": [
+              ".runtime/browser-visual/*",
+              ".runtime/phase-runs/*",
+              "production raw logs",
+              "raw screenshots",
+              "CI raw output"
+            ],
+            "rawArtifactsInGit": false,
+            "foldback": "sanitized_summary_only"
+          },
+          "designSystemBoundary": {
+            "claimed": "ui_ux_v1_product_surface",
+            "notClaimed": "complete_ui_ux_design_system"
+          },
+          "requiredEvals": [
+            {
+              "id": "ui_production_quality_claim_eval",
+              "contract": "contracts/web-gui-product-contract.json#/visualQualityGate/productionUiQualityClaim",
+              "proves": ["UI/UX v1 production acceptance claim is gated by owner receipt and sanitized production evidence"],
+              "doesNotProve": ["complete UI/UX design system", "assistive technology conformance", "production visual polish complete without owner receipt"],
               "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
             }
           ]

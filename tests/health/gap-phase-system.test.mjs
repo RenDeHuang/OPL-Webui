@@ -96,6 +96,58 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
   }
 });
 
+test('UI/UX production claim phase keeps owner receipt and raw artifacts out of inferred truth', () => {
+  const registry = readJson(registryPath);
+  const uiGap = registry.gaps.find((gap) => gap.id === 'ui_ux_product_depth');
+  const productionClaim = uiGap.phases.find((phase) => phase.id === 'production_ui_quality_claim');
+
+  assert.equal(uiGap.currentPhaseId, 'production_ui_quality_claim');
+  assert.equal(uiGap.currentStatus, 'partial');
+  assert.equal(
+    productionClaim.objective,
+    'Claim UI/UX v1 production acceptance only after human owner receipt and sanitized production evidence exist, without claiming a complete design system.',
+  );
+  assert.deepEqual(productionClaim.entryCriteria, [
+    'repo-local responsive_visual_qa evidence exists',
+    'Figma MCP source context remains pinned',
+    'human owner approved opening the claim phase but has not signed acceptance',
+  ]);
+  assert.deepEqual(productionClaim.exitCriteria, [
+    'human owner receipt acceptedClaim=ui_ux_v1_production_accepted',
+    'production browser e2e or production screenshot evidence is folded back as sanitized summary',
+    'accessibility closeout boundary is folded back',
+    'complete design system remains explicitly not claimed',
+  ]);
+  assert.deepEqual(productionClaim.ownerReceipt, {
+    required: true,
+    source: 'human_owner_receipt',
+    status: 'pending',
+    acceptedClaim: null,
+    cannotBeInferredBy: ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt'],
+  });
+  assert.deepEqual(productionClaim.artifactLifecycle.longTermTruth, [
+    'contracts/web-gui-product-contract.json',
+    'contracts/web-gap-phase-registry.json',
+    'contracts/web-product-profile.json',
+    'registered tests',
+    'docs/status.md',
+    'docs/active/README.md',
+  ]);
+  assert.deepEqual(productionClaim.artifactLifecycle.temporaryArtifacts, [
+    '.runtime/browser-visual/*',
+    '.runtime/phase-runs/*',
+    'production raw logs',
+    'raw screenshots',
+    'CI raw output',
+  ]);
+  assert.equal(productionClaim.artifactLifecycle.rawArtifactsInGit, false);
+  assert.equal(productionClaim.artifactLifecycle.foldback, 'sanitized_summary_only');
+  assert.deepEqual(productionClaim.designSystemBoundary, {
+    claimed: 'ui_ux_v1_product_surface',
+    notClaimed: 'complete_ui_ux_design_system',
+  });
+});
+
 test('gap phase runner creates ignored runtime summaries and cleans stale phase artifacts', async () => {
   const runner = await import('../../scripts/gap-phase-runner.mjs');
   const root = join('.runtime', 'gap-phase-test-runs');

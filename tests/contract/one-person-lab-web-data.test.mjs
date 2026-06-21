@@ -35,14 +35,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
   assert.deepEqual(product.visionGaps.items.map((gap) => [gap.id, gap.ownerSurface, gap.disposition]), [
-    ['ui_ux_product_depth', 'apps-web', 'repo_local_responsive_visual_qa_captured_pending_owner_receipt'],
+    ['ui_ux_product_depth', 'apps-web', 'production_ui_quality_claim_pending_owner_receipt_and_production_evidence'],
     ['medopl_readonly_evidence', 'release-evidence', 'awaiting_secret_gated_foldback'],
     ['runtime_execution_boundary', 'runtime-gate', 'fail_closed_until_admission_contract'],
     ['commercial_saas_depth', 'product-boundary', 'readonly_personal_projection_only'],
     ['operations_maturity', 'release-evidence', 'baseline_plus_next_evidence_contracts'],
   ]);
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
-  assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim']);
+  assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
   assert.equal(visionGap('ui_ux_product_depth').acceptanceContract, 'contracts/web-gui-product-contract.json');
   assert.equal(visionGap('medopl_readonly_evidence').acceptanceContract, 'contracts/web-release-profile.json#/productionDogfoodReadiness');
   assert.equal(visionGap('runtime_execution_boundary').acceptanceContract, 'contracts/web-runtime-bridge.json');
@@ -283,13 +283,15 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['collapsed_expanded_left_rail', 'account_popover_status', 'missing_api_key_resource_gate', 'prompt_command_center', 'research_skill_launcher', 'chat_task_view', 'right_inspector_tabs_files_progress_output', 'running_blocked_turn_state']);
   assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_code_video_skills']);
-  assert.equal(gui.visualQualityGate.state, 'repo_local_responsive_visual_qa_captured_pending_owner_receipt');
-  assert.equal(gui.visualQualityGate.completedPhase, 'visual_baseline');
-  assert.equal(gui.visualQualityGate.currentPhase, 'responsive_visual_qa');
-  assert.equal(gui.visualQualityGate.nextPhase, 'production_ui_quality_claim');
+  assert.equal(gui.visualQualityGate.state, 'production_ui_quality_claim_pending_owner_receipt_and_production_evidence');
+  assert.equal(gui.visualQualityGate.completedPhase, 'responsive_visual_qa');
+  assert.equal(gui.visualQualityGate.currentPhase, 'production_ui_quality_claim');
+  assert.equal(gui.visualQualityGate.nextPhase, null);
   assert.equal(gui.visualQualityGate.ownerReceipt.required, true);
   assert.equal(gui.visualQualityGate.ownerReceipt.status, 'pending');
   assert.equal(gui.visualQualityGate.ownerReceipt.source, 'human_owner_receipt');
+  assert.equal(gui.visualQualityGate.ownerReceipt.acceptedClaim, null);
+  assert.deepEqual(gui.visualQualityGate.ownerReceipt.cannotBeInferredBy, ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt']);
   assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, [
     'Figma MCP source context refreshed',
     'desktop screenshot captured and layout-reviewed in local browser',
@@ -316,6 +318,28 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.visualQualityGate.baselineEvidence.viewports, ['desktop', 'tablet', 'mobile', 'compact']);
   assert.equal(gui.visualQualityGate.baselineEvidence.screenshotPathPattern, '.runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png');
   assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'rightInspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible']);
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.phaseId, 'production_ui_quality_claim');
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.targetClaim, 'ui_ux_v1_production_accepted');
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.status, 'pending_owner_receipt_and_production_evidence');
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.designSystemBoundary, {
+    claimed: 'ui_ux_v1_product_surface',
+    notClaimed: 'complete_ui_ux_design_system',
+  });
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.requiredEvidence, ['owner_receipt', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.lifecycle.longTermTruth, ['contracts/web-gui-product-contract.json', 'contracts/web-gap-phase-registry.json', 'contracts/web-product-profile.json', 'registered tests', 'docs/status.md', 'docs/active/README.md']);
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.lifecycle.temporaryArtifacts, ['.runtime/browser-visual/*', '.runtime/phase-runs/*', 'production raw logs', 'raw screenshots', 'CI raw output']);
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.productionEvidence, {
+    status: 'pending',
+    requiredHost: 'https://opl.medopl.cn',
+    acceptedSources: ['production_browser_e2e', 'production_screenshot_evidence'],
+    rawArtifactsInGit: false,
+    foldback: 'sanitized_summary_only',
+  });
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.accessibilityCloseout, {
+    status: 'partial_repo_local_only',
+    completedRepoLocalChecks: ['touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'noStaticTextOverflow', 'hiddenOverlayDoesNotInterceptInput'],
+    requiredBeforeFullA11yClaim: ['contrast_review', 'keyboard_path_review', 'modal_focus_trap_review', 'assistive_technology_review'],
+  });
   assert.equal(gui.visualQualityGate.cannotClaim.includes('complete UI/UX design system'), true);
   assert.deepEqual(gui.pageTemplates, ['PublicLanding', 'Auth', 'DefaultAppShell', 'ExpandedSidebar', 'RightInspectorOpen', 'ModalOverlay', 'SkillPlaza', 'OutputPreview']);
   assert.equal(gui.accessibility.keyboardRequired, true);
