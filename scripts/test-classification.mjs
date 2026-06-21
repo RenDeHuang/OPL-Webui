@@ -397,7 +397,7 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'static',
     claimScope: 'repo',
     contracts: ['apps/web/index.html', 'apps/web/styles.css', 'apps/web/src/onePersonLabWeb.mjs', 'contracts/web-gui-product-contract.json'],
-    proves: ['static Web shell exposes the research SaaS product surface, clean workbench UI variant, and hides internal workspace concepts'],
+    proves: ['static Web shell exposes the AI-native research homepage, OPL green polish guard, responsive sheet states, and hidden internal workspace concepts'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, 'interactive browser behavior'],
     riskTriggers: ['apps-web'],
     verifySuites: ['current', 'smoke'],

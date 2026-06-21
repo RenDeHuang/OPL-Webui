@@ -49,18 +49,20 @@
     "requiredNodeMetadata": ["componentId", "variantProps", "stateId", "mustShow", "mustNotShow"],
     "variantProps": {
       "SideNavigation": {
-        "state": ["default", "active", "compact"]
+        "state": ["default", "active", "hover", "focus-visible", "disabled", "compact"]
       },
       "Sheet": {
         "state": ["closed", "open", "empty", "error", "loading"],
-        "variant": ["search", "inspector"]
+        "variant": ["search", "inspector"],
+        "motion": ["default", "reduced_motion"]
       },
       "MorePage": {
         "state": ["default", "saving", "error"]
       },
       "InspectorSheet": {
         "state": ["hidden", "files", "progress", "output"],
-        "width": ["default", "narrow", "wide"]
+        "width": ["default", "narrow", "wide"],
+        "placement": ["right_resizable_panel", "right_sheet", "bottom_sheet"]
       },
       "ApiKeyDialog": {
         "state": ["closed", "open", "saving", "error"]
@@ -74,18 +76,20 @@
   },
   "codeProps": {
     "SideNavigation": {
-      "state": ["default", "active", "compact"]
+      "state": ["default", "active", "hover", "focus-visible", "disabled", "compact"]
     },
       "Sheet": {
         "state": ["closed", "open", "empty", "error", "loading"],
-        "variant": ["search", "inspector"]
+        "variant": ["search", "inspector"],
+        "motion": ["default", "reduced_motion"]
       },
       "MorePage": {
         "state": ["default", "saving", "error"]
       },
     "InspectorSheet": {
       "state": ["hidden", "files", "progress", "output"],
-      "resizable": true
+      "resizable": true,
+      "placement": ["right_resizable_panel", "right_sheet", "bottom_sheet"]
     },
     "ApiKeyDialog": {
       "open": "boolean",

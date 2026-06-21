@@ -167,6 +167,11 @@
       "launcher": "right_utility_rail",
       "tabs": ["files", "progress", "output"],
       "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "responsivePlacement": {
+        "desktop": "right_resizable_panel",
+        "tablet": "right_sheet",
+        "mobile": "bottom_sheet"
+      },
       "mustNotBePrimaryNavigation": true
     },
     "overlaySurfaces": ["account_popover", "search_sheet", "api_key_required_modal", "inspector_sheet"],
@@ -208,10 +213,31 @@
       "spaceScale": ["4", "8", "12", "16", "24", "32"],
       "radiusScale": ["6", "8", "12", "pill"]
     },
+    "colorPolicy": {
+      "primaryAccent": "opl_green",
+      "primaryAccentHex": "#2f6b4f",
+      "focusRing": "opl_green_focus_ring",
+      "forbiddenPrimaryPalettes": ["default_tech_blue", "default_purple", "purple_blue_gradient"],
+      "forbiddenPrimaryHex": ["#2563eb", "#6366f1", "#8b5cf6"],
+      "allowedDepth": "flat_with_soft_depth_only"
+    },
+    "motionPolicy": {
+      "durationMs": { "fast": 120, "base": 160, "sheet": 180 },
+      "easing": "ease-out",
+      "allowedProperties": ["opacity", "transform", "background-color", "border-color", "box-shadow", "color"],
+      "forbidden": ["layout_animation", "long_blocking_transition", "motion_without_prefers_reduced_motion"],
+      "prefersReducedMotion": "required"
+    },
+    "interactionStatePolicy": {
+      "requiredStates": ["hover", "active", "focus-visible", "disabled", "loading"],
+      "appliesTo": ["button", "nav", "chip", "card", "input", "sheet", "modal", "inspector"],
+      "loadingSelector": "[data-loading=\"true\"]",
+      "disabledSelectors": [":disabled", "[aria-disabled=\"true\"]"]
+    },
     "responsiveTopology": {
       "desktop": ["side_nav_visible", "center_composer_primary", "secondary_surfaces_below_fold", "right_inspector_on_request"],
       "tablet": ["side_nav_compact", "center_composer_primary", "secondary_surfaces_single_column", "inspector_sheet"],
-      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "settings_and_inspector_as_sheets"],
+      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "settings_and_inspector_as_bottom_sheets"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
     "layoutRules": [
@@ -258,7 +284,12 @@
       "emptyState": "refs_not_available",
       "errorState": "projection_unavailable",
       "loadingState": "projection_pending",
-      "placement": "right_resizable_panel"
+      "placement": "right_resizable_panel",
+      "responsivePlacement": {
+        "desktop": "right_resizable_panel",
+        "tablet": "right_sheet",
+        "mobile": "bottom_sheet"
+      }
     }
   },
   "semanticTokens": {
@@ -330,6 +361,7 @@
       "defaultState": "hidden",
       "tabs": ["files", "progress", "output"],
       "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "responsivePlacement": { "desktop": "right_resizable_panel", "tablet": "right_sheet", "mobile": "bottom_sheet" },
       "mustNotOwn": ["runtime_truth", "artifact_body_authority"]
     },
     {
@@ -379,15 +411,15 @@
   "componentTokens": {
     "Button": {
       "variants": ["primary", "secondary", "ghost", "icon"],
-      "states": ["default", "hover", "focus", "disabled", "loading"]
+      "states": ["default", "hover", "active", "focus-visible", "disabled", "loading"]
     },
     "Input": {
       "variants": ["composer", "text", "search", "password"],
-      "states": ["default", "focus", "disabled", "error", "loading"]
+      "states": ["default", "hover", "active", "focus-visible", "disabled", "error", "loading"]
     },
     "Card": {
       "variants": ["starter_chip", "skill_entry", "workflow_entry", "result"],
-      "states": ["default", "hover", "selected", "disabled", "loading", "error"]
+      "states": ["default", "hover", "active", "focus-visible", "selected", "disabled", "loading", "error"]
     },
     "Popover": {
       "variants": ["account"],
@@ -399,15 +431,15 @@
     },
     "Nav": {
       "variants": ["side", "mobile_compact"],
-      "states": ["default", "active", "hover", "focus"]
+      "states": ["default", "active", "hover", "focus-visible", "disabled"]
     },
     "Chip": {
       "variants": ["starter", "intent", "status"],
-      "states": ["default", "hover", "selected", "disabled"]
+      "states": ["default", "hover", "active", "focus-visible", "selected", "disabled", "loading"]
     },
     "Tabs": {
       "variants": ["inspector"],
-      "states": ["default", "selected", "focus", "disabled"]
+      "states": ["default", "hover", "active", "focus-visible", "selected", "disabled"]
     },
     "Sheet": {
       "variants": ["search", "inspector"],
@@ -458,7 +490,12 @@
       "founder_plan_upsell",
       "unlimited_compute_claim",
       "dashboard_crm_primary_app",
-      "generic_office_content_design_video_skills"
+      "generic_office_content_design_video_skills",
+      "default_tech_blue_primary_palette",
+      "dominant_purple_primary_palette",
+      "purple_blue_gradient_primary_style",
+      "heavy_glassmorphism_primary_style",
+      "neumorphism_primary_style"
     ]
   },
   "visualQualityGate": {
@@ -485,6 +522,9 @@
       "no static text overflow across registered responsive breakpoints",
       "interactive touch targets and named controls pass registered browser checks",
       "keyboard focus ring is visible on the primary chat submit control",
+      "OPL green token guard rejects default tech blue or purple primary palette",
+      "prefers-reduced-motion path is implemented for UI motion",
+      "mobile inspector is verified as a bottom sheet",
       "production UI owner receipt completed"
     ],
     "baselineEvidence": {
@@ -497,6 +537,7 @@
         "horizontalOverflowPx=0",
         "inspector.visible=true",
         "inspector.withinViewport=true",
+        "inspector.mobileBottomSheet=true on mobile and compact viewports",
         "activeInspectorPanel.visible=true",
         "hiddenOverlayInterceptsInput=false",
         "chatInputHitTarget=true",
@@ -525,7 +566,10 @@
         "chatInputHitTarget",
         "touchTargetsPass",
         "namedControlsPass",
-        "keyboardFocusVisible"
+        "keyboardFocusVisible",
+        "oplGreenTokenGuard",
+        "prefersReducedMotionPresent",
+        "mobileInspectorBottomSheet"
       ],
       "doesNotProve": [
         "human owner accepted production UI quality",

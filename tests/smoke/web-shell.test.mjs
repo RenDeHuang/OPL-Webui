@@ -184,6 +184,9 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
 
   assert.match(css, /--inspector-min:\s*320px/);
   assert.match(css, /--inspector-max:\s*520px/);
+  assert.match(css, /--accent:\s*#2f6b4f/);
+  assert.match(css, /--focus-ring:\s*rgba\(47,\s*107,\s*79,\s*0\.28\)/);
+  assert.doesNotMatch(css, /#2563eb|#6366f1|#8b5cf6/);
   assert.match(css, /data-visual-density="low_stimulus_command_home"/);
   assert.match(css, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
   assert.match(css, /body\[data-view="home"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="home"\]\)/);
@@ -195,9 +198,28 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
   assert.match(css, /\.right-inspector-rail/);
   assert.match(css, /\.home-first-view/);
   assert.match(css, /\.starter-chips/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*no-preference\)/);
+  assert.match(css, /:active/);
+  assert.match(css, /:disabled/);
+  assert.match(css, /\[aria-disabled="true"\]/);
+  assert.match(css, /\[data-loading="true"\]/);
+  assert.match(css, /\.inspector-sheet\[data-responsive-placement="bottom_sheet"\]/);
   assert.doesNotMatch(css, /left-rail|sidebar-shell|conversation-list|quiet_dense_workbench|clean_workbench_v1/);
   assert.match(css, /@media \(max-width:\s*1040px\)/);
   assert.match(css, /@media \(max-width:\s*760px\)/);
+});
+
+test('active UI truth no longer narrates the retired workbench shell as current', () => {
+  const activeTruth = [
+    'docs/status.md',
+    'docs/active/README.md',
+    'scripts/test-classification.mjs',
+  ].map((path) => readFileSync(path, 'utf8')).join('\n');
+
+  assert.match(activeTruth, /ai_native_research_home_v1/);
+  assert.match(activeTruth, /OPL green|OPL Green|opl_green/);
+  assert.doesNotMatch(activeTruth, /current repo-local UI variant is `clean_workbench_v1`|clean workbench UI variant|workbench command band|summary strip/);
 });
 
 test('more surface contains productized settings without becoming primary navigation', () => {

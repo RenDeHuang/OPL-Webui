@@ -663,6 +663,14 @@ async function readVisualLayout(cdp) {
     };
     const inspector = document.querySelector('[data-inspector-sheet]');
     const inspectorRect = inspector?.getBoundingClientRect();
+    const inspectorStyle = inspector ? getComputedStyle(inspector) : null;
+    const mobileBottomSheet = Boolean(inspectorRect
+      && viewport.width <= 760
+      && inspectorRect.left <= 1
+      && inspectorRect.right >= viewport.width - 1
+      && Math.abs(inspectorRect.bottom - viewport.height) <= 1
+      && inspectorStyle?.borderTopLeftRadius !== '0px'
+      && inspectorStyle?.borderTopRightRadius !== '0px');
     const activeInspectorPanel = document.querySelector('[data-inspector-panel]:not([hidden])');
     const chatInput = document.querySelector('#chat-input');
     const focusProbe = document.querySelector('[data-chat-submit]');
@@ -748,6 +756,7 @@ async function readVisualLayout(cdp) {
           && inspectorRect.left >= 0
           && inspectorRect.right <= viewport.width
           && inspectorRect.width <= viewport.width),
+        mobileBottomSheet,
         rect: rectJSON(inspector),
       },
       activeInspectorPanel: {

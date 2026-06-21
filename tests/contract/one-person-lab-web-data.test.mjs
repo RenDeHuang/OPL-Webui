@@ -121,11 +121,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(pageStates.shellStates.requiredStates, ['public_landing', 'auth_login_register', 'home_default', 'project_library', 'search_sheet_open', 'inspector_files', 'inspector_progress', 'inspector_output', 'api_key_required_modal', 'skill_plaza', 'workflow_plaza', 'running_turn', 'blocked_turn']);
   assert.equal(pageStates.shellStates.defaultAppState, 'home_default');
   assert.equal(pageStates.shellStates.sideNavigation.defaultState, 'visible');
-  assert.equal(pageStates.shellStates.inspector.defaultState, 'hidden');
-  assert.deepEqual(pageStates.shellStates.inspector.tabs, ['files', 'progress', 'output']);
-  assert.deepEqual(pageStates.shellStates.inspector.resize, { enabled: true, minWidth: 320, maxWidth: 520 });
-  assert.equal(pageStates.shellStates.inspector.placement, 'right_resizable_panel');
-  assert.equal(pageStates.shellStates.inspector.mustNotBePrimaryNavigation, true);
+  assert.deepEqual(pageStates.shellStates.inspector, { defaultState: 'hidden', tabs: ['files', 'progress', 'output'], resize: { enabled: true, minWidth: 320, maxWidth: 520 }, placement: 'right_resizable_panel', responsivePlacement: { desktop: 'right_resizable_panel', tablet: 'right_sheet', mobile: 'bottom_sheet' }, mustNotBePrimaryNavigation: true });
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryAction, 'save');
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryActionLabel, '保存');
   assert.deepEqual(pageStates.shellStates.modals.apiKeyRequired.closeTrigger, ['explicit_close', 'escape']);
@@ -304,7 +300,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   });
   assert.deepEqual(gui.informationArchitecture.routeScope, expectedRouteScope);
   assert.deepEqual(gui.informationArchitecture.librarySurfaces, pageStates.shellStates.librarySurfaces);
-  assert.deepEqual(gui.informationArchitecture.rightInspector, { launcher: 'right_utility_rail', tabs: ['files', 'progress', 'output'], resize: { enabled: true, minWidth: 320, maxWidth: 520 }, mustNotBePrimaryNavigation: true });
+  assert.deepEqual(gui.informationArchitecture.rightInspector, { launcher: 'right_utility_rail', tabs: ['files', 'progress', 'output'], resize: { enabled: true, minWidth: 320, maxWidth: 520 }, responsivePlacement: { desktop: 'right_resizable_panel', tablet: 'right_sheet', mobile: 'bottom_sheet' }, mustNotBePrimaryNavigation: true });
   assert.equal(gui.informationArchitecture.accountEntry, 'bottom_avatar_popover');
   assert.deepEqual(gui.informationArchitecture.forbiddenPrimaryNavigationItems, ['account_text_link', 'research_capability', 'paper', 'grant', 'settings', 'api_key']);
   assert.deepEqual(gui.informationArchitecture.retiredPrimaryShell, ['left_rail', 'workspace_sidebar', 'multi_column_sidebar_sprawl', 'clean_workbench_v1']);
@@ -320,10 +316,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.visualGrammar.firstViewContract.starterChipCount, { min: 3, max: 5 });
   assert.deepEqual(gui.visualGrammar.surfaceBudget, { maxSectionsPerScreen: 3, maxCardsPerScreen: 6, maxBodyParagraphsPerScreen: 3, maxCtaPerScreen: 2, homeFirstViewMaxSections: 1, homeFirstViewMaxCards: 0, secondarySurfaceMaxCards: 6 });
   assert.deepEqual(gui.visualGrammar.styleTokens.colorRoles, ['canvas', 'surface', 'elevatedSurface', 'border', 'text', 'mutedText', 'accent', 'success', 'warning', 'danger', 'focusRing']);
-  assert.deepEqual(gui.visualGrammar.styleTokens.typeScale, ['caption', 'label', 'body', 'bodyStrong', 'title', 'display']);
-  assert.deepEqual(gui.visualGrammar.styleTokens.spaceScale, ['4', '8', '12', '16', '24', '32']);
-  assert.deepEqual(gui.visualGrammar.styleTokens.radiusScale, ['6', '8', '12', 'pill']);
-  assert.deepEqual(gui.visualGrammar.responsiveTopology, { desktop: ['side_nav_visible', 'center_composer_primary', 'secondary_surfaces_below_fold', 'right_inspector_on_request'], tablet: ['side_nav_compact', 'center_composer_primary', 'secondary_surfaces_single_column', 'inspector_sheet'], mobile: ['side_nav_icon_strip', 'composer_first', 'starter_chips_before_history', 'settings_and_inspector_as_sheets'], compact: ['brand_composer_first', 'single_column', 'nonessential_status_collapsed'] });
+  assert.deepEqual([gui.visualGrammar.styleTokens.typeScale, gui.visualGrammar.styleTokens.spaceScale, gui.visualGrammar.styleTokens.radiusScale], [['caption', 'label', 'body', 'bodyStrong', 'title', 'display'], ['4', '8', '12', '16', '24', '32'], ['6', '8', '12', 'pill']]);
+  assert.deepEqual(gui.visualGrammar.colorPolicy, { primaryAccent: 'opl_green', primaryAccentHex: '#2f6b4f', focusRing: 'opl_green_focus_ring', forbiddenPrimaryPalettes: ['default_tech_blue', 'default_purple', 'purple_blue_gradient'], forbiddenPrimaryHex: ['#2563eb', '#6366f1', '#8b5cf6'], allowedDepth: 'flat_with_soft_depth_only' });
+  assert.deepEqual(gui.visualGrammar.motionPolicy, { durationMs: { fast: 120, base: 160, sheet: 180 }, easing: 'ease-out', allowedProperties: ['opacity', 'transform', 'background-color', 'border-color', 'box-shadow', 'color'], forbidden: ['layout_animation', 'long_blocking_transition', 'motion_without_prefers_reduced_motion'], prefersReducedMotion: 'required' });
+  assert.deepEqual(gui.visualGrammar.interactionStatePolicy.requiredStates, ['hover', 'active', 'focus-visible', 'disabled', 'loading']);
+  assert.deepEqual(gui.visualGrammar.responsiveTopology, { desktop: ['side_nav_visible', 'center_composer_primary', 'secondary_surfaces_below_fold', 'right_inspector_on_request'], tablet: ['side_nav_compact', 'center_composer_primary', 'secondary_surfaces_single_column', 'inspector_sheet'], mobile: ['side_nav_icon_strip', 'composer_first', 'starter_chips_before_history', 'settings_and_inspector_as_bottom_sheets'], compact: ['brand_composer_first', 'single_column', 'nonessential_status_collapsed'] });
   assert.deepEqual(Object.keys(gui.interactionContract), ['account_popover', 'search_sheet', 'api_key_required_modal', 'inspector_sheet']);
   for (const overlay of Object.values(gui.interactionContract)) {
     assert.equal(Array.isArray(overlay.closeTrigger), true);
@@ -349,7 +346,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.figmaSource.nodeId, '0:1');
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['account_popover_status', 'missing_api_key_resource_gate', 'side_navigation_new_chat_projects_skill_workflow_search_more', 'ai_native_center_composer', 'starter_chips', 'prompt_command_center', 'research_skill_launcher', 'agentic_workflow_cards', 'inspector_sheet_tabs_files_progress_output', 'running_blocked_turn_state']);
-  assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_video_skills']);
+  assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_video_skills', 'default_tech_blue_primary_palette', 'dominant_purple_primary_palette', 'purple_blue_gradient_primary_style', 'heavy_glassmorphism_primary_style', 'neumorphism_primary_style']);
   assert.equal(gui.visualGrammar.currentUiVariant, 'ai_native_research_home_v1');
   assert.deepEqual([gui.visualQualityGate.state, gui.visualQualityGate.completedPhase, gui.visualQualityGate.currentPhase, gui.visualQualityGate.nextPhase], ['production_ui_quality_claim_pending_owner_receipt_and_production_evidence', 'responsive_visual_qa', 'production_ui_quality_claim', null]);
   assert.deepEqual(gui.visualQualityGate.ownerReceipt, { required: true, status: 'pending', source: 'human_owner_receipt', acceptedClaim: null, cannotBeInferredBy: ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt'], reason: 'repo-local baseline and responsive screenshots prove mechanics, but production UI quality needs owner review' });
@@ -364,6 +361,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'no static text overflow across registered responsive breakpoints',
     'interactive touch targets and named controls pass registered browser checks',
     'keyboard focus ring is visible on the primary chat submit control',
+    'OPL green token guard rejects default tech blue or purple primary palette',
+    'prefers-reduced-motion path is implemented for UI motion',
+    'mobile inspector is verified as a bottom sheet',
     'production UI owner receipt completed',
   ]);
   assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'tablet_screenshot_review', 'mobile_screenshot_review', 'compact_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check', 'responsive_visual_qa_closeout', 'ai_native_research_home_v1_shell', 'owner_receipt_closeout']);
@@ -383,7 +383,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.visualQualityGate.baselineEvidence.command, 'npm run verify:browser');
   assert.deepEqual(gui.visualQualityGate.baselineEvidence.viewports, ['desktop', 'tablet', 'mobile', 'compact']);
   assert.equal(gui.visualQualityGate.baselineEvidence.screenshotPathPattern, '.runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png');
-  assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'inspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible']);
+  assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'inspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'oplGreenTokenGuard', 'prefersReducedMotionPresent', 'mobileInspectorBottomSheet']);
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.phaseId, 'production_ui_quality_claim');
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.targetClaim, 'ui_ux_v1_production_accepted');
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.status, 'pending_owner_receipt_and_production_evidence');
@@ -418,14 +418,16 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(shell.activeShell.migrationPolicy, 'stay_static_until_component_state_or_visual_regression_evidence_requires_framework');
   assertIncludesAll(shell.shellMayOwn, ['renderer_components', 'layout_composition', 'panel_resize_behavior', 'figma_code_mapping'], 'shell-owned surface');
   assertIncludesAll(shell.shellMustNotOwn, ['product_truth', 'runtime_truth', 'domain_judgment_truth', 'artifact_body_authority', 'billing_source_of_truth'], 'shell forbidden surface');
-  assert.deepEqual(shell.figmaCodeMapping.variantProps.SideNavigation, { state: ['default', 'active', 'compact'] });
+  assert.deepEqual(shell.figmaCodeMapping.variantProps.SideNavigation, { state: ['default', 'active', 'hover', 'focus-visible', 'disabled', 'compact'] });
   assert.deepEqual(shell.figmaCodeMapping.variantProps.Sheet, {
     state: ['closed', 'open', 'empty', 'error', 'loading'],
     variant: ['search', 'inspector'],
+    motion: ['default', 'reduced_motion'],
   });
   assert.deepEqual(shell.figmaCodeMapping.variantProps.InspectorSheet, {
     state: ['hidden', 'files', 'progress', 'output'],
     width: ['default', 'narrow', 'wide'],
+    placement: ['right_resizable_panel', 'right_sheet', 'bottom_sheet'],
   });
   assertIncludesAll(shell.figmaCodeMapping.requiredNodeMetadata, ['componentId', 'variantProps'], 'Figma node metadata');
   assert.equal(shell.codeProps.InspectorSheet.state.includes('files'), true);

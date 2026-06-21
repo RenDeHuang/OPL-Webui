@@ -77,7 +77,8 @@
           "blockerTypes": ["missing_owner_receipt", "missing_eval"],
           "acceptance": [
             "browser visual QA includes desktop, tablet, mobile, and compact screenshots in .runtime/browser-visual",
-            "current browser lane asserts no horizontal overflow, no static text overflow, right inspector in viewport, visible active inspector panel, touch target pass, named controls pass, focus ring visibility, and no hidden overlay input interception",
+            "current browser lane asserts no horizontal overflow, no static text overflow, right inspector in viewport, mobile inspector bottom sheet, visible active inspector panel, touch target pass, named controls pass, focus ring visibility, and no hidden overlay input interception",
+            "current smoke and contract lanes assert OPL green primary accent, no default tech blue or purple primary palette, full interaction states, and prefers-reduced-motion",
             "visual quality gate keeps complete UI/UX design system and production visual polish in cannot-claim",
             "next production UI claim remains blocked until owner receipt is folded back"
           ],

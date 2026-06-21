@@ -112,6 +112,7 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
     'Figma MCP source context remains pinned',
     'human owner approved opening the claim phase but has not signed acceptance',
   ]);
+  assert.ok(uiGap.phases.find((phase) => phase.id === 'responsive_visual_qa').acceptance.some((item) => item.includes('OPL green primary accent')));
   assert.deepEqual(productionClaim.exitCriteria, [
     'human owner receipt acceptedClaim=ui_ux_v1_production_accepted',
     'production browser e2e or production screenshot evidence is folded back as sanitized summary',

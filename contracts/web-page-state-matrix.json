@@ -195,6 +195,11 @@
         "maxWidth": 520
       },
       "placement": "right_resizable_panel",
+      "responsivePlacement": {
+        "desktop": "right_resizable_panel",
+        "tablet": "right_sheet",
+        "mobile": "bottom_sheet"
+      },
       "mustNotBePrimaryNavigation": true
     },
     "modals": {

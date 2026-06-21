@@ -40,6 +40,7 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(visual.layout.horizontalOverflowPx, 0);
     assert.equal(visual.layout.inspector.visible, true);
     assert.equal(visual.layout.inspector.withinViewport, true);
+    if (['mobile', 'compact'].includes(viewport)) assert.equal(visual.layout.inspector.mobileBottomSheet, true);
     assert.equal(visual.layout.activeInspectorPanel.visible, true);
     assert.equal(visual.layout.hiddenOverlayInterceptsInput, false);
     assert.equal(visual.layout.chatInputHitTarget, true);
