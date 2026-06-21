@@ -346,7 +346,7 @@ async function readResponse(response) {
   } catch (error) {
     return sanitizedError('SERVICE_UNAVAILABLE', error, response?.status);
   }
-  if (!response.ok && body && !body.ok) return body;
+  if (!response.ok && body && !body.ok) return sanitizeReliabilityError(body, response?.status);
   return body;
 }
 
@@ -360,12 +360,76 @@ function sanitizedError(errorCode, error, status = 0) {
   };
 }
 
+function sanitizeReliabilityError(body = {}, status = 0) {
+  const errorCode = normalizeReliabilityErrorCode(body.errorCode, status);
+  const diagnostics = safeDiagnosticsFrom(body);
+  const sanitized = {
+    ok: false,
+    errorCode,
+    status,
+    message: messageForReliabilityError(errorCode, body.message),
+    diagnostics,
+  };
+  if (errorCode === 'RUNTIME_REQUIRED') {
+    sanitized.medoplDeepLink = safeMedoplDeepLink(body.medoplDeepLink);
+  }
+  return sanitized;
+}
+
+function normalizeReliabilityErrorCode(errorCode, status = 0) {
+  if (errorCode === 'AUTH_REQUIRED') return 'AUTH_REQUIRED';
+  if (errorCode === 'API_KEY_REQUIRED') return 'API_KEY_REQUIRED';
+  if (errorCode === 'CHAT_QUOTA_EXCEEDED') return 'CHAT_QUOTA_EXCEEDED';
+  if (errorCode === 'RUNTIME_REQUIRED') return 'RUNTIME_REQUIRED';
+  if (errorCode === 'UPSTREAM_CHAT_FAILED') return 'UPSTREAM_CHAT_FAILED';
+  if (errorCode === 'NETWORK_UNREACHABLE') return 'NETWORK_UNREACHABLE';
+  if (errorCode === 'SERVICE_UNAVAILABLE') return 'SERVICE_UNAVAILABLE';
+  if (status === 401) return 'AUTH_REQUIRED';
+  if (status === 429) return 'CHAT_QUOTA_EXCEEDED';
+  if (status === 502 || status === 504) return 'UPSTREAM_CHAT_FAILED';
+  if (status >= 500) return 'SERVICE_UNAVAILABLE';
+  return errorCode || 'SERVICE_UNAVAILABLE';
+}
+
+function messageForReliabilityError(errorCode, message = '') {
+  const byCode = {
+    AUTH_REQUIRED: '请先登录后继续。',
+    API_KEY_REQUIRED: '请先绑定 API Key 后继续。',
+    CHAT_QUOTA_EXCEEDED: '当前额度已用完。',
+    RUNTIME_REQUIRED: '该能力需要在 MedOPL 开通后继续。',
+    UPSTREAM_CHAT_FAILED: '上游暂时不可用，请稍后重试。',
+    SERVICE_UNAVAILABLE: '服务暂时不可用，请稍后重试。',
+    NETWORK_UNREACHABLE: '网络暂时不可达，请稍后重试。',
+  };
+  return byCode[errorCode] || sanitizedDetails(message || '请求暂时无法完成。');
+}
+
+function safeDiagnosticsFrom(body = {}) {
+  const diagnostics = body.upstreamDiagnostics || body.metadata || body.diagnostics || {};
+  const fields = [
+    diagnostics.upstreamHost,
+    diagnostics.host,
+    diagnostics.upstreamModel,
+    diagnostics.model,
+    diagnostics.upstreamKind,
+    diagnostics.kind,
+  ];
+  return sanitizedDetails(fields.filter(Boolean).join(' / '));
+}
+
+function safeMedoplDeepLink(value) {
+  const text = String(value || '');
+  return text.startsWith(MEDOPL_DEEP_LINK) ? text : MEDOPL_DEEP_LINK;
+}
+
 function sanitizedDetails(value) {
   return String(value || '')
     .replace(/postgres(?:ql)?:\/\/\S+/gi, '[redacted-database-url]')
     .replace(/sk-[A-Za-z0-9_-]+/g, '[redacted-api-key]')
+    .replace(/api[_-]?key\s*=\s*[^\s]+/gi, '[redacted-field]')
     .replace(/password\s*=\s*[^\s]+/gi, 'password=[redacted]')
-    .replace(/rawApiKey|encryptedApiKey/gi, '[redacted-field]');
+    .replace(/\/home\/dev\/\.opl\/[^\s"'`]+/gi, '[redacted-private-state-path]')
+    .replace(/rawUpstreamBody|rawProviderError|rawApiKey|encryptedApiKey|privateState|private_state_path/gi, '[redacted-field]');
 }
 
 function capitalize(value) {

@@ -73,6 +73,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     assert.equal(pageStates.chatStates.includes(state), true, `missing research chat state: ${state}`);
   }
   assert.equal(pageStates.chatStates.includes('runtime_required'), true);
+  const reliability = pageStates.reliabilityModel;
+  assert.deepEqual([reliability.owner, reliability.consumer, reliability.mode], ['one-person-lab-web', 'browser_reliability_status_surface', 'sanitized_view_model_only']);
+  const reliabilityStates = ['auth_required', 'api_key_required', 'quota_exceeded', 'upstream_failed', 'service_unavailable', 'network_unreachable'];
+  assert.deepEqual(reliability.statuses.map(({ state, resultErrorCode }) => [state, resultErrorCode]), [['auth_required', 'AUTH_REQUIRED'], ['api_key_required', 'API_KEY_REQUIRED'], ['quota_exceeded', 'CHAT_QUOTA_EXCEEDED'], ['upstream_failed', 'UPSTREAM_CHAT_FAILED'], ['service_unavailable', 'SERVICE_UNAVAILABLE'], ['network_unreachable', 'NETWORK_UNREACHABLE']]);
+  assert.deepEqual(reliabilityStates.every((state) => pageStates.routes.find((route) => route.id === 'chat').states.includes(state)), true);
+  assert.deepEqual(reliability.allowedFields, ['state', 'title', 'action', 'retryable', 'details']);
+  assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
   assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), [
     'anonymous_shell',
     'register',
@@ -518,6 +525,7 @@ test('web data module exposes hash view and account state machine', () => {
 test('web data module implements the page-state chat matrix', () => {
   const pageStates = readJson('contracts/web-page-state-matrix.json');
   const chatStates = pageStates.chatStates;
+  const reliabilityStates = pageStates.reliabilityModel.statuses.map((status) => status.state);
 
   for (const state of ['idle', 'sending', 'runtime_required', 'quota_exceeded', 'upstream_failed']) {
     assert.equal(chatStates.includes(state), true, `missing contract chat state: ${state}`);
@@ -525,6 +533,7 @@ test('web data module implements the page-state chat matrix', () => {
   for (const state of ['auth_required', 'api_key_required', 'service_unavailable', 'network_unreachable']) {
     assert.equal(chatStates.includes(state), true, `missing reliability contract state: ${state}`);
   }
+  assert.deepEqual(reliabilityStates, ['auth_required', 'api_key_required', 'quota_exceeded', 'upstream_failed', 'service_unavailable', 'network_unreachable']);
   for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending']) {
     assert.equal(chatStates.includes(state), true, `missing research contract state: ${state}`);
   }
@@ -590,17 +599,7 @@ test('web data module builds sanitized reliability and account lifecycle status 
   assert.equal(reliability.details.includes('gflabtoken.cn'), true);
   assert.doesNotMatch(JSON.stringify(reliability), /sk-secret|rawApiKey|encryptedApiKey|password|postgres:\/\//i);
 
-  const account = web.accountLifecycleSummary({
-    ok: true,
-    accountType: 'personal',
-    lifecycleState: 'active',
-    tenantRole: 'owner',
-    tenantId: 'tenant_123',
-  }, {
-    ok: true,
-    quota: { limit: 100, used: 7, remaining: 93 },
-    audit: { eventCount: 12, latestEventKind: 'chat.completed' },
-  });
+  const account = web.accountLifecycleSummary({ ok: true, accountType: 'personal', lifecycleState: 'active', tenantRole: 'owner', tenantId: 'tenant_123' }, { ok: true, quota: { limit: 100, used: 7, remaining: 93 }, audit: { eventCount: 12, latestEventKind: 'chat.completed' } });
   assert.equal(account.lifecycleLabel, 'Personal / active');
   assert.equal(account.tenantRoleLabel, 'tenant role: owner');
   assert.equal(account.quotaLabel, 'quota 7/100 used, 93 remaining');
@@ -609,6 +608,23 @@ test('web data module builds sanitized reliability and account lifecycle status 
 });
 
 test('web data module converts network and malformed JSON failures into sanitized reliability errors', async () => {
+  const leakyPayload = { ok: false, errorCode: 'UPSTREAM_CHAT_FAILED', message: 'api_key=sk-secret-value private_state_path=/home/dev/.opl/private/state.json', rawUpstreamBody: 'sk-secret-value', upstreamDiagnostics: { upstreamHost: 'gflabtoken.cn', upstreamModel: 'gpt-5.5', rawProviderError: 'Bearer sk-secret-value', rawApiKey: 'sk-secret-value', encryptedApiKey: 'ciphertext-secret', databaseUrl: 'postgres://user:secret@example/oplweb' } };
+  const upstream = await web.sendChatMessage(async () => response(leakyPayload, 502), '@科研 分析方向');
+  assert.deepEqual([upstream.errorCode, upstream.status, web.chatStateForResult(upstream), web.reliabilityStatusForResult(upstream).state], ['UPSTREAM_CHAT_FAILED', 502, 'upstream_failed', 'upstream_failed']);
+  assert.match(upstream.diagnostics, /gflabtoken\.cn.*gpt-5\.5/);
+  assert.doesNotMatch(JSON.stringify(upstream), /rawUpstreamBody|rawProviderError|rawApiKey|encryptedApiKey|sk-secret-value|ciphertext-secret|postgres:\/\/|\/home\/dev\/\.opl\/private/i);
+
+  for (const [status, payload, expectedCode, expectedState, retryable] of [
+    [401, { ok: false, errorCode: 'AUTH_REQUIRED', message: 'cookie expired with session_secret=secret' }, 'AUTH_REQUIRED', 'auth_required', false],
+    [400, { ok: false, errorCode: 'API_KEY_REQUIRED', rawApiKey: 'sk-secret-value' }, 'API_KEY_REQUIRED', 'api_key_required', false],
+    [429, { ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED', rawUpstreamBody: 'quota body with sk-secret-value' }, 'CHAT_QUOTA_EXCEEDED', 'quota_exceeded', false],
+    [503, { ok: false, errorCode: 'API_KEY_DECRYPT_FAILED', message: 'postgres://user:secret@example/oplweb unavailable' }, 'SERVICE_UNAVAILABLE', 'service_unavailable', true],
+  ]) {
+    const result = await web.sendChatMessage(async () => response(payload, status), '普通问题');
+    assert.deepEqual([result.errorCode, web.chatStateForResult(result), web.reliabilityStatusForResult(result).state, web.reliabilityStatusForResult(result).retryable], [expectedCode, expectedState, expectedState, retryable]);
+    assert.doesNotMatch(JSON.stringify(result), /sk-secret-value|postgres:\/\/|session_secret|rawUpstreamBody|rawApiKey/i);
+  }
+
   const chatNetwork = await web.sendChatMessage(async () => {
     throw new Error('connect ECONNRESET postgres://user:secret@example/oplweb sk-secret');
   }, '普通问题');

@@ -6,7 +6,7 @@
       "id": "chat",
       "hash": "",
       "surface": "research_capability_workbench",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "sending", "runtime_required", "upstream_failed", "quota_exceeded"]
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "sending", "runtime_required", "upstream_failed", "quota_exceeded", "auth_required", "api_key_required", "service_unavailable", "network_unreachable"]
     },
     {
       "id": "settings",
@@ -43,6 +43,55 @@
     "service_unavailable",
     "network_unreachable"
   ],
+  "reliabilityModel": {
+    "owner": "one-person-lab-web",
+    "consumer": "browser_reliability_status_surface",
+    "mode": "sanitized_view_model_only",
+    "statuses": [
+      {
+        "state": "auth_required",
+        "resultErrorCode": "AUTH_REQUIRED",
+        "retryable": false
+      },
+      {
+        "state": "api_key_required",
+        "resultErrorCode": "API_KEY_REQUIRED",
+        "retryable": false
+      },
+      {
+        "state": "quota_exceeded",
+        "resultErrorCode": "CHAT_QUOTA_EXCEEDED",
+        "retryable": false
+      },
+      {
+        "state": "upstream_failed",
+        "resultErrorCode": "UPSTREAM_CHAT_FAILED",
+        "retryable": true
+      },
+      {
+        "state": "service_unavailable",
+        "resultErrorCode": "SERVICE_UNAVAILABLE",
+        "retryable": true
+      },
+      {
+        "state": "network_unreachable",
+        "resultErrorCode": "NETWORK_UNREACHABLE",
+        "retryable": true
+      }
+    ],
+    "allowedFields": ["state", "title", "action", "retryable", "details"],
+    "forbiddenPayload": [
+      "raw_upstream_body",
+      "raw_provider_error",
+      "api_key",
+      "rawApiKey",
+      "encryptedApiKey",
+      "private_state",
+      "private_state_path",
+      "database_url",
+      "artifact_body"
+    ]
+  },
   "shellStates": {
     "requiredStates": [
       "public_landing",
