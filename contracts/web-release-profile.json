@@ -168,6 +168,18 @@
       "sanitized_audit"
     ],
     "readonlyFoldbackPolicy": {
+      "currentPhase": "production_readonly_foldback",
+      "nextPhase": "readonly_foldback_closeout",
+      "blockedBy": "missing_production_evidence",
+      "ownerReceipt": {
+        "required": false,
+        "source": "production_secret_gated"
+      },
+      "nextStepOpeners": [
+        "approved production dogfood run with OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
+        "sanitized dogfood stdout confirms readonly projection checks",
+        "release:evidence folds readonly confirmation without raw logs or secrets"
+      ],
       "requiredEvidence": [
         "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
         "dogfood stdout confirms readonly projection checks",
@@ -489,6 +501,18 @@
   "productionObservabilityBaseline": {
     "mode": "no_secret_public_http_observability_baseline_v1",
     "state": "release_probe_executed_run_27876229568_scheduled_canary_success_pending_long_term_ops",
+    "currentPhase": "ops_evidence_contracts",
+    "nextPhase": "ops_contract_detail",
+    "blockedBy": "missing_contract",
+    "ownerReceipt": {
+      "required": true,
+      "source": "external_owner"
+    },
+    "nextStepOpeners": [
+      "operations owner chooses dashboard, alerting, error budget, or rollback record as next consumer",
+      "concrete contract exists for the selected operations surface",
+      "registered eval exists before any new operations surface ships"
+    ],
     "owner": "one-person-lab-web-release",
     "consumer": "cloud_rollout_closeout",
     "sourceEndpoint": "/metricsz",

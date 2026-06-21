@@ -35,6 +35,22 @@
           "exitCriteria": ["desktop screenshot reviewed", "mobile screenshot reviewed", "browser interaction e2e passed"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_eval"],
+          "acceptance": [
+            "Figma MCP source context is refreshed for file E8nYfNFc2D9P01FYZ8UwBW node 0:1",
+            "visual quality gate declares desktop screenshot, mobile screenshot, browser e2e, and hidden-overlay input checks",
+            "current browser lane passes for app shell interaction evidence",
+            "complete UI/UX design system remains cannot-claim until screenshot review is folded back"
+          ],
+          "nextStepOpeners": [
+            "Open responsive_visual_qa after visual_baseline acceptance passes",
+            "Keep this gap partial if desktop or mobile screenshot evidence is missing",
+            "Do not open production UI-quality claim without screenshot review and browser interaction evidence"
+          ],
+          "ownerReceipt": {
+            "required": false,
+            "source": "repo_local",
+            "reason": "repo-local Figma MCP, contract, smoke, and browser evidence can advance the visual baseline before any production UI claim"
+          },
           "requiredEvals": [
             {
               "id": "ui_visual_baseline_eval",
@@ -62,6 +78,22 @@
           "exitCriteria": ["OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 confirmed", "sanitized dogfood stdout folded back", "raw secret absence confirmed"],
           "evidenceSources": ["production_secret_gated"],
           "blockerTypes": ["missing_production_evidence"],
+          "acceptance": [
+            "readonly foldback policy requires OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
+            "dogfood stdout confirms runtime status, materials/deliverables, and billing readonly projection checks",
+            "release evidence foldback stores sanitized summary only and forbids raw logs or secret values",
+            "status remains blocked while production readonly switch or stdout evidence is unavailable"
+          ],
+          "nextStepOpeners": [
+            "Open readonly_foldback_closeout only after approved production dogfood evidence exists",
+            "Run release:evidence with readonly confirmation and fold summary into release profile and status",
+            "Keep production MedOPL readonly projection dogfood in cannot-claim if variable or stdout evidence is not public or folded back"
+          ],
+          "ownerReceipt": {
+            "required": false,
+            "source": "production_secret_gated",
+            "reason": "the blocker is missing production evidence, not missing product owner approval"
+          },
           "requiredEvals": [
             {
               "id": "medopl_readonly_foldback_eval",
@@ -89,6 +121,22 @@
           "exitCriteria": ["Go-side execution contract exists", "registered eval covers command allowlist", "human authorization boundary exists", "tenant-scoped audit events exist"],
           "evidenceSources": ["repo_local", "human_owner_receipt"],
           "blockerTypes": ["missing_contract", "missing_eval", "missing_owner_receipt"],
+          "acceptance": [
+            "executionAdmission currentStatus stays not_admitted",
+            "requiredBeforeAnyExecution lists Go-side contract, registered eval, command allowlist, human authorization, tenant audit, and artifact/body authority contract",
+            "failClosedUntil lists contract_exists, eval_passes, allowlist_exists, and authorization_boundary_exists",
+            "Web runtime mutation remains forbidden until all admission conditions and owner receipt exist"
+          ],
+          "nextStepOpeners": [
+            "Open runtime_execution_contract_design only after a human owner receipt names the real consumer and command class",
+            "Add Go-side execution contract, allowlist eval, and authorization boundary before any Web runtime mutation route",
+            "Keep runtime gate behavior if owner receipt or eval is missing"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "human_owner_receipt",
+            "reason": "runtime execution changes authority boundaries and cannot be admitted by repo-local tests alone"
+          },
           "requiredEvals": [
             {
               "id": "runtime_execution_admission_eval",
@@ -116,6 +164,22 @@
           "exitCriteria": ["real consumer exists", "contract exists", "registered tests exist", "MedOPL billing authority preserved"],
           "evidenceSources": ["repo_local", "external_owner"],
           "blockerTypes": ["missing_contract", "missing_product_decision", "missing_owner_receipt"],
+          "acceptance": [
+            "commercialLifecycle remains authenticated_readonly_personal_status_projection",
+            "team invite, RBAC, pricing, subscription, payment mutation, billing source of truth, and commercial admin console remain forbidden expansions",
+            "expansionRequires lists real_consumer, contract, registered_tests, and MedOPL_billing_authority_preserved",
+            "complete commercial SaaS lifecycle remains cannot-claim without real consumer and owner receipt"
+          ],
+          "nextStepOpeners": [
+            "Open commercial_consumer_contract only after a real buyer or operator workflow is named",
+            "Add contract and registered tests before introducing invite, RBAC, pricing, subscription, or payment surfaces",
+            "Keep settings lifecycle readonly if product decision or owner receipt is missing"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "external_owner",
+            "reason": "commercial lifecycle expansion needs a real consumer and billing authority decision outside repo-local implementation"
+          },
           "requiredEvals": [
             {
               "id": "commercial_saas_readiness_eval",
@@ -143,6 +207,22 @@
           "exitCriteria": ["dashboard contract exists", "alerting contract exists", "error budget contract exists", "rollback record contract exists"],
           "evidenceSources": ["repo_local", "production_secret_gated"],
           "blockerTypes": ["missing_contract", "missing_production_evidence"],
+          "acceptance": [
+            "production observability baseline preserves metricsz, availability probe, scheduled canary, and manual rollback harness evidence",
+            "future evidence contracts list dashboard, alerting, error_budget, and rollback_record",
+            "automatic rollback, dashboard, alerting, and error budget enforcement remain cannot-claim",
+            "production evidence is required before claiming rollback record or long-term operations maturity"
+          ],
+          "nextStepOpeners": [
+            "Open ops_contract_detail when an operations owner chooses dashboard, alerting, error budget, or rollback record as the next consumer",
+            "Add a concrete contract and registered eval before adding any new operations surface",
+            "Keep operations maturity partial until production evidence and owner receipt exist"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "external_owner",
+            "reason": "long-term dashboard, alerting, error budget, and rollback record semantics need an operations owner"
+          },
           "requiredEvals": [
             {
               "id": "ops_maturity_eval",

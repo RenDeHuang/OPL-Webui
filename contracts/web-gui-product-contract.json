@@ -264,12 +264,49 @@
   },
   "visualQualityGate": {
     "state": "repo_local_contract_ready_pending_visual_baseline",
+    "currentPhase": "visual_baseline",
+    "nextPhase": "responsive_visual_qa",
+    "ownerReceipt": {
+      "required": false,
+      "source": "repo_local"
+    },
     "requiredBeforeProductionUiClaim": [
       "Figma MCP source context refreshed",
       "desktop screenshot reviewed",
       "mobile screenshot reviewed",
       "browser interaction e2e passed",
       "no hidden overlay intercepts input"
+    ],
+    "acceptance": [
+      {
+        "id": "figma_mcp_source_context",
+        "state": "done",
+        "evidence": "Figma MCP get_design_context and source reads for App.tsx, theme.css, and index.css"
+      },
+      {
+        "id": "desktop_screenshot_review",
+        "state": "pending",
+        "evidence": "desktop screenshot review not folded back"
+      },
+      {
+        "id": "mobile_screenshot_review",
+        "state": "pending",
+        "evidence": "mobile screenshot review not folded back"
+      },
+      {
+        "id": "browser_interaction_e2e",
+        "state": "available",
+        "command": "npm run verify:browser"
+      },
+      {
+        "id": "hidden_overlay_input_check",
+        "state": "available",
+        "command": "npm run verify:smoke"
+      }
+    ],
+    "cannotClaim": [
+      "complete UI/UX design system",
+      "production visual polish complete"
     ]
   },
   "acceptanceLayers": ["contract", "component_state", "interaction", "visual"],

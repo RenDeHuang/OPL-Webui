@@ -70,6 +70,18 @@
   },
   "executionAdmission": {
     "currentStatus": "not_admitted",
+    "currentPhase": "execution_admission",
+    "nextPhase": "runtime_execution_contract_design",
+    "blockedBy": "missing_owner_receipt",
+    "ownerReceipt": {
+      "required": true,
+      "source": "human_owner_receipt"
+    },
+    "nextStepOpeners": [
+      "human owner receipt names the real consumer and command class",
+      "Go-side runtime execution contract is added",
+      "registered eval covers command allowlist and authorization boundary"
+    ],
     "requiredBeforeAnyExecution": [
       "Go-side runtime execution contract",
       "registered eval covering command allowlist",

@@ -8,6 +8,10 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+function assertIncludesAll(actual, expected, label) {
+  for (const item of expected) assert.equal(actual.includes(item), true, `missing ${label}: ${item}`);
+}
+
 test('one-person-lab-web contracts define product truth instead of prose specs', () => {
   const product = readJson('contracts/web-product-profile.json');
   const pageStates = readJson('contracts/web-page-state-matrix.json');
@@ -22,17 +26,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
   assert.equal(product.primaryUserPath, 'research_capability_first_web_workbench');
   assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
-  assert.deepEqual(product.targetUsers, [
-    'research_staff',
-    'masters_students',
-    'phd_students',
-    'principal_investigators',
-    'research_teams',
-  ]);
+  assert.deepEqual(product.targetUsers, ['research_staff', 'masters_students', 'phd_students', 'principal_investigators', 'research_teams']);
   assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件']);
-  for (const owned of ['multi_tenant_saas_product', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api']) {
-    assert.equal(product.ownedSurfaces.includes(owned), true, `missing owned surface: ${owned}`);
-  }
+  assertIncludesAll(product.ownedSurfaces, ['multi_tenant_saas_product', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api'], 'owned surface');
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.publicUi.primarySurface, 'research_capability_first_web_workbench');
@@ -59,12 +55,25 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.provider.upstreamTimeoutEnv, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS');
   assert.equal(product.provider.userEditableBaseUrl, false);
   assert.equal(product.credential.rawKeyReturnedToBrowser, false);
-  for (const hidden of ['workspace', 'runtime', 'nodePool', 'storage', 'billing']) {
-    assert.equal(product.publicUi.hiddenConcepts.includes(hidden), true, `${hidden} must stay hidden`);
-  }
-  for (const nonOwned of ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth']) {
-    assert.equal(product.nonOwnedTruth.includes(nonOwned), true, `missing non-owned truth: ${nonOwned}`);
-  }
+  assert.deepEqual([
+    product.commercialLifecycle.mode,
+    product.commercialLifecycle.currentPhase,
+    product.commercialLifecycle.nextPhase,
+    product.commercialLifecycle.blockedBy,
+  ], [
+    'authenticated_readonly_personal_status_projection',
+    'commercial_contract',
+    'commercial_consumer_contract',
+    'missing_product_decision',
+  ]);
+  assert.deepEqual(product.commercialLifecycle.ownerReceipt, { required: true, source: 'external_owner' });
+  assert.deepEqual(product.commercialLifecycle.nextStepOpeners, [
+    'real buyer or operator workflow is named',
+    'contract exists for invite, RBAC, pricing, subscription, or payment surface',
+    'registered tests preserve MedOPL billing authority',
+  ]);
+  assertIncludesAll(product.publicUi.hiddenConcepts, ['workspace', 'runtime', 'nodePool', 'storage', 'billing'], 'hidden concept');
+  assertIncludesAll(product.nonOwnedTruth, ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth'], 'non-owned truth');
 
   assert.deepEqual(pageStates.routes.map((route) => route.id), ['chat', 'settings', 'capabilities', 'medopl']);
   assert.equal(pageStates.routes.find((route) => route.id === 'chat').surface, 'research_capability_workbench');
@@ -80,39 +89,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(reliabilityStates.every((state) => pageStates.routes.find((route) => route.id === 'chat').states.includes(state)), true);
   assert.deepEqual(reliability.allowedFields, ['state', 'title', 'action', 'retryable', 'details']);
   assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
-  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), [
-    'anonymous_shell',
-    'register',
-    'login',
-    'current_session',
-    'browser_session_bootstrap',
-    'api_key_binding',
-    'research_task_template_selected',
-    'research_capability_launcher',
-    'ordinary_chat_fallback',
-    'quota_exceeded',
-    'paper_runtime_gate',
-    'grant_runtime_gate',
-    'account_lifecycle_status_visible',
-    'reliability_status_visible',
-    'sanitized_audit',
-  ]);
+  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_capability_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'account_lifecycle_status_visible', 'reliability_status_visible', 'sanitized_audit']);
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-chat-log]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-gate]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-settings-panel]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-launcher]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-marker]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-capability-mode]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-task]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-research-result-section]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-runtime-task-card]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-lifecycle-status]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-team-readiness-status]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-quota-status]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-account-audit-status]'), true);
-  assert.equal(pageStates.localReadinessScenario.observableSelectors.includes('[data-reliability-status]'), true);
+  assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-chat-log]', '[data-runtime-gate]', '[data-settings-panel]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-account-lifecycle-status]', '[data-team-readiness-status]', '[data-quota-status]', '[data-account-audit-status]', '[data-reliability-status]'], 'observable selector');
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
     ['research_direction', '@科研', 'ordinary_chat_fallback'],
     ['paper_question', '@论文', 'runtime_gate'],
@@ -125,19 +104,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.structuredResultShape.consumer, 'research_user_chat_result');
   assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(pageStates.structuredResultShape.forbiddenPayload.includes('private_state_path'), true);
-  assert.deepEqual(pageStates.shellStates.requiredStates, [
-    'public_landing',
-    'auth_login_register',
-    'app_default_chat',
-    'left_sidebar_expanded',
-    'right_inspector_files',
-    'right_inspector_progress',
-    'right_inspector_output',
-    'api_key_required_modal',
-    'skill_plaza',
-    'running_turn',
-    'blocked_turn',
-  ]);
+  assert.deepEqual(pageStates.shellStates.requiredStates, ['public_landing', 'auth_login_register', 'app_default_chat', 'left_sidebar_expanded', 'right_inspector_files', 'right_inspector_progress', 'right_inspector_output', 'api_key_required_modal', 'skill_plaza', 'running_turn', 'blocked_turn']);
   assert.equal(pageStates.shellStates.defaultAppState, 'app_default_chat');
   assert.equal(pageStates.shellStates.leftRail.defaultState, 'collapsed');
   assert.equal(pageStates.shellStates.leftRail.expandedState, 'left_sidebar_expanded');
@@ -147,16 +114,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryAction, 'save');
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryActionLabel, '保存');
 
-  for (const path of [
+  assertIncludesAll(Object.keys(api.paths), [
     '/api/session/current',
     '/api/settings/model-provider',
     '/api/chat',
     '/api/chat/conversations',
     '/api/account/audit-events',
     '/api/account/commercial-status',
-  ]) {
-    assert.ok(api.paths[path], `missing API path: ${path}`);
-  }
+  ], 'API path');
   assert.equal(api.paths['/api/mvp/task'], undefined);
   assert.equal(
     api.paths['/api/account/commercial-status'].get.responses['200'].content['application/json'].schema.$ref,
@@ -185,39 +150,24 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
   for (const field of ['requiresGoSideContract', 'requiresEval', 'requiresWhitelist', 'requiresHumanAuthorization']) assert.equal(runtime.authorizationBoundary[field], true);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
-  assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, [
-    'Go-side runtime execution contract',
-    'registered eval covering command allowlist',
-    'human authorization boundary',
-    'tenant-scoped audit events',
-    'artifact/body authority contract',
+  assert.equal(runtime.executionAdmission.currentPhase, 'execution_admission');
+  assert.equal(runtime.executionAdmission.nextPhase, 'runtime_execution_contract_design');
+  assert.equal(runtime.executionAdmission.blockedBy, 'missing_owner_receipt');
+  assert.deepEqual(runtime.executionAdmission.ownerReceipt, { required: true, source: 'human_owner_receipt' });
+  assert.deepEqual(runtime.executionAdmission.nextStepOpeners, [
+    'human owner receipt names the real consumer and command class',
+    'Go-side runtime execution contract is added',
+    'registered eval covers command allowlist and authorization boundary',
   ]);
-  assert.deepEqual(runtime.executionAdmission.failClosedUntil, [
-    'contract_exists',
-    'eval_passes',
-    'allowlist_exists',
-    'authorization_boundary_exists',
-  ]);
+  assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, ['Go-side runtime execution contract', 'registered eval covering command allowlist', 'human authorization boundary', 'tenant-scoped audit events', 'artifact/body authority contract']);
+  assert.deepEqual(runtime.executionAdmission.failClosedUntil, ['contract_exists', 'eval_passes', 'allowlist_exists', 'authorization_boundary_exists']);
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
   assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:ai', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
   assert.equal(release.localNoSecretReadiness.requiresProductionSecrets, false);
   assert.equal(release.localNoSecretReadiness.browserAutomation, false);
   assert.equal(release.localNoSecretReadiness.automationLevel, 'http_contract_and_static_shell');
-  assert.deepEqual(release.localNoSecretReadiness.coverage, [
-    'register',
-    'login',
-    'current_session',
-    'browser_session_bootstrap',
-    'api_key_binding',
-    'ordinary_chat_mock_upstream',
-    'quota_exceeded',
-    'runtime_gate',
-    'sanitized_audit',
-    'desktop_shell',
-    'mobile_shell',
-    'settings_hash',
-  ]);
+  assert.deepEqual(release.localNoSecretReadiness.coverage, ['register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'ordinary_chat_mock_upstream', 'quota_exceeded', 'runtime_gate', 'sanitized_audit', 'desktop_shell', 'mobile_shell', 'settings_hash']);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
   assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27876229568_real_chat_readonly_unconfirmed');
@@ -226,7 +176,16 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
+  assertIncludesAll(release.productionDogfoodReadiness.latestSuccessfulRun.coverage, ['ordinary_chat_real_completion'], 'dogfood coverage');
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.currentPhase, 'production_readonly_foldback');
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.nextPhase, 'readonly_foldback_closeout');
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.blockedBy, 'missing_production_evidence');
+  assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.ownerReceipt, { required: false, source: 'production_secret_gated' });
+  assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.nextStepOpeners, [
+    'approved production dogfood run with OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1',
+    'sanitized dogfood stdout confirms readonly projection checks',
+    'release:evidence folds readonly confirmation without raw logs or secrets',
+  ]);
   assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.requiredEvidence, [
     'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1',
     'dogfood stdout confirms readonly projection checks',
@@ -237,25 +196,33 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.claimWhenConfirmed, 'production MedOPL readonly projection dogfood');
   assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27876229568_after_apply');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage.includes('HTTPS /readyz'), true);
+  assertIncludesAll(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage, ['HTTPS /readyz'], 'availability coverage');
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_27876229568_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.currentPhase, 'ops_evidence_contracts');
+  assert.equal(release.productionObservabilityBaseline.nextPhase, 'ops_contract_detail');
+  assert.equal(release.productionObservabilityBaseline.blockedBy, 'missing_contract');
+  assert.deepEqual(release.productionObservabilityBaseline.ownerReceipt, { required: true, source: 'external_owner' });
+  assert.deepEqual(release.productionObservabilityBaseline.nextStepOpeners, [
+    'operations owner chooses dashboard, alerting, error budget, or rollback record as next consumer',
+    'concrete contract exists for the selected operations surface',
+    'registered eval exists before any new operations surface ships',
+  ]);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'scheduled_canary_first_success_run_27874732529_pending_ops_consumer');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.implementedEvidence.includes('scheduled_canary_first_success'), true);
+  assertIncludesAll(release.productionObservabilityBaseline.nextReadiness.implementedEvidence, ['scheduled_canary_first_success'], 'implemented ops evidence');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.latestSuccessfulRun.runId, 27874732529);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary_first_success'), false);
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('error_budget'), true);
+  assertIncludesAll(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence, ['error_budget'], 'future ops evidence');
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
     { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
     { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
     { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
     { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
   ]);
-  assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
-  assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
+  assertIncludesAll(release.productionObservabilityBaseline.cannotClaim, ['dashboard', 'alerting'], 'ops cannot-claim');
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
   assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, {
     'medopl.cn/webui': 'true',
@@ -264,10 +231,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'medopl.cn/workload': 'medopl',
   });
   assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
-  assert.equal(release.productionHAReadiness.requiredEvidence.includes('two_ready_pods'), true);
-  assert.equal(release.productionHAReadiness.requiredEvidence.includes('distinct_nodes'), true);
-  assert.equal(release.productionHAReadiness.requiredEvidence.includes('ingress_backend_at_least_2'), true);
-  assert.equal(release.productionHAReadiness.cannotClaim.includes('multi-node HA'), true);
+  assertIncludesAll(release.productionHAReadiness.requiredEvidence, ['two_ready_pods', 'distinct_nodes', 'ingress_backend_at_least_2'], 'HA evidence');
+  assertIncludesAll(release.productionHAReadiness.cannotClaim, ['multi-node HA'], 'HA cannot-claim');
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
   assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');
@@ -282,18 +247,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27876229568);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, null);
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.canClaim.includes('production browser e2e executed against https://opl.medopl.cn'), true);
+  assertIncludesAll(release.productionBrowserE2EReadiness.latestAttempt.canClaim, ['production browser e2e executed against https://opl.medopl.cn'], 'browser can-claim');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
-  assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, [
-    'OPL_DOGFOOD_EMAIL',
-    'OPL_DOGFOOD_PASSWORD',
-    'OPL_DOGFOOD_API_KEY',
-  ]);
+  assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, ['OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY']);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
-  assert.equal(release.productionBrowserE2EReadiness.coverage.includes('real_browser_login'), true);
-  assert.equal(release.productionBrowserE2EReadiness.coverage.includes('paper_runtime_gate'), true);
+  assertIncludesAll(release.productionBrowserE2EReadiness.coverage, ['real_browser_login', 'paper_runtime_gate'], 'browser coverage');
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
-  assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
+  assertIncludesAll(release.productionBrowserE2EReadiness.cannotClaim, ['MedOPL runtime execution'], 'browser cannot-claim');
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e requires Cloud Rollout evidence'), true);
   assert.equal(release.dogfood.rawApiKeyPrinted, false);
@@ -305,33 +265,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.productTruthGate.appShell, 'chat_first_research_workspace');
   assert.equal(gui.productTruthGate.gensparkInfluence, 'public_landing_only');
   assert.equal(gui.productTruthGate.codexInfluence, 'app_workspace_shell');
-  for (const forbidden of ['dashboard_first_app_home', 'raw_trace_console', 'runtime_truth_panel', 'billing_source_of_truth', 'node_pool_console']) {
-    assert.equal(gui.productTruthGate.mustNotShow.includes(forbidden), true, `GUI contract must forbid ${forbidden}`);
-  }
-  assert.deepEqual(gui.objectGrammar.allowedPrimaryObjects, [
-    'Project',
-    'Session',
-    'Message',
-    'Skill',
-    'InputFile',
-    'OutputFile',
-    'ProgressStage',
-    'ApiKey',
-    'Model',
-    'Export',
-  ]);
+  assertIncludesAll(gui.productTruthGate.mustNotShow, ['dashboard_first_app_home', 'raw_trace_console', 'runtime_truth_panel', 'billing_source_of_truth', 'node_pool_console'], 'forbidden GUI surface');
+  assert.deepEqual(gui.objectGrammar.allowedPrimaryObjects, ['Project', 'Session', 'Message', 'Skill', 'InputFile', 'OutputFile', 'ProgressStage', 'ApiKey', 'Model', 'Export']);
   assert.deepEqual(gui.objectGrammar.fileHierarchy, ['cloud_drive', 'project', 'session', 'input_output_refs']);
-  assert.deepEqual(gui.taskFlow.primaryFlow, [
-    'public_dashboard',
-    'login_or_register',
-    'app_default_chat',
-    'project_or_session_select',
-    'compose_prompt',
-    'attach_input_files_optional',
-    'run_chat_or_runtime_gate',
-    'inspect_progress_files_output',
-    'export_or_continue',
-  ]);
+  assert.deepEqual(gui.taskFlow.primaryFlow, ['public_dashboard', 'login_or_register', 'app_default_chat', 'project_or_session_select', 'compose_prompt', 'attach_input_files_optional', 'run_chat_or_runtime_gate', 'inspect_progress_files_output', 'export_or_continue']);
   assert.deepEqual(gui.informationArchitecture.appShell, ['left_rail', 'workspace_sidebar', 'chat_canvas', 'right_inspector', 'modal_layer']);
   assert.equal(gui.visualGrammar.maxPrimaryCtaPerView, 1);
   assert.equal(gui.visualGrammar.longExplanatoryCopy, 'forbidden_in_app_shell');
@@ -344,68 +281,36 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
   assert.equal(gui.figmaSource.nodeId, '0:1');
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
-  assert.deepEqual(gui.figmaSource.adoptedPatterns, [
-    'collapsed_expanded_left_rail',
-    'account_popover_status',
-    'missing_api_key_resource_gate',
-    'prompt_command_center',
-    'research_skill_launcher',
-    'chat_task_view',
-    'right_inspector_tabs_files_progress_output',
-    'running_blocked_turn_state',
-  ]);
-  assert.deepEqual(gui.figmaSource.rejectedPatterns, [
-    'drive_or_cloud_storage_ownership',
-    'runtime_truth_ownership',
-    'founder_plan_upsell',
-    'unlimited_compute_claim',
-    'dashboard_crm_primary_app',
-    'generic_office_content_design_code_video_skills',
-  ]);
+  assert.deepEqual(gui.figmaSource.adoptedPatterns, ['collapsed_expanded_left_rail', 'account_popover_status', 'missing_api_key_resource_gate', 'prompt_command_center', 'research_skill_launcher', 'chat_task_view', 'right_inspector_tabs_files_progress_output', 'running_blocked_turn_state']);
+  assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_code_video_skills']);
   assert.equal(gui.visualQualityGate.state, 'repo_local_contract_ready_pending_visual_baseline');
-  assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, [
-    'Figma MCP source context refreshed',
-    'desktop screenshot reviewed',
-    'mobile screenshot reviewed',
-    'browser interaction e2e passed',
-    'no hidden overlay intercepts input',
-  ]);
-  assert.deepEqual(gui.pageTemplates, [
-    'PublicLanding',
-    'Auth',
-    'DefaultAppShell',
-    'ExpandedSidebar',
-    'RightInspectorOpen',
-    'ModalOverlay',
-    'SkillPlaza',
-    'OutputPreview',
-  ]);
+  assert.equal(gui.visualQualityGate.currentPhase, 'visual_baseline');
+  assert.equal(gui.visualQualityGate.nextPhase, 'responsive_visual_qa');
+  assert.deepEqual(gui.visualQualityGate.ownerReceipt, { required: false, source: 'repo_local' });
+  assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, ['Figma MCP source context refreshed', 'desktop screenshot reviewed', 'mobile screenshot reviewed', 'browser interaction e2e passed', 'no hidden overlay intercepts input']);
+  assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'mobile_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check']);
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'figma_mcp_source_context').state, 'done');
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'desktop_screenshot_review').state, 'pending');
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'browser_interaction_e2e').command, 'npm run verify:browser');
+  assert.equal(gui.visualQualityGate.cannotClaim.includes('complete UI/UX design system'), true);
+  assert.deepEqual(gui.pageTemplates, ['PublicLanding', 'Auth', 'DefaultAppShell', 'ExpandedSidebar', 'RightInspectorOpen', 'ModalOverlay', 'SkillPlaza', 'OutputPreview']);
   assert.equal(gui.accessibility.keyboardRequired, true);
-  assert.equal(gui.acceptanceLayers.includes('contract'), true);
-  assert.equal(gui.acceptanceLayers.includes('component_state'), true);
-  assert.equal(gui.acceptanceLayers.includes('interaction'), true);
-  assert.equal(gui.acceptanceLayers.includes('visual'), true);
+  assertIncludesAll(gui.acceptanceLayers, ['contract', 'component_state', 'interaction', 'visual'], 'GUI acceptance layer');
 
   assert.equal(shell.owner, 'one-person-lab-web');
   assert.equal(shell.purpose, 'web_shell_adapter');
   assert.equal(shell.state, 'active');
   assert.equal(shell.activeShell.id, 'opl_web_static_esm_shell');
   assert.equal(shell.activeShell.migrationPolicy, 'stay_static_until_component_state_or_visual_regression_evidence_requires_framework');
-  for (const owned of ['renderer_components', 'layout_composition', 'panel_resize_behavior', 'figma_code_mapping']) {
-    assert.equal(shell.shellMayOwn.includes(owned), true, `shell may own ${owned}`);
-  }
-  for (const forbidden of ['product_truth', 'runtime_truth', 'domain_judgment_truth', 'artifact_body_authority', 'billing_source_of_truth']) {
-    assert.equal(shell.shellMustNotOwn.includes(forbidden), true, `shell must not own ${forbidden}`);
-  }
+  assertIncludesAll(shell.shellMayOwn, ['renderer_components', 'layout_composition', 'panel_resize_behavior', 'figma_code_mapping'], 'shell-owned surface');
+  assertIncludesAll(shell.shellMustNotOwn, ['product_truth', 'runtime_truth', 'domain_judgment_truth', 'artifact_body_authority', 'billing_source_of_truth'], 'shell forbidden surface');
   assert.deepEqual(shell.figmaCodeMapping.variantProps.RightInspector, {
     state: ['hidden', 'files', 'progress', 'output'],
     width: ['default', 'narrow', 'wide'],
   });
-  assert.equal(shell.figmaCodeMapping.requiredNodeMetadata.includes('componentId'), true);
-  assert.equal(shell.figmaCodeMapping.requiredNodeMetadata.includes('variantProps'), true);
+  assertIncludesAll(shell.figmaCodeMapping.requiredNodeMetadata, ['componentId', 'variantProps'], 'Figma node metadata');
   assert.equal(shell.codeProps.RightInspector.state.includes('files'), true);
-  assert.equal(shell.validationCommands.includes('npm run verify:contract'), true);
-  assert.equal(shell.validationCommands.includes('npm run verify:smoke'), true);
+  assertIncludesAll(shell.validationCommands, ['npm run verify:contract', 'npm run verify:smoke'], 'shell validation command');
 });
 
 test('web data module calls session provider and chat APIs only', async () => {
@@ -937,20 +842,8 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.match(view.capabilitySource.appContract, /one-person-lab-app\/contracts\/app-product-profile\.json/);
   assert.match(view.capabilitySource.frameworkContract, /one-person-lab\/contracts\/opl-framework\/domains\.json/);
   assert.deepEqual(view.capabilities.map((item) => item.label), ['科研规划', '论文/综述', '基金', '材料/文件', '普通问答']);
-  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.id), [
-    'research_direction',
-    'paper_question',
-    'grant_plan',
-    'review_map',
-    'materials_refs',
-  ]);
-  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.consumer), [
-    'research_user_prompt',
-    'research_user_prompt',
-    'research_user_prompt',
-    'research_user_prompt',
-    'research_user_prompt',
-  ]);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.id), ['research_direction', 'paper_question', 'grant_plan', 'review_map', 'materials_refs']);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.consumer), ['research_user_prompt', 'research_user_prompt', 'research_user_prompt', 'research_user_prompt', 'research_user_prompt']);
   assert.equal(view.skillGroups, undefined);
   assert.deepEqual(view.capabilities.filter((item) => item.runtimeRequired).map((item) => item.sourceAssistant), ['mas', 'mag', 'medopl']);
   assert.equal(view.runtimeGate.deepLink, 'https://medopl.medopl.cn');
@@ -958,13 +851,7 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.runtimeGate.message, '该能力需要在 MedOPL 开通后继续');
   assert.doesNotMatch(JSON.stringify(view.runtimeGate), /MedOPL Runtime|node pool|托管运行环境|存储|无限计算资源|创始人计划|WebUI owns/i);
   assert.deepEqual(view.researchResultSections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
-  assert.deepEqual(view.workbenchSteps.map((item) => item.title), [
-    '选择专业工作',
-    '绑定真实材料',
-    '进入科研工作流',
-    '沉淀交付物',
-    '保留普通聊天',
-  ]);
+  assert.deepEqual(view.workbenchSteps.map((item) => item.title), ['选择专业工作', '绑定真实材料', '进入科研工作流', '沉淀交付物', '保留普通聊天']);
   assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
 });
 

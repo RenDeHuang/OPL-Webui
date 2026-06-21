@@ -60,6 +60,9 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
       assert.ok(phase.requiredEvals.length > 0, `${gap.id}/${phase.id} must declare required evals`);
       assert.ok(phase.evidenceSources.length > 0, `${gap.id}/${phase.id} must declare evidence sources`);
       assert.ok(phase.blockerTypes.length > 0, `${gap.id}/${phase.id} must declare typed blockers`);
+      assert.ok(phase.acceptance.length > 0, `${gap.id}/${phase.id} must declare machine acceptance`);
+      assert.ok(phase.nextStepOpeners.length > 0, `${gap.id}/${phase.id} must declare next step openers`);
+      assert.ok(phase.ownerReceipt.required !== undefined, `${gap.id}/${phase.id} must declare owner receipt policy`);
 
       for (const evalRef of phase.requiredEvals) {
         assert.equal(typeof evalRef.id, 'string', `${gap.id}/${phase.id} eval must declare id`);
@@ -85,6 +88,12 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
   assert.ok(report.blockedClaims.includes('OPL runtime execution from Web'));
   assert.ok(report.blockedClaims.includes('complete commercial SaaS lifecycle'));
   assert.ok(report.blockedClaims.includes('complete UI/UX design system'));
+  for (const gap of report.gaps) {
+    assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
+    assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
+    assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
+    assert.equal(gap.readyToAdvance, gap.status === 'done');
+  }
 });
 
 test('gap phase runner creates ignored runtime summaries and cleans stale phase artifacts', async () => {

@@ -141,6 +141,13 @@
   },
   "commercialLifecycle": {
     "mode": "authenticated_readonly_personal_status_projection",
+    "currentPhase": "commercial_contract",
+    "nextPhase": "commercial_consumer_contract",
+    "blockedBy": "missing_product_decision",
+    "ownerReceipt": {
+      "required": true,
+      "source": "external_owner"
+    },
     "owner": "one-person-lab-web",
     "consumer": "settings_lifecycle_summary",
     "contract": "contracts/web-api.openapi.json#/paths/~1api~1account~1commercial-status",
@@ -153,6 +160,11 @@
       "contract",
       "registered_tests",
       "MedOPL_billing_authority_preserved"
+    ],
+    "nextStepOpeners": [
+      "real buyer or operator workflow is named",
+      "contract exists for invite, RBAC, pricing, subscription, or payment surface",
+      "registered tests preserve MedOPL billing authority"
     ],
     "forbiddenExpansions": [
       "team_invite",
