@@ -2,6 +2,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+const OPERATIONS_EVIDENCE_CONTRACTS = Object.freeze([
+  { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
+  { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
+  { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
+  { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
+]);
+
 export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload, workflow }) {
   const jobs = Array.isArray(jobsPayload?.jobs) ? jobsPayload.jobs : [];
   const failedJob = jobs.find((job) => job.conclusion === 'failure');
@@ -250,6 +257,10 @@ function foldAvailabilityIntoReleaseProfile({ profile, summary }) {
           '/metricsz summary fields',
         ],
       },
+      nextReadiness: {
+        ...(observability.nextReadiness ?? {}),
+        evidenceContracts: observability.nextReadiness?.evidenceContracts ?? OPERATIONS_EVIDENCE_CONTRACTS,
+      },
     },
   };
 }
@@ -271,6 +282,7 @@ function foldScheduledCanaryIntoReleaseProfile({ profile, summary }) {
       nextReadiness: {
         ...nextReadiness,
         state: `scheduled_canary_first_success_run_${summary.runId}_pending_ops_consumer`,
+        evidenceContracts: nextReadiness.evidenceContracts ?? OPERATIONS_EVIDENCE_CONTRACTS,
         implementedEvidence: uniqueStrings([
           ...(nextReadiness.implementedEvidence ?? []),
           'scheduled_canary_workflow',

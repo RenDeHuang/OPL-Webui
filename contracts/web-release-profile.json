@@ -167,6 +167,16 @@
       "medopl_readonly_billing_summary",
       "sanitized_audit"
     ],
+    "readonlyFoldbackPolicy": {
+      "requiredEvidence": [
+        "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
+        "dogfood stdout confirms readonly projection checks",
+        "release-evidence-sync --dogfood-readonly-confirmed"
+      ],
+      "forbidRawLogs": true,
+      "forbidSecretValues": true,
+      "claimWhenConfirmed": "production MedOPL readonly projection dogfood"
+    },
     "cannotClaim": [
       "browser e2e",
       "MedOPL runtime execution",
@@ -577,6 +587,28 @@
         "alerting",
         "error_budget",
         "rollback_record"
+      ],
+      "evidenceContracts": [
+        {
+          "id": "dashboard",
+          "owner": "operations_owner",
+          "state": "contract_required"
+        },
+        {
+          "id": "alerting",
+          "owner": "operations_owner",
+          "state": "contract_required"
+        },
+        {
+          "id": "error_budget",
+          "owner": "operations_owner",
+          "state": "contract_required"
+        },
+        {
+          "id": "rollback_record",
+          "owner": "release_operator",
+          "state": "contract_required"
+        }
       ]
     },
     "cannotClaim": [

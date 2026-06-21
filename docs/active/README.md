@@ -15,6 +15,8 @@ One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. It ow
 
 Current product work is moving from fixed truth into engineering evidence:
 
+0. The active non-HA gap set is `contracts/web-product-profile.json#/visionGaps`: UI/UX Product Depth, MedOPL readonly evidence, runtime execution boundary, commercial SaaS depth, and operations maturity. HA is paused for single-node launch safety. These gaps advance through contracts, source, tests, and foldback evidence; production deploy is not the default next action unless the user explicitly asks for release evidence.
+
 1. Browser-level e2e runner executed successfully through `npm run verify:browser` with real Chromium/CDP for register, login, API Key binding, ordinary chat fallback, `@论文`/`@基金` gate, and sanitized audit evidence. It is now a CI release gate before image release; future non-CI hosts still need Chrome/Chromium via `OPL_BROWSER_BINARY` or system discovery.
 2. Research-task-first UX state is owned by the page-state contract, `RESEARCH_TASK_INTENTS`, `RESEARCH_RESULT_SECTIONS`, and `chatStateForPrompt`; the browser runner now clicks the `research_direction` task template before ordinary chat fallback, verifies the structured `@科研` result sections, and verifies `@论文`/`@基金` runtime task cards. This remains a browser UI view model and must not become artifact body, storage, or runtime execution.
 3. Production authenticated dogfood HTTP evidence passed in GitHub Actions run `27876229568` for commit `a3f7c399872a70332bd9e9465c05d11c9c2bd4ad`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39`, after dry-run, production apply, canary/smoke, and Production Availability Probe After Apply success. Production real ordinary chat and `chat.completed` audit evidence are confirmed by the production browser e2e lane in the same run. It remains secret-gated and not MedOPL runtime execution.
@@ -30,6 +32,9 @@ Current product work is moving from fixed truth into engineering evidence:
 13. User-facing reliability status is now rendered in the browser shell for login/key/quota/runtime/upstream/service/network states. It is a sanitized UX view model only and must not include raw provider errors, API keys, DB URLs, private state, or artifact bodies.
 14. Frontend engineering stays static HTML/CSS/ESM until browser evidence and product complexity justify React/Vite/TypeScript migration.
 15. Retired Go task projection and OPL task-route surfaces must stay tombstoned; current DB canary validates the Web app schema.
+16. UI/UX Product Depth now requires Figma MCP before further UI work. Current source evidence is pinned to Figma Make file `E8nYfNFc2D9P01FYZ8UwBW`, node `0:1`, with `src/app/App.tsx`, `src/styles/theme.css`, and `src/styles/index.css` as source files. Adopted patterns are left rail, account popover, API key/resource gate, prompt command center, research skill launcher, chat/task view, right inspector tabs, and running/blocked turn state. Rejected patterns are Drive/storage ownership, runtime truth ownership, founder-plan upsell, unlimited compute, dashboard/CRM primary app, and generic office/content/code/video skills.
+17. Runtime execution remains `not_admitted`: no OPL install, repair, module exec, mutation, artifact body, private state, or domain verdict until Go-side runtime execution contract, registered eval, allowlist, human authorization boundary, tenant audit, and artifact/body authority contract exist.
+18. Operations maturity currently means baseline plus future evidence contracts: dashboard, alerting, error budget, and rollback record remain `contract_required`.
 
 ## Worktree Lane Model
 

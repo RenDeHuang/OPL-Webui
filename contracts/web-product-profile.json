@@ -71,6 +71,74 @@
     "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
     "visibleRoutes": ["chat", "settings", "capabilities", "medopl"]
   },
+  "visionGaps": {
+    "state": "active_non_ha_gap_acceptance",
+    "haPolicy": {
+      "state": "paused",
+      "reason": "single-node launch safety"
+    },
+    "items": [
+      {
+        "id": "ui_ux_product_depth",
+        "ownerSurface": "apps-web",
+        "acceptanceContract": "contracts/web-gui-product-contract.json",
+        "disposition": "repo_local_contract_ready_pending_visual_baseline",
+        "evidenceRequired": [
+          "figma_mcp_source_context",
+          "component_state_contract",
+          "responsive_shell_smoke",
+          "browser_interaction_e2e"
+        ]
+      },
+      {
+        "id": "medopl_readonly_evidence",
+        "ownerSurface": "release-evidence",
+        "acceptanceContract": "contracts/web-release-profile.json#/productionDogfoodReadiness",
+        "disposition": "awaiting_secret_gated_foldback",
+        "evidenceRequired": [
+          "readonly_switch_confirmed",
+          "sanitized_dogfood_stdout_foldback",
+          "raw_secret_absence"
+        ]
+      },
+      {
+        "id": "runtime_execution_boundary",
+        "ownerSurface": "runtime-gate",
+        "acceptanceContract": "contracts/web-runtime-bridge.json",
+        "disposition": "fail_closed_until_admission_contract",
+        "evidenceRequired": [
+          "go_side_execution_contract",
+          "registered_eval",
+          "command_allowlist",
+          "human_authorization_boundary"
+        ]
+      },
+      {
+        "id": "commercial_saas_depth",
+        "ownerSurface": "product-boundary",
+        "acceptanceContract": "contracts/web-product-profile.json#/commercialLifecycle",
+        "disposition": "readonly_personal_projection_only",
+        "evidenceRequired": [
+          "real_consumer",
+          "contract",
+          "registered_tests",
+          "MedOPL_billing_authority_preserved"
+        ]
+      },
+      {
+        "id": "operations_maturity",
+        "ownerSurface": "release-evidence",
+        "acceptanceContract": "contracts/web-release-profile.json#/productionObservabilityBaseline",
+        "disposition": "baseline_plus_next_evidence_contracts",
+        "evidenceRequired": [
+          "dashboard_contract",
+          "alerting_contract",
+          "error_budget_contract",
+          "rollback_record_contract"
+        ]
+      }
+    ]
+  },
   "commercialLifecycle": {
     "mode": "authenticated_readonly_personal_status_projection",
     "owner": "one-person-lab-web",

@@ -235,6 +235,43 @@
     "touchTargetMinimum": "wcag_2_2_target_size_when_applicable",
     "contrastMinimum": "wcag_2_2_aa"
   },
+  "figmaSource": {
+    "fileKey": "E8nYfNFc2D9P01FYZ8UwBW",
+    "nodeId": "0:1",
+    "requiredSourceFiles": [
+      "src/app/App.tsx",
+      "src/styles/theme.css",
+      "src/styles/index.css"
+    ],
+    "adoptedPatterns": [
+      "collapsed_expanded_left_rail",
+      "account_popover_status",
+      "missing_api_key_resource_gate",
+      "prompt_command_center",
+      "research_skill_launcher",
+      "chat_task_view",
+      "right_inspector_tabs_files_progress_output",
+      "running_blocked_turn_state"
+    ],
+    "rejectedPatterns": [
+      "drive_or_cloud_storage_ownership",
+      "runtime_truth_ownership",
+      "founder_plan_upsell",
+      "unlimited_compute_claim",
+      "dashboard_crm_primary_app",
+      "generic_office_content_design_code_video_skills"
+    ]
+  },
+  "visualQualityGate": {
+    "state": "repo_local_contract_ready_pending_visual_baseline",
+    "requiredBeforeProductionUiClaim": [
+      "Figma MCP source context refreshed",
+      "desktop screenshot reviewed",
+      "mobile screenshot reviewed",
+      "browser interaction e2e passed",
+      "no hidden overlay intercepts input"
+    ]
+  },
   "acceptanceLayers": ["contract", "component_state", "interaction", "visual"],
   "cannotClaim": [
     "pixel-perfect production UI from this contract alone",

@@ -13,6 +13,8 @@ The current stage is research SaaS product engineering. Product work now moves o
 
 `docs/active/README.md` now carries the lightweight current gap baton for worktree lanes and next-agent handoff. It supports the fixed truth set; it does not replace this status file or any machine contract.
 
+The current non-HA gap set is now machine-owned by `contracts/web-product-profile.json#/visionGaps`. HA remains explicitly paused for single-node launch safety. UI/UX product depth, MedOPL readonly evidence, runtime execution boundary, commercial SaaS depth, and operations maturity must advance through their acceptance contracts; production deploy is release evidence only and must not substitute for product/eval work.
+
 ## Machine Truth
 
 - Product boundary: `contracts/web-product-profile.json`
@@ -72,6 +74,9 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Manual production rollback evidence is now supported by `Cloud Rollout` input `rollback=true` and `node scripts/cloud-rollout.mjs --rollback`. It requires production environment approval, kubeconfig, image allowlist validation, rollout status, canary db, canary opl-cli, HTTPS smoke, and optional availability probe after rollback. This is manual rollback evidence, not automatic rollback or data migration rollback.
 - Commercial account lifecycle projection is implemented as authenticated readonly personal commercial status projection: `GET /api/account/commercial-status` returns personal SaaS account state, tenant role, lifecycle state, `teamReadiness=single_user_owner`, allowed next action `view_medopl_billing`, and forbidden team/invite/RBAC/payment/billing-source mutation flags. The browser settings surface now renders lifecycle, team readiness, tenant role, quota, and audit summaries from existing readonly projections. It reuses the existing account/session and tenant membership surface; it does not add team management, RBAC, invite, pricing, payment, plan, subscription, storage, node pool, or runtime ownership. Any team invite/RBAC/pricing/subscription/payment expansion requires a real consumer, contract, and registered tests while preserving MedOPL billing authority.
 - User-facing reliability UX is implemented for current Web states: the data layer converts auth-required, API-key-required, quota, upstream failure, service-unavailable, and network-unreachable results into sanitized view models; the browser shell renders a stable reliability status surface without raw upstream bodies, API keys, DB URLs, or private state.
+- UI/UX product depth now has source-level Figma MCP evidence pinned in `contracts/web-gui-product-contract.json`: file `E8nYfNFc2D9P01FYZ8UwBW`, node `0:1`, required source files `src/app/App.tsx`, `src/styles/theme.css`, and `src/styles/index.css`. The static shell adopts the left rail, account popover, prompt command center, research skill launcher, right inspector tabs, and running/blocked turn-state patterns while rejecting Drive/storage ownership, runtime truth ownership, founder-plan upsell, unlimited compute claims, dashboard/CRM primary app, and generic office/content/code/video skill surfaces. This is repo-local contract/component-state/smoke evidence; production UI quality still requires desktop screenshot review, mobile screenshot review, browser interaction e2e, and hidden-overlay input checks.
+- Runtime execution remains fail-closed by admission contract: any OPL install, repair, module exec, mutation, or artifact/body authority requires a Go-side runtime execution contract, registered eval covering command allowlist, human authorization boundary, tenant-scoped audit events, artifact/body authority contract, and allowlist evidence before Web can execute anything.
+- Operations maturity now has explicit future evidence contracts for dashboard, alerting, error budget, and rollback record. Existing `/metricsz`, availability probe, scheduled canary, and manual rollback harness are baseline/release evidence only; they are not dashboarding, alerting, error-budget enforcement, automatic rollback, or production-ready SaaS evidence.
 
 ## Cannot Claim
 
@@ -87,5 +92,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 ## Next Priorities
 
 1. Continue product development from the current production evidence: keep framework/governance frozen unless a real product gap requires a source, contract, test, or deploy change.
-2. If `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` is enabled in a future product rollout, fold back log or variable evidence; do not run readonly-only just to chase evidence.
-3. Add team/commercial account lifecycle expansion only after there is a real consumer for invite/RBAC/pricing/subscription/payment state, a contract, and registered tests that preserve MedOPL billing authority.
+2. Continue UI/UX depth through Figma MCP first, then local component-state, responsive smoke, browser interaction, and screenshot review evidence before any production UI-quality claim.
+3. If `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` is enabled in a future product rollout, fold back log or variable evidence; do not run readonly-only just to chase evidence.
+4. Add team/commercial account lifecycle expansion only after there is a real consumer for invite/RBAC/pricing/subscription/payment state, a contract, and registered tests that preserve MedOPL billing authority.
+5. Add dashboard, alerting, error budget, rollback record, or runtime execution only after the corresponding owner, consumer, contract, eval/test, and acceptance evidence exist.

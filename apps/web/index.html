@@ -15,9 +15,11 @@
     data-left-rail-state="collapsed"
     data-right-inspector-state="hidden"
     data-api-key-dialog-state="closed"
+    data-visual-density="quiet_dense_workbench"
+    data-visual-quality-gate="repo_local_contract_ready_pending_visual_baseline"
   >
     <div class="app-shell figma-make-webui-alignment" data-figma-source="E8nYfNFc2D9P01FYZ8UwBW">
-      <aside class="sidebar-shell" aria-label="One Person Lab navigation">
+      <aside class="sidebar-shell" data-figma-pattern="collapsed_expanded_left_rail" aria-label="One Person Lab navigation">
         <a class="sidebar-brand" href="#home" aria-label="One Person Lab Web 首页">
           <span class="brand-mark">OPL</span>
           <span>One Person Lab</span>
@@ -37,7 +39,7 @@
           <button type="button" data-prompt="@论文 拆解研究问题">论文研究问题拆解</button>
           <button type="button" data-prompt="@基金 帮我规划申请书">基金申请书规划</button>
         </div>
-        <div class="account-dock">
+        <div class="account-dock" data-figma-pattern="account_popover_status">
           <button type="button" data-account-toggle aria-expanded="false" aria-controls="account-popover">
             <span class="account-avatar" aria-hidden="true">人</span>
             <span>
@@ -77,7 +79,7 @@
             <p>面向科研工作人员、硕博、PI 与科研团队的 Web 版 One Person Lab。用户从 @科研、@论文、@基金 等科研能力入口进入，普通聊天是 fallback。</p>
           </div>
 
-          <form class="prompt-console prompt-command-center" id="chat" data-chat-form aria-label="科研能力入口">
+          <form class="prompt-console prompt-command-center" id="chat" data-chat-form data-figma-pattern="prompt_command_center" aria-label="科研能力入口">
             <label for="chat-input">输入科研问题或 @能力入口</label>
             <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入科研问题或 @能力入口"></textarea>
             <div class="prompt-footer">
@@ -86,7 +88,7 @@
             </div>
           </form>
 
-          <div class="skill-launcher research-task-grid" data-research-launcher aria-label="科研任务入口">
+          <div class="skill-launcher research-task-grid" data-research-launcher data-figma-pattern="research_skill_launcher" aria-label="科研任务入口">
             <button type="button" data-research-task data-research-task-intent="research_direction" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">
               <span>@科研</span>
               <strong>开题/研究方向</strong>
@@ -115,7 +117,7 @@
           </div>
         </section>
 
-        <aside class="turn-state-strip" aria-label="任务状态">
+        <aside class="turn-state-strip" data-figma-pattern="running_blocked_turn_state" aria-label="任务状态">
           <div data-running-turn hidden>
             <strong>运行中</strong>
             <span>正在等待科研结果。</span>
@@ -208,7 +210,7 @@
           </aside>
         </section>
 
-        <aside class="right-inspector" data-right-inspector data-right-inspector-state="hidden" aria-label="文件、进度和输出检查器" hidden>
+        <aside class="right-inspector" data-right-inspector data-right-inspector-state="hidden" data-figma-pattern="right_inspector_tabs_files_progress_output" aria-label="文件、进度和输出检查器" hidden>
           <div class="inspector-header">
             <p class="panel-kicker">Inspector</p>
             <button class="ghost-button" type="button" data-right-inspector-close>关闭</button>
@@ -218,17 +220,32 @@
             <button type="button" data-right-inspector-tab="progress" aria-selected="false">进度</button>
             <button type="button" data-right-inspector-tab="output" aria-selected="false">输出</button>
           </div>
-          <section class="inspector-panel" data-right-inspector-panel="files">
+          <section class="inspector-panel" data-right-inspector-panel="files" data-inspector-files-refs>
             <h3>Files</h3>
             <p>只显示输入、输出和交付物 refs；不返回 artifact body。</p>
+            <dl class="inspector-ref-list">
+              <div><dt>input_ref</dt><dd>input_ref: protocol.pdf</dd></div>
+              <div><dt>material_ref</dt><dd>material_ref: cohort-notes</dd></div>
+              <div><dt>deliverable_ref</dt><dd>deliverable_ref: methods-outline</dd></div>
+            </dl>
           </section>
-          <section class="inspector-panel" data-right-inspector-panel="progress" hidden>
+          <section class="inspector-panel" data-right-inspector-panel="progress" data-inspector-progress-projection hidden>
             <h3>Progress</h3>
             <p>只显示阶段投影；不拥有 runtime truth。</p>
+            <ol class="inspector-timeline">
+              <li><span>1</span><strong>progress_ref: research_plan</strong><small>ready</small></li>
+              <li><span>2</span><strong>progress_ref: evidence_refs</strong><small>pending refs</small></li>
+              <li><span>3</span><strong>progress_ref: next_steps</strong><small>blocked until user confirms</small></li>
+            </ol>
           </section>
-          <section class="inspector-panel" data-right-inspector-panel="output" hidden>
+          <section class="inspector-panel" data-right-inspector-panel="output" data-inspector-output-refs hidden>
             <h3>Output</h3>
             <p>只显示输出引用和导出入口；正文权威留在 MedOPL/OPL。</p>
+            <dl class="inspector-ref-list">
+              <div><dt>output_ref</dt><dd>output_ref: research-plan-draft</dd></div>
+              <div><dt>export_ref</dt><dd>export_ref: markdown-summary</dd></div>
+              <div><dt>视觉 QA gate</dt><dd>desktop screenshot reviewed / mobile screenshot reviewed</dd></div>
+            </dl>
           </section>
         </aside>
 

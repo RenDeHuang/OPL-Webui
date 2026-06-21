@@ -67,5 +67,21 @@
     "requiresEval": true,
     "requiresWhitelist": true,
     "requiresHumanAuthorization": true
+  },
+  "executionAdmission": {
+    "currentStatus": "not_admitted",
+    "requiredBeforeAnyExecution": [
+      "Go-side runtime execution contract",
+      "registered eval covering command allowlist",
+      "human authorization boundary",
+      "tenant-scoped audit events",
+      "artifact/body authority contract"
+    ],
+    "failClosedUntil": [
+      "contract_exists",
+      "eval_passes",
+      "allowlist_exists",
+      "authorization_boundary_exists"
+    ]
   }
 }

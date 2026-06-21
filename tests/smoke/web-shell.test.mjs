@@ -10,6 +10,13 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /科研工作人员、硕博、PI 与科研团队/);
   assert.match(html, /figma-make-webui-alignment/);
   assert.match(html, /data-figma-source="E8nYfNFc2D9P01FYZ8UwBW"/);
+  assert.match(html, /data-figma-pattern="collapsed_expanded_left_rail"/);
+  assert.match(html, /data-figma-pattern="account_popover_status"/);
+  assert.match(html, /data-figma-pattern="prompt_command_center"/);
+  assert.match(html, /data-figma-pattern="research_skill_launcher"/);
+  assert.match(html, /data-figma-pattern="right_inspector_tabs_files_progress_output"/);
+  assert.match(html, /data-figma-pattern="running_blocked_turn_state"/);
+  assert.match(html, /data-visual-quality-gate="repo_local_contract_ready_pending_visual_baseline"/);
   assert.match(html, /app-shell/);
   assert.match(html, /data-shell-state="app_default_chat"/);
   assert.match(html, /sidebar-shell/);
@@ -29,6 +36,15 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /data-right-inspector-tab="files"/);
   assert.match(html, /data-right-inspector-tab="progress"/);
   assert.match(html, /data-right-inspector-tab="output"/);
+  assert.match(html, /data-inspector-files-refs/);
+  assert.match(html, /data-inspector-progress-projection/);
+  assert.match(html, /data-inspector-output-refs/);
+  assert.match(html, /input_ref: protocol\.pdf/);
+  assert.match(html, /progress_ref: research_plan/);
+  assert.match(html, /output_ref: research-plan-draft/);
+  assert.match(html, /视觉 QA gate/);
+  assert.match(html, /desktop screenshot reviewed/);
+  assert.match(html, /mobile screenshot reviewed/);
   assert.match(html, /data-api-key-dialog/);
   assert.match(html, /data-api-key-dialog-state="closed"/);
   assert.match(html, /data-research-launcher/);
@@ -125,6 +141,19 @@ test('hidden shell overlays cannot intercept browser input', () => {
   assert.match(html, /class="api-key-dialog"[\s\S]*hidden/);
   assert.match(html, /class="right-inspector"[\s\S]*hidden/);
   assert.match(css, /\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/);
+});
+
+test('shell css carries responsive Figma workspace constraints', () => {
+  const css = readFileSync('apps/web/styles.css', 'utf8');
+
+  assert.match(css, /--left-rail-collapsed:\s*82px/);
+  assert.match(css, /--left-rail-expanded:\s*260px/);
+  assert.match(css, /--inspector-min:\s*320px/);
+  assert.match(css, /--inspector-max:\s*520px/);
+  assert.match(css, /data-visual-density="quiet_dense_workbench"/);
+  assert.match(css, /data-figma-pattern="right_inspector_tabs_files_progress_output"/);
+  assert.match(css, /@media \(max-width:1040px\)/);
+  assert.match(css, /@media \(max-width:760px\)/);
 });
 
 test('settings hash has a dedicated productized settings surface', () => {

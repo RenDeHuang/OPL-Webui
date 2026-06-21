@@ -36,6 +36,20 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.publicUi.primarySurface, 'research_capability_first_web_workbench');
+  assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
+  assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
+  assert.deepEqual(product.visionGaps.items.map((gap) => [gap.id, gap.ownerSurface, gap.disposition]), [
+    ['ui_ux_product_depth', 'apps-web', 'repo_local_contract_ready_pending_visual_baseline'],
+    ['medopl_readonly_evidence', 'release-evidence', 'awaiting_secret_gated_foldback'],
+    ['runtime_execution_boundary', 'runtime-gate', 'fail_closed_until_admission_contract'],
+    ['commercial_saas_depth', 'product-boundary', 'readonly_personal_projection_only'],
+    ['operations_maturity', 'release-evidence', 'baseline_plus_next_evidence_contracts'],
+  ]);
+  const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
+  assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e']);
+  assert.equal(visionGap('ui_ux_product_depth').acceptanceContract, 'contracts/web-gui-product-contract.json');
+  assert.equal(visionGap('medopl_readonly_evidence').acceptanceContract, 'contracts/web-release-profile.json#/productionDogfoodReadiness');
+  assert.equal(visionGap('runtime_execution_boundary').acceptanceContract, 'contracts/web-runtime-bridge.json');
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(product.provider.wireApi, 'responses');
   assert.equal(product.provider.defaultModel, 'gpt-5.5');
@@ -162,6 +176,21 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(runtime.medoplDeepLink, 'https://medopl.medopl.cn');
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
+  for (const field of ['requiresGoSideContract', 'requiresEval', 'requiresWhitelist', 'requiresHumanAuthorization']) assert.equal(runtime.authorizationBoundary[field], true);
+  assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
+  assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, [
+    'Go-side runtime execution contract',
+    'registered eval covering command allowlist',
+    'human authorization boundary',
+    'tenant-scoped audit events',
+    'artifact/body authority contract',
+  ]);
+  assert.deepEqual(runtime.executionAdmission.failClosedUntil, [
+    'contract_exists',
+    'eval_passes',
+    'allowlist_exists',
+    'authorization_boundary_exists',
+  ]);
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
   assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:ai', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
@@ -191,6 +220,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.coverage.includes('ordinary_chat_real_completion'), true);
+  assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.requiredEvidence, [
+    'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1',
+    'dogfood stdout confirms readonly projection checks',
+    'release-evidence-sync --dogfood-readonly-confirmed',
+  ]);
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.forbidRawLogs, true);
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.forbidSecretValues, true);
+  assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.claimWhenConfirmed, 'production MedOPL readonly projection dogfood');
   assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27876229568_after_apply');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage.includes('HTTPS /readyz'), true);
@@ -204,6 +241,12 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.latestSuccessfulRun.runId, 27874732529);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary_first_success'), false);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('error_budget'), true);
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
+    { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
+  ]);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('dashboard'), true);
   assert.equal(release.productionObservabilityBaseline.cannotClaim.includes('alerting'), true);
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
@@ -291,6 +334,35 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.components.find((component) => component.id === 'RightInspector').tabs, ['files', 'progress', 'output']);
   assert.equal(gui.components.find((component) => component.id === 'RightInspector').resize.enabled, true);
   assert.equal(gui.components.find((component) => component.id === 'ApiKeyDialog').primaryActionLabel, '保存');
+  assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
+  assert.equal(gui.figmaSource.nodeId, '0:1');
+  assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
+  assert.deepEqual(gui.figmaSource.adoptedPatterns, [
+    'collapsed_expanded_left_rail',
+    'account_popover_status',
+    'missing_api_key_resource_gate',
+    'prompt_command_center',
+    'research_skill_launcher',
+    'chat_task_view',
+    'right_inspector_tabs_files_progress_output',
+    'running_blocked_turn_state',
+  ]);
+  assert.deepEqual(gui.figmaSource.rejectedPatterns, [
+    'drive_or_cloud_storage_ownership',
+    'runtime_truth_ownership',
+    'founder_plan_upsell',
+    'unlimited_compute_claim',
+    'dashboard_crm_primary_app',
+    'generic_office_content_design_code_video_skills',
+  ]);
+  assert.equal(gui.visualQualityGate.state, 'repo_local_contract_ready_pending_visual_baseline');
+  assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, [
+    'Figma MCP source context refreshed',
+    'desktop screenshot reviewed',
+    'mobile screenshot reviewed',
+    'browser interaction e2e passed',
+    'no hidden overlay intercepts input',
+  ]);
   assert.deepEqual(gui.pageTemplates, [
     'PublicLanding',
     'Auth',

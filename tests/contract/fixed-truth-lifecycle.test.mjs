@@ -267,6 +267,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, false);
+  assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.requiredEvidence, [
+    'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1',
+    'dogfood stdout confirms readonly projection checks',
+    'release-evidence-sync --dogfood-readonly-confirmed',
+  ]);
   assert.equal(release.productionDogfoodReadiness.defaultEnabled, false);
   assert.equal(release.productionDogfoodReadiness.requiresProductionSecrets, true);
   assert.equal(release.productionDogfoodReadiness.requiresSuccessfulRolloutEvidence, true);
@@ -342,6 +347,12 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     'alerting',
     'error_budget',
     'rollback_record',
+  ]);
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
+    { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
   ]);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runId, 27876229568);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.coverage.includes('/metricsz summary fields'), true);
@@ -453,7 +464,43 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
   assert.doesNotMatch(status, /本阶段没有执行 production availability probe/);
   assert.match(status, /Next Priorities/);
+  assert.match(status, /current non-HA gap set is now machine-owned/);
+  assert.match(status, /UI\/UX product depth now has source-level Figma MCP evidence pinned/);
+  assert.match(status, /Runtime execution remains fail-closed by admission contract/);
+  assert.match(status, /Operations maturity now has explicit future evidence contracts/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
+});
+
+test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const gui = readJson('contracts/web-gui-product-contract.json');
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+  const decisions = readFileSync('docs/decisions.md', 'utf8');
+
+  assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
+  assert.equal(product.visionGaps.haPolicy.state, 'paused');
+  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), [
+    'ui_ux_product_depth',
+    'medopl_readonly_evidence',
+    'runtime_execution_boundary',
+    'commercial_saas_depth',
+    'operations_maturity',
+  ]);
+  assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
+  assert.equal(gui.figmaSource.nodeId, '0:1');
+  assert.equal(gui.figmaSource.rejectedPatterns.includes('runtime_truth_ownership'), true);
+  assert.equal(gui.figmaSource.rejectedPatterns.includes('unlimited_compute_claim'), true);
+  assert.equal(gui.visualQualityGate.state, 'repo_local_contract_ready_pending_visual_baseline');
+  assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
+  assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('registered eval covering command allowlist'), true);
+
+  assert.match(status, /production deploy is release evidence only and must not substitute for product\/eval work/);
+  assert.match(active, /production deploy is not the default next action unless the user explicitly asks for release evidence/);
+  assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
+  assert.match(decisions, /Non-HA gaps use acceptance contracts before deploy evidence/);
+  assert.match(decisions, /UI work starts from Figma MCP source context/);
 });
 
 test('commercial lifecycle expansion stays a readonly personal projection until consumer contract and tests exist', () => {

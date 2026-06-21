@@ -444,10 +444,24 @@ test('release evidence sync folds latest rollout dogfood availability browser an
   assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.realChatEvidence, 'production_browser_e2e');
   assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assert.equal(profile.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, false);
+  assert.doesNotMatch(
+    JSON.stringify(profile.productionDogfoodReadiness.latestSuccessfulRun.coverage),
+    /medopl_readonly_runtime_status|medopl_readonly_materials_deliverables|medopl_readonly_billing_summary/,
+  );
+  assert.match(
+    profile.productionDogfoodReadiness.latestSuccessfulRun.readonlyEvidenceBoundary,
+    /do not claim MedOPL readonly production coverage/,
+  );
   assert.equal(profile.productionAvailabilityReadiness.state, 'executed_success_run_27876229568_after_apply');
   assert.equal(profile.productionAvailabilityReadiness.latestSuccessfulRun.runId, 27876229568);
   assert.equal(profile.productionObservabilityBaseline.state, 'release_probe_executed_run_27876229568_pending_long_term_ops');
   assert.equal(profile.productionObservabilityBaseline.latestSuccessfulRun.runId, 27876229568);
+  assert.deepEqual(profile.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
+    { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
+    { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
+  ]);
   assert.equal(profile.productionBrowserE2EReadiness.state, 'executed_success_run_27876229568');
   assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.runId, 27876229568);
   assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39');
