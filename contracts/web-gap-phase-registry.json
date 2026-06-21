@@ -63,33 +63,33 @@
         },
         {
           "id": "responsive_visual_qa",
-          "objective": "Use the captured repo-local desktop/mobile baseline as input for fuller responsive, accessibility, and owner visual QA without making a production UI-quality claim.",
+          "objective": "Use repo-local desktop/tablet/mobile/compact responsive visual QA as owner-review input without making a production UI-quality claim.",
           "entryCriteria": [
             "visual_baseline captured through real Chromium/CDP desktop and mobile screenshots",
             "web GUI product contract records baseline evidence"
           ],
           "exitCriteria": [
-            "responsive breakpoints beyond desktop/mobile baseline are reviewed",
-            "accessibility and text-fit visual checks are folded back",
+            "desktop/tablet/mobile/compact responsive breakpoints are reviewed",
+            "accessibility-adjacent touch target, named control, focus ring, and text-fit browser checks are folded back",
             "product owner receipt exists before any production UI quality claim"
           ],
           "evidenceSources": ["repo_local", "browser", "human_owner_receipt"],
           "blockerTypes": ["missing_owner_receipt", "missing_eval"],
           "acceptance": [
-            "browser visual baseline includes desktop and mobile screenshots in .runtime/browser-visual",
-            "current browser lane asserts no horizontal overflow, right inspector in viewport, visible active inspector panel, and no hidden overlay input interception",
+            "browser visual QA includes desktop, tablet, mobile, and compact screenshots in .runtime/browser-visual",
+            "current browser lane asserts no horizontal overflow, no static text overflow, right inspector in viewport, visible active inspector panel, touch target pass, named controls pass, focus ring visibility, and no hidden overlay input interception",
             "visual quality gate keeps complete UI/UX design system and production visual polish in cannot-claim",
-            "next production UI claim remains blocked until responsive QA and owner receipt are folded back"
+            "next production UI claim remains blocked until owner receipt is folded back"
           ],
           "nextStepOpeners": [
-            "Open production_ui_quality_claim only after responsive visual QA and owner receipt pass",
-            "Keep this gap partial while complete design system, accessibility, and production visual polish evidence is missing",
+            "Open production_ui_quality_claim only after product owner receipt passes",
+            "Keep this gap partial while complete design system, assistive technology conformance, and production visual polish evidence is missing",
             "Do not deploy solely to satisfy repo-local visual QA"
           ],
           "ownerReceipt": {
             "required": true,
             "source": "human_owner_receipt",
-            "reason": "repo-local screenshots prove baseline mechanics, but product-level UI/UX quality needs explicit owner review before production claim"
+            "reason": "repo-local screenshots and browser metrics prove baseline mechanics, but product-level UI/UX quality needs explicit owner review before production claim"
           },
           "requiredEvals": [
             {

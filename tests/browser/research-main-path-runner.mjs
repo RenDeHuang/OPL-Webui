@@ -553,10 +553,13 @@ async function captureVisualQualityEvidence(cdp, runMode) {
   mkdirSync(runtimeDir, { recursive: true });
 
   const viewports = {};
-  for (const viewport of [
+  const viewportSpecs = [
     { id: 'desktop', width: 1440, height: 1200, deviceScaleFactor: 1, mobile: false },
+    { id: 'tablet', width: 834, height: 1200, deviceScaleFactor: 2, mobile: true },
     { id: 'mobile', width: 390, height: 1200, deviceScaleFactor: 2, mobile: true },
-  ]) {
+    { id: 'compact', width: 360, height: 1200, deviceScaleFactor: 3, mobile: true },
+  ];
+  for (const viewport of viewportSpecs) {
     await setViewport(cdp, viewport);
     await waitFor(cdp, 'document.readyState === "complete"');
     await activate(cdp, '[data-right-inspector-open="files"]');
@@ -580,10 +583,19 @@ async function captureVisualQualityEvidence(cdp, runMode) {
 
   return {
     state: 'repo_local_visual_baseline_captured',
+    currentPhase: 'responsive_visual_qa',
     source: 'browser_cdp',
     figmaSource: {
       fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
       nodeId: '0:1',
+    },
+    responsiveBreakpoints: viewportSpecs.map((viewport) => viewport.id),
+    accessibilityChecks: summarizeAccessibilityChecks(viewports),
+    visualFitChecks: summarizeVisualFitChecks(viewports),
+    ownerReceipt: {
+      required: true,
+      status: 'pending',
+      source: 'human_owner_receipt',
     },
     viewports,
     cannotClaim: [
@@ -633,6 +645,10 @@ async function readVisualLayout(cdp) {
     const inspectorRect = inspector?.getBoundingClientRect();
     const activeInspectorPanel = document.querySelector('[data-right-inspector-panel]:not([hidden])');
     const chatInput = document.querySelector('#chat-input');
+    const focusProbe = document.querySelector('[data-chat-submit]');
+    focusProbe?.focus();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const focusProbeStyle = focusProbe ? getComputedStyle(focusProbe) : null;
     chatInput?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
     await new Promise((resolve) => requestAnimationFrame(resolve));
     const chatInputRect = chatInput?.getBoundingClientRect();
@@ -655,11 +671,56 @@ async function readVisualLayout(cdp) {
           && chatInputPoint.y >= rect.top
           && chatInputPoint.y <= rect.bottom;
       });
+    const visibleElements = Array.from(document.body.querySelectorAll('body *')).filter((element) => {
+      if (element.hidden || element.closest('[hidden]')) return false;
+      const style = getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+    const textOverflowElements = visibleElements.filter((element) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName)) return false;
+      const style = getComputedStyle(element);
+      if (style.overflowX === 'visible' && style.whiteSpace !== 'nowrap') return false;
+      return element.scrollWidth > Math.ceil(element.clientWidth) + 1;
+    });
+    const interactiveTargets = Array.from(document.querySelectorAll('button, a[href], input, textarea, select, [role="button"], [tabindex]:not([tabindex="-1"])'))
+      .filter((element) => !element.disabled && !element.hidden && !element.closest('[hidden]'))
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          tag: element.tagName.toLowerCase(),
+          text: (element.getAttribute('aria-label') || element.textContent || element.getAttribute('placeholder') || '').trim().slice(0, 80),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        };
+      })
+      .filter((target) => target.width > 0 && target.height > 0);
+    const interactiveTargetFailures = interactiveTargets.filter((target) => target.width < 36 || target.height < 36);
+    const focusableWithoutName = interactiveTargets
+      .filter((target) => !target.text)
+      .map((target) => ({ tag: target.tag, width: target.width, height: target.height }));
     return {
       viewport,
       horizontalOverflowPx: Math.max(0, viewport.scrollWidth - viewport.width),
       chatInputHitTarget: Boolean(chatInputHit && (chatInputHit === chatInput || chatInput.contains(chatInputHit))),
       hiddenOverlayInterceptsInput: Boolean(blockingOverlay),
+      textOverflowCount: textOverflowElements.length,
+      textOverflowSamples: textOverflowElements.slice(0, 5).map((element) => ({
+        tag: element.tagName.toLowerCase(),
+        text: (element.textContent || '').trim().slice(0, 120),
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      })),
+      interactiveTargetFailures,
+      focusableWithoutName,
+      focusRingProbe: {
+        selector: '[data-chat-submit]',
+        visible: Boolean(focusProbeStyle && (
+          focusProbeStyle.outlineStyle !== 'none'
+          || focusProbeStyle.boxShadow !== 'none'
+        )),
+      },
       rightInspector: {
         visible: Boolean(inspector && !inspector.hidden && inspectorRect && inspectorRect.width > 0 && inspectorRect.height > 0),
         state: inspector?.dataset.rightInspectorState || '',
@@ -676,6 +737,23 @@ async function readVisualLayout(cdp) {
       },
     };
   })()`);
+}
+
+function summarizeAccessibilityChecks(viewports) {
+  const results = Object.values(viewports);
+  return {
+    keyboardFocusVisible: results.every((result) => result.layout.focusRingProbe.visible === true),
+    touchTargetsPass: results.every((result) => result.layout.interactiveTargetFailures.length === 0),
+    namedControlsPass: results.every((result) => result.layout.focusableWithoutName.length === 0),
+  };
+}
+
+function summarizeVisualFitChecks(viewports) {
+  const results = Object.values(viewports);
+  return {
+    noTextOverflow: results.every((result) => result.layout.textOverflowCount === 0),
+    noHorizontalOverflow: results.every((result) => result.layout.horizontalOverflowPx === 0),
+  };
 }
 
 async function captureScreenshot(cdp, relativePath) {

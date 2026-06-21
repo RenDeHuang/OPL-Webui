@@ -29,7 +29,11 @@ test('research main path runs in a real browser and records page-state evidence'
     fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
     nodeId: '0:1',
   });
-  for (const viewport of ['desktop', 'mobile']) {
+  assert.equal(evidence.visualQuality.currentPhase, 'responsive_visual_qa');
+  assert.equal(evidence.visualQuality.ownerReceipt.required, true);
+  assert.equal(evidence.visualQuality.ownerReceipt.status, 'pending');
+  assert.deepEqual(evidence.visualQuality.responsiveBreakpoints, ['desktop', 'tablet', 'mobile', 'compact']);
+  for (const viewport of evidence.visualQuality.responsiveBreakpoints) {
     const visual = evidence.visualQuality.viewports[viewport];
     assert.equal(visual.screenshot.captured, true);
     assert.match(visual.screenshot.path, /^\.runtime\/browser-visual\/research-main-path-local-/);
@@ -39,7 +43,16 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(visual.layout.activeInspectorPanel.visible, true);
     assert.equal(visual.layout.hiddenOverlayInterceptsInput, false);
     assert.equal(visual.layout.chatInputHitTarget, true);
+    assert.equal(visual.layout.textOverflowCount, 0);
+    assert.equal(visual.layout.interactiveTargetFailures.length, 0);
+    assert.equal(visual.layout.focusableWithoutName.length, 0);
+    assert.equal(visual.layout.focusRingProbe.visible, true);
   }
+  assert.equal(evidence.visualQuality.accessibilityChecks.keyboardFocusVisible, true);
+  assert.equal(evidence.visualQuality.accessibilityChecks.touchTargetsPass, true);
+  assert.equal(evidence.visualQuality.accessibilityChecks.namedControlsPass, true);
+  assert.equal(evidence.visualQuality.visualFitChecks.noTextOverflow, true);
+  assert.equal(evidence.visualQuality.visualFitChecks.noHorizontalOverflow, true);
 });
 
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {

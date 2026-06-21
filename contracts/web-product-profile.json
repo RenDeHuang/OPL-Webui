@@ -82,13 +82,14 @@
         "id": "ui_ux_product_depth",
         "ownerSurface": "apps-web",
         "acceptanceContract": "contracts/web-gui-product-contract.json",
-        "disposition": "repo_local_visual_baseline_captured_pending_responsive_visual_qa",
+        "disposition": "repo_local_responsive_visual_qa_captured_pending_owner_receipt",
         "evidenceRequired": [
           "figma_mcp_source_context",
           "component_state_contract",
           "responsive_shell_smoke",
           "browser_interaction_e2e",
-          "desktop_mobile_visual_baseline_browser_evidence"
+          "desktop_tablet_mobile_compact_visual_qa_browser_evidence",
+          "human_owner_receipt_before_production_ui_claim"
         ]
       },
       {

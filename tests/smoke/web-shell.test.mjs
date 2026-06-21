@@ -16,7 +16,7 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /data-figma-pattern="research_skill_launcher"/);
   assert.match(html, /data-figma-pattern="right_inspector_tabs_files_progress_output"/);
   assert.match(html, /data-figma-pattern="running_blocked_turn_state"/);
-  assert.match(html, /data-visual-quality-gate="repo_local_visual_baseline_captured_pending_responsive_visual_qa"/);
+  assert.match(html, /data-visual-quality-gate="repo_local_responsive_visual_qa_captured_pending_owner_receipt"/);
   assert.match(html, /app-shell/);
   assert.match(html, /data-shell-state="app_default_chat"/);
   assert.match(html, /sidebar-shell/);

@@ -263,28 +263,34 @@
     ]
   },
   "visualQualityGate": {
-    "state": "repo_local_visual_baseline_captured_pending_responsive_visual_qa",
+    "state": "repo_local_responsive_visual_qa_captured_pending_owner_receipt",
     "completedPhase": "visual_baseline",
     "currentPhase": "responsive_visual_qa",
     "nextPhase": "production_ui_quality_claim",
     "ownerReceipt": {
       "required": true,
+      "status": "pending",
       "source": "human_owner_receipt",
-      "reason": "repo-local baseline screenshots prove mechanics, but responsive visual QA and production UI quality need owner review"
+      "reason": "repo-local baseline and responsive screenshots prove mechanics, but production UI quality needs owner review"
     },
     "requiredBeforeProductionUiClaim": [
       "Figma MCP source context refreshed",
       "desktop screenshot captured and layout-reviewed in local browser",
+      "tablet screenshot captured and layout-reviewed in local browser",
       "mobile screenshot captured and layout-reviewed in local browser",
+      "compact screenshot captured and layout-reviewed in local browser",
       "browser interaction e2e passed",
       "no hidden overlay intercepts input",
-      "full responsive visual QA and production UI owner receipt completed"
+      "no static text overflow across registered responsive breakpoints",
+      "interactive touch targets and named controls pass registered browser checks",
+      "keyboard focus ring is visible on the primary chat submit control",
+      "production UI owner receipt completed"
     ],
     "baselineEvidence": {
       "command": "npm run verify:browser",
       "runner": "tests/browser/research-main-path-runner.mjs",
       "test": "tests/browser/research-main-path.browser.test.mjs",
-      "viewports": ["desktop", "mobile"],
+      "viewports": ["desktop", "tablet", "mobile", "compact"],
       "screenshotPathPattern": ".runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png",
       "layoutChecks": [
         "horizontalOverflowPx=0",
@@ -292,9 +298,39 @@
         "rightInspector.withinViewport=true",
         "activeInspectorPanel.visible=true",
         "hiddenOverlayInterceptsInput=false",
-        "chatInputHitTarget=true"
+        "chatInputHitTarget=true",
+        "textOverflowCount=0",
+        "interactiveTargetFailures.length=0",
+        "focusableWithoutName.length=0",
+        "focusRingProbe.visible=true"
       ],
       "artifactPolicy": "screenshots are temporary .runtime artifacts and are not git-tracked"
+    },
+    "responsiveVisualQaEvidence": {
+      "command": "npm run verify:browser",
+      "source": "real Chromium/CDP Page.captureScreenshot and DOM layout metrics",
+      "breakpoints": [
+        { "id": "desktop", "width": 1440, "height": 1200, "deviceScaleFactor": 1 },
+        { "id": "tablet", "width": 834, "height": 1200, "deviceScaleFactor": 2 },
+        { "id": "mobile", "width": 390, "height": 1200, "deviceScaleFactor": 2 },
+        { "id": "compact", "width": 360, "height": 1200, "deviceScaleFactor": 3 }
+      ],
+      "checks": [
+        "noHorizontalOverflow",
+        "noStaticTextOverflow",
+        "rightInspectorWithinViewport",
+        "activeInspectorPanelVisible",
+        "hiddenOverlayDoesNotInterceptInput",
+        "chatInputHitTarget",
+        "touchTargetsPass",
+        "namedControlsPass",
+        "keyboardFocusVisible"
+      ],
+      "doesNotProve": [
+        "human owner accepted production UI quality",
+        "complete UI/UX design system",
+        "assistive technology conformance"
+      ]
     },
     "acceptance": [
       {
@@ -308,9 +344,19 @@
         "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-desktop-*.png"
       },
       {
+        "id": "tablet_screenshot_review",
+        "state": "done",
+        "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-tablet-*.png"
+      },
+      {
         "id": "mobile_screenshot_review",
         "state": "done",
         "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-mobile-*.png"
+      },
+      {
+        "id": "compact_screenshot_review",
+        "state": "done",
+        "evidence": "real Chromium/CDP Page.captureScreenshot plus layout checks in npm run verify:browser; screenshot path is .runtime/browser-visual/research-main-path-local-compact-*.png"
       },
       {
         "id": "browser_interaction_e2e",
@@ -324,8 +370,13 @@
       },
       {
         "id": "responsive_visual_qa_closeout",
+        "state": "done",
+        "evidence": "repo-local desktop/tablet/mobile/compact responsive visual QA and accessibility-adjacent browser checks are captured by npm run verify:browser"
+      },
+      {
+        "id": "owner_receipt_closeout",
         "state": "pending",
-        "evidence": "full responsive visual QA, accessibility review, and owner receipt are not folded back"
+        "evidence": "production UI owner receipt is not folded back"
       }
     ],
     "cannotClaim": [
