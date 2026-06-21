@@ -102,17 +102,18 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
   const productionClaim = uiGap.phases.find((phase) => phase.id === 'production_ui_quality_claim');
 
   assert.equal(uiGap.currentPhaseId, 'production_ui_quality_claim');
-  assert.equal(uiGap.currentStatus, 'partial');
+  assert.deepEqual(uiGap.phases.map((phase) => phase.id), ['production_ui_quality_claim']);
+  assert.equal(uiGap.currentStatus, 'blocked');
   assert.equal(
     productionClaim.objective,
     'Claim UI/UX v1 production acceptance only after human owner receipt and sanitized production evidence exist, without claiming a complete design system.',
   );
   assert.deepEqual(productionClaim.entryCriteria, [
-    'repo-local responsive_visual_qa evidence exists',
+    'repo-local responsive visual QA evidence is folded into web GUI product contract',
     'Figma MCP source context remains pinned',
     'human owner approved opening the claim phase but has not signed acceptance',
   ]);
-  assert.ok(uiGap.phases.find((phase) => phase.id === 'responsive_visual_qa').acceptance.some((item) => item.includes('OPL green primary accent')));
+  assert.equal(productionClaim.nextStepOpeners.every((item) => !item.includes('partial')), true);
   assert.deepEqual(productionClaim.exitCriteria, [
     'human owner receipt acceptedClaim=ui_ux_v1_production_accepted',
     'production browser e2e or production screenshot evidence is folded back as sanitized summary',

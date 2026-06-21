@@ -25,88 +25,14 @@
       "ownerSurface": "apps-web",
       "state": "active",
       "currentPhaseId": "production_ui_quality_claim",
-      "currentStatus": "partial",
+      "currentStatus": "blocked",
       "cannotClaim": ["complete UI/UX design system", "production visual polish complete"],
       "phases": [
-        {
-          "id": "visual_baseline",
-          "objective": "Close repo-local Figma-backed shell depth and define the remaining visual QA gate.",
-          "entryCriteria": ["Figma MCP source context available", "web GUI product contract exists"],
-          "exitCriteria": ["desktop screenshot reviewed", "mobile screenshot reviewed", "browser interaction e2e passed"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval"],
-          "acceptance": [
-            "Figma MCP source context is refreshed for file E8nYfNFc2D9P01FYZ8UwBW node 0:1",
-            "visual quality gate declares desktop screenshot, mobile screenshot, browser e2e, and hidden-overlay input checks",
-            "current browser lane passes for app shell interaction evidence",
-            "complete UI/UX design system remains cannot-claim until screenshot review is folded back"
-          ],
-          "nextStepOpeners": [
-            "Open responsive_visual_qa after visual_baseline acceptance passes",
-            "Keep this gap partial if desktop or mobile screenshot evidence is missing",
-            "Do not open production UI-quality claim without screenshot review and browser interaction evidence"
-          ],
-          "ownerReceipt": {
-            "required": false,
-            "source": "repo_local",
-            "reason": "repo-local Figma MCP, contract, smoke, and browser evidence can advance the visual baseline before any production UI claim"
-          },
-          "requiredEvals": [
-            {
-              "id": "ui_visual_baseline_eval",
-              "contract": "contracts/web-gui-product-contract.json#/visualQualityGate",
-              "proves": ["Figma-backed shell visual baseline is ready for production UI claim"],
-              "doesNotProve": ["complete UI/UX design system", "long-term production usability"],
-              "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
-            }
-          ]
-        },
-        {
-          "id": "responsive_visual_qa",
-          "objective": "Use repo-local desktop/tablet/mobile/compact responsive visual QA as owner-review input without making a production UI-quality claim.",
-          "entryCriteria": [
-            "visual_baseline captured through real Chromium/CDP desktop and mobile screenshots",
-            "web GUI product contract records baseline evidence"
-          ],
-          "exitCriteria": [
-            "desktop/tablet/mobile/compact responsive breakpoints are reviewed",
-            "accessibility-adjacent touch target, named control, focus ring, and text-fit browser checks are folded back",
-            "product owner receipt exists before any production UI quality claim"
-          ],
-          "evidenceSources": ["repo_local", "browser", "human_owner_receipt"],
-          "blockerTypes": ["missing_owner_receipt", "missing_eval"],
-          "acceptance": [
-            "browser visual QA includes desktop, tablet, mobile, and compact screenshots in .runtime/browser-visual",
-            "current browser lane asserts no horizontal overflow, no static text overflow, right inspector in viewport, mobile inspector bottom sheet, visible active inspector panel, touch target pass, named controls pass, focus ring visibility, and no hidden overlay input interception",
-            "current smoke and contract lanes assert OPL green primary accent, no default tech blue or purple primary palette, full interaction states, and prefers-reduced-motion",
-            "visual quality gate keeps complete UI/UX design system and production visual polish in cannot-claim",
-            "next production UI claim remains blocked until owner receipt is folded back"
-          ],
-          "nextStepOpeners": [
-            "Open production_ui_quality_claim after repo-local responsive visual QA is folded back and the human owner approves opening the claim phase",
-            "Keep this gap partial while complete design system, assistive technology conformance, and production visual polish evidence is missing",
-            "Do not deploy solely to satisfy repo-local visual QA"
-          ],
-          "ownerReceipt": {
-            "required": true,
-            "source": "human_owner_receipt",
-            "reason": "repo-local screenshots and browser metrics prove baseline mechanics, but product-level UI/UX quality needs explicit owner review before production claim"
-          },
-          "requiredEvals": [
-            {
-              "id": "ui_responsive_visual_qa_eval",
-              "contract": "contracts/web-gui-product-contract.json#/visualQualityGate",
-              "proves": ["repo-local responsive visual QA is ready for owner review"],
-              "doesNotProve": ["complete UI/UX design system", "production visual polish complete"],
-              "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
-            }
-          ]
-        },
         {
           "id": "production_ui_quality_claim",
           "objective": "Claim UI/UX v1 production acceptance only after human owner receipt and sanitized production evidence exist, without claiming a complete design system.",
           "entryCriteria": [
-            "repo-local responsive_visual_qa evidence exists",
+            "repo-local responsive visual QA evidence is folded into web GUI product contract",
             "Figma MCP source context remains pinned",
             "human owner approved opening the claim phase but has not signed acceptance"
           ],
@@ -127,7 +53,7 @@
           "nextStepOpeners": [
             "Close production_ui_quality_claim only after owner receipt and sanitized production evidence exist",
             "Open complete design system work only after a separate owner, consumer, contract, and eval are approved",
-            "Keep this gap partial while owner receipt, production evidence, or accessibility closeout is missing"
+            "Keep this gap blocked while owner receipt, production evidence, or accessibility closeout is missing"
           ],
           "ownerReceipt": {
             "required": true,
