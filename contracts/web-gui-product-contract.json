@@ -6,21 +6,24 @@
   "state": "active",
   "machineBoundary": "GUI product grammar for AI design, Figma generation, frontend implementation, and UI acceptance tests; source, API contracts, and release evidence remain authoritative for runtime behavior.",
   "productTruthGate": {
-    "publicShell": "public_landing_then_auth",
-    "appShell": "chat_first_research_workspace",
-    "gensparkInfluence": "public_landing_only",
-    "codexInfluence": "app_workspace_shell",
+    "publicShell": "ai_native_homepage",
+    "appShell": "side_nav_command_home",
+    "gensparkInfluence": "homepage_structure_reference",
+    "codexInfluence": "contract_first_surface_builder",
     "mustShow": [
-      "public_dashboard_before_auth",
-      "login_register_entry",
-      "chat_first_app_workspace_after_auth",
-      "project_session_history_as_secondary_navigation",
-      "right_inspector_on_user_request",
+      "side_navigation_new_chat_projects_skill_workflow_search_more",
+      "centered_brand_title",
+      "primary_research_composer",
+      "starter_chips",
+      "project_session_history_as_secondary_surface",
+      "inspector_on_user_request",
       "api_key_required_before_chat_send_when_missing"
     ],
     "mustNotShow": [
       "dashboard_first_app_home",
       "explanatory_landing_inside_app_shell",
+      "left_rail_primary_navigation",
+      "workspace_sidebar_primary_shell",
       "raw_trace_console",
       "runtime_truth_panel",
       "billing_source_of_truth",
@@ -69,11 +72,10 @@
   },
   "taskFlow": {
     "primaryFlow": [
-      "public_dashboard",
-      "login_or_register",
-      "app_default_chat",
-      "project_or_session_select",
-      "compose_prompt",
+      "home",
+      "compose_prompt_or_pick_starter_chip",
+      "login_or_register_if_needed",
+      "api_key_modal_if_needed",
       "attach_input_files_optional",
       "run_chat_or_runtime_gate",
       "inspect_progress_files_output",
@@ -88,7 +90,7 @@
       "return_to_composer"
     ],
     "fileFlow": [
-      "open_right_inspector_files",
+      "open_inspector_files",
       "select_project",
       "select_session",
       "inspect_input_output_refs",
@@ -96,88 +98,168 @@
     ]
   },
   "informationArchitecture": {
-    "publicShell": ["landing_summary", "primary_start_action", "login_register"],
-    "appShell": ["left_rail", "workspace_sidebar", "chat_canvas", "right_inspector", "modal_layer"],
-    "leftRail": ["new_chat", "projects", "skill", "search", "more"],
+    "publicShell": ["side_navigation", "first_view", "secondary_surfaces", "overlay_layer"],
+    "appShell": ["side_navigation", "home_command_canvas", "secondary_surfaces", "right_inspector_layer", "modal_layer"],
+    "sideNavigation": ["home", "projects", "skills", "workflows", "search", "more"],
+    "sideNavigationLabels": ["新建对话", "Projects", "Skill", "工作流", "搜索", "More"],
+    "sideNavigationTaskOwnership": {
+      "home": "compose_or_start_research_task",
+      "projects": "browse_project_session_refs_and_create_project",
+      "skills": "browse_or_import_skill_entries",
+      "workflows": "browse_create_or_import_agentic_research_workflows",
+      "search": "open_local_prompt_and_recent_session_filter",
+      "more": "route_settings_and_account_status_page"
+    },
     "accountEntry": "bottom_avatar_popover",
-    "forbiddenLeftRailItems": ["account_text_link", "research_capability", "paper", "grant"],
-    "leftRailActionMap": {
-      "new_chat": {
-        "action": "route_chat_and_focus_composer",
-        "targetView": "chat",
+    "forbiddenPrimaryNavigationItems": ["account_text_link", "research_capability", "paper", "grant", "settings", "api_key"],
+    "sideNavigationActionMap": {
+      "home": {
+        "action": "route_home_and_focus_composer",
+        "targetView": "home",
         "ownerSurface": "browser_shell",
         "consumer": "composer_focus"
       },
       "projects": {
-        "action": "open_local_project_refs_sidebar",
-        "targetView": "chat",
+        "action": "route_projects_page",
+        "targetView": "projects",
         "ownerSurface": "browser_shell",
-        "consumer": "recent_project_session_refs"
+        "consumer": "project_library"
       },
-      "skill": {
-        "action": "route_skill_plaza",
-        "targetView": "skill",
+      "skills": {
+        "action": "route_skills_page",
+        "targetView": "skills",
         "ownerSurface": "browser_shell",
-        "consumer": "research_skill_plaza"
+        "consumer": "skill_library"
+      },
+      "workflows": {
+        "action": "route_workflows_page",
+        "targetView": "workflows",
+        "ownerSurface": "browser_shell",
+        "consumer": "workflow_library"
       },
       "search": {
-        "action": "open_local_search_sidebar",
-        "targetView": "chat",
+        "action": "open_search_sheet",
+        "targetView": "home",
         "ownerSurface": "browser_shell",
         "consumer": "local_prompt_and_recent_session_filter"
       },
       "more": {
-        "action": "open_local_more_sidebar",
-        "targetView": "settings",
+        "action": "route_more_settings_page",
+        "targetView": "more",
         "ownerSurface": "browser_shell",
-        "consumer": "settings_and_medopl_shortcuts"
+        "consumer": "settings_and_account_status"
       }
     },
     "routeScope": {
-      "chat": ["workbench_command", "turn_state", "chat_canvas"],
-      "settings": ["settings_panel"],
-      "skill": ["skill_plaza", "workbench_steps"],
-      "medopl": ["runtime_gate"]
+      "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
+      "skills": ["skill_library"],
+      "workflows": ["workflow_library"],
+      "projects": ["project_library"],
+      "more": ["settings_panel"]
     },
-    "rightInspector": ["files", "progress", "output"],
-    "leftRailLabels": ["新建对话", "项目", "Skill", "搜索", "更多"],
-    "modalLayer": ["login_register", "api_key_required", "confirm_destructive_action"]
+    "librarySurfaces": {
+      "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
+      "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
+      "projects": { "scopes": ["my_projects"], "actions": ["create_project"], "forbiddenApis": ["/api/projects"] }
+    },
+    "inspector": ["files", "progress", "output"],
+    "rightInspector": {
+      "launcher": "right_utility_rail",
+      "tabs": ["files", "progress", "output"],
+      "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "mustNotBePrimaryNavigation": true
+    },
+    "overlaySurfaces": ["account_popover", "search_sheet", "api_key_required_modal", "inspector_sheet"],
+    "modalLayer": ["login_register", "api_key_required"],
+    "retiredPrimaryShell": ["left_rail", "workspace_sidebar", "multi_column_sidebar_sprawl", "clean_workbench_v1"]
   },
   "visualGrammar": {
-    "density": "quiet_dense_workspace",
-    "currentUiVariant": "clean_workbench_v1",
-    "aesthetic": "calm_research_command_workspace",
-    "mainstreamReference": "ai_workspace_left_nav_center_composer_context_panel",
+    "density": "low_stimulus_command_home",
+    "currentUiVariant": "ai_native_research_home_v1",
+    "aesthetic": "clean_low_stimulus_research_workspace",
+    "mainstreamReference": "genspark_like_side_nav_center_composer_agentic_cards",
     "appCopyDensity": "low",
-    "publicCopyDensity": "moderate",
+    "publicCopyDensity": "low",
     "longExplanatoryCopy": "forbidden_in_app_shell",
     "maxPrimaryCtaPerView": 1,
-    "cardUse": "repeated_items_only",
+    "cardUse": "starter_or_secondary_entry_only",
     "nestedCards": "forbidden",
     "kpiCardDashboard": "forbidden_for_app_home",
-    "defaultPanelPolicy": "heavy_left_and_right_panels_hidden_until_user_action",
+    "defaultPanelPolicy": "secondary_surfaces_hidden_until_navigation_or_trigger",
+    "firstViewContract": {
+      "allowedElements": ["side_navigation", "brand_title", "primary_composer", "starter_chips", "right_inspector_utility_rail"],
+      "forbiddenElements": ["left_rail", "workspace_sidebar", "summary_strip", "settings_form", "chat_history", "right_inspector_content_by_default", "runtime_gate", "long_explanatory_copy"],
+      "starterChipCount": { "min": 3, "max": 5 },
+      "maxBodyParagraphs": 1,
+      "primaryComposerRequired": true
+    },
+    "surfaceBudget": {
+      "maxSectionsPerScreen": 3,
+      "maxCardsPerScreen": 6,
+      "maxBodyParagraphsPerScreen": 3,
+      "maxCtaPerScreen": 2,
+      "homeFirstViewMaxSections": 1,
+      "homeFirstViewMaxCards": 0,
+      "secondarySurfaceMaxCards": 6
+    },
     "styleTokens": {
-      "colorRoles": ["canvas", "surface", "rail", "border", "text", "mutedText", "accent", "success", "warning", "danger", "focusRing"],
+      "colorRoles": ["canvas", "surface", "elevatedSurface", "border", "text", "mutedText", "accent", "success", "warning", "danger", "focusRing"],
       "typeScale": ["caption", "label", "body", "bodyStrong", "title", "display"],
       "spaceScale": ["4", "8", "12", "16", "24", "32"],
       "radiusScale": ["6", "8", "12", "pill"]
     },
     "responsiveTopology": {
-      "desktop": ["left_rail_visible", "center_composer_primary", "right_inspector_on_request"],
-      "tablet": ["left_rail_collapsed", "center_composer_primary", "right_inspector_overlay"],
-      "mobile": ["top_identity_bar", "composer_first", "task_chips_before_history", "settings_and_inspector_as_sheets"],
-      "compact": ["composer_first", "single_column", "nonessential_status_collapsed"]
+      "desktop": ["side_nav_visible", "center_composer_primary", "secondary_surfaces_below_fold", "right_inspector_on_request"],
+      "tablet": ["side_nav_compact", "center_composer_primary", "secondary_surfaces_single_column", "inspector_sheet"],
+      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "settings_and_inspector_as_sheets"],
+      "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
     "layoutRules": [
-      "Public landing may use centered prompt-style composition.",
-      "Authenticated app shell must keep the research command workbench and chat canvas primary.",
-      "Left sidebar expands from the rail; it must not create a second extra column.",
-      "Left rail hosts only New Chat, Projects, Skill, Search, and More; account access is a bottom avatar popover.",
-      "Research, paper, and grant skills are invoked from the composer, command palette, task chips, or result follow-up actions rather than shown as primary left-rail navigation.",
-      "Right inspector hosts files, progress, and output tabs in the same shell.",
-      "Files and progress must not be rendered as duplicate standalone page layouts.",
-      "The clean_workbench_v1 shell must not use the retired hero-shell section."
+      "Home must use a centered AI-native composer-first composition.",
+      "Side navigation hosts New Chat, Projects, Skill, 工作流, Search, and More; each primary item owns exactly one task class.",
+      "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.",
+      "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.",
+      "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; they must not appear as primary navigation items.",
+      "Search opens a secondary sheet; More routes to the settings/account status page and must not create a workspace column.",
+      "The first viewport must not show summary strips, settings forms, chat history, or card grids.",
+      "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.",
+      "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."
     ]
+  },
+  "interactionContract": {
+    "account_popover": {
+      "openTrigger": "avatar_button",
+      "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
+      "focusReturn": "avatar_button",
+      "emptyState": "anonymous_status",
+      "errorState": "sanitized_status_only",
+      "loadingState": "status_pending"
+    },
+    "search_sheet": {
+      "openTrigger": "search_button_or_more_shortcut",
+      "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
+      "focusReturn": "search_button_or_more_shortcut",
+      "emptyState": "no_filter_query",
+      "errorState": "local_only_no_backend_error",
+      "loadingState": "not_applicable_local_only"
+    },
+    "api_key_required_modal": {
+      "openTrigger": "chat_submit_without_provider_key",
+      "closeTrigger": ["explicit_close", "escape"],
+      "focusReturn": "chat_submit",
+      "emptyState": "provider_unbound",
+      "errorState": "sanitized_api_key_error",
+      "loadingState": "saving_key"
+    },
+    "inspector_sheet": {
+      "openTrigger": "right_inspector_files_progress_output_button",
+      "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
+      "focusReturn": "inspector_open_button",
+      "emptyState": "refs_not_available",
+      "errorState": "projection_unavailable",
+      "loadingState": "projection_pending",
+      "placement": "right_resizable_panel"
+    }
   },
   "semanticTokens": {
     "resourceActive": "resource.active",
@@ -206,35 +288,36 @@
     },
     {
       "id": "AppShell",
-      "role": "authenticated_workspace_shell",
-      "defaultState": "chat_canvas_primary"
+      "role": "side_nav_command_shell",
+      "defaultState": "home_first_view_primary"
     },
     {
-      "id": "LeftRail",
+      "id": "SideNavigation",
       "role": "global_app_navigation",
-      "defaultState": "collapsed",
-      "expandedComponent": "WorkspaceSidebar"
+      "items": ["home", "projects", "skills", "workflows", "search", "more"],
+      "defaultState": "visible"
     },
     {
-      "id": "WorkspaceSidebar",
-      "role": "search_history_projects",
+      "id": "Sheet",
+      "role": "secondary_overlay_surface",
       "defaultState": "hidden",
-      "resize": { "enabled": true, "minWidth": 260, "maxWidth": 420 }
+      "variants": ["search", "inspector"],
+      "states": ["closed", "open", "empty", "error", "loading"]
     },
     {
-      "id": "ProjectTree",
+      "id": "ProjectRefs",
       "role": "project_session_navigation",
       "hierarchy": ["project", "session"]
     },
     {
-      "id": "ConversationList",
+      "id": "SearchPanel",
       "role": "recent_session_history",
-      "placement": "below_search"
+      "placement": "secondary_sheet"
     },
     {
       "id": "ChatCanvas",
       "role": "primary_work_area",
-      "composerPosition": "bottom"
+      "composerPosition": "first_view_center"
     },
     {
       "id": "Composer",
@@ -242,7 +325,7 @@
       "supports": ["model_select", "skill_mention", "file_attach"]
     },
     {
-      "id": "RightInspector",
+      "id": "InspectorSheet",
       "role": "secondary_context_surface",
       "defaultState": "hidden",
       "tabs": ["files", "progress", "output"],
@@ -268,22 +351,77 @@
       "id": "ApiKeyDialog",
       "role": "chat_send_unblocker",
       "primaryAction": "save",
-      "primaryActionLabel": "保存"
+      "primaryActionLabel": "保存",
+      "states": ["closed", "open", "empty", "error", "loading"]
     },
     {
       "id": "SkillPlaza",
       "role": "skill_discovery_secondary_surface",
-      "defaultState": "inside_app_shell"
+      "defaultState": "inside_app_shell",
+      "scopes": ["my_skills", "opl_skills"],
+      "actions": ["import_skill"]
+    },
+    {
+      "id": "WorkflowCards",
+      "role": "agentic_workflow_secondary_surface",
+      "defaultState": "secondary_route",
+      "scopes": ["my_workflows", "opl_workflows"],
+      "actions": ["create_workflow", "import_workflow"]
+    },
+    {
+      "id": "ProjectLibrary",
+      "role": "project_refs_secondary_route",
+      "defaultState": "secondary_route",
+      "actions": ["create_project"],
+      "forbiddenApis": ["/api/projects"]
     }
   ],
+  "componentTokens": {
+    "Button": {
+      "variants": ["primary", "secondary", "ghost", "icon"],
+      "states": ["default", "hover", "focus", "disabled", "loading"]
+    },
+    "Input": {
+      "variants": ["composer", "text", "search", "password"],
+      "states": ["default", "focus", "disabled", "error", "loading"]
+    },
+    "Card": {
+      "variants": ["starter_chip", "skill_entry", "workflow_entry", "result"],
+      "states": ["default", "hover", "selected", "disabled", "loading", "error"]
+    },
+    "Popover": {
+      "variants": ["account"],
+      "states": ["closed", "open", "empty", "error", "loading"]
+    },
+    "Modal": {
+      "variants": ["api_key_required"],
+      "states": ["closed", "open", "empty", "error", "loading"]
+    },
+    "Nav": {
+      "variants": ["side", "mobile_compact"],
+      "states": ["default", "active", "hover", "focus"]
+    },
+    "Chip": {
+      "variants": ["starter", "intent", "status"],
+      "states": ["default", "hover", "selected", "disabled"]
+    },
+    "Tabs": {
+      "variants": ["inspector"],
+      "states": ["default", "selected", "focus", "disabled"]
+    },
+    "Sheet": {
+      "variants": ["search", "inspector"],
+      "states": ["closed", "open", "empty", "error", "loading"]
+    }
+  },
   "pageTemplates": [
-    "PublicLanding",
-    "Auth",
-    "DefaultAppShell",
-    "ExpandedSidebar",
-    "RightInspectorOpen",
+    "HomeFirstView",
+    "Skills",
+    "Workflows",
+    "Projects",
+    "MorePage",
+    "InspectorSheet",
     "ModalOverlay",
-    "SkillPlaza",
     "OutputPreview"
   ],
   "accessibility": {
@@ -303,13 +441,15 @@
       "src/styles/index.css"
     ],
     "adoptedPatterns": [
-      "collapsed_expanded_left_rail",
       "account_popover_status",
       "missing_api_key_resource_gate",
+      "side_navigation_new_chat_projects_skill_workflow_search_more",
+      "ai_native_center_composer",
+      "starter_chips",
       "prompt_command_center",
       "research_skill_launcher",
-      "chat_task_view",
-      "right_inspector_tabs_files_progress_output",
+      "agentic_workflow_cards",
+      "inspector_sheet_tabs_files_progress_output",
       "running_blocked_turn_state"
     ],
     "rejectedPatterns": [
@@ -318,7 +458,7 @@
       "founder_plan_upsell",
       "unlimited_compute_claim",
       "dashboard_crm_primary_app",
-      "generic_office_content_design_code_video_skills"
+      "generic_office_content_design_video_skills"
     ]
   },
   "visualQualityGate": {
@@ -355,8 +495,8 @@
       "screenshotPathPattern": ".runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png",
       "layoutChecks": [
         "horizontalOverflowPx=0",
-        "rightInspector.visible=true",
-        "rightInspector.withinViewport=true",
+        "inspector.visible=true",
+        "inspector.withinViewport=true",
         "activeInspectorPanel.visible=true",
         "hiddenOverlayInterceptsInput=false",
         "chatInputHitTarget=true",
@@ -379,7 +519,7 @@
       "checks": [
         "noHorizontalOverflow",
         "noStaticTextOverflow",
-        "rightInspectorWithinViewport",
+        "inspectorWithinViewport",
         "activeInspectorPanelVisible",
         "hiddenOverlayDoesNotInterceptInput",
         "chatInputHitTarget",
@@ -490,9 +630,9 @@
         "evidence": "repo-local desktop/tablet/mobile/compact responsive visual QA and accessibility-adjacent browser checks are captured by npm run verify:browser"
       },
       {
-        "id": "clean_workbench_v1_shell",
+        "id": "ai_native_research_home_v1_shell",
         "state": "done",
-        "evidence": "apps/web/index.html declares data-ui-variant=clean_workbench_v1, uses a workbench command band, retires the hero-shell markup, and passed refreshed repo-local browser visual QA through npm run verify:browser"
+        "evidence": "apps/web/index.html declares data-ui-variant=ai_native_research_home_v1, uses side navigation plus first-view composer, retires the left-rail workbench structure, and must pass refreshed repo-local browser visual QA through npm run verify:browser"
       },
       {
         "id": "owner_receipt_closeout",

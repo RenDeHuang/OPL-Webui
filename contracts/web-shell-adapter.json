@@ -48,14 +48,17 @@
     "codeRole": "implementation of contract states only",
     "requiredNodeMetadata": ["componentId", "variantProps", "stateId", "mustShow", "mustNotShow"],
     "variantProps": {
-      "LeftRail": {
-        "state": ["collapsed", "expanded"]
+      "SideNavigation": {
+        "state": ["default", "active", "compact"]
       },
-      "WorkspaceSidebar": {
-        "state": ["hidden", "expanded"],
-        "width": ["default", "narrow", "wide"]
+      "Sheet": {
+        "state": ["closed", "open", "empty", "error", "loading"],
+        "variant": ["search", "inspector"]
       },
-      "RightInspector": {
+      "MorePage": {
+        "state": ["default", "saving", "error"]
+      },
+      "InspectorSheet": {
         "state": ["hidden", "files", "progress", "output"],
         "width": ["default", "narrow", "wide"]
       },
@@ -70,14 +73,17 @@
     }
   },
   "codeProps": {
-    "LeftRail": {
-      "state": ["collapsed", "expanded"]
+    "SideNavigation": {
+      "state": ["default", "active", "compact"]
     },
-    "WorkspaceSidebar": {
-      "state": ["hidden", "expanded"],
-      "resizable": true
-    },
-    "RightInspector": {
+      "Sheet": {
+        "state": ["closed", "open", "empty", "error", "loading"],
+        "variant": ["search", "inspector"]
+      },
+      "MorePage": {
+        "state": ["default", "saving", "error"]
+      },
+    "InspectorSheet": {
       "state": ["hidden", "files", "progress", "output"],
       "resizable": true
     },

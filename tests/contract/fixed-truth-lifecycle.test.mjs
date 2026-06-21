@@ -170,7 +170,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
-  assert.equal(product.primaryUserPath, 'research_capability_first_web_workbench');
+  assert.equal(product.primaryUserPath, 'ai_native_research_homepage');
   assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
   assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件']);
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');

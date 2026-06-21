@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-test('one-person-lab-web shell exposes research SaaS workbench product surface', () => {
+test('one-person-lab-web shell exposes AI-native research homepage product surface', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /One Person Lab Web/);
@@ -10,55 +10,58 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /科研工作人员、硕博、PI 与科研团队/);
   assert.match(html, /figma-make-webui-alignment/);
   assert.match(html, /data-figma-source="E8nYfNFc2D9P01FYZ8UwBW"/);
-  assert.match(html, /data-figma-pattern="collapsed_expanded_left_rail"/);
+  assert.match(html, /data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more"/);
+  assert.match(html, /data-figma-pattern="ai_native_center_composer"/);
+  assert.match(html, /data-figma-pattern="starter_chips"/);
   assert.match(html, /data-figma-pattern="account_popover_status"/);
   assert.match(html, /data-figma-pattern="prompt_command_center"/);
   assert.match(html, /data-figma-pattern="research_skill_launcher"/);
-  assert.match(html, /data-figma-pattern="right_inspector_tabs_files_progress_output"/);
+  assert.match(html, /data-figma-pattern="agentic_workflow_cards"/);
+  assert.match(html, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
   assert.match(html, /data-figma-pattern="running_blocked_turn_state"/);
   assert.match(html, /data-visual-quality-gate="repo_local_responsive_visual_qa_captured_pending_owner_receipt"/);
-  assert.match(html, /data-ui-variant="clean_workbench_v1"/);
-  assert.match(html, /workbench-summary-strip/);
+  assert.match(html, /data-ui-variant="ai_native_research_home_v1"/);
+  assert.match(html, /data-visual-density="low_stimulus_command_home"/);
+  assert.match(html, /data-view="home"/);
+  assert.match(html, /data-shell-state="home_default"/);
+  assert.match(html, /data-side-navigation/);
+  assert.match(html, /data-nav-item="home"[^>]*data-shell-action="home"[^>]*>新建对话/);
+  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>Projects/);
+  assert.match(html, /data-nav-item="skills"[^>]*data-shell-action="skills"[^>]*>Skill/);
+  assert.match(html, /data-nav-item="workflows"[^>]*data-shell-action="workflows"[^>]*>工作流/);
+  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>Projects/);
+  assert.match(html, /data-nav-item="search"[^>]*data-shell-action="search"[^>]*>搜索/);
+  assert.match(html, /data-nav-item="more"[^>]*data-shell-action="more"[^>]*>More/);
+  assert.match(html, /data-search-trigger/);
+  assert.match(html, /data-first-view/);
+  assert.match(html, /data-first-view-contract="side_nav_brand_composer_chips_right_inspector_rail"/);
   assert.match(html, /research-command-band/);
-  assert.match(html, /surface-stack/);
-  assert.match(html, /输入研究问题，直接进入工作台/);
-  assert.match(html, /今天的工作/);
-  assert.match(html, /研究方向/);
-  assert.match(html, /材料与输出/);
+  assert.match(html, /data-starter-chips/);
+  assert.equal((html.match(/data-starter-chip(?=[\s>])/g) ?? []).length, 5);
+  assert.match(html, /输入研究问题，调用 OPL/);
   assert.doesNotMatch(html, /hero-shell/);
   assert.match(html, /app-shell/);
-  assert.match(html, /data-shell-state="app_default_chat"/);
-  assert.match(html, /sidebar-shell/);
-  assert.match(html, /data-left-rail-state="collapsed"/);
-  assert.match(html, /data-left-rail-toggle/);
-  assert.match(html, /data-left-rail-item="new_chat"[^>]*data-shell-action="new_chat"/);
-  assert.match(html, /data-left-rail-item="projects"[^>]*data-shell-action="projects"/);
-  assert.match(html, /data-left-rail-item="skill"[^>]*data-shell-action="skill"/);
-  assert.match(html, /data-left-rail-item="search"[^>]*data-shell-action="search"/);
-  assert.match(html, /data-left-rail-item="more"[^>]*data-shell-action="more"/);
-  assert.match(html, /新建对话/);
-  assert.match(html, /项目/);
-  assert.match(html, /Skill/);
-  assert.match(html, /搜索/);
-  assert.match(html, /更多/);
-  assert.doesNotMatch(html, /<nav class="sidebar-nav"[\s\S]*?(科研能力|论文|基金|账号)[\s\S]*?<\/nav>/);
-  assert.match(html, /data-local-sidebar/);
-  assert.match(html, /data-local-sidebar-panel="recent"/);
-  assert.match(html, /data-project-panel/);
-  assert.match(html, /data-search-panel/);
-  assert.match(html, /data-more-panel/);
+  assert.doesNotMatch(html, /sidebar-shell|left-rail-toggle|data-left-rail|conversation-list|data-local-sidebar|workspace-sidebar|workbench-summary-strip|clean_workbench_v1/);
+  assert.doesNotMatch(html, /<nav[^>]*data-side-navigation[\s\S]*?(科研能力|论文|基金|账号|Settings|API Key|文件|进度|输出)[\s\S]*?<\/nav>/);
+  assert.doesNotMatch(html, /data-projects-sheet/);
+  assert.match(html, /data-project-library/);
+  assert.match(html, /data-search-sheet/);
+  assert.match(html, /data-overlay-close="search"/);
   assert.match(html, /data-local-search/);
   assert.match(html, /data-local-search-entry/);
   assert.match(html, /account-dock/);
   assert.match(html, /account-popover/);
+  assert.match(html, /data-account-popover-close/);
   assert.doesNotMatch(html, /<\/dl>\s*<\/dl>/);
   assert.match(html, /prompt-command-center/);
   assert.match(html, /skill-launcher/);
-  assert.match(html, /data-right-inspector/);
-  assert.match(html, /data-right-inspector-state="hidden"/);
-  assert.match(html, /data-right-inspector-tab="files"/);
-  assert.match(html, /data-right-inspector-tab="progress"/);
-  assert.match(html, /data-right-inspector-tab="output"/);
+  assert.match(html, /data-inspector-sheet/);
+  assert.match(html, /data-right-inspector-rail/);
+  assert.match(html, /data-inspector-resize-handle/);
+  assert.match(html, /data-inspector-state="hidden"/);
+  assert.match(html, /data-inspector-tab="files"/);
+  assert.match(html, /data-inspector-tab="progress"/);
+  assert.match(html, /data-inspector-tab="output"/);
   assert.match(html, /data-inspector-files-refs/);
   assert.match(html, /data-inspector-progress-projection/);
   assert.match(html, /data-inspector-output-refs/);
@@ -78,14 +81,15 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /MedOPL/);
   assert.match(html, /prompt-console/);
   assert.match(html, /@科研、@论文、@基金/);
-  assert.match(html, /输入研究问题或选择 Skill/);
-  assert.match(html, /OPL Web 应承接的五件事/);
-  assert.match(html, /选择 Skill/);
-  assert.match(html, /绑定真实材料/);
-  assert.match(html, /进入科研工作流/);
-  assert.match(html, /沉淀交付物/);
-  assert.match(html, /保留普通聊天/);
-  assert.match(html, /Skill 入口/);
+  assert.match(html, /输入研究问题或选择一个 starter chip/);
+  assert.match(html, /导入 Skill/);
+  assert.match(html, /我的 Skill/);
+  assert.match(html, /OPL Skill/);
+  assert.match(html, /制定工作流/);
+  assert.match(html, /导入工作流/);
+  assert.match(html, /我的工作流/);
+  assert.match(html, /OPL 工作流/);
+  assert.match(html, /新增 Project/);
   assert.match(html, /账号与凭据状态/);
   assert.match(html, /OPL/);
   assert.match(html, /科研任务入口/);
@@ -128,17 +132,17 @@ test('one-person-lab-web shell exposes research SaaS workbench product surface',
   assert.match(html, /data-reliability-details/);
   assert.match(html, /data-running-turn/);
   assert.match(html, /data-blocked-turn/);
-  assert.match(html, /class="workbench-command"[\s\S]*data-route-surface="chat"/);
-  assert.match(html, /class="turn-state-strip"[\s\S]*data-route-surface="chat"/);
-  assert.match(html, /class="product-grid surface-stack"[\s\S]*data-route-surface="chat settings"/);
-  assert.match(html, /class="chat-panel"[\s\S]*data-route-surface="chat"/);
-  assert.match(html, /class="settings-panel credential-panel"[\s\S]*data-route-surface="settings"/);
-  assert.match(html, /class="capability-section foundry-section"[\s\S]*data-route-surface="skill"/);
-  assert.match(html, /class="workbench-card"[\s\S]*data-route-surface="skill"/);
-  assert.match(html, /class="runtime-gate"[\s\S]*data-route-surface="chat medopl"/);
+  assert.match(html, /class="home-first-view[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="turn-state-strip"[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="chat-panel"[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="settings-panel credential-panel"[\s\S]*data-route-surface="more"/);
+  assert.match(html, /class="capability-section foundry-section"[\s\S]*data-route-surface="skills"/);
+  assert.match(html, /class="workflow-section"[\s\S]*data-route-surface="workflows"/);
+  assert.match(html, /class="project-section"[\s\S]*data-route-surface="projects"/);
+  assert.match(html, /class="runtime-gate"[\s\S]*data-route-surface="home more"/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
   assert.doesNotMatch(html, /styles\/v3\.css/);
-  assert.doesNotMatch(html, /\/api\/search|\/api\/projects|MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM|#capabilities/);
+  assert.doesNotMatch(html, /\/api\/search|\/api\/projects|MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM|#(?:capabilities|chat|settings|medopl)(?=["'\s<>]|$)/);
 });
 
 test('one-person-lab-web shell keeps internal workspace concepts hidden', () => {
@@ -149,14 +153,15 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
     'apps/web/src/onePersonLabWebDom.mjs',
   ].map((path) => readFileSync(path, 'utf8')).join('\n');
 
-  assert.doesNotMatch(html, /workspace|runtime tab|MedOPL Runtime|node pool|托管运行环境|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution/i);
+  assert.doesNotMatch(html, /workspace|runtime tab|MedOPL Runtime|node pool|托管运行环境|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution|left rail/i);
   assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(webSource, /dataset\.chatState/);
   assert.match(webSource, /dataset\.shellState/);
-  assert.match(webSource, /dataset\.leftRailState/);
-  assert.match(webSource, /dataset\.rightInspectorState/);
+  assert.match(webSource, /dataset\.inspectorState/);
   assert.match(webSource, /dataset\.apiKeyDialogState/);
+  assert.match(webSource, /function handleGlobalKeydown\(event\)[\s\S]*closeOverlay\(name, true\)[\s\S]*closeAccountPopover\(true\)/);
+  assert.doesNotMatch(webSource, /leftRailState|data-left-rail|left_sidebar_expanded/);
   assert.match(webSource, /chatStateForResult/);
   assert.match(webSource, /chatStateForPrompt/);
   assert.doesNotMatch(webSource, /if \(requiresRuntimeGate\(message\)\) \{\n\s+document\.body\.dataset\.chatState = chatStateForResult/);
@@ -169,35 +174,37 @@ test('hidden shell overlays cannot intercept browser input', () => {
   const css = readFileSync('apps/web/styles.css', 'utf8');
 
   assert.match(html, /class="api-key-dialog"[\s\S]*hidden/);
-  assert.match(html, /class="right-inspector"[\s\S]*hidden/);
+  assert.match(html, /class="inspector-sheet"[\s\S]*hidden/);
+  assert.match(html, /class="overlay-sheet"[\s\S]*hidden/);
   assert.match(css, /\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/);
 });
 
-test('shell css carries responsive Figma workspace constraints', () => {
+test('shell css carries responsive low-stimulus homepage constraints', () => {
   const css = readFileSync('apps/web/styles.css', 'utf8');
 
-  assert.match(css, /--left-rail-collapsed:\s*82px/);
-  assert.match(css, /--left-rail-expanded:\s*260px/);
   assert.match(css, /--inspector-min:\s*320px/);
   assert.match(css, /--inspector-max:\s*520px/);
-  assert.match(css, /data-visual-density="quiet_dense_workbench"/);
-  assert.match(css, /data-figma-pattern="right_inspector_tabs_files_progress_output"/);
-  assert.match(css, /body\[data-left-rail-state="collapsed"\]\s+\.sidebar-nav a\{[^}]*min-width:48px[^}]*width:48px/);
-  assert.match(css, /body\[data-view="chat"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="chat"\]\)/);
-  assert.match(css, /body\[data-view="settings"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="settings"\]\)/);
-  assert.match(css, /body\[data-view="skill"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="skill"\]\)/);
-  assert.match(css, /body\[data-view="medopl"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="medopl"\]\)/);
-  assert.match(css, /body\[data-view="chat"\]\s+\.product-grid/);
-  assert.match(css, /body\[data-view="settings"\]\s+\.product-grid/);
-  assert.match(css, /@media \(max-width:1040px\)/);
-  assert.match(css, /@media \(max-width:760px\)/);
+  assert.match(css, /data-visual-density="low_stimulus_command_home"/);
+  assert.match(css, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
+  assert.match(css, /body\[data-view="home"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="home"\]\)/);
+  assert.match(css, /body\[data-view="skills"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="skills"\]\)/);
+  assert.match(css, /body\[data-view="workflows"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="workflows"\]\)/);
+  assert.match(css, /body\[data-view="projects"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="projects"\]\)/);
+  assert.match(css, /body\[data-view="more"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="more"\]\)/);
+  assert.match(css, /\.side-navigation/);
+  assert.match(css, /\.right-inspector-rail/);
+  assert.match(css, /\.home-first-view/);
+  assert.match(css, /\.starter-chips/);
+  assert.doesNotMatch(css, /left-rail|sidebar-shell|conversation-list|quiet_dense_workbench|clean_workbench_v1/);
+  assert.match(css, /@media \(max-width:\s*1040px\)/);
+  assert.match(css, /@media \(max-width:\s*760px\)/);
 });
 
-test('settings hash has a dedicated productized settings surface', () => {
+test('more surface contains productized settings without becoming primary navigation', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
 
-  assert.match(html, /href="#settings"/);
-  assert.match(html, /id="settings"/);
+  assert.match(html, /href="#more"/);
+  assert.match(html, /id="more"/);
   assert.match(html, /data-settings-panel/);
   assert.match(html, /data-account-settings-link/);
   assert.match(html, /data-account-popover/);

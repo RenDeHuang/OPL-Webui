@@ -17,9 +17,8 @@ import {
 
 export async function initOnePersonLabWeb() {
   let view = createInitialOnePersonLabViewModel();
-  document.body.dataset.shellState = 'app_default_chat';
-  document.body.dataset.leftRailState = document.body.dataset.leftRailState || 'collapsed';
-  document.body.dataset.rightInspectorState = document.body.dataset.rightInspectorState || 'hidden';
+  document.body.dataset.shellState = 'home_default';
+  document.body.dataset.inspectorState = document.body.dataset.inspectorState || 'hidden';
   document.body.dataset.apiKeyDialogState = document.body.dataset.apiKeyDialogState || 'closed';
   document.body.dataset.chatState = chatStateForResult(null);
 
@@ -41,16 +40,27 @@ export async function initOnePersonLabWeb() {
 function syncHashView() {
   const view = viewFromHash(window.location.hash);
   document.body.dataset.view = view;
-  syncRailCurrent(view);
-  if (view === 'settings') {
+  syncNavCurrent(view);
+  closeTransientOverlays();
+  if (view === 'home') {
+    document.querySelector('#home')?.setAttribute('tabindex', '-1');
+  }
+  if (view === 'skills') {
+    document.querySelector('#skills')?.setAttribute('tabindex', '-1');
+    document.querySelector('#skills')?.focus({ preventScroll: true });
+  }
+  if (view === 'workflows') {
+    document.querySelector('#workflows')?.setAttribute('tabindex', '-1');
+    document.querySelector('#workflows')?.focus({ preventScroll: true });
+  }
+  if (view === 'projects') {
+    document.querySelector('#projects')?.setAttribute('tabindex', '-1');
+    document.querySelector('#projects')?.focus({ preventScroll: true });
+  }
+  if (view === 'more') {
     document.querySelector('[data-settings-panel]')?.setAttribute('tabindex', '-1');
     document.querySelector('[data-settings-panel]')?.focus({ preventScroll: true });
   }
-  if (view === 'skill') {
-    document.querySelector('#skill')?.setAttribute('tabindex', '-1');
-    document.querySelector('#skill')?.focus({ preventScroll: true });
-  }
-  if (view === 'medopl') showRuntimeGate();
 }
 
 function bindCapabilityButtons() {
@@ -72,11 +82,11 @@ function bindAccountPopover() {
   const button = document.querySelector('[data-account-toggle]');
   const popover = document.querySelector('[data-account-popover]');
   if (!button || !popover) return;
-  button.addEventListener('click', () => {
-    const nextExpanded = popover.hidden;
-    popover.hidden = !nextExpanded;
-    button.setAttribute('aria-expanded', String(nextExpanded));
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleAccountPopover();
   });
+  document.querySelector('[data-account-popover-close]')?.addEventListener('click', () => closeAccountPopover(true));
 }
 
 function bindChatForm(getView) {
@@ -91,16 +101,16 @@ function bindChatForm(getView) {
     if (view.accountState === 'anonymous') {
       setShellTurnState('blocked_turn');
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }));
-      appendMessage('OPL', '请先登录/注册后开始聊天。', 'assistant-message');
-      window.location.hash = 'settings';
+      appendMessage('OPL', '请先登录或注册后再发送。', 'assistant-message');
+      window.location.hash = 'more';
       return;
     }
     if (view.accountState === 'authenticated_unbound') {
       setShellTurnState('blocked_turn');
       openAPIKeyDialog();
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
-      appendMessage('OPL', '请先在 Settings 绑定 API Key。', 'assistant-message');
-      window.location.hash = 'settings';
+      appendMessage('OPL', '请先在 More 绑定 API Key。', 'assistant-message');
+      window.location.hash = 'more';
       return;
     }
     setShellTurnState('running_turn');
@@ -108,7 +118,7 @@ function bindChatForm(getView) {
     renderReliabilityStatus(reliabilityStatusForResult(null));
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
-    setShellTurnState(result.ok ? 'app_default_chat' : 'blocked_turn');
+    setShellTurnState(result.ok ? 'home_default' : 'blocked_turn');
     renderReliabilityStatus(reliabilityStatusForResult(result));
     if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
     appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
@@ -118,13 +128,6 @@ function bindChatForm(getView) {
 }
 
 function bindShellControls() {
-  document.querySelector('[data-left-rail-toggle]')?.addEventListener('click', () => {
-    const expanded = document.body.dataset.leftRailState !== 'expanded';
-    document.body.dataset.leftRailState = expanded ? 'expanded' : 'collapsed';
-    document.body.dataset.shellState = expanded ? 'left_sidebar_expanded' : 'app_default_chat';
-    document.querySelector('[data-left-rail-toggle]')?.setAttribute('aria-expanded', String(expanded));
-  });
-
   for (const action of document.querySelectorAll('[data-shell-action]')) {
     action.addEventListener('click', (event) => {
       const handled = runShellAction(action.dataset.shellAction);
@@ -132,75 +135,58 @@ function bindShellControls() {
     });
   }
 
-  for (const button of document.querySelectorAll('[data-right-inspector-open]')) {
-    button.addEventListener('click', () => openRightInspector(button.dataset.rightInspectorOpen || 'files'));
+  for (const button of document.querySelectorAll('[data-inspector-open]')) {
+    button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'files', button));
   }
 
-  for (const tab of document.querySelectorAll('[data-right-inspector-tab]')) {
-    tab.addEventListener('click', () => openRightInspector(tab.dataset.rightInspectorTab || 'files'));
+  for (const tab of document.querySelectorAll('[data-inspector-tab]')) {
+    tab.addEventListener('click', () => openInspector(tab.dataset.inspectorTab || 'files', tab));
   }
 
-  document.querySelector('[data-right-inspector-close]')?.addEventListener('click', () => closeRightInspector());
-  document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
+  bindInspectorResize();
+  document.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector(true));
+  for (const close of document.querySelectorAll('[data-overlay-close]')) {
+    close.addEventListener('click', () => closeOverlay(close.dataset.overlayClose, true));
+  }
+  document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog(true));
   document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => closeAPIKeyDialog());
-  document.querySelector('[data-local-search]')?.addEventListener('input', (event) => filterLocalSidebar(event.currentTarget.value));
+  document.querySelector('[data-local-search]')?.addEventListener('input', (event) => filterLocalEntries(event.currentTarget.value));
+  document.addEventListener('keydown', handleGlobalKeydown);
+  document.addEventListener('click', handleOutsideClick);
 }
 
 function runShellAction(action) {
   const input = document.querySelector('#chat-input');
-  if (action === 'new_chat') {
-    setHashView('chat');
-    openLocalSidebarPanel('recent');
-    document.body.dataset.shellState = 'app_default_chat';
+  if (action === 'home') {
+    setHashView('home');
+    document.body.dataset.shellState = 'home_default';
     input?.focus({ preventScroll: true });
     return true;
   }
-  if (action === 'projects') {
-    setHashView('chat');
-    openLocalSidebarPanel('projects');
-    focusLocalSidebar('[data-project-panel] button');
-    return true;
-  }
-  if (action === 'skill') {
-    setHashView('skill');
-    openLocalSidebarPanel('recent');
+  if (action === 'skills' || action === 'workflows' || action === 'projects') {
+    setHashView(action);
     return true;
   }
   if (action === 'search') {
-    setHashView('chat');
-    openLocalSidebarPanel('search');
+    setHashView('home');
+    openOverlay('search', document.querySelector('[data-search-trigger]'));
     document.querySelector('[data-local-search]')?.focus({ preventScroll: true });
     return true;
   }
   if (action === 'more') {
-    setHashView('settings');
-    openLocalSidebarPanel('more');
-    focusLocalSidebar('[data-more-panel] a');
+    setHashView('more');
     return true;
   }
   return false;
 }
 
 function setHashView(view) {
-  const nextHash = view === 'chat' ? '#chat' : `#${view}`;
+  const nextHash = view === 'home' ? '#home' : `#${view}`;
   if (window.location.hash === nextHash) syncHashView();
   else window.location.hash = nextHash;
 }
 
-function openLocalSidebarPanel(panelName) {
-  document.body.dataset.leftRailState = 'expanded';
-  document.querySelector('[data-left-rail-toggle]')?.setAttribute('aria-expanded', 'true');
-  document.body.dataset.shellState = panelName === 'recent' ? 'app_default_chat' : 'left_sidebar_expanded';
-  for (const panel of document.querySelectorAll('[data-local-sidebar-panel]')) {
-    panel.hidden = panel.dataset.localSidebarPanel !== panelName;
-  }
-}
-
-function focusLocalSidebar(selector) {
-  document.querySelector(selector)?.focus({ preventScroll: true });
-}
-
-function filterLocalSidebar(query) {
+function filterLocalEntries(query) {
   const normalized = String(query || '').trim().toLowerCase();
   for (const entry of document.querySelectorAll('[data-local-search-entry]')) {
     const matches = !normalized || entry.textContent.toLowerCase().includes(normalized) || (entry.dataset.prompt || '').toLowerCase().includes(normalized);
@@ -208,43 +194,79 @@ function filterLocalSidebar(query) {
   }
 }
 
-function syncRailCurrent(view) {
-  const currentByView = { chat: 'new_chat', settings: 'more', skill: 'skill', medopl: 'more' };
-  const currentID = currentByView[view] || 'new_chat';
-  for (const item of document.querySelectorAll('[data-left-rail-item]')) {
-    if (item.dataset.leftRailItem === currentID) item.setAttribute('aria-current', 'page');
+function syncNavCurrent(view) {
+  const currentID = ['home', 'skills', 'workflows', 'projects', 'more'].includes(view) ? view : 'home';
+  for (const item of document.querySelectorAll('[data-nav-item]')) {
+    if (item.dataset.navItem === currentID) item.setAttribute('aria-current', 'page');
     else item.removeAttribute('aria-current');
   }
 }
 
-function openRightInspector(state = 'files') {
-  const inspector = document.querySelector('[data-right-inspector]');
+function openInspector(state = 'files', trigger = null) {
+  const inspector = document.querySelector('[data-inspector-sheet]');
   if (!inspector) return;
   const normalized = ['files', 'progress', 'output'].includes(state) ? state : 'files';
+  setFocusReturn(inspector, trigger);
   inspector.hidden = false;
-  inspector.dataset.rightInspectorState = normalized;
-  document.body.dataset.rightInspectorState = normalized;
-  document.body.dataset.shellState = 'right_inspector_open';
-  for (const tab of document.querySelectorAll('[data-right-inspector-tab]')) {
-    tab.setAttribute('aria-selected', String(tab.dataset.rightInspectorTab === normalized));
+  inspector.dataset.inspectorState = normalized;
+  document.body.dataset.inspectorState = normalized;
+  document.body.dataset.shellState = `inspector_${normalized}`;
+  for (const tab of document.querySelectorAll('[data-inspector-tab]')) {
+    tab.setAttribute('aria-selected', String(tab.dataset.inspectorTab === normalized));
   }
-  for (const panel of document.querySelectorAll('[data-right-inspector-panel]')) {
-    panel.hidden = panel.dataset.rightInspectorPanel !== normalized;
+  for (const panel of document.querySelectorAll('[data-inspector-panel]')) {
+    panel.hidden = panel.dataset.inspectorPanel !== normalized;
   }
 }
 
-function closeRightInspector() {
-  const inspector = document.querySelector('[data-right-inspector]');
+function closeInspector(restoreFocus = false) {
+  const inspector = document.querySelector('[data-inspector-sheet]');
   if (!inspector) return;
   inspector.hidden = true;
-  inspector.dataset.rightInspectorState = 'hidden';
-  document.body.dataset.rightInspectorState = 'hidden';
-  document.body.dataset.shellState = 'app_default_chat';
+  inspector.dataset.inspectorState = 'hidden';
+  document.body.dataset.inspectorState = 'hidden';
+  document.body.dataset.shellState = 'home_default';
+  if (restoreFocus) restoreFocusFor(inspector);
+}
+
+function bindInspectorResize() {
+  const inspector = document.querySelector('[data-inspector-sheet]');
+  const handle = document.querySelector('[data-inspector-resize-handle]');
+  if (!inspector || !handle) return;
+  const clampWidth = (value) => Math.max(320, Math.min(520, value));
+  const setWidth = (value) => {
+    const width = clampWidth(value);
+    inspector.style.setProperty('--inspector-width', `${width}px`);
+    inspector.dataset.inspectorWidth = String(width);
+  };
+  handle.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const current = Number(inspector.dataset.inspectorWidth || inspector.getBoundingClientRect().width || 420);
+    setWidth(current + (event.key === 'ArrowLeft' ? 24 : -24));
+  });
+  handle.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    handle.setPointerCapture?.(event.pointerId);
+    const startX = event.clientX;
+    const startWidth = inspector.getBoundingClientRect().width;
+    const move = (moveEvent) => setWidth(startWidth + startX - moveEvent.clientX);
+    const stop = () => {
+      handle.releasePointerCapture?.(event.pointerId);
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', stop);
+      document.removeEventListener('pointercancel', stop);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', stop);
+    document.addEventListener('pointercancel', stop);
+  });
 }
 
 function openAPIKeyDialog() {
   const dialog = document.querySelector('[data-api-key-dialog]');
   if (!dialog) return;
+  setFocusReturn(dialog, document.querySelector('[data-chat-submit]'));
   dialog.hidden = false;
   dialog.dataset.apiKeyDialogState = 'open';
   document.body.dataset.apiKeyDialogState = 'open';
@@ -252,21 +274,106 @@ function openAPIKeyDialog() {
   dialog.querySelector('[data-api-key-dialog-primary]')?.focus({ preventScroll: true });
 }
 
-function closeAPIKeyDialog() {
+function closeAPIKeyDialog(restoreFocus = false) {
   const dialog = document.querySelector('[data-api-key-dialog]');
   if (!dialog) return;
   dialog.hidden = true;
   dialog.dataset.apiKeyDialogState = 'closed';
   document.body.dataset.apiKeyDialogState = 'closed';
   if (document.body.dataset.shellState === 'api_key_required_modal') {
-    document.body.dataset.shellState = 'app_default_chat';
+    document.body.dataset.shellState = 'home_default';
   }
+  if (restoreFocus) restoreFocusFor(dialog);
 }
 
 function setShellTurnState(state) {
   document.querySelector('[data-running-turn]').hidden = state !== 'running_turn';
   document.querySelector('[data-blocked-turn]').hidden = state !== 'blocked_turn';
   document.body.dataset.shellState = state;
+}
+
+function openOverlay(name, trigger = null) {
+  const overlay = document.querySelector(`[data-${name}-sheet]`);
+  if (!overlay) return;
+  closeTransientOverlays(name);
+  setFocusReturn(overlay, trigger);
+  overlay.hidden = false;
+  overlay.dataset.overlayState = 'open';
+  document.body.dataset.shellState = `${name}_sheet_open`;
+  overlay.querySelector('input, button, a[href], textarea')?.focus({ preventScroll: true });
+}
+
+function closeOverlay(name, restoreFocus = false) {
+  const overlay = document.querySelector(`[data-${name}-sheet]`);
+  if (!overlay) return;
+  overlay.hidden = true;
+  overlay.dataset.overlayState = 'closed';
+  if (document.body.dataset.shellState === `${name}_sheet_open`) {
+    document.body.dataset.shellState = 'home_default';
+  }
+  if (restoreFocus) restoreFocusFor(overlay);
+}
+
+function closeTransientOverlays(except = '') {
+  for (const name of ['search']) {
+    if (name !== except) closeOverlay(name);
+  }
+  closeAccountPopover();
+}
+
+function toggleAccountPopover() {
+  const popover = document.querySelector('[data-account-popover]');
+  const button = document.querySelector('[data-account-toggle]');
+  if (!button || !popover) return;
+  const opening = popover.hidden;
+  if (opening) {
+    closeTransientOverlays();
+    setFocusReturn(popover, button);
+  }
+  popover.hidden = !opening;
+  button.setAttribute('aria-expanded', String(opening));
+}
+
+function closeAccountPopover(restoreFocus = false) {
+  const popover = document.querySelector('[data-account-popover]');
+  const button = document.querySelector('[data-account-toggle]');
+  if (!button || !popover || popover.hidden) return;
+  popover.hidden = true;
+  button.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) restoreFocusFor(popover);
+}
+
+function handleGlobalKeydown(event) {
+  if (event.key !== 'Escape') return;
+  closeAPIKeyDialog(true);
+  closeInspector(true);
+  for (const name of ['search']) closeOverlay(name, true);
+  closeAccountPopover(true);
+}
+
+function handleOutsideClick(event) {
+  const target = event.target;
+  if (!target.closest('[data-account-popover], [data-account-toggle]')) closeAccountPopover();
+  for (const name of ['search']) {
+    const overlay = document.querySelector(`[data-${name}-sheet]`);
+    const trigger = document.querySelector(`[data-shell-action="${name}"]`);
+    if (overlay && !overlay.hidden && !target.closest(`[data-${name}-sheet]`) && !trigger?.contains(target)) {
+      closeOverlay(name);
+    }
+  }
+}
+
+function setFocusReturn(surface, trigger) {
+  if (!surface || !trigger) return;
+  const key = `focus-return-${Math.random().toString(36).slice(2)}`;
+  trigger.dataset.focusReturnKey = key;
+  surface.dataset.focusReturnKey = key;
+}
+
+function restoreFocusFor(surface) {
+  const key = surface?.dataset.focusReturnKey;
+  if (!key) return;
+  document.querySelector(`[data-focus-return-key="${key}"]`)?.focus({ preventScroll: true });
 }
 
 function bindSettingsForms(getView, setView) {
@@ -307,7 +414,7 @@ async function authAction(kind, setView) {
 function renderView(view) {
   document.body.dataset.authState = view.accountState;
   document.body.dataset.chatState = document.body.dataset.chatState || chatStateForResult(null);
-  document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
+  document.querySelector('[data-chat-submit]').textContent = '发送';
   document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
   setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
@@ -317,7 +424,7 @@ function renderView(view) {
   setTextAll('[data-quota-status]', view.accountLifecycle.quotaLabel);
   setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
   renderReliabilityStatus(view.reliabilityStatus);
-  document.querySelector('[data-account-hint]').textContent = view.primaryCTA;
+  document.querySelector('[data-account-hint]').textContent = view.session.ok ? '账号状态' : '登录 / 注册';
 }
 
 function setTextAll(selector, text) {

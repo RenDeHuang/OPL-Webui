@@ -167,16 +167,16 @@ async function openSettingsRoute(cdp) {
   await activate(cdp, '[data-shell-action="more"]');
   await waitFor(
     cdp,
-    'document.body.dataset.view === "settings" && document.querySelector("#auth-email")?.offsetParent !== null',
+    'document.body.dataset.view === "more" && document.querySelector("#auth-email")?.offsetParent !== null',
     () => describePageState(cdp, 'settings route did not expose auth form'),
   );
 }
 
 async function openChatRoute(cdp) {
-  await activate(cdp, '[data-shell-action="new_chat"]');
+  await activate(cdp, '[data-shell-action="home"]');
   await waitFor(
     cdp,
-    'document.body.dataset.view === "chat" && document.querySelector("[data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
+    'document.body.dataset.view === "home" && document.querySelector("[data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
     () => describePageState(cdp, 'chat route did not expose research launcher'),
   );
 }
@@ -582,7 +582,7 @@ async function captureVisualQualityEvidence(cdp, runMode) {
   for (const viewport of viewportSpecs) {
     await setViewport(cdp, viewport);
     await waitFor(cdp, 'document.readyState === "complete"');
-    await activate(cdp, '[data-right-inspector-open="files"]');
+    await activate(cdp, '[data-inspector-open="files"]');
     const path = join('.runtime', 'browser-visual', `research-main-path-${runMode}-${viewport.id}-${stamp}.png`);
     await captureScreenshot(cdp, path);
     const layout = await readVisualLayout(cdp);
@@ -661,9 +661,9 @@ async function readVisualLayout(cdp) {
       scrollWidth: document.documentElement.scrollWidth,
       scrollHeight: document.documentElement.scrollHeight,
     };
-    const inspector = document.querySelector('[data-right-inspector]');
+    const inspector = document.querySelector('[data-inspector-sheet]');
     const inspectorRect = inspector?.getBoundingClientRect();
-    const activeInspectorPanel = document.querySelector('[data-right-inspector-panel]:not([hidden])');
+    const activeInspectorPanel = document.querySelector('[data-inspector-panel]:not([hidden])');
     const chatInput = document.querySelector('#chat-input');
     const focusProbe = document.querySelector('[data-chat-submit]');
     focusProbe?.focus();
@@ -741,9 +741,9 @@ async function readVisualLayout(cdp) {
           || focusProbeStyle.boxShadow !== 'none'
         )),
       },
-      rightInspector: {
+      inspector: {
         visible: Boolean(inspector && !inspector.hidden && inspectorRect && inspectorRect.width > 0 && inspectorRect.height > 0),
-        state: inspector?.dataset.rightInspectorState || '',
+        state: inspector?.dataset.inspectorState || '',
         withinViewport: Boolean(inspectorRect
           && inspectorRect.left >= 0
           && inspectorRect.right <= viewport.width
@@ -752,7 +752,7 @@ async function readVisualLayout(cdp) {
       },
       activeInspectorPanel: {
         visible: Boolean(activeInspectorPanel && !activeInspectorPanel.hidden),
-        panel: activeInspectorPanel?.dataset.rightInspectorPanel || '',
+        panel: activeInspectorPanel?.dataset.inspectorPanel || '',
         rect: rectJSON(activeInspectorPanel),
       },
     };

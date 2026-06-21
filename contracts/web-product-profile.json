@@ -14,7 +14,7 @@
     "principal_investigators",
     "research_teams"
   ],
-  "primaryUserPath": "research_capability_first_web_workbench",
+  "primaryUserPath": "ai_native_research_homepage",
   "primaryEntryModel": "at_mention_research_capabilities",
   "primaryEntryMarkers": ["@科研", "@论文", "@基金", "@综述", "@文件"],
   "ownedSurfaces": [
@@ -67,9 +67,9 @@
     "storageRequirement": "encrypted_server_side"
   },
   "publicUi": {
-    "primarySurface": "research_capability_first_web_workbench",
+    "primarySurface": "ai_native_research_homepage",
     "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
-    "visibleRoutes": ["chat", "settings", "skill", "medopl"]
+    "visibleRoutes": ["home", "skills", "workflows", "projects", "more"]
   },
   "visionGaps": {
     "state": "active_non_ha_gap_acceptance",
@@ -184,7 +184,7 @@
   "claims": {
     "canClaim": [
       "One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab.",
-      "Researchers, graduate students, PhD students, principal investigators, and research teams can enter OPL through Web research capability markers.",
+      "Researchers, graduate students, PhD students, principal investigators, and research teams can enter OPL through an AI-native research homepage and Web research capability markers.",
       "Web UI calls the same-origin Go control plane HTTP API.",
       "Users bind their own provider key while base_url remains fixed.",
       "Ordinary chat is available for low-risk explanation and organization, while research Skill entry remains the primary product positioning.",

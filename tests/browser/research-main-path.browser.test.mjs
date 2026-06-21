@@ -38,8 +38,8 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(visual.screenshot.captured, true);
     assert.match(visual.screenshot.path, /^\.runtime\/browser-visual\/research-main-path-local-/);
     assert.equal(visual.layout.horizontalOverflowPx, 0);
-    assert.equal(visual.layout.rightInspector.visible, true);
-    assert.equal(visual.layout.rightInspector.withinViewport, true);
+    assert.equal(visual.layout.inspector.visible, true);
+    assert.equal(visual.layout.inspector.withinViewport, true);
     assert.equal(visual.layout.activeInspectorPanel.visible, true);
     assert.equal(visual.layout.hiddenOverlayInterceptsInput, false);
     assert.equal(visual.layout.chatInputHitTarget, true);
@@ -77,7 +77,7 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'openSettingsRoute',
     '[data-shell-action="more"]',
     'openChatRoute',
-    '[data-shell-action="new_chat"]',
+    '[data-shell-action="home"]',
   ]) {
     assert.match(runner, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }

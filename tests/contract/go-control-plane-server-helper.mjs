@@ -62,6 +62,17 @@ export async function startGoServerWithEnv(extraEnv) {
 }
 
 export async function stopGoServer(child) {
-  child.kill();
-  await new Promise((resolve) => child.once('exit', resolve));
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  await new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(finish, 1000);
+    child.once('exit', finish);
+    if (!child.kill()) finish();
+  });
 }

@@ -124,7 +124,8 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
 
 export function viewFromHash(hash) {
   const normalized = String(hash || '').replace(/^#/, '');
-  return ['settings', 'skill', 'medopl'].includes(normalized) ? normalized : 'chat';
+  if (!normalized) return 'home';
+  return ['home', 'skills', 'workflows', 'projects', 'more'].includes(normalized) ? normalized : 'home';
 }
 
 export function accountState(session, provider) {
@@ -242,13 +243,14 @@ export function createOnePersonLabViewModel(state) {
     title: '科研人员的 One Person Lab Web',
     subtitle: '面向科研工作人员、硕博、PI 与科研团队；从研究问题、项目和 Skill 进入多租户 SaaS 版 One Person Lab。',
     figmaMakeSource: FIGMA_MAKE_SOURCE,
-    shell: { leftSidebar: true, accountDock: true, promptCommandCenter: true },
+    shell: { sideNavigation: true, accountDock: true, promptCommandCenter: true },
     navItems: [
-      { id: 'new_chat', label: '新建对话', href: '#chat' },
-      { id: 'projects', label: '项目', href: '#projects' },
-      { id: 'skill', label: 'Skill', href: '#skill' },
-      { id: 'search', label: '搜索', href: '#search' },
-      { id: 'more', label: '更多', href: '#more' },
+      { id: 'home', label: '新建对话', href: '#home' },
+      { id: 'projects', label: 'Projects', href: '#projects' },
+      { id: 'skills', label: 'Skill', href: '#skills' },
+      { id: 'workflows', label: '工作流', href: '#workflows' },
+      { id: 'search', label: '搜索', href: '#home' },
+      { id: 'more', label: 'More', href: '#more' },
     ],
     accountEntry: 'bottom_avatar_popover',
     session,
@@ -274,12 +276,11 @@ export function createOnePersonLabViewModel(state) {
     capabilities: OPL_CAPABILITY_MANIFEST.capabilities.map(([label, prompt, runtimeRequired, sourceAssistant]) => ({
       label, prompt, runtimeRequired, sourceAssistant,
     })),
-    workbenchSteps: [
-      { title: '选择 Skill', description: '从科研任务入口进入，不是泛 Agent 列表。' },
-      { title: '绑定真实材料', description: '围绕材料、引用和版本组织输入，不伪造文件能力。' },
-      { title: '进入科研工作流', description: '用 @科研、@论文、@基金、@综述 和 @文件 表达科研意图。' },
-      { title: '沉淀交付物', description: '面向证据包、申请书、PPT 和修回材料的交付闭环。' },
-      { title: '保留普通聊天', description: '普通聊天用于解释、整理和低风险问答。' },
+    workflowCards: [
+      { title: '论文工作流', description: '从选题、问题和证据计划进入，先过 MedOPL gate。' },
+      { title: '基金工作流', description: '拆解标书结构、研究目标和执行路径。' },
+      { title: '综述工作流', description: '整理综述结构、证据线索和引用计划。' },
+      { title: '材料线索', description: '围绕材料、引用和交付物 refs 组织输入。' },
     ],
     runtimeGate: {
       title: '需要 MedOPL 授权',
@@ -315,8 +316,7 @@ export function createInitialOnePersonLabViewModel() {
 }
 
 function ctaForState(state) {
-  if (state === 'anonymous') return '登录/注册后开始';
-  return state === 'authenticated_unbound' ? '绑定 API Key' : '发送';
+  return '发送';
 }
 
 async function writeJSON(fetchRef, url, body, method = 'POST') {

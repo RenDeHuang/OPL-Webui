@@ -3,28 +3,34 @@
   "productId": "one-person-lab-web",
   "routes": [
     {
-      "id": "chat",
+      "id": "home",
       "hash": "",
-      "surface": "research_capability_workbench",
+      "surface": "ai_native_research_homepage",
       "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "sending", "runtime_required", "upstream_failed", "quota_exceeded", "auth_required", "api_key_required", "service_unavailable", "network_unreachable"]
     },
     {
-      "id": "settings",
-      "hash": "#settings",
-      "surface": "account_and_provider",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound"]
-    },
-    {
-      "id": "skill",
-      "hash": "#skill",
+      "id": "skills",
+      "hash": "#skills",
       "surface": "research_skill_plaza",
       "states": ["readonly_catalog", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "runtime_required"]
     },
     {
-      "id": "medopl",
-      "hash": "#medopl",
-      "surface": "runtime_gate_deeplink",
-      "states": ["runtime_required", "external_handoff"]
+      "id": "workflows",
+      "hash": "#workflows",
+      "surface": "agentic_research_workflows",
+      "states": ["readonly_catalog", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "runtime_required"]
+    },
+    {
+      "id": "projects",
+      "hash": "#projects",
+      "surface": "project_session_refs",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound"]
+    },
+    {
+      "id": "more",
+      "hash": "#more",
+      "surface": "settings_search_and_medopl_shortcuts",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "runtime_required", "external_handoff"]
     }
   ],
   "accountStates": ["anonymous", "authenticated_unbound", "authenticated_bound"],
@@ -96,94 +102,109 @@
     "requiredStates": [
       "public_landing",
       "auth_login_register",
-      "app_default_chat",
-      "left_sidebar_expanded",
-      "right_inspector_files",
-      "right_inspector_progress",
-      "right_inspector_output",
+      "home_default",
+      "project_library",
+      "search_sheet_open",
+      "inspector_files",
+      "inspector_progress",
+      "inspector_output",
       "api_key_required_modal",
       "skill_plaza",
+      "workflow_plaza",
       "running_turn",
       "blocked_turn"
     ],
-    "defaultAppState": "app_default_chat",
-    "leftRail": {
-      "defaultState": "collapsed",
-      "expandedState": "left_sidebar_expanded",
+    "defaultAppState": "home_default",
+    "sideNavigation": {
+      "defaultState": "visible",
       "actions": [
         {
-          "id": "new_chat",
+          "id": "home",
           "label": "新建对话",
           "kind": "route",
-          "targetView": "chat",
+          "targetView": "home",
           "localOnly": true,
           "consumer": "composer_focus",
           "forbiddenApis": []
         },
         {
           "id": "projects",
-          "label": "项目",
-          "kind": "local_sidebar_panel",
-          "targetView": "chat",
+          "label": "Projects",
+          "kind": "route",
+          "targetView": "projects",
           "localOnly": true,
-          "consumer": "recent_project_session_refs",
+          "consumer": "project_library",
           "forbiddenApis": ["/api/projects"]
         },
         {
-          "id": "skill",
+          "id": "skills",
           "label": "Skill",
           "kind": "route",
-          "targetView": "skill",
+          "targetView": "skills",
           "localOnly": true,
-          "consumer": "research_skill_plaza",
+          "consumer": "skill_library",
+          "forbiddenApis": []
+        },
+        {
+          "id": "workflows",
+          "label": "工作流",
+          "kind": "route",
+          "targetView": "workflows",
+          "localOnly": true,
+          "consumer": "workflow_library",
           "forbiddenApis": []
         },
         {
           "id": "search",
           "label": "搜索",
-          "kind": "local_sidebar_panel",
-          "targetView": "chat",
+          "kind": "sheet",
+          "targetView": "home",
           "localOnly": true,
           "consumer": "local_prompt_and_recent_session_filter",
           "forbiddenApis": ["/api/search"]
         },
         {
           "id": "more",
-          "label": "更多",
-          "kind": "local_sidebar_panel",
-          "targetView": "settings",
+          "label": "More",
+          "kind": "route",
+          "targetView": "more",
           "localOnly": true,
-          "consumer": "settings_and_medopl_shortcuts",
+          "consumer": "settings_and_account_status",
           "forbiddenApis": []
         }
-      ],
-      "resize": {
-        "enabled": true,
-        "minWidth": 260,
-        "maxWidth": 420
-      }
+      ]
     },
     "routeScopedSurfaces": {
-      "chat": ["workbench_command", "turn_state", "chat_canvas"],
-      "settings": ["settings_panel"],
-      "skill": ["skill_plaza", "workbench_steps"],
-      "medopl": ["runtime_gate"]
+      "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
+      "skills": ["skill_library"],
+      "workflows": ["workflow_library"],
+      "projects": ["project_library"],
+      "more": ["settings_panel"]
     },
-    "rightInspector": {
+    "librarySurfaces": {
+      "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
+      "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
+      "projects": { "scopes": ["my_projects"], "actions": ["create_project"], "forbiddenApis": ["/api/projects"] }
+    },
+    "inspector": {
       "defaultState": "hidden",
       "tabs": ["files", "progress", "output"],
       "resize": {
         "enabled": true,
         "minWidth": 320,
         "maxWidth": 520
-      }
+      },
+      "placement": "right_resizable_panel",
+      "mustNotBePrimaryNavigation": true
     },
     "modals": {
       "apiKeyRequired": {
         "state": "api_key_required_modal",
         "primaryAction": "save",
         "primaryActionLabel": "保存",
-        "requiredBefore": "chat_send_when_provider_unbound"
+        "requiredBefore": "chat_send_when_provider_unbound",
+        "closeTrigger": ["explicit_close", "escape"],
+        "focusReturn": "chat_submit"
       }
     },
     "evidence": {
@@ -286,10 +307,16 @@
     "observableSelectors": [
       "[data-chat-form]",
       "[data-chat-log]",
+      "[data-side-navigation]",
+      "[data-first-view]",
+      "[data-starter-chips]",
       "[data-register-button]",
       "[data-login-button]",
       "[data-provider-form]",
       "[data-settings-panel]",
+      "[data-project-library]",
+      "[data-search-sheet]",
+      "[data-overlay-close]",
       "[data-runtime-gate]",
       "[data-research-launcher]",
       "[data-research-task]",
@@ -310,101 +337,101 @@
     "steps": [
       {
         "id": "anonymous_shell",
-        "route": "chat",
+        "route": "home",
         "expectedState": "anonymous",
         "evidence": "tests/smoke/web-shell.test.mjs"
       },
       {
         "id": "register",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/auth/register",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "login",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/auth/login",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "current_session",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/session/current",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "browser_session_bootstrap",
-        "route": "chat",
+        "route": "home",
         "requiredApi": "/api/session/current",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
       },
       {
         "id": "api_key_binding",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/settings/model-provider",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "research_task_template_selected",
-        "route": "chat",
+        "route": "home",
         "expectedState": "research_entry_selected",
         "evidence": "tests/browser/research-main-path.browser.test.mjs"
       },
       {
         "id": "research_skill_launcher",
-        "route": "chat",
+        "route": "home",
         "expectedState": "research_entry_selected",
         "evidence": "tests/smoke/web-shell.test.mjs"
       },
       {
         "id": "ordinary_chat_fallback",
-        "route": "chat",
+        "route": "home",
         "requiredApi": "/api/chat",
         "expectedState": "idle",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "quota_exceeded",
-        "route": "chat",
+        "route": "home",
         "requiredApi": "/api/chat",
         "expectedState": "quota_exceeded",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "paper_runtime_gate",
-        "route": "chat",
+        "route": "home",
         "requiredApi": "/api/chat",
         "expectedState": "runtime_required",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "grant_runtime_gate",
-        "route": "chat",
+        "route": "home",
         "requiredApi": "/api/chat",
         "expectedState": "runtime_required",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "account_lifecycle_status_visible",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/account/commercial-status",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
       },
       {
         "id": "reliability_status_visible",
-        "route": "chat",
+        "route": "home",
         "expectedState": "upstream_failed",
         "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
       },
       {
         "id": "sanitized_audit",
-        "route": "settings",
+        "route": "more",
         "requiredApi": "/api/account/audit-events",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
