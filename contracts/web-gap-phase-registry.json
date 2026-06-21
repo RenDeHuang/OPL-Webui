@@ -39,7 +39,7 @@
           "exitCriteria": [
             "human owner receipt acceptedClaim=ui_ux_v1_production_accepted",
             "production browser e2e or production screenshot evidence is folded back as sanitized summary",
-            "accessibility closeout boundary is folded back",
+            "repo-local accessibility closeout boundary remains folded back without claiming assistive technology conformance",
             "complete design system remains explicitly not claimed"
           ],
           "evidenceSources": ["browser", "production_secret_gated", "human_owner_receipt"],
@@ -47,13 +47,13 @@
           "acceptance": [
             "owner receipt remains pending until the human owner explicitly accepts ui_ux_v1_production_accepted",
             "production UI evidence must be folded back as a sanitized summary, not raw logs or screenshots in git",
-            "accessibility closeout may claim repo-local browser checks only until contrast, keyboard path, modal focus trap, and assistive technology reviews exist",
+            "repo-local accessibility closeout may claim contrast, keyboard path, and API key modal focus trap browser checks only; full accessibility still requires assistive technology review",
             "complete UI/UX design system remains cannot-claim"
           ],
           "nextStepOpeners": [
             "Close production_ui_quality_claim only after owner receipt and sanitized production evidence exist",
             "Open complete design system work only after a separate owner, consumer, contract, and eval are approved",
-            "Keep this gap blocked while owner receipt, production evidence, or accessibility closeout is missing"
+            "Keep this gap blocked while owner receipt or production evidence is missing"
           ],
           "ownerReceipt": {
             "required": true,

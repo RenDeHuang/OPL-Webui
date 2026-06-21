@@ -8,9 +8,7 @@ import { join } from 'node:path';
 
 const repoRoot = new URL('../../', import.meta.url).pathname;
 
-const state = {
-  cleanup: [],
-};
+const state = { cleanup: [] };
 const mode = process.argv.includes('--production') ? 'production' : 'local';
 const productionChatResultTimeoutMs = 120000;
 
@@ -45,6 +43,7 @@ try {
 
   if (mode === 'production') await resetSessionIfAuthenticated(cdp);
   await authenticate(cdp, config);
+  const accessibilityCloseout = await captureAccessibilityCloseout(cdp);
 
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
@@ -99,7 +98,7 @@ try {
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));
-  const visualQuality = await captureVisualQualityEvidence(cdp, mode);
+  const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
 
   console.log(JSON.stringify({
     ok: true,
@@ -567,7 +566,7 @@ async function waitForAuditKindCount(cdp, eventKind, count) {
   }, 60000);
 }
 
-async function captureVisualQualityEvidence(cdp, runMode) {
+async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const runtimeDir = join(repoRoot, '.runtime', 'browser-visual');
   mkdirSync(runtimeDir, { recursive: true });
@@ -610,7 +609,8 @@ async function captureVisualQualityEvidence(cdp, runMode) {
       nodeId: '0:1',
     },
     responsiveBreakpoints: viewportSpecs.map((viewport) => viewport.id),
-    accessibilityChecks: summarizeAccessibilityChecks(viewports),
+    accessibilityChecks: summarizeAccessibilityChecks(viewports, accessibilityCloseout),
+    accessibilityCloseout,
     visualFitChecks: summarizeVisualFitChecks(viewports),
     ownerReceipt: {
       required: true,
@@ -618,11 +618,121 @@ async function captureVisualQualityEvidence(cdp, runMode) {
       source: 'human_owner_receipt',
     },
     viewports,
-    cannotClaim: [
-      'complete UI/UX design system',
-      'production visual polish complete',
-    ],
+    cannotClaim: ['complete UI/UX design system', 'production visual polish complete'],
   };
+}
+
+async function captureAccessibilityCloseout(cdp) {
+  await activate(cdp, '[data-shell-action="home"]');
+  await typeInto(cdp, '#chat-input', '@科研 accessibility closeout');
+  await userClick(cdp, '[data-chat-submit]');
+  await waitFor(
+    cdp,
+    'document.body.dataset.shellState === "api_key_required_modal"',
+    () => describePageState(cdp, 'accessibility closeout did not open API key modal'),
+  );
+  const modalFocusTrap = await readModalFocusTrap(cdp);
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden === true');
+  await activate(cdp, '[data-shell-action="skills"]');
+  await waitFor(cdp, 'document.body.dataset.view === "skills"');
+  await activate(cdp, '[data-shell-action="home"]');
+  await waitFor(cdp, 'document.body.dataset.view === "home"');
+  await activate(cdp, '[data-shell-action="more"]');
+  await waitFor(cdp, 'document.body.dataset.view === "more"');
+  return {
+    keyboardPath: { homeToSkills: true, skillsToHome: true, escapeClosesModal: true },
+    modalFocusTrap,
+    contrast: await readContrastEvidence(cdp),
+  };
+}
+
+async function readModalFocusTrap(cdp) {
+  const initial = await readAPIKeyDialogFocus(cdp);
+  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+  const forwardFocus = await readAPIKeyDialogFocus(cdp);
+  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+  const forwardWrap = await readAPIKeyDialogFocus(cdp);
+  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9, modifiers: 8 });
+  const backwardWrap = await readAPIKeyDialogFocus(cdp);
+  return {
+    initial,
+    forwardFocus,
+    forwardWrap,
+    backwardWrap,
+    pass: initial === 'primary' && forwardFocus === 'close' && forwardWrap === 'primary' && backwardWrap === 'close',
+  };
+}
+
+async function readAPIKeyDialogFocus(cdp) {
+  return evaluateJSON(cdp, `(() => {
+    const dialog = document.querySelector('[data-api-key-dialog]');
+    const primary = dialog?.querySelector('[data-api-key-dialog-primary]');
+    const close = dialog?.querySelector('[data-api-key-dialog-close]');
+    const active = document.activeElement;
+    if (active === primary) return 'primary';
+    if (active === close) return 'close';
+    return active?.tagName || '';
+  })()`);
+}
+
+async function readContrastEvidence(cdp) {
+  return evaluateJSON(cdp, `(() => {
+    const parseRGB = (value) => {
+      const match = String(value).match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+      return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+    };
+    const backgroundFor = (element) => {
+      let current = element;
+      while (current) {
+        const value = getComputedStyle(current).backgroundColor;
+        if (value && !/rgba\\(\\s*0,\\s*0,\\s*0,\\s*0\\s*\\)/.test(value) && value !== 'transparent') {
+          return parseRGB(value);
+        }
+        current = current.parentElement;
+      }
+      return parseRGB(getComputedStyle(document.body).backgroundColor) || [255, 255, 255];
+    };
+    const linear = (channel) => {
+      const normalized = channel / 255;
+      return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = ([r, g, b]) => (0.2126 * linear(r)) + (0.7152 * linear(g)) + (0.0722 * linear(b));
+    const ratio = (fg, bg) => {
+      const first = luminance(fg);
+      const second = luminance(bg);
+      const light = Math.max(first, second);
+      const dark = Math.min(first, second);
+      return Number(((light + 0.05) / (dark + 0.05)).toFixed(2));
+    };
+    const samples = Array.from(document.querySelectorAll('body, p, small, button, a, h1, h2, h3, textarea, input'))
+      .filter((element) => {
+        if (element.hidden || element.closest('[hidden]')) return false;
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      })
+      .slice(0, 80)
+      .map((element) => {
+        const style = getComputedStyle(element);
+        const fg = parseRGB(style.color);
+        const bg = backgroundFor(element);
+        const text = (element.textContent || element.getAttribute('aria-label') || element.getAttribute('placeholder') || '').trim().slice(0, 48);
+        const fontSize = Number.parseFloat(style.fontSize) || 16;
+        const fontWeight = Number.parseInt(style.fontWeight, 10) || 400;
+        const minimum = element.matches('button, a, input, textarea') || fontSize >= 24 || (fontSize >= 18.66 && fontWeight >= 700) ? 3 : 4.5;
+        const actual = fg && bg ? ratio(fg, bg) : 0;
+        return fg && bg ? { tag: element.tagName.toLowerCase(), text, ratio: actual, minimum } : null;
+      })
+      .filter(Boolean);
+    const failures = samples.filter((sample) => sample.ratio < sample.minimum);
+    return {
+      minRatio: samples.reduce((min, sample) => Math.min(min, sample.ratio), 99),
+      sampleCount: samples.length,
+      failures,
+      pass: failures.length === 0,
+    };
+  })()`);
 }
 
 async function setViewport(cdp, viewport) {
@@ -768,12 +878,15 @@ async function readVisualLayout(cdp) {
   })()`);
 }
 
-function summarizeAccessibilityChecks(viewports) {
+function summarizeAccessibilityChecks(viewports, closeout) {
   const results = Object.values(viewports);
   return {
     keyboardFocusVisible: results.every((result) => result.layout.focusRingProbe.visible === true),
+    keyboardPathPass: closeout.keyboardPath.homeToSkills === true && closeout.keyboardPath.skillsToHome === true && closeout.keyboardPath.escapeClosesModal === true,
+    modalFocusTrapPass: closeout.modalFocusTrap.pass === true,
     touchTargetsPass: results.every((result) => result.layout.interactiveTargetFailures.length === 0),
     namedControlsPass: results.every((result) => result.layout.focusableWithoutName.length === 0),
+    contrastPass: closeout.contrast.pass === true,
   };
 }
 

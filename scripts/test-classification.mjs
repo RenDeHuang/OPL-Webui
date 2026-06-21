@@ -488,7 +488,7 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'browser',
     claimScope: 'ci',
     contracts: ['tests/browser/research-main-path-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-gui-product-contract.json'],
-    proves: ['CI/local Chromium research main path works with user-like interaction, sanitized evidence, and repo-local desktop/tablet/mobile/compact responsive visual QA checks'],
+    proves: ['CI/local Chromium research main path works with user-like interaction, sanitized evidence, repo-local desktop/tablet/mobile/compact responsive visual QA checks, and repo-local keyboard path, modal focus trap, and contrast closeout checks'],
     doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality'],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux'],
     verifySuites: ['browser', 'full'],

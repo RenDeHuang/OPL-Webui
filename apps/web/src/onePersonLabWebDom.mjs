@@ -110,7 +110,6 @@ function bindChatForm(getView) {
       openAPIKeyDialog();
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
       appendMessage('OPL', '请先在 More 绑定 API Key。', 'assistant-message');
-      window.location.hash = 'more';
       return;
     }
     setShellTurnState('running_turn');
@@ -344,11 +343,47 @@ function closeAccountPopover(restoreFocus = false) {
 }
 
 function handleGlobalKeydown(event) {
+  if (trapAPIKeyDialogFocus(event)) return;
   if (event.key !== 'Escape') return;
   closeAPIKeyDialog(true);
   closeInspector(true);
   for (const name of ['search']) closeOverlay(name, true);
   closeAccountPopover(true);
+}
+
+function trapAPIKeyDialogFocus(event) {
+  if (event.key !== 'Tab') return false;
+  const dialog = document.querySelector('[data-api-key-dialog]');
+  if (!dialog || dialog.hidden) return false;
+  const focusable = getFocusableElements(dialog);
+  if (focusable.length === 0) return false;
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus({ preventScroll: true });
+    return true;
+  }
+  if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus({ preventScroll: true });
+    return true;
+  }
+  if (!dialog.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus({ preventScroll: true });
+    return true;
+  }
+  return false;
+}
+
+function getFocusableElements(root) {
+  return Array.from(root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+    .filter((element) => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+    });
 }
 
 function handleOutsideClick(event) {

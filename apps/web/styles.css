@@ -144,12 +144,17 @@ body[data-visual-density="low_stimulus_command_home"] .app-shell { letter-spacin
   padding: 11px 12px;
 }
 
-.side-navigation a[aria-current="page"], .side-navigation a:hover {
-  background: var(--accent);
+.side-navigation a[aria-current="page"] {
+  background: var(--accent-strong);
   color: #fff;
 }
+.side-navigation a:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.side-navigation a[aria-current="page"]:hover { background: var(--accent-strong); color: #fff; }
 .side-navigation a:active { background: var(--accent-strong); transform: translateY(1px); }
 .side-navigation a[aria-disabled="true"] { background: transparent; color: #98a2b3; }
+@media (prefers-reduced-motion: no-preference) {
+  .side-navigation a { transition: transform var(--motion-fast) var(--motion-ease); }
+}
 
 .side-account { align-self: end; gap: 10px; margin-top: auto; }
 .icon-button {
@@ -229,7 +234,7 @@ body[data-visual-density="low_stimulus_command_home"] .app-shell { letter-spacin
 
 .home-copy { display: grid; gap: 8px; justify-items: center; }
 .eyebrow, .panel-kicker {
-  color: #7a8493;
+  color: #566070;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0;

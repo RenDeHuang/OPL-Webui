@@ -117,7 +117,7 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
   assert.deepEqual(productionClaim.exitCriteria, [
     'human owner receipt acceptedClaim=ui_ux_v1_production_accepted',
     'production browser e2e or production screenshot evidence is folded back as sanitized summary',
-    'accessibility closeout boundary is folded back',
+    'repo-local accessibility closeout boundary remains folded back without claiming assistive technology conformance',
     'complete design system remains explicitly not claimed',
   ]);
   assert.deepEqual(productionClaim.ownerReceipt, {

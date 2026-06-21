@@ -361,6 +361,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'no static text overflow across registered responsive breakpoints',
     'interactive touch targets and named controls pass registered browser checks',
     'keyboard focus ring is visible on the primary chat submit control',
+    'repo-local keyboard path, API key modal focus trap, and contrast closeout pass browser evidence',
     'OPL green token guard rejects default tech blue or purple primary palette',
     'prefers-reduced-motion path is implemented for UI motion',
     'mobile inspector is verified as a bottom sheet',
@@ -383,7 +384,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.visualQualityGate.baselineEvidence.command, 'npm run verify:browser');
   assert.deepEqual(gui.visualQualityGate.baselineEvidence.viewports, ['desktop', 'tablet', 'mobile', 'compact']);
   assert.equal(gui.visualQualityGate.baselineEvidence.screenshotPathPattern, '.runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png');
-  assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'inspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'oplGreenTokenGuard', 'prefersReducedMotionPresent', 'mobileInspectorBottomSheet']);
+  assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'inspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'keyboardPathPass', 'modalFocusTrapPass', 'contrastPass', 'oplGreenTokenGuard', 'prefersReducedMotionPresent', 'mobileInspectorBottomSheet']);
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.phaseId, 'production_ui_quality_claim');
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.targetClaim, 'ui_ux_v1_production_accepted');
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.status, 'pending_owner_receipt_and_production_evidence');
@@ -402,9 +403,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     foldback: 'sanitized_summary_only',
   });
   assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.accessibilityCloseout, {
-    status: 'partial_repo_local_only',
-    completedRepoLocalChecks: ['touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'noStaticTextOverflow', 'hiddenOverlayDoesNotInterceptInput'],
-    requiredBeforeFullA11yClaim: ['contrast_review', 'keyboard_path_review', 'modal_focus_trap_review', 'assistive_technology_review'],
+    status: 'repo_local_browser_closeout_done_production_owner_pending',
+    completedRepoLocalChecks: ['touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'noStaticTextOverflow', 'hiddenOverlayDoesNotInterceptInput', 'keyboardPathPass', 'modalFocusTrapPass', 'contrastPass'],
+    requiredBeforeFullA11yClaim: ['assistive_technology_review'],
   });
   assert.equal(gui.visualQualityGate.cannotClaim.includes('complete UI/UX design system'), true);
   assert.deepEqual(gui.pageTemplates, ['HomeFirstView', 'Skills', 'Workflows', 'Projects', 'MorePage', 'InspectorSheet', 'ModalOverlay', 'OutputPreview']);
@@ -989,11 +990,5 @@ test('web product entry delegates state and DOM ownership to focused modules', (
 });
 
 function response(payload, status = 200) {
-  return {
-    ok: status >= 200 && status < 300,
-    status,
-    async json() {
-      return payload;
-    },
-  };
+  return { ok: status >= 200 && status < 300, status, json: async () => payload };
 }

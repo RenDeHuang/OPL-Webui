@@ -522,6 +522,7 @@
       "no static text overflow across registered responsive breakpoints",
       "interactive touch targets and named controls pass registered browser checks",
       "keyboard focus ring is visible on the primary chat submit control",
+      "repo-local keyboard path, API key modal focus trap, and contrast closeout pass browser evidence",
       "OPL green token guard rejects default tech blue or purple primary palette",
       "prefers-reduced-motion path is implemented for UI motion",
       "mobile inspector is verified as a bottom sheet",
@@ -567,6 +568,9 @@
         "touchTargetsPass",
         "namedControlsPass",
         "keyboardFocusVisible",
+        "keyboardPathPass",
+        "modalFocusTrapPass",
+        "contrastPass",
         "oplGreenTokenGuard",
         "prefersReducedMotionPresent",
         "mobileInspectorBottomSheet"
@@ -616,18 +620,18 @@
         "foldback": "sanitized_summary_only"
       },
       "accessibilityCloseout": {
-        "status": "partial_repo_local_only",
+        "status": "repo_local_browser_closeout_done_production_owner_pending",
         "completedRepoLocalChecks": [
           "touchTargetsPass",
           "namedControlsPass",
           "keyboardFocusVisible",
           "noStaticTextOverflow",
-          "hiddenOverlayDoesNotInterceptInput"
+          "hiddenOverlayDoesNotInterceptInput",
+          "keyboardPathPass",
+          "modalFocusTrapPass",
+          "contrastPass"
         ],
         "requiredBeforeFullA11yClaim": [
-          "contrast_review",
-          "keyboard_path_review",
-          "modal_focus_trap_review",
           "assistive_technology_review"
         ]
       }

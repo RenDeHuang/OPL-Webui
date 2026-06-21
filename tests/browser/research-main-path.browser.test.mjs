@@ -50,8 +50,18 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(visual.layout.focusRingProbe.visible, true);
   }
   assert.equal(evidence.visualQuality.accessibilityChecks.keyboardFocusVisible, true);
+  assert.equal(evidence.visualQuality.accessibilityChecks.keyboardPathPass, true);
+  assert.equal(evidence.visualQuality.accessibilityChecks.modalFocusTrapPass, true);
+  assert.deepEqual(evidence.visualQuality.accessibilityCloseout.modalFocusTrap, {
+    initial: 'primary',
+    forwardFocus: 'close',
+    forwardWrap: 'primary',
+    backwardWrap: 'close',
+    pass: true,
+  });
   assert.equal(evidence.visualQuality.accessibilityChecks.touchTargetsPass, true);
   assert.equal(evidence.visualQuality.accessibilityChecks.namedControlsPass, true);
+  assert.equal(evidence.visualQuality.accessibilityChecks.contrastPass, true);
   assert.equal(evidence.visualQuality.visualFitChecks.noTextOverflow, true);
   assert.equal(evidence.visualQuality.visualFitChecks.noHorizontalOverflow, true);
 });
