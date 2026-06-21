@@ -89,6 +89,53 @@
       "tenant-scoped audit events",
       "artifact/body authority contract"
     ],
+    "conditions": [
+      {
+        "id": "go_side_execution_contract",
+        "status": "missing",
+        "owner": "one-person-lab-web-runtime",
+        "evidence": "contract"
+      },
+      {
+        "id": "registered_allowlist_eval",
+        "status": "missing",
+        "owner": "one-person-lab-web-runtime",
+        "evidence": "eval"
+      },
+      {
+        "id": "command_allowlist",
+        "status": "missing",
+        "owner": "one-person-lab-web-runtime",
+        "evidence": "allowlist"
+      },
+      {
+        "id": "human_authorization_boundary",
+        "status": "missing",
+        "owner": "human_owner_receipt",
+        "evidence": "owner_receipt"
+      },
+      {
+        "id": "tenant_scoped_audit_events",
+        "status": "missing",
+        "owner": "one-person-lab-web-runtime",
+        "evidence": "audit_contract"
+      },
+      {
+        "id": "artifact_body_authority_contract",
+        "status": "missing",
+        "owner": "MedOPL",
+        "evidence": "authority_contract"
+      }
+    ],
+    "admittedWhen": [
+      "go_side_execution_contract=present",
+      "registered_allowlist_eval=pass",
+      "command_allowlist=present",
+      "human_authorization_boundary=accepted",
+      "tenant_scoped_audit_events=present",
+      "artifact_body_authority_contract=present"
+    ],
+    "webRoutesMayMutateRuntime": false,
     "failClosedUntil": [
       "contract_exists",
       "eval_passes",

@@ -19,6 +19,14 @@
   "statusValues": ["done", "partial", "blocked", "not_started"],
   "evidenceSources": ["repo_local", "browser", "production_secret_gated", "external_owner", "human_owner_receipt"],
   "blockerTypes": ["missing_eval", "missing_contract", "missing_production_evidence", "missing_owner_receipt", "missing_product_decision"],
+  "evalDimensionPolicy": {
+    "dimensions": ["contract", "repo_local", "browser", "production", "owner", "cleanup"],
+    "statusValues": ["pass", "blocked", "fail"],
+    "advanceRule": "currentStatus=done and all evalResults pass",
+    "externalEvidenceCannotBeInferredFromRepoLocal": true,
+    "externalEvidenceDimensions": ["production", "owner"],
+    "requiredFields": ["id", "dimension", "status", "proves", "doesNotProve"]
+  },
   "gaps": [
     {
       "id": "ui_ux_product_depth",

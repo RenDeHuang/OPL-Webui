@@ -159,12 +159,52 @@
     "currentAccountType": "personal",
     "currentLifecycleState": "active",
     "projectionOnly": true,
+    "webRoutesMayMutateBilling": false,
     "allowedCurrentActions": ["view_medopl_billing"],
     "expansionRequires": [
       "real_consumer",
       "contract",
       "registered_tests",
       "MedOPL_billing_authority_preserved"
+    ],
+    "expansionConditions": [
+      {
+        "id": "real_consumer",
+        "status": "missing",
+        "owner": "external_owner",
+        "evidence": "owner_receipt"
+      },
+      {
+        "id": "surface_contract",
+        "status": "missing",
+        "owner": "one-person-lab-web-product",
+        "evidence": "contract"
+      },
+      {
+        "id": "registered_tests",
+        "status": "missing",
+        "owner": "one-person-lab-web-product",
+        "evidence": "eval"
+      },
+      {
+        "id": "medopl_billing_authority_preserved",
+        "status": "missing",
+        "owner": "MedOPL",
+        "evidence": "authority_contract"
+      },
+      {
+        "id": "payment_processor_contract",
+        "status": "missing",
+        "owner": "external_owner",
+        "evidence": "contract"
+      }
+    ],
+    "admittedWhen": [
+      "real_consumer=present",
+      "surface_contract=present",
+      "registered_tests=pass",
+      "medopl_billing_authority_preserved=present",
+      "payment_processor_contract=present"
     ],
     "nextStepOpeners": [
       "real buyer or operator workflow is named",

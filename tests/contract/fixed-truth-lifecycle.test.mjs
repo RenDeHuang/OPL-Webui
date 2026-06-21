@@ -500,6 +500,15 @@ test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.productionEvidence.rawArtifactsInGit, false);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
   assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('registered eval covering command allowlist'), true);
+  assert.equal(runtime.executionAdmission.webRoutesMayMutateRuntime, false);
+  assert.deepEqual(runtime.executionAdmission.conditions.map((condition) => [condition.id, condition.status, condition.evidence]), [
+    ['go_side_execution_contract', 'missing', 'contract'],
+    ['registered_allowlist_eval', 'missing', 'eval'],
+    ['command_allowlist', 'missing', 'allowlist'],
+    ['human_authorization_boundary', 'missing', 'owner_receipt'],
+    ['tenant_scoped_audit_events', 'missing', 'audit_contract'],
+    ['artifact_body_authority_contract', 'missing', 'authority_contract'],
+  ]);
 
   assert.match(status, /production deploy is release evidence only and must not substitute for product\/eval work/);
   assert.match(active, /production deploy is not the default next action unless the user explicitly asks for release evidence/);
@@ -529,6 +538,14 @@ test('commercial lifecycle expansion stays a readonly personal projection until 
     'registered_tests',
     'MedOPL_billing_authority_preserved',
   ]);
+  assert.equal(product.commercialLifecycle.webRoutesMayMutateBilling, false);
+  assert.deepEqual(product.commercialLifecycle.expansionConditions.map((condition) => [condition.id, condition.status, condition.evidence]), [
+    ['real_consumer', 'missing', 'owner_receipt'],
+    ['surface_contract', 'missing', 'contract'],
+    ['registered_tests', 'missing', 'eval'],
+    ['medopl_billing_authority_preserved', 'missing', 'authority_contract'],
+    ['payment_processor_contract', 'missing', 'contract'],
+  ]);
   for (const forbiddenExpansion of [
     'team_invite',
     'team_rbac',
@@ -556,11 +573,39 @@ test('commercial lifecycle expansion stays a readonly personal projection until 
   }
 
   assert.match(status, /authenticated readonly personal commercial status projection/);
-  assert.match(status, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires a real consumer, contract, and registered tests/);
+  assert.match(status, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires structured `expansionConditions`/);
   assert.match(active, /authenticated readonly personal commercial status projection/);
-  assert.match(active, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires a real consumer, contract, and registered tests/);
+  assert.match(active, /Commercial lifecycle remains readonly personal projection/);
   assert.match(decisions, /Commercial lifecycle stays a readonly personal projection/);
   assert.match(decisions, /team invite\/RBAC\/pricing\/subscription\/payment/i);
+});
+
+test('operations maturity and gap phase advancement require structured eval evidence', () => {
+  const release = readJson('contracts/web-release-profile.json');
+  const gapRegistry = readJson('contracts/web-gap-phase-registry.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.deepEqual(gapRegistry.evalDimensionPolicy.dimensions, ['contract', 'repo_local', 'browser', 'production', 'owner', 'cleanup']);
+  assert.equal(gapRegistry.evalDimensionPolicy.advanceRule, 'currentStatus=done and all evalResults pass');
+  assert.equal(gapRegistry.evalDimensionPolicy.externalEvidenceCannotBeInferredFromRepoLocal, true);
+  assert.deepEqual(gapRegistry.evalDimensionPolicy.externalEvidenceDimensions, ['production', 'owner']);
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceConditions.map((condition) => [condition.id, condition.status, condition.evidence]), [
+    ['dashboard_contract', 'missing', 'contract'],
+    ['alerting_contract', 'missing', 'contract'],
+    ['error_budget_contract', 'missing', 'contract'],
+    ['rollback_record_contract', 'missing', 'contract'],
+    ['production_rollback_record', 'missing', 'production_evidence'],
+  ]);
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.maturityAdmittedWhen, [
+    'dashboard_contract=present',
+    'alerting_contract=present',
+    'error_budget_contract=present',
+    'rollback_record_contract=present',
+    'production_rollback_record=present',
+  ]);
+  assert.match(status, /a phase may advance only when `currentStatus=done` and all eval results pass/);
+  assert.match(active, /Repo-local tests cannot infer production evidence or owner receipt/);
 });
 
 test('release automation evidence is historical after production-gated closeout', () => {

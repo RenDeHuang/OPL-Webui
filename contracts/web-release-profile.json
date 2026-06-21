@@ -633,6 +633,45 @@
           "owner": "release_operator",
           "state": "contract_required"
         }
+      ],
+      "evidenceConditions": [
+        {
+          "id": "dashboard_contract",
+          "status": "missing",
+          "owner": "operations_owner",
+          "evidence": "contract"
+        },
+        {
+          "id": "alerting_contract",
+          "status": "missing",
+          "owner": "operations_owner",
+          "evidence": "contract"
+        },
+        {
+          "id": "error_budget_contract",
+          "status": "missing",
+          "owner": "operations_owner",
+          "evidence": "contract"
+        },
+        {
+          "id": "rollback_record_contract",
+          "status": "missing",
+          "owner": "release_operator",
+          "evidence": "contract"
+        },
+        {
+          "id": "production_rollback_record",
+          "status": "missing",
+          "owner": "release_operator",
+          "evidence": "production_evidence"
+        }
+      ],
+      "maturityAdmittedWhen": [
+        "dashboard_contract=present",
+        "alerting_contract=present",
+        "error_budget_contract=present",
+        "rollback_record_contract=present",
+        "production_rollback_record=present"
       ]
     },
     "cannotClaim": [

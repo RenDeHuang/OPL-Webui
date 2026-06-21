@@ -31,6 +31,12 @@ test('gap phase registry defines phase queues without creating durable process l
   assert.equal(registry.runtimeArtifactPolicy.foldback, 'sanitized_summary_only');
   assert.equal(registry.runtimeArtifactPolicy.cleanupCommand, 'node scripts/gap-phase-runner.mjs cleanup');
   assert.match(registry.machineBoundary, /\.runtime phase run artifacts are temporary/);
+  assert.deepEqual(registry.evalDimensionPolicy.dimensions, ['contract', 'repo_local', 'browser', 'production', 'owner', 'cleanup']);
+  assert.deepEqual(registry.evalDimensionPolicy.statusValues, ['pass', 'blocked', 'fail']);
+  assert.equal(registry.evalDimensionPolicy.advanceRule, 'currentStatus=done and all evalResults pass');
+  assert.equal(registry.evalDimensionPolicy.externalEvidenceCannotBeInferredFromRepoLocal, true);
+  assert.deepEqual(registry.evalDimensionPolicy.externalEvidenceDimensions, ['production', 'owner']);
+  assert.deepEqual(registry.evalDimensionPolicy.requiredFields, ['id', 'dimension', 'status', 'proves', 'doesNotProve']);
 });
 
 test('each gap phase has owner, eval, evidence, cannot-claim, and blocker boundaries', () => {
@@ -94,6 +100,71 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(gap.readyToAdvance, gap.status === 'done');
   }
+});
+
+test('gap phase runner evaluates each gap across repo, production, owner, contract, and cleanup dimensions', async () => {
+  const runner = await import('../../scripts/gap-phase-runner.mjs');
+  const registry = readJson(registryPath);
+  const report = runner.buildPhaseStatusReport(registry);
+  const byGap = Object.fromEntries(report.gaps.map((gap) => [gap.id, gap]));
+
+  for (const gap of report.gaps) {
+    assert.ok(Array.isArray(gap.evalResults), `${gap.id} must report machine eval results`);
+    assert.ok(gap.evalResults.length >= 5, `${gap.id} must evaluate multiple dimensions`);
+    assert.ok(gap.evalResults.some((result) => result.dimension === 'cleanup'), `${gap.id} must evaluate cleanup`);
+    assert.ok(gap.evalResults.every((result) => registry.evalDimensionPolicy.dimensions.includes(result.dimension)), `${gap.id} eval dimensions must be declared by contract`);
+    assert.ok(gap.evalResults.every((result) => typeof result.id === 'string' && result.id.length > 0), `${gap.id} eval ids must be stable`);
+    assert.ok(gap.evalResults.every((result) => ['pass', 'blocked', 'fail'].includes(result.status)), `${gap.id} eval statuses must be typed`);
+    assert.ok(gap.evalResults.every((result) => Array.isArray(result.proves) && result.proves.length > 0), `${gap.id} evals must declare proves`);
+    assert.ok(gap.evalResults.every((result) => Array.isArray(result.doesNotProve) && result.doesNotProve.length > 0), `${gap.id} evals must declare doesNotProve`);
+  }
+
+  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'blocked');
+  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'blocked');
+  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
+  assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'blocked');
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'blocked');
+  assert.equal(
+    byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_allowlist_eval').evidenceSource,
+    'conditions',
+  );
+  assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_readonly_projection').status, 'pass');
+  assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_owner_receipt').status, 'blocked');
+  assert.equal(
+    byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_consumer_contract').evidenceSource,
+    'expansionConditions',
+  );
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'observability_baseline').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_owner_receipt').status, 'blocked');
+  assert.equal(
+    byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_future_contract_placeholders').evidenceSource,
+    'evidenceConditions',
+  );
+
+  assert.equal(report.readyToAdvanceCount, 0);
+  assert.deepEqual(report.summary, {
+    done: 0,
+    partial: 1,
+    blocked: 4,
+    not_started: 0,
+  });
+});
+
+test('gap phase runner refuses advancement when a done status lacks required eval evidence', async () => {
+  const runner = await import('../../scripts/gap-phase-runner.mjs');
+  const registry = readJson(registryPath);
+  const forgedRegistry = structuredClone(registry);
+  const uiGap = forgedRegistry.gaps.find((gap) => gap.id === 'ui_ux_product_depth');
+  uiGap.currentStatus = 'done';
+
+  const report = runner.buildPhaseStatusReport(forgedRegistry);
+  const uiReport = report.gaps.find((gap) => gap.id === 'ui_ux_product_depth');
+
+  assert.equal(uiReport.status, 'done');
+  assert.equal(uiReport.readyToAdvance, false);
+  assert.deepEqual(uiReport.readyToAdvanceBlockedBy, ['production_ui_evidence', 'owner_receipt']);
+  assert.equal(report.goalComplete, false);
 });
 
 test('UI/UX production claim phase keeps owner receipt and raw artifacts out of inferred truth', () => {
