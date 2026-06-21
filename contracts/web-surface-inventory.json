@@ -551,7 +551,7 @@
       "type": "test",
       "ownerSurface": "apps-web",
       "consumer": ["npm run verify:smoke"],
-      "contract": ["apps/web/index.html", "apps/web/src/onePersonLabWeb.mjs"],
+      "contract": ["apps/web/index.html", "apps/web/styles.css", "apps/web/src/onePersonLabWeb.mjs", "contracts/web-gui-product-contract.json"],
       "lifecycle": "durable"
     },
     {

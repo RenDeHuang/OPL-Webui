@@ -104,6 +104,7 @@
   },
   "visualGrammar": {
     "density": "quiet_dense_workspace",
+    "currentUiVariant": "clean_workbench_v1",
     "appCopyDensity": "low",
     "publicCopyDensity": "moderate",
     "longExplanatoryCopy": "forbidden_in_app_shell",
@@ -114,10 +115,11 @@
     "defaultPanelPolicy": "heavy_left_and_right_panels_hidden_until_user_action",
     "layoutRules": [
       "Public landing may use centered prompt-style composition.",
-      "Authenticated app shell must keep chat canvas primary.",
+      "Authenticated app shell must keep the research command workbench and chat canvas primary.",
       "Left sidebar expands from the rail; it must not create a second extra column.",
       "Right inspector hosts files, progress, and output tabs in the same shell.",
-      "Files and progress must not be rendered as duplicate standalone page layouts."
+      "Files and progress must not be rendered as duplicate standalone page layouts.",
+      "The clean_workbench_v1 shell must not use the retired hero-shell section."
     ]
   },
   "semanticTokens": {
@@ -429,6 +431,11 @@
         "id": "responsive_visual_qa_closeout",
         "state": "done",
         "evidence": "repo-local desktop/tablet/mobile/compact responsive visual QA and accessibility-adjacent browser checks are captured by npm run verify:browser"
+      },
+      {
+        "id": "clean_workbench_v1_shell",
+        "state": "done",
+        "evidence": "apps/web/index.html declares data-ui-variant=clean_workbench_v1, uses a workbench command band, retires the hero-shell markup, and passed refreshed repo-local browser visual QA through npm run verify:browser"
       },
       {
         "id": "owner_receipt_closeout",

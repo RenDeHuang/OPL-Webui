@@ -283,6 +283,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['collapsed_expanded_left_rail', 'account_popover_status', 'missing_api_key_resource_gate', 'prompt_command_center', 'research_skill_launcher', 'chat_task_view', 'right_inspector_tabs_files_progress_output', 'running_blocked_turn_state']);
   assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_code_video_skills']);
+  assert.equal(gui.visualGrammar.currentUiVariant, 'clean_workbench_v1');
   assert.equal(gui.visualQualityGate.state, 'production_ui_quality_claim_pending_owner_receipt_and_production_evidence');
   assert.equal(gui.visualQualityGate.completedPhase, 'responsive_visual_qa');
   assert.equal(gui.visualQualityGate.currentPhase, 'production_ui_quality_claim');
@@ -305,13 +306,14 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'keyboard focus ring is visible on the primary chat submit control',
     'production UI owner receipt completed',
   ]);
-  assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'tablet_screenshot_review', 'mobile_screenshot_review', 'compact_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check', 'responsive_visual_qa_closeout', 'owner_receipt_closeout']);
+  assert.deepEqual(gui.visualQualityGate.acceptance.map((item) => item.id), ['figma_mcp_source_context', 'desktop_screenshot_review', 'tablet_screenshot_review', 'mobile_screenshot_review', 'compact_screenshot_review', 'browser_interaction_e2e', 'hidden_overlay_input_check', 'responsive_visual_qa_closeout', 'clean_workbench_v1_shell', 'owner_receipt_closeout']);
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'figma_mcp_source_context').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'desktop_screenshot_review').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'tablet_screenshot_review').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'mobile_screenshot_review').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'compact_screenshot_review').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'responsive_visual_qa_closeout').state, 'done');
+  assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'clean_workbench_v1_shell').state, 'done');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'owner_receipt_closeout').state, 'pending');
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'browser_interaction_e2e').command, 'npm run verify:browser');
   assert.equal(gui.visualQualityGate.baselineEvidence.command, 'npm run verify:browser');

@@ -17,6 +17,7 @@
     data-api-key-dialog-state="closed"
     data-visual-density="quiet_dense_workbench"
     data-visual-quality-gate="repo_local_responsive_visual_qa_captured_pending_owner_receipt"
+    data-ui-variant="clean_workbench_v1"
   >
     <div class="app-shell figma-make-webui-alignment" data-figma-source="E8nYfNFc2D9P01FYZ8UwBW">
       <aside class="sidebar-shell" data-figma-pattern="collapsed_expanded_left_rail" aria-label="One Person Lab navigation">
@@ -65,22 +66,40 @@
       </aside>
 
       <main class="main-stage">
-        <section class="runtime-card" aria-label="MedOPL 授权入口">
-          <p class="panel-kicker">MedOPL</p>
-          <h2>开通后继续</h2>
-          <p>需要云端能力时，Web 只打开授权入口。</p>
-          <a href="https://medopl.medopl.cn">去 MedOPL</a>
-        </section>
-
-        <section class="hero-shell" id="home" aria-label="Figma Make one-person-lab-web shell">
-          <div class="hero-copy">
-            <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
-            <h1>One Person Lab Web</h1>
-            <p>面向科研工作人员、硕博、PI 与科研团队的 Web 版 One Person Lab。用户从 @科研、@论文、@基金 等科研能力入口进入，普通聊天是 fallback。</p>
+        <section class="workbench-command" id="home" aria-label="Figma Make one-person-lab-web shell">
+          <div class="workbench-topline">
+            <div>
+              <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
+              <h1>One Person Lab Web</h1>
+              <p>面向科研工作人员、硕博、PI 与科研团队的 Web 工作台。普通聊天是 fallback，科研任务从 @科研、@论文、@基金 等入口进入。</p>
+            </div>
+            <a class="runtime-card" href="https://medopl.medopl.cn" aria-label="MedOPL 授权入口">
+              <span>MedOPL</span>
+              <strong>开通后继续</strong>
+              <small>需要云端能力时，Web 只打开授权入口。</small>
+            </a>
           </div>
 
-          <form class="prompt-console prompt-command-center" id="chat" data-chat-form data-figma-pattern="prompt_command_center" aria-label="科研能力入口">
-            <label for="chat-input">输入科研问题或 @能力入口</label>
+          <div class="workbench-summary-strip" aria-label="今天的工作">
+            <section>
+              <span>今天的工作</span>
+              <strong>从研究问题开始</strong>
+              <small>输入问题、选择能力、沉淀 refs。</small>
+            </section>
+            <section>
+              <span>研究方向</span>
+              <strong>@科研 可直接运行</strong>
+              <small>普通聊天 fallback 使用自己的 API Key。</small>
+            </section>
+            <section>
+              <span>材料与输出</span>
+              <strong>只显示 refs</strong>
+              <small>不返回 artifact body，不拥有 runtime truth。</small>
+            </section>
+          </div>
+
+          <form class="prompt-console prompt-command-center research-command-band" id="chat" data-chat-form data-figma-pattern="prompt_command_center" aria-label="科研能力入口">
+            <label for="chat-input">输入研究问题，直接进入工作台</label>
             <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入科研问题或 @能力入口"></textarea>
             <div class="prompt-footer">
               <span class="gateway-pill">Model gateway: https://gflabtoken.cn/v1</span>
@@ -131,7 +150,7 @@
           <button class="secondary-button" type="button" data-right-inspector-open="output">输出</button>
         </aside>
 
-        <section class="product-grid" aria-label="One Person Lab Web 工作台">
+        <section class="product-grid surface-stack" aria-label="One Person Lab Web 工作台">
           <section class="chat-panel" aria-labelledby="chat-title">
             <div class="section-heading">
               <p class="panel-kicker">Chat</p>
