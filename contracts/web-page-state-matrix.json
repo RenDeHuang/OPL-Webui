@@ -115,6 +115,18 @@
       "blocked_turn"
     ],
     "defaultAppState": "home_default",
+    "layeredGovernance": {
+      "productSubject": "ai_native_research_composer_with_project_session_result_workflow",
+      "order": ["product_subject", "information_architecture", "first_view_contract", "surface_budget", "interaction_contract", "component_behavior_law", "semantic_tokens"],
+      "rule": "components_follow_surface_ownership_not_visual_similarity",
+      "noNewTruthFile": true
+    },
+    "surfaceOwnershipForbidden": {
+      "search": ["skill_search", "workflow_search", "prompt_directory", "backend_search_api"],
+      "more": ["settings_status_dump", "account_lifecycle", "quota_audit", "provider_base_url", "api_key_form"],
+      "account": ["primary_navigation_item", "more_route_panel"],
+      "model_selector": ["visible_gateway_url", "base_url_editor"]
+    },
     "sideNavigation": {
       "defaultState": "visible",
       "actions": [

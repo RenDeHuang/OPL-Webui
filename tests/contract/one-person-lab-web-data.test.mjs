@@ -94,6 +94,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
   const expectedRouteScope = { home: ['side_navigation', 'first_view', 'turn_state', 'chat_canvas', 'runtime_gate'], skills: ['skill_library'], workflows: ['workflow_library'], projects: ['project_library'], more: ['empty_overflow_menu'] };
   assert.deepEqual(pageStates.shellStates.routeScopedSurfaces, expectedRouteScope);
+  assert.deepEqual(Object.values(pageStates.shellStates.layeredGovernance), ['ai_native_research_composer_with_project_session_result_workflow', ['product_subject', 'information_architecture', 'first_view_contract', 'surface_budget', 'interaction_contract', 'component_behavior_law', 'semantic_tokens'], 'components_follow_surface_ownership_not_visual_similarity', true]);
+  assert.deepEqual(pageStates.shellStates.surfaceOwnershipForbidden, { search: ['skill_search', 'workflow_search', 'prompt_directory', 'backend_search_api'], more: ['settings_status_dump', 'account_lifecycle', 'quota_audit', 'provider_base_url', 'api_key_form'], account: ['primary_navigation_item', 'more_route_panel'], model_selector: ['visible_gateway_url', 'base_url_editor'] });
   assert.deepEqual(pageStates.shellStates.sideNavigation.actions.map(({ id, label, kind, targetView, localOnly, consumer, forbiddenApis }) => [id, label, kind, targetView, localOnly, consumer, forbiddenApis.join('|')]), [
     ['home', '新建对话', 'route', 'home', true, 'composer_focus', ''],
     ['projects', 'Projects', 'route', 'projects', true, 'project_library', '/api/projects'],
@@ -126,6 +128,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryAction, 'save');
   assert.equal(pageStates.shellStates.modals.apiKeyRequired.primaryActionLabel, '保存');
   assert.deepEqual(pageStates.shellStates.modals.apiKeyRequired.closeTrigger, ['explicit_close', 'escape']);
+
+  assert.deepEqual(Object.values(gui.layeredGovernance.subjectBeforePattern), ['ai_native_research_composer_with_project_session_result_workflow', 'research_turn', 'compose_research_question_or_continue_session', ['dashboard_template', 'crm_template', 'settings_center', 'runtime_console', 'card_grid_first', 'component_inventory']]);
+  assert.deepEqual([gui.layeredGovernance.layerOrder, gui.layeredGovernance.noNewTruthFile], [['product_subject', 'information_architecture', 'first_view_contract', 'surface_budget', 'interaction_contract', 'component_behavior_law', 'semantic_tokens'], true]);
+  assert.deepEqual(gui.visualGrammar.surfaceBudget.routeBudgets.home, { maxSections: 1, maxCards: 0, maxBodyParagraphs: 1, maxCta: 1 });
+  assert.deepEqual(gui.visualGrammar.surfaceBudget.routeBudgets.more, { maxSections: 1, maxCards: 0, maxBodyParagraphs: 1, maxCta: 0 });
+  assert.deepEqual([gui.componentBehaviorLaw.Popover.allowedFor, gui.componentBehaviorLaw.Dialog.allowedFor, gui.componentBehaviorLaw.Sheet.allowedFor], [['account_status', 'compact_model_metadata'], ['api_key_required_blocking_task'], ['mobile_inspector', 'conversation_history_search']]);
+  assert.equal(gui.componentBehaviorLaw.Card.forbiddenFor.includes('routine_page_section_wrapper'), true);
 
   assertIncludesAll(Object.keys(api.paths), [
     '/api/session/current',
@@ -301,7 +310,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.visualGrammar.firstViewContract.allowedElements, ['side_navigation', 'brand_title', 'primary_composer', 'starter_chips', 'right_inspector_utility_rail']);
   assert.deepEqual(gui.visualGrammar.firstViewContract.forbiddenElements, ['left_rail', 'workspace_sidebar', 'summary_strip', 'settings_form', 'chat_history', 'right_inspector_content_by_default', 'runtime_gate', 'long_explanatory_copy']);
   assert.deepEqual(gui.visualGrammar.firstViewContract.starterChipCount, { min: 3, max: 5 });
-  assert.deepEqual(gui.visualGrammar.surfaceBudget, { maxSectionsPerScreen: 3, maxCardsPerScreen: 6, maxBodyParagraphsPerScreen: 3, maxCtaPerScreen: 2, homeFirstViewMaxSections: 1, homeFirstViewMaxCards: 0, secondarySurfaceMaxCards: 6 });
+  assert.deepEqual(Object.fromEntries(Object.entries(gui.visualGrammar.surfaceBudget).filter(([key]) => key !== 'routeBudgets')), { maxSectionsPerScreen: 3, maxCardsPerScreen: 6, maxBodyParagraphsPerScreen: 3, maxCtaPerScreen: 2, homeFirstViewMaxSections: 1, homeFirstViewMaxCards: 0, secondarySurfaceMaxCards: 6 });
   assert.deepEqual(gui.visualGrammar.resultStreamContract, { primaryResearchResultSurface: 'structured_research_artifact_card', rawAssistantTranscriptForStructuredResult: 'forbidden', maxRawAssistantMessagesPerStructuredResult: 0, researchArtifactSectionCount: 3, density: 'artifact_first_not_test_log' });
   assert.deepEqual(gui.visualGrammar.inspectorSurfaceContract, { desktop: { behavior: 'stable_right_work_panel', overlapWithMainContent: 'forbidden', reservedMainLayout: 'required' }, mobile: { behavior: 'light_bottom_sheet', maxHeightVh: 64, railYieldWhileOpen: 'required' } });
   assert.deepEqual(gui.visualGrammar.styleTokens.colorRoles, ['canvas', 'surface', 'elevatedSurface', 'border', 'text', 'mutedText', 'accent', 'success', 'warning', 'danger', 'focusRing']);
@@ -972,13 +981,8 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
 });
 
 test('web product entry delegates state and DOM ownership to focused modules', () => {
-  const entryPath = 'apps/web/src/onePersonLabWeb.mjs';
-  const statePath = 'apps/web/src/onePersonLabWebState.mjs';
-  const domPath = 'apps/web/src/onePersonLabWebDom.mjs';
-  const entry = readFileSync(entryPath, 'utf8');
-
-  assert.equal(existsSync(statePath), true, `missing state owner module: ${statePath}`);
-  assert.equal(existsSync(domPath), true, `missing DOM owner module: ${domPath}`);
+  const entry = readFileSync('apps/web/src/onePersonLabWeb.mjs', 'utf8');
+  for (const path of ['apps/web/src/onePersonLabWebState.mjs', 'apps/web/src/onePersonLabWebDom.mjs']) assert.equal(existsSync(path), true, `missing owner module: ${path}`);
   assert.match(entry, /onePersonLabWebState\.mjs/);
   assert.match(entry, /onePersonLabWebDom\.mjs/);
   assert.doesNotMatch(entry, /querySelector|addEventListener|appendMessage|writeJSON|readJSON|providerFallback/);

@@ -5,6 +5,24 @@
   "purpose": "web_gui_product_contract",
   "state": "active",
   "machineBoundary": "GUI product grammar for AI design, Figma generation, frontend implementation, and UI acceptance tests; source, API contracts, and release evidence remain authoritative for runtime behavior.",
+  "layeredGovernance": {
+    "subjectBeforePattern": {
+      "productSubject": "ai_native_research_composer_with_project_session_result_workflow",
+      "primaryObject": "research_turn",
+      "primaryTask": "compose_research_question_or_continue_session",
+      "forbiddenStartingPoints": ["dashboard_template", "crm_template", "settings_center", "runtime_console", "card_grid_first", "component_inventory"]
+    },
+    "layerOrder": ["product_subject", "information_architecture", "first_view_contract", "surface_budget", "interaction_contract", "component_behavior_law", "semantic_tokens"],
+    "noNewTruthFile": true,
+    "truthOwners": ["contracts/web-gui-product-contract.json", "contracts/web-page-state-matrix.json", "contracts/web-shell-adapter.json", "TASTE.md", "docs/status.md", "docs/active/README.md"],
+    "rulePlacement": {
+      "hardUiRules": "contracts/web-gui-product-contract.json",
+      "pageStateAndSelectors": "contracts/web-page-state-matrix.json",
+      "humanJudgment": "TASTE.md",
+      "currentClaimBoundary": "docs/status.md",
+      "currentBaton": "docs/active/README.md"
+    }
+  },
   "productTruthGate": {
     "publicShell": "ai_native_homepage",
     "appShell": "side_nav_command_home",
@@ -224,7 +242,14 @@
       "maxCtaPerScreen": 2,
       "homeFirstViewMaxSections": 1,
       "homeFirstViewMaxCards": 0,
-      "secondarySurfaceMaxCards": 6
+      "secondarySurfaceMaxCards": 6,
+      "routeBudgets": {
+        "home": { "maxSections": 1, "maxCards": 0, "maxBodyParagraphs": 1, "maxCta": 1 },
+        "skills": { "maxSections": 2, "maxCards": 6, "maxBodyParagraphs": 2, "maxCta": 1 },
+        "workflows": { "maxSections": 2, "maxCards": 6, "maxBodyParagraphs": 2, "maxCta": 2 },
+        "projects": { "maxSections": 2, "maxCards": 4, "maxBodyParagraphs": 1, "maxCta": 1 },
+        "more": { "maxSections": 1, "maxCards": 0, "maxBodyParagraphs": 1, "maxCta": 0 }
+      }
     },
     "resultStreamContract": {
       "primaryResearchResultSurface": "structured_research_artifact_card",
@@ -370,6 +395,40 @@
         "tablet": "right_sheet",
         "mobile": "bottom_sheet"
       }
+    }
+  },
+  "componentBehaviorLaw": {
+    "Popover": {
+      "allowedFor": ["account_status", "compact_model_metadata"],
+      "forbiddenFor": ["route_page", "settings_dump", "long_form_task"]
+    },
+    "DropdownMenu": {
+      "allowedFor": ["compact_command_list", "model_choice"],
+      "forbiddenFor": ["blocking_task", "long_form_status"]
+    },
+    "Select": {
+      "allowedFor": ["single_field_value_choice"],
+      "forbiddenFor": ["navigation_route", "multi_step_task"]
+    },
+    "Dialog": {
+      "allowedFor": ["api_key_required_blocking_task"],
+      "forbiddenFor": ["routine_navigation", "non_blocking_metadata"]
+    },
+    "AlertDialog": {
+      "allowedFor": ["destructive_or_irreversible_confirmation"],
+      "forbiddenFor": ["ordinary_close", "non_destructive_navigation"]
+    },
+    "Sheet": {
+      "allowedFor": ["mobile_inspector", "conversation_history_search"],
+      "forbiddenFor": ["desktop_primary_work_panel", "account_settings_dump"]
+    },
+    "Card": {
+      "allowedFor": ["starter_chip", "secondary_entry", "result_artifact", "library_item"],
+      "forbiddenFor": ["routine_page_section_wrapper", "first_view_home_grid", "card_inside_card_depth"]
+    },
+    "Tabs": {
+      "allowedFor": ["peer_views_inside_one_surface"],
+      "forbiddenFor": ["primary_navigation_replacement", "unrelated_task_grouping"]
     }
   },
   "semanticTokens": {

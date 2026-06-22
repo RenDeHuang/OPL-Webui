@@ -18,6 +18,15 @@
 - Small files stay purposeful: line count is only a hard hygiene boundary at 1000 lines unless generated, fixture, or schema material. Below that boundary, split files because responsibilities are clearer, not because an arbitrary small number was crossed.
 - File count is a portfolio signal, not a release blocker. Owned growth is report-only; orphan growth without owner or consumer is a hard failure.
 
+## UI Governance Taste
+
+- UI work is subject-first: identify the One Person Lab Web research task and primary object before choosing layout patterns or components.
+- Current subject: AI-native research composer with project/session/result workflow. It is not a dashboard template, CRM template, settings center, runtime console, or card grid first surface.
+- Components follow surface ownership and behavior, not visual similarity. Account and compact model metadata use popovers; conversation history and mobile inspector use sheets; API Key unblock uses a dialog; destructive confirmation alone uses alert dialog.
+- Surface budget comes before component polish. Home is composer-first and low-copy; More stays empty overflow until it has a named consumer; Search stays conversation history only.
+- Do not create new UI governance files while `contracts/web-gui-product-contract.json`, `contracts/web-page-state-matrix.json`, `contracts/web-shell-adapter.json`, this file, `docs/status.md`, and `docs/active/README.md` can carry the rule.
+- If a UI rule will not change the next correct agent action, leave it in code/tests or remove it instead of adding prose.
+
 ## Default Development Loop
 
 1. Read `README.md`, `AGENTS.md`, this file, `docs/status.md`, `docs/decisions.md`, `docs/active/README.md`, and relevant `contracts/*.json`.

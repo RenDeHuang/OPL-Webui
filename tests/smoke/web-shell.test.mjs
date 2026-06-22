@@ -225,14 +225,20 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
 
 test('active UI truth no longer narrates the retired workbench shell as current', () => {
   const activeTruth = [
+    'TASTE.md',
     'docs/status.md',
     'docs/active/README.md',
     'scripts/test-classification.mjs',
   ].map((path) => readFileSync(path, 'utf8')).join('\n');
 
   assert.match(activeTruth, /ai_native_research_home_v1/);
+  assert.match(activeTruth, /subject-first|subject first|Subject-first/);
+  assert.match(activeTruth, /components follow surface ownership|component behavior law|组件按行为/i);
   assert.match(activeTruth, /OPL green|OPL Green|opl_green/);
-  assert.doesNotMatch(activeTruth, /current repo-local UI variant is `clean_workbench_v1`|clean workbench UI variant|workbench command band|summary strip/);
+  assert.doesNotMatch(activeTruth, /current repo-local UI variant is `clean_workbench_v1`|clean workbench UI variant|workbench command band|summary strip|current subject: dashboard|current subject: CRM|current subject: settings center|current subject: runtime console|current subject: card grid/i);
+  for (const path of ['DESIGN.md', 'UI_GOVERNANCE.md', 'docs/ui_governance.md', 'docs/design_system.md']) {
+    assert.equal(existsSync(path), false, `UI governance must stay in existing truth surfaces, not ${path}`);
+  }
 });
 
 test('more surface stays empty overflow and account actions stay in avatar flow', () => {
