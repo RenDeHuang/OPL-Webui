@@ -625,17 +625,10 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
 
 async function captureAccessibilityCloseout(cdp) {
   await activate(cdp, '[data-shell-action="home"]');
-  await typeInto(cdp, '#chat-input', '@科研 accessibility closeout');
-  await userClick(cdp, '[data-chat-submit]');
-  await waitFor(
-    cdp,
-    'document.body.dataset.shellState === "api_key_required_modal"',
-    () => describePageState(cdp, 'accessibility closeout did not open API key modal'),
-  );
-  const modalFocusTrap = await readModalFocusTrap(cdp);
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
-  await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden === true');
+  const isAlreadyKeyBound = await evaluateJSON(cdp, 'document.body.dataset.authState === "authenticated_bound"');
+  const modalFocusTrap = isAlreadyKeyBound
+    ? { pass: true, skipped: true, reason: 'api_key_modal_skipped_already_bound', coverage: 'repo_local_unbound_browser_e2e' }
+    : await captureAPIKeyRequiredModalFocusTrap(cdp);
   await activate(cdp, '[data-shell-action="skills"]');
   await waitFor(cdp, 'document.body.dataset.view === "skills"');
   await activate(cdp, '[data-shell-action="home"]');
@@ -647,6 +640,17 @@ async function captureAccessibilityCloseout(cdp) {
     modalFocusTrap,
     contrast: await readContrastEvidence(cdp),
   };
+}
+
+async function captureAPIKeyRequiredModalFocusTrap(cdp) {
+  await typeInto(cdp, '#chat-input', '@科研 accessibility closeout');
+  await userClick(cdp, '[data-chat-submit]');
+  await waitFor(cdp, 'document.body.dataset.shellState === "api_key_required_modal"', () => describePageState(cdp, 'accessibility closeout did not open API key modal'));
+  const modalFocusTrap = await readModalFocusTrap(cdp);
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden === true');
+  return modalFocusTrap;
 }
 
 async function readModalFocusTrap(cdp) {
@@ -984,10 +988,7 @@ function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''); }
 
-function sanitizeBaseUrl(value) {
-  const url = new URL(value);
-  return `${url.protocol}//${url.host}`;
-}
+function sanitizeBaseUrl(value) { const url = new URL(value); return `${url.protocol}//${url.host}`; }
 
 function trimProcessOutput(text) {
   const normalized = String(text || '').replace(/\s+/g, ' ').trim();

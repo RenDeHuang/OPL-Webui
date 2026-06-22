@@ -139,6 +139,15 @@ test('production browser e2e accepts reusable dogfood accounts that are already 
   assert.match(runner, /authenticated_bound/);
 });
 
+test('production accessibility closeout is idempotent when dogfood account is already key-bound', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /isAlreadyKeyBound/);
+  assert.match(runner, /api_key_modal_skipped_already_bound/);
+  assert.match(runner, /repo_local_unbound_browser_e2e/);
+  assert.match(runner, /document\.body\.dataset\.authState === "authenticated_bound"/);
+});
+
 test('production browser e2e waits for async research results and reports page evidence', () => {
   const runner = readFileSync(runnerPath, 'utf8');
   const markerExpression = '\'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"\'';
