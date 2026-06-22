@@ -416,7 +416,7 @@
       "sanitized_audit",
       "desktop_shell",
       "mobile_shell",
-      "settings_hash"
+      "more_empty_overflow"
     ],
     "evidenceCommands": [
       "node --test tests/contract/one-person-lab-chat-upstream.test.mjs",

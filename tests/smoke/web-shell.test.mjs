@@ -47,8 +47,10 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-project-library/);
   assert.match(html, /data-search-sheet/);
   assert.match(html, /data-overlay-close="search"/);
-  assert.match(html, /data-local-search/);
-  assert.match(html, /data-local-search-entry/);
+  assert.match(html, /data-conversation-search/);
+  assert.match(html, /data-conversation-history/);
+  assert.match(html, /data-conversation-empty/);
+  assert.doesNotMatch(html, /data-local-search/);
   assert.match(html, /account-dock/);
   assert.match(html, /account-popover/);
   assert.match(html, /data-account-popover-close/);
@@ -65,12 +67,12 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-inspector-files-refs/);
   assert.match(html, /data-inspector-progress-projection/);
   assert.match(html, /data-inspector-output-refs/);
-  assert.match(html, /input_ref: protocol\.pdf/);
-  assert.match(html, /progress_ref: research_plan/);
-  assert.match(html, /output_ref: research-plan-draft/);
-  assert.match(html, /视觉 QA gate/);
-  assert.match(html, /desktop screenshot reviewed/);
-  assert.match(html, /mobile screenshot reviewed/);
+  assert.doesNotMatch(html, /input_ref: protocol\.pdf/);
+  assert.doesNotMatch(html, /progress_ref: research_plan/);
+  assert.doesNotMatch(html, /output_ref: research-plan-draft/);
+  assert.doesNotMatch(html, /视觉 QA gate/);
+  assert.doesNotMatch(html, /desktop screenshot reviewed/);
+  assert.doesNotMatch(html, /mobile screenshot reviewed/);
   assert.match(html, /data-api-key-dialog/);
   assert.match(html, /data-api-key-dialog-state="closed"/);
   assert.match(html, /data-research-launcher/);
@@ -90,7 +92,8 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /我的工作流/);
   assert.match(html, /OPL 工作流/);
   assert.match(html, /新增 Project/);
-  assert.match(html, /账号与凭据状态/);
+  assert.match(html, /data-more-overflow/);
+  assert.match(html, /暂时没有更多入口/);
   assert.match(html, /OPL/);
   assert.match(html, /科研任务入口/);
   assert.match(html, /@科研/);
@@ -100,8 +103,10 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /注册/);
   assert.match(html, /登录/);
   assert.match(html, /API Key/);
-  assert.match(html, /Model gateway: https:\/\/gflabtoken\.cn\/v1/);
-  assert.match(html, /https:\/\/gflabtoken\.cn\/v1/);
+  assert.match(html, /data-model-selector/);
+  assert.match(html, /模型/);
+  assert.doesNotMatch(html, /Model gateway: https:\/\/gflabtoken\.cn\/v1/);
+  assert.doesNotMatch(html, /https:\/\/gflabtoken\.cn\/v1/);
   assert.match(html, /普通聊天/);
   assert.doesNotMatch(html, />[^<]*(fallback|artifact body|runtime truth)[^<]*</i);
   assert.match(html, /普通问答/);
@@ -123,11 +128,11 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /chat-log/);
   assert.match(html, /data-result-stream-contract="artifact_first_not_test_log"/);
   assert.match(html, /data-research-artifact-policy="no_raw_assistant_transcript"/);
-  assert.match(html, /settings-panel/);
-  assert.match(html, /data-account-lifecycle-status/);
-  assert.match(html, /data-team-readiness-status/);
-  assert.match(html, /data-quota-status/);
-  assert.match(html, /data-account-audit-status/);
+  assert.doesNotMatch(html, /settings-panel/);
+  assert.doesNotMatch(html, /data-account-lifecycle-status/);
+  assert.doesNotMatch(html, /data-team-readiness-status/);
+  assert.doesNotMatch(html, /data-quota-status/);
+  assert.doesNotMatch(html, /data-account-audit-status/);
   assert.match(html, /data-reliability-status/);
   assert.match(html, /data-reliability-title/);
   assert.match(html, /data-reliability-action/);
@@ -137,7 +142,7 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /class="home-first-view[\s\S]*data-route-surface="home"/);
   assert.match(html, /class="turn-state-strip"[\s\S]*data-route-surface="home"/);
   assert.match(html, /class="chat-panel"[\s\S]*data-route-surface="home"/);
-  assert.match(html, /class="settings-panel credential-panel"[\s\S]*data-route-surface="more"/);
+  assert.match(html, /class="more-overflow"[\s\S]*data-route-surface="more"/);
   assert.match(html, /class="capability-section foundry-section"[\s\S]*data-route-surface="skills"/);
   assert.match(html, /class="workflow-section"[\s\S]*data-route-surface="workflows"/);
   assert.match(html, /class="project-section"[\s\S]*data-route-surface="projects"/);
@@ -230,23 +235,26 @@ test('active UI truth no longer narrates the retired workbench shell as current'
   assert.doesNotMatch(activeTruth, /current repo-local UI variant is `clean_workbench_v1`|clean workbench UI variant|workbench command band|summary strip/);
 });
 
-test('more surface contains productized settings without becoming primary navigation', () => {
+test('more surface stays empty overflow and account actions stay in avatar flow', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /href="#more"/);
   assert.match(html, /id="more"/);
-  assert.match(html, /data-settings-panel/);
-  assert.match(html, /data-account-settings-link/);
+  assert.match(html, /data-more-overflow/);
+  assert.match(html, /data-more-empty/);
+  assert.match(html, /暂时没有更多入口/);
+  assert.doesNotMatch(html, /data-account-settings-link/);
   assert.match(html, /data-account-popover/);
   assert.match(html, /登录状态/);
   assert.match(html, /API Key 绑定状态/);
-  assert.match(html, /账号生命周期/);
-  assert.match(html, /团队状态/);
-  assert.match(html, /额度状态/);
-  assert.match(html, /最近审计/);
-  assert.match(html, /不可编辑/);
+  assert.doesNotMatch(html, /账号生命周期/);
+  assert.doesNotMatch(html, /团队状态/);
+  assert.doesNotMatch(html, /额度状态/);
+  assert.doesNotMatch(html, /最近审计/);
+  assert.doesNotMatch(html, /不可编辑|fixed base_url|Model gateway/);
   assert.match(html, /保存\/更新 API Key/);
   assert.match(html, /退出登录/);
+  assert.doesNotMatch(html, /<span class="account-avatar" aria-hidden="true">人<\/span>/);
 });
 
 test('retired demo bridge is removed', () => {

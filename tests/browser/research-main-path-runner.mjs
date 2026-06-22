@@ -45,6 +45,8 @@ try {
   await authenticate(cdp, config);
   const accessibilityCloseout = await captureAccessibilityCloseout(cdp);
 
+  await openAccountPopover(cdp);
+  await waitFor(cdp, 'document.querySelector("#api-key")?.offsetParent !== null');
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
@@ -147,7 +149,7 @@ function resolveRunConfig(runMode) {
 }
 
 async function authenticate(cdp, config) {
-  await openSettingsRoute(cdp);
+  await openAccountPopover(cdp);
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-register-button]');
@@ -162,12 +164,12 @@ async function authenticate(cdp, config) {
   await waitForBoundOrUnboundAuthState(cdp, 'login');
 }
 
-async function openSettingsRoute(cdp) {
-  await activate(cdp, '[data-shell-action="more"]');
+async function openAccountPopover(cdp) {
+  await activate(cdp, '[data-account-toggle]');
   await waitFor(
     cdp,
-    'document.body.dataset.view === "more" && document.querySelector("#auth-email")?.offsetParent !== null',
-    () => describePageState(cdp, 'settings route did not expose auth form'),
+    'document.querySelector("[data-account-popover]")?.hidden === false && document.querySelector("#auth-email")?.offsetParent !== null',
+    () => describePageState(cdp, 'account popover did not expose auth form'),
   );
 }
 
@@ -183,6 +185,7 @@ async function openChatRoute(cdp) {
 async function resetSessionIfAuthenticated(cdp) {
   const authState = await evaluateJSON(cdp, 'document.body.dataset.authState');
   if (authState === 'anonymous') return;
+  await openAccountPopover(cdp);
   await activate(cdp, '[data-logout-button]');
   await waitForAuthState(cdp, 'anonymous', 'initial logout');
 }
@@ -750,6 +753,7 @@ async function setViewport(cdp, viewport) {
 async function readVisualLayout(cdp) {
   await focusElement(cdp, '#chat-input');
   await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
   return evaluateJSON(cdp, `(async () => {
     const rectJSON = (element) => {
       if (!element) return null;
@@ -976,13 +980,9 @@ async function closeChildProcess(child, afterClose = () => {}) {
   }
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
-function normalizeBaseUrl(value) {
-  return String(value || '').replace(/\/+$/, '');
-}
+function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''); }
 
 function sanitizeBaseUrl(value) {
   const url = new URL(value);

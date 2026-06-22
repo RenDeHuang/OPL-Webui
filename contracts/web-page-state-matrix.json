@@ -29,8 +29,8 @@
     {
       "id": "more",
       "hash": "#more",
-      "surface": "settings_search_and_medopl_shortcuts",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "runtime_required", "external_handoff"]
+      "surface": "empty_overflow_menu",
+      "states": ["empty"]
     }
   ],
   "accountStates": ["anonymous", "authenticated_unbound", "authenticated_bound"],
@@ -160,7 +160,7 @@
           "kind": "sheet",
           "targetView": "home",
           "localOnly": true,
-          "consumer": "local_prompt_and_recent_session_filter",
+          "consumer": "conversation_history_search",
           "forbiddenApis": ["/api/search"]
         },
         {
@@ -169,7 +169,7 @@
           "kind": "route",
           "targetView": "more",
           "localOnly": true,
-          "consumer": "settings_and_account_status",
+          "consumer": "empty_overflow_menu",
           "forbiddenApis": []
         }
       ]
@@ -179,7 +179,7 @@
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
       "projects": ["project_library"],
-      "more": ["settings_panel"]
+      "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
       "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
@@ -321,9 +321,13 @@
       "[data-register-button]",
       "[data-login-button]",
       "[data-provider-form]",
-      "[data-settings-panel]",
+      "[data-more-overflow]",
       "[data-project-library]",
       "[data-search-sheet]",
+      "[data-conversation-search]",
+      "[data-conversation-history]",
+      "[data-conversation-empty]",
+      "[data-model-selector]",
       "[data-overlay-close]",
       "[data-runtime-gate]",
       "[data-research-launcher]",
@@ -333,10 +337,6 @@
       "[data-research-result]",
       "[data-research-result-section]",
       "[data-runtime-task-card]",
-      "[data-account-lifecycle-status]",
-      "[data-team-readiness-status]",
-      "[data-quota-status]",
-      "[data-account-audit-status]",
       "[data-reliability-status]",
       "[data-reliability-title]",
       "[data-reliability-action]",
@@ -351,21 +351,21 @@
       },
       {
         "id": "register",
-        "route": "more",
+        "route": "home",
         "requiredApi": "/api/auth/register",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "login",
-        "route": "more",
+        "route": "home",
         "requiredApi": "/api/auth/login",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
         "id": "current_session",
-        "route": "more",
+        "route": "home",
         "requiredApi": "/api/session/current",
         "expectedState": "authenticated_unbound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
@@ -379,7 +379,7 @@
       },
       {
         "id": "api_key_binding",
-        "route": "more",
+        "route": "home",
         "requiredApi": "/api/settings/model-provider",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
@@ -425,11 +425,16 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
-        "id": "account_lifecycle_status_visible",
+        "id": "conversation_history_search_visible",
+        "route": "home",
+        "expectedState": "idle",
+        "evidence": "tests/smoke/web-shell.test.mjs"
+      },
+      {
+        "id": "more_empty_overflow_visible",
         "route": "more",
-        "requiredApi": "/api/account/commercial-status",
-        "expectedState": "authenticated_bound",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "expectedState": "empty",
+        "evidence": "tests/smoke/web-shell.test.mjs"
       },
       {
         "id": "reliability_status_visible",
@@ -439,7 +444,7 @@
       },
       {
         "id": "sanitized_audit",
-        "route": "more",
+        "route": "home",
         "requiredApi": "/api/account/audit-events",
         "expectedState": "authenticated_bound",
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"

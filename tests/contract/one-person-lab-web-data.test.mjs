@@ -92,20 +92,20 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(reliabilityStates.every((state) => pageStates.routes.find((route) => route.id === 'home').states.includes(state)), true);
   assert.deepEqual(reliability.allowedFields, ['state', 'title', 'action', 'retryable', 'details']);
   assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
-  const expectedRouteScope = { home: ['side_navigation', 'first_view', 'turn_state', 'chat_canvas', 'runtime_gate'], skills: ['skill_library'], workflows: ['workflow_library'], projects: ['project_library'], more: ['settings_panel'] };
+  const expectedRouteScope = { home: ['side_navigation', 'first_view', 'turn_state', 'chat_canvas', 'runtime_gate'], skills: ['skill_library'], workflows: ['workflow_library'], projects: ['project_library'], more: ['empty_overflow_menu'] };
   assert.deepEqual(pageStates.shellStates.routeScopedSurfaces, expectedRouteScope);
   assert.deepEqual(pageStates.shellStates.sideNavigation.actions.map(({ id, label, kind, targetView, localOnly, consumer, forbiddenApis }) => [id, label, kind, targetView, localOnly, consumer, forbiddenApis.join('|')]), [
     ['home', '新建对话', 'route', 'home', true, 'composer_focus', ''],
     ['projects', 'Projects', 'route', 'projects', true, 'project_library', '/api/projects'],
     ['skills', 'Skill', 'route', 'skills', true, 'skill_library', ''],
     ['workflows', '工作流', 'route', 'workflows', true, 'workflow_library', ''],
-    ['search', '搜索', 'sheet', 'home', true, 'local_prompt_and_recent_session_filter', '/api/search'],
-    ['more', 'More', 'route', 'more', true, 'settings_and_account_status', ''],
+    ['search', '搜索', 'sheet', 'home', true, 'conversation_history_search', '/api/search'],
+    ['more', 'More', 'route', 'more', true, 'empty_overflow_menu', ''],
   ]);
   assert.deepEqual(pageStates.shellStates.librarySurfaces, { skills: { scopes: ['my_skills', 'opl_skills'], actions: ['import_skill'] }, workflows: { scopes: ['my_workflows', 'opl_workflows'], actions: ['create_workflow', 'import_workflow'] }, projects: { scopes: ['my_projects'], actions: ['create_project'], forbiddenApis: ['/api/projects'] } });
-  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_skill_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'account_lifecycle_status_visible', 'reliability_status_visible', 'sanitized_audit']);
+  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_skill_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'conversation_history_search_visible', 'more_empty_overflow_visible', 'reliability_status_visible', 'sanitized_audit']);
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
-  assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-side-navigation]', '[data-first-view]', '[data-starter-chips]', '[data-chat-log]', '[data-runtime-gate]', '[data-settings-panel]', '[data-project-library]', '[data-search-sheet]', '[data-overlay-close]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-account-lifecycle-status]', '[data-team-readiness-status]', '[data-quota-status]', '[data-account-audit-status]', '[data-reliability-status]'], 'observable selector');
+  assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-side-navigation]', '[data-first-view]', '[data-starter-chips]', '[data-chat-log]', '[data-runtime-gate]', '[data-more-overflow]', '[data-project-library]', '[data-search-sheet]', '[data-conversation-search]', '[data-conversation-history]', '[data-conversation-empty]', '[data-model-selector]', '[data-overlay-close]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-reliability-status]'], 'observable selector');
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
     ['research_direction', '@科研', 'ordinary_chat_fallback'],
     ['paper_question', '@论文', 'runtime_gate'],
@@ -180,7 +180,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localNoSecretReadiness.requiresProductionSecrets, false);
   assert.equal(release.localNoSecretReadiness.browserAutomation, false);
   assert.equal(release.localNoSecretReadiness.automationLevel, 'http_contract_and_static_shell');
-  assert.deepEqual(release.localNoSecretReadiness.coverage, ['register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'ordinary_chat_mock_upstream', 'quota_exceeded', 'runtime_gate', 'sanitized_audit', 'desktop_shell', 'mobile_shell', 'settings_hash']);
+  assert.deepEqual(release.localNoSecretReadiness.coverage, ['register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'ordinary_chat_mock_upstream', 'quota_exceeded', 'runtime_gate', 'sanitized_audit', 'desktop_shell', 'mobile_shell', 'more_empty_overflow']);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
   assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27876229568_real_chat_readonly_unconfirmed');
@@ -283,22 +283,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.informationArchitecture.appShell, ['side_navigation', 'home_command_canvas', 'secondary_surfaces', 'right_inspector_layer', 'modal_layer']);
   assert.deepEqual(gui.informationArchitecture.sideNavigation, ['home', 'projects', 'skills', 'workflows', 'search', 'more']);
   assert.deepEqual(gui.informationArchitecture.sideNavigationLabels, ['新建对话', 'Projects', 'Skill', '工作流', '搜索', 'More']);
-  assert.deepEqual(gui.informationArchitecture.sideNavigationTaskOwnership, {
-    home: 'compose_or_start_research_task',
-    projects: 'browse_project_session_refs_and_create_project',
-    skills: 'browse_or_import_skill_entries',
-    workflows: 'browse_create_or_import_agentic_research_workflows',
-    search: 'open_local_prompt_and_recent_session_filter',
-    more: 'route_settings_and_account_status_page',
-  });
-  assert.deepEqual(gui.informationArchitecture.sideNavigationActionMap, {
-    home: { action: 'route_home_and_focus_composer', targetView: 'home', ownerSurface: 'browser_shell', consumer: 'composer_focus' },
-    projects: { action: 'route_projects_page', targetView: 'projects', ownerSurface: 'browser_shell', consumer: 'project_library' },
-    skills: { action: 'route_skills_page', targetView: 'skills', ownerSurface: 'browser_shell', consumer: 'skill_library' },
-    workflows: { action: 'route_workflows_page', targetView: 'workflows', ownerSurface: 'browser_shell', consumer: 'workflow_library' },
-    search: { action: 'open_search_sheet', targetView: 'home', ownerSurface: 'browser_shell', consumer: 'local_prompt_and_recent_session_filter' },
-    more: { action: 'route_more_settings_page', targetView: 'more', ownerSurface: 'browser_shell', consumer: 'settings_and_account_status' },
-  });
+  assert.deepEqual(gui.informationArchitecture.sideNavigationTaskOwnership, { home: 'compose_or_start_research_task', projects: 'browse_project_session_refs_and_create_project', skills: 'browse_or_import_skill_entries', workflows: 'browse_create_or_import_agentic_research_workflows', search: 'open_conversation_history_search', more: 'route_empty_overflow_surface' });
+  assert.deepEqual(gui.informationArchitecture.sideNavigationActionMap, { home: { action: 'route_home_and_focus_composer', targetView: 'home', ownerSurface: 'browser_shell', consumer: 'composer_focus' }, projects: { action: 'route_projects_page', targetView: 'projects', ownerSurface: 'browser_shell', consumer: 'project_library' }, skills: { action: 'route_skills_page', targetView: 'skills', ownerSurface: 'browser_shell', consumer: 'skill_library' }, workflows: { action: 'route_workflows_page', targetView: 'workflows', ownerSurface: 'browser_shell', consumer: 'workflow_library' }, search: { action: 'open_search_sheet', targetView: 'home', ownerSurface: 'browser_shell', consumer: 'conversation_history_search' }, more: { action: 'route_more_overflow_surface', targetView: 'more', ownerSurface: 'browser_shell', consumer: 'empty_overflow_menu' } });
   assert.deepEqual(gui.informationArchitecture.routeScope, expectedRouteScope);
   assert.deepEqual(gui.informationArchitecture.librarySurfaces, pageStates.shellStates.librarySurfaces);
   assert.deepEqual(gui.informationArchitecture.rightInspector, { launcher: 'right_utility_rail', tabs: ['files', 'progress', 'output'], resize: { enabled: true, minWidth: 320, maxWidth: 520 }, desktopBehavior: 'stable_right_work_panel_without_main_overlap', mobileBehavior: 'light_bottom_sheet_with_rail_yield', mobileMaxHeightVh: 64, responsivePlacement: { desktop: 'right_resizable_panel', tablet: 'right_sheet', mobile: 'bottom_sheet' }, mustNotBePrimaryNavigation: true });
@@ -323,7 +309,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.visualGrammar.colorPolicy, { primaryAccent: 'opl_green', primaryAccentHex: '#2f6b4f', focusRing: 'opl_green_focus_ring', forbiddenPrimaryPalettes: ['default_tech_blue', 'default_purple', 'purple_blue_gradient'], forbiddenPrimaryHex: ['#2563eb', '#6366f1', '#8b5cf6'], allowedDepth: 'flat_with_soft_depth_only' });
   assert.deepEqual(gui.visualGrammar.motionPolicy, { durationMs: { fast: 120, base: 160, sheet: 180 }, easing: 'ease-out', allowedProperties: ['opacity', 'transform', 'background-color', 'border-color', 'box-shadow', 'color'], forbidden: ['layout_animation', 'long_blocking_transition', 'motion_without_prefers_reduced_motion'], prefersReducedMotion: 'required' });
   assert.deepEqual(gui.visualGrammar.interactionStatePolicy.requiredStates, ['hover', 'active', 'focus-visible', 'disabled', 'loading']);
-  assert.deepEqual(gui.visualGrammar.responsiveTopology, { desktop: ['side_nav_visible', 'center_composer_primary', 'secondary_surfaces_below_fold', 'stable_right_inspector_on_request'], tablet: ['side_nav_compact', 'center_composer_primary', 'secondary_surfaces_single_column', 'inspector_sheet'], mobile: ['side_nav_icon_strip', 'composer_first', 'starter_chips_before_history', 'lightweight_settings_and_inspector_bottom_sheets'], compact: ['brand_composer_first', 'single_column', 'nonessential_status_collapsed'] });
+  assert.deepEqual(gui.visualGrammar.responsiveTopology, { desktop: ['side_nav_visible', 'center_composer_primary', 'secondary_surfaces_below_fold', 'stable_right_inspector_on_request'], tablet: ['side_nav_compact', 'center_composer_primary', 'secondary_surfaces_single_column', 'inspector_sheet'], mobile: ['side_nav_icon_strip', 'composer_first', 'starter_chips_before_history', 'lightweight_inspector_bottom_sheet', 'account_popover_for_auth_and_api_key'], compact: ['brand_composer_first', 'single_column', 'nonessential_status_collapsed'] });
+  assertIncludesAll(Object.keys(gui.designQualityGates), ['accessibility', 'touch', 'performance', 'style', 'layout', 'typography', 'motion', 'forms', 'navigation'], 'design quality gate');
+  assertIncludesAll(gui.designQualityGates.navigation.required, ['search_is_conversation_history', 'more_is_empty_overflow', 'bottom_avatar_account_entry', 'optional_model_selector'], 'navigation design quality gate');
+  assertIncludesAll(gui.designQualityGates.style.required, ['opl_green_primary_accent', 'low_stimulus_ui', 'no_test_like_ui_copy'], 'style design quality gate');
   assert.deepEqual(Object.keys(gui.interactionContract), ['account_popover', 'search_sheet', 'api_key_required_modal', 'inspector_sheet']);
   for (const overlay of Object.values(gui.interactionContract)) {
     assert.equal(Array.isArray(overlay.closeTrigger), true);
@@ -337,6 +326,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(gui.semanticTokens.resourceActive, 'resource.active');
   assert.equal(gui.semanticTokens.billingWarning, 'billing.warning');
   assert.equal(gui.components.find((component) => component.id === 'SideNavigation').defaultState, 'visible');
+  assert.equal(gui.components.find((component) => component.id === 'SearchPanel').role, 'conversation_history_search');
+  assert.equal(gui.components.find((component) => component.id === 'MoreOverflow').defaultState, 'empty');
   assert.equal(gui.components.find((component) => component.id === 'InspectorSheet').defaultState, 'hidden');
   assert.deepEqual(gui.components.find((component) => component.id === 'InspectorSheet').tabs, ['files', 'progress', 'output']);
   assert.equal(gui.components.find((component) => component.id === 'InspectorSheet').resize.enabled, true);
@@ -413,7 +404,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     requiredBeforeFullA11yClaim: ['assistive_technology_review'],
   });
   assert.equal(gui.visualQualityGate.cannotClaim.includes('complete UI/UX design system'), true);
-  assert.deepEqual(gui.pageTemplates, ['HomeFirstView', 'Skills', 'Workflows', 'Projects', 'MorePage', 'InspectorSheet', 'ModalOverlay', 'OutputPreview']);
+  assert.deepEqual(gui.pageTemplates, ['HomeFirstView', 'Skills', 'Workflows', 'Projects', 'MoreOverflow', 'InspectorSheet', 'ModalOverlay', 'OutputPreview']);
   assert.equal(gui.accessibility.keyboardRequired, true);
   assertIncludesAll(gui.acceptanceLayers, ['contract', 'component_state', 'interaction', 'visual'], 'GUI acceptance layer');
 
@@ -435,7 +426,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     width: ['default', 'narrow', 'wide'],
     placement: ['right_resizable_panel', 'right_sheet', 'bottom_sheet'],
   });
+  assert.deepEqual(shell.figmaCodeMapping.variantProps.MoreOverflow, { state: ['empty'] });
   assertIncludesAll(shell.figmaCodeMapping.requiredNodeMetadata, ['componentId', 'variantProps'], 'Figma node metadata');
+  assert.deepEqual(shell.codeProps.MoreOverflow, { state: ['empty'] });
   assert.equal(shell.codeProps.InspectorSheet.state.includes('files'), true);
   assertIncludesAll(shell.validationCommands, ['npm run verify:contract', 'npm run verify:smoke'], 'shell validation command');
 });
@@ -506,7 +499,7 @@ test('web data module calls session provider and chat APIs only', async () => {
 
   const state = await web.loadOnePersonLabWebState(fetchRef);
   assert.equal(state.session.email, 'user@example.com');
-  assert.equal(state.provider.baseUrl, 'https://gflabtoken.cn/v1');
+  assert.equal(state.provider.baseUrl, undefined);
   assert.equal(state.provider.apiKeyConfigured, true);
   assert.equal(state.commercialStatus.accountType, 'personal');
   assert.equal(state.commercialStatus.lifecycleState, 'active');
@@ -625,8 +618,8 @@ test('web data module builds sanitized reliability and account lifecycle status 
   assert.equal(reliability.title, '上游暂时不可用');
   assert.equal(reliability.action, '稍后重试');
   assert.equal(reliability.retryable, true);
-  assert.equal(reliability.details.includes('gflabtoken.cn'), true);
-  assert.doesNotMatch(JSON.stringify(reliability), /sk-secret|rawApiKey|encryptedApiKey|password|postgres:\/\//i);
+  assert.equal(reliability.details, '');
+  assert.doesNotMatch(JSON.stringify(reliability), /gflabtoken\.cn|gpt-5\.5|sk-secret|rawApiKey|encryptedApiKey|password|postgres:\/\//i);
 
   const account = web.accountLifecycleSummary({ ok: true, accountType: 'personal', lifecycleState: 'active', tenantRole: 'owner', tenantId: 'tenant_123' }, { ok: true, quota: { limit: 100, used: 7, remaining: 93 }, audit: { eventCount: 12, latestEventKind: 'chat.completed' } });
   assert.equal(account.lifecycleLabel, 'Personal / active');
@@ -640,7 +633,7 @@ test('web data module converts network and malformed JSON failures into sanitize
   const leakyPayload = { ok: false, errorCode: 'UPSTREAM_CHAT_FAILED', message: 'api_key=sk-secret-value private_state_path=/home/dev/.opl/private/state.json', rawUpstreamBody: 'sk-secret-value', upstreamDiagnostics: { upstreamHost: 'gflabtoken.cn', upstreamModel: 'gpt-5.5', rawProviderError: 'Bearer sk-secret-value', rawApiKey: 'sk-secret-value', encryptedApiKey: 'ciphertext-secret', databaseUrl: 'postgres://user:secret@example/oplweb' } };
   const upstream = await web.sendChatMessage(async () => response(leakyPayload, 502), '@科研 分析方向');
   assert.deepEqual([upstream.errorCode, upstream.status, web.chatStateForResult(upstream), web.reliabilityStatusForResult(upstream).state], ['UPSTREAM_CHAT_FAILED', 502, 'upstream_failed', 'upstream_failed']);
-  assert.match(upstream.diagnostics, /gflabtoken\.cn.*gpt-5\.5/);
+  assert.doesNotMatch(upstream.diagnostics, /gflabtoken\.cn|gpt-5\.5/);
   assert.doesNotMatch(JSON.stringify(upstream), /rawUpstreamBody|rawProviderError|rawApiKey|encryptedApiKey|sk-secret-value|ciphertext-secret|postgres:\/\/|\/home\/dev\/\.opl\/private/i);
 
   for (const [status, payload, expectedCode, expectedState, retryable] of [
@@ -941,12 +934,7 @@ test('web data module loads commercial account lifecycle without team or billing
 test('web view model keeps workspace hidden and exposes fixed provider surface', () => {
   const view = web.createOnePersonLabViewModel({
     session: { ok: true, email: 'user@example.com' },
-    provider: {
-      ok: true,
-      baseUrl: 'https://gflabtoken.cn/v1',
-      apiKeyConfigured: false,
-      maskedKey: '',
-    },
+    provider: { ok: true, baseUrl: 'https://gflabtoken.cn/v1', apiKeyConfigured: false, maskedKey: '' },
     conversations: { conversations: [] },
     oplSnapshot: { ok: true, mode: 'readonly' },
   });
@@ -958,12 +946,14 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.shell.accountDock, true);
   assert.equal(view.shell.promptCommandCenter, true);
   assert.deepEqual(view.navItems.map(({ id, label, href }) => [id, label, href]), [['home', '新建对话', '#home'], ['projects', 'Projects', '#projects'], ['skills', 'Skill', '#skills'], ['workflows', '工作流', '#workflows'], ['search', '搜索', '#home'], ['more', 'More', '#more']]);
-  assert.equal(view.primaryCTA, '发送');
+  assert.equal(view.primaryCTA, '绑定 API Key');
   assert.equal(view.accountEntry, 'bottom_avatar_popover');
   assert.equal(view.navItems.some((item) => ['科研能力', '论文', '基金', '账号'].includes(item.label)), false);
-  assert.equal(view.provider.baseUrl, 'https://gflabtoken.cn/v1');
+  assert.equal(view.provider.baseUrl, undefined);
   assert.equal(view.provider.baseUrlEditable, false);
+  assert.deepEqual(view.modelSelector, { label: '模型：自动', value: 'auto', optional: true, baseUrlVisible: false });
   assert.equal(view.accountState, 'authenticated_unbound');
+  assert.deepEqual(['anonymous', 'authenticated_unbound', 'authenticated_bound'].map((state) => web.createOnePersonLabViewModel({ session: { ok: state !== 'anonymous', email: 'user@example.com' }, provider: { ok: true, apiKeyConfigured: state === 'authenticated_bound', maskedKey: 'sk-***1234' }, conversations: { conversations: [] } }).primaryCTA), ['登录/注册', '绑定 API Key', '发送']);
   assert.equal(view.capabilitySource.syncMode, 'source_path_pinned_manifest');
   assert.equal(view.capabilitySource.dynamicSync, false);
   assert.match(view.capabilitySource.appContract, /one-person-lab-app\/contracts\/app-product-profile\.json/);
@@ -978,6 +968,7 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.deepEqual(view.researchResultSections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
   assert.deepEqual(view.workflowCards.map((item) => item.title), ['论文工作流', '基金工作流', '综述工作流', '材料线索']);
   assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
+  assert.doesNotMatch(JSON.stringify(view), /https:\/\/gflabtoken\.cn\/v1|base_url/i);
 });
 
 test('web product entry delegates state and DOM ownership to focused modules', () => {
@@ -994,6 +985,4 @@ test('web product entry delegates state and DOM ownership to focused modules', (
   assert.ok(entry.split('\n').length <= 80, 'product entry should stay thin');
 });
 
-function response(payload, status = 200) {
-  return { ok: status >= 200 && status < 300, status, json: async () => payload };
-}
+function response(payload, status = 200) { return { ok: status >= 200 && status < 300, status, json: async () => payload }; }

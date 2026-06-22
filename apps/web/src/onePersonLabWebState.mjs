@@ -150,9 +150,6 @@ export function chatStateForResult(result, pending = false) {
 
 export function reliabilityStatusForResult(result) {
   const state = chatStateForResult(result);
-  const diagnostics = result?.upstreamDiagnostics || result?.metadata || {};
-  const host = diagnostics.upstreamHost || diagnostics.host || '';
-  const model = diagnostics.upstreamModel || diagnostics.model || '';
   const byState = {
     idle: { title: '系统就绪', action: '继续输入', retryable: false },
     sending: { title: '正在发送', action: '等待结果', retryable: false },
@@ -170,7 +167,7 @@ export function reliabilityStatusForResult(result) {
     title: base.title,
     action: base.action,
     retryable: base.retryable,
-    details: sanitizedDetails([host, model].filter(Boolean).join(' / ') || result?.message || result?.errorCode || ''),
+    details: state === 'upstream_failed' ? '' : sanitizedDetails(result?.message || result?.errorCode || ''),
   };
 }
 
@@ -257,10 +254,15 @@ export function createOnePersonLabViewModel(state) {
     accountState: currentAccountState,
     primaryCTA: ctaForState(currentAccountState),
     provider: {
-      baseUrl: provider.baseUrl ?? FIXED_BASE_URL,
       baseUrlEditable: false,
       apiKeyConfigured: Boolean(provider.apiKeyConfigured),
       maskedKey: provider.maskedKey ?? '',
+    },
+    modelSelector: {
+      label: '模型：自动',
+      value: 'auto',
+      optional: true,
+      baseUrlVisible: false,
     },
     conversations: state.conversations?.conversations ?? [],
     commercialStatus: commercialStatusFallback(state.commercialStatus),
@@ -316,6 +318,8 @@ export function createInitialOnePersonLabViewModel() {
 }
 
 function ctaForState(state) {
+  if (state === 'anonymous') return '登录/注册';
+  if (state === 'authenticated_unbound') return '绑定 API Key';
   return '发送';
 }
 
@@ -407,15 +411,8 @@ function messageForReliabilityError(errorCode, message = '') {
 
 function safeDiagnosticsFrom(body = {}) {
   const diagnostics = body.upstreamDiagnostics || body.metadata || body.diagnostics || {};
-  const fields = [
-    diagnostics.upstreamHost,
-    diagnostics.host,
-    diagnostics.upstreamModel,
-    diagnostics.model,
-    diagnostics.upstreamKind,
-    diagnostics.kind,
-  ];
-  return sanitizedDetails(fields.filter(Boolean).join(' / '));
+  const kind = diagnostics.upstreamKind || diagnostics.kind;
+  return sanitizedDetails(kind ? `原因：${kind}` : '');
 }
 
 function safeMedoplDeepLink(value) {

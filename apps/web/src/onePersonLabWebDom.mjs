@@ -58,8 +58,8 @@ function syncHashView() {
     document.querySelector('#projects')?.focus({ preventScroll: true });
   }
   if (view === 'more') {
-    document.querySelector('[data-settings-panel]')?.setAttribute('tabindex', '-1');
-    document.querySelector('[data-settings-panel]')?.focus({ preventScroll: true });
+    document.querySelector('[data-more-overflow]')?.setAttribute('tabindex', '-1');
+    document.querySelector('[data-more-overflow]')?.focus({ preventScroll: true });
   }
 }
 
@@ -102,14 +102,14 @@ function bindChatForm(getView) {
       setShellTurnState('blocked_turn');
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }));
       appendMessage('OPL', '请先登录或注册后再发送。', 'assistant-message');
-      window.location.hash = 'more';
+      openAccountPopover(document.querySelector('[data-chat-submit]'));
       return;
     }
     if (view.accountState === 'authenticated_unbound') {
       setShellTurnState('blocked_turn');
       openAPIKeyDialog();
       renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
-      appendMessage('OPL', '请先在 More 绑定 API Key。', 'assistant-message');
+      appendMessage('OPL', '请先绑定 API Key 后继续。', 'assistant-message');
       return;
     }
     setShellTurnState('running_turn');
@@ -148,8 +148,12 @@ function bindShellControls() {
     close.addEventListener('click', () => closeOverlay(close.dataset.overlayClose, true));
   }
   document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog(true));
-  document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => closeAPIKeyDialog());
-  document.querySelector('[data-local-search]')?.addEventListener('input', (event) => filterLocalEntries(event.currentTarget.value));
+  document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => {
+    closeAPIKeyDialog();
+    openAccountPopover(document.querySelector('[data-api-key-dialog-primary]'));
+    document.querySelector('#api-key')?.focus({ preventScroll: true });
+  });
+  document.querySelector('[data-conversation-search]')?.addEventListener('input', (event) => filterConversationEntries(event.currentTarget.value));
   document.addEventListener('keydown', handleGlobalKeydown);
   document.addEventListener('click', handleOutsideClick);
 }
@@ -169,7 +173,7 @@ function runShellAction(action) {
   if (action === 'search') {
     setHashView('home');
     openOverlay('search', document.querySelector('[data-search-trigger]'));
-    document.querySelector('[data-local-search]')?.focus({ preventScroll: true });
+    document.querySelector('[data-conversation-search]')?.focus({ preventScroll: true });
     return true;
   }
   if (action === 'more') {
@@ -185,12 +189,16 @@ function setHashView(view) {
   else window.location.hash = nextHash;
 }
 
-function filterLocalEntries(query) {
+function filterConversationEntries(query) {
   const normalized = String(query || '').trim().toLowerCase();
-  for (const entry of document.querySelectorAll('[data-local-search-entry]')) {
-    const matches = !normalized || entry.textContent.toLowerCase().includes(normalized) || (entry.dataset.prompt || '').toLowerCase().includes(normalized);
+  let visible = 0;
+  for (const entry of document.querySelectorAll('[data-conversation-entry]')) {
+    const matches = !normalized || entry.textContent.toLowerCase().includes(normalized) || (entry.dataset.conversationTitle || '').toLowerCase().includes(normalized);
     entry.hidden = !matches;
+    if (matches) visible += 1;
   }
+  const empty = document.querySelector('[data-conversation-empty]');
+  if (empty) empty.hidden = visible > 0;
 }
 
 function syncNavCurrent(view) {
@@ -320,17 +328,21 @@ function closeTransientOverlays(except = '') {
   closeAccountPopover();
 }
 
-function toggleAccountPopover() {
+function openAccountPopover(trigger = null) {
   const popover = document.querySelector('[data-account-popover]');
   const button = document.querySelector('[data-account-toggle]');
   if (!button || !popover) return;
-  const opening = popover.hidden;
-  if (opening) {
-    closeTransientOverlays();
-    setFocusReturn(popover, button);
-  }
-  popover.hidden = !opening;
-  button.setAttribute('aria-expanded', String(opening));
+  closeTransientOverlays();
+  setFocusReturn(popover, trigger || button);
+  popover.hidden = false;
+  button.setAttribute('aria-expanded', 'true');
+}
+
+function toggleAccountPopover() {
+  const popover = document.querySelector('[data-account-popover]');
+  if (!popover) return;
+  if (popover.hidden) openAccountPopover();
+  else closeAccountPopover(true);
 }
 
 function closeAccountPopover(restoreFocus = false) {
@@ -449,7 +461,8 @@ async function authAction(kind, setView) {
 function renderView(view) {
   document.body.dataset.authState = view.accountState;
   document.body.dataset.chatState = document.body.dataset.chatState || chatStateForResult(null);
-  document.querySelector('[data-chat-submit]').textContent = '发送';
+  document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
+  document.querySelector('[data-model-selector]').textContent = view.modelSelector.label;
   document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
   setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
@@ -459,6 +472,7 @@ function renderView(view) {
   setTextAll('[data-quota-status]', view.accountLifecycle.quotaLabel);
   setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
   renderReliabilityStatus(view.reliabilityStatus);
+  renderConversationHistory(view.conversations);
   document.querySelector('[data-account-hint]').textContent = view.session.ok ? '账号状态' : '登录 / 注册';
 }
 
@@ -528,7 +542,41 @@ function renderRuntimeTaskCard(gate, taskCard) {
 }
 
 function setSettingsMessage(message) {
-  document.querySelector('[data-settings-message]').textContent = message;
+  const node = document.querySelector('[data-settings-message]');
+  if (node) node.textContent = message;
+}
+
+function renderConversationHistory(conversations = []) {
+  const list = document.querySelector('[data-conversation-history]');
+  const empty = document.querySelector('[data-conversation-empty]');
+  if (!list || !empty) return;
+  list.textContent = '';
+  for (const conversation of conversations) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.conversationEntry = conversation.conversationId || conversation.id || '';
+    button.dataset.conversationTitle = conversation.title || '';
+    const title = document.createElement('strong');
+    title.textContent = conversation.title || '未命名对话';
+    const meta = document.createElement('small');
+    meta.textContent = conversation.updatedAt ? `更新于 ${formatConversationDate(conversation.updatedAt)}` : '历史对话';
+    button.append(title, meta);
+    button.addEventListener('click', () => {
+      const input = document.querySelector('#chat-input');
+      input.value = conversation.title || '';
+      closeOverlay('search', true);
+      input.focus({ preventScroll: true });
+    });
+    list.append(button);
+  }
+  empty.hidden = conversations.length > 0;
+  filterConversationEntries(document.querySelector('[data-conversation-search]')?.value || '');
+}
+
+function formatConversationDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '历史对话';
+  return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
 }
 
 function renderReliabilityStatus(status) {

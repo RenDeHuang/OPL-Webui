@@ -17,6 +17,10 @@
       "starter_chips",
       "project_session_history_as_secondary_surface",
       "inspector_on_user_request",
+      "conversation_history_search_sheet",
+      "empty_more_overflow_surface",
+      "optional_model_selector_without_visible_base_url",
+      "bottom_avatar_account_entry",
       "api_key_required_before_chat_send_when_missing",
       "structured_research_artifact_result_stream",
       "desktop_inspector_stable_work_panel",
@@ -36,7 +40,13 @@
       "duplicated_files_progress_panels",
       "raw_upstream_transcript_for_structured_research_result",
       "floating_desktop_inspector_overlay",
-      "heavy_mobile_inspector_sheet"
+      "heavy_mobile_inspector_sheet",
+      "visible_fixed_base_url_in_user_shell",
+      "model_gateway_url_pill",
+      "settings_status_dump_in_more",
+      "test_evidence_copy_in_inspector",
+      "fake_input_progress_output_refs",
+      "account_glyph_text_person"
     ]
   },
   "objectGrammar": {
@@ -113,8 +123,8 @@
       "projects": "browse_project_session_refs_and_create_project",
       "skills": "browse_or_import_skill_entries",
       "workflows": "browse_create_or_import_agentic_research_workflows",
-      "search": "open_local_prompt_and_recent_session_filter",
-      "more": "route_settings_and_account_status_page"
+      "search": "open_conversation_history_search",
+      "more": "route_empty_overflow_surface"
     },
     "accountEntry": "bottom_avatar_popover",
     "forbiddenPrimaryNavigationItems": ["account_text_link", "research_capability", "paper", "grant", "settings", "api_key"],
@@ -147,13 +157,13 @@
         "action": "open_search_sheet",
         "targetView": "home",
         "ownerSurface": "browser_shell",
-        "consumer": "local_prompt_and_recent_session_filter"
+        "consumer": "conversation_history_search"
       },
       "more": {
-        "action": "route_more_settings_page",
+        "action": "route_more_overflow_surface",
         "targetView": "more",
         "ownerSurface": "browser_shell",
-        "consumer": "settings_and_account_status"
+        "consumer": "empty_overflow_menu"
       }
     },
     "routeScope": {
@@ -161,7 +171,7 @@
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
       "projects": ["project_library"],
-      "more": ["settings_panel"]
+      "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
       "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
@@ -265,7 +275,7 @@
     "responsiveTopology": {
       "desktop": ["side_nav_visible", "center_composer_primary", "secondary_surfaces_below_fold", "stable_right_inspector_on_request"],
       "tablet": ["side_nav_compact", "center_composer_primary", "secondary_surfaces_single_column", "inspector_sheet"],
-      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_settings_and_inspector_bottom_sheets"],
+      "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_inspector_bottom_sheet", "account_popover_for_auth_and_api_key"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
     "layoutRules": [
@@ -275,11 +285,52 @@
       "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.",
       "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.",
       "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.",
-      "Search opens a secondary sheet; More routes to the settings/account status page and must not create a workspace column.",
+      "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.",
+      "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.",
+      "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.",
       "The first viewport must not show summary strips, settings forms, chat history, or card grids.",
       "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.",
       "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."
     ]
+  },
+  "designQualityGates": {
+    "accessibility": {
+      "longTerm": true,
+      "required": ["contrast_aa", "focus_visible", "keyboard_path", "modal_focus_trap", "named_controls"],
+      "cannotClaimWithout": ["assistive_technology_review"]
+    },
+    "touch": {
+      "longTerm": true,
+      "required": ["minimum_44px_targets", "no_hover_only_actions", "mobile_bottom_sheet_escape_path"]
+    },
+    "performance": {
+      "longTerm": true,
+      "required": ["no_heavy_first_view_media", "no_layout_animation", "lightweight_local_history_search"]
+    },
+    "style": {
+      "longTerm": true,
+      "required": ["opl_green_primary_accent", "low_stimulus_ui", "no_default_tech_blue_or_purple_primary_palette", "no_test_like_ui_copy"]
+    },
+    "layout": {
+      "longTerm": true,
+      "required": ["composer_first_home", "first_view_budget", "secondary_surfaces_hidden_until_triggered", "empty_more_overflow", "history_search_sheet"]
+    },
+    "typography": {
+      "longTerm": true,
+      "required": ["body_text_minimum_16px", "max_two_font_roles_per_surface", "line_length_limits", "clear_heading_hierarchy"]
+    },
+    "motion": {
+      "longTerm": true,
+      "required": ["120_to_180ms_motion", "transform_opacity_color_border_shadow_only", "prefers_reduced_motion"]
+    },
+    "forms": {
+      "longTerm": true,
+      "required": ["visible_labels", "field_local_errors", "submit_loading_success_error_states", "api_key_modal_without_base_url"]
+    },
+    "navigation": {
+      "longTerm": true,
+      "required": ["side_nav_primary_tasks_only", "search_is_conversation_history", "more_is_empty_overflow", "bottom_avatar_account_entry", "optional_model_selector"]
+    }
   },
   "interactionContract": {
     "account_popover": {
@@ -294,7 +345,7 @@
       "openTrigger": "search_button_or_more_shortcut",
       "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
       "focusReturn": "search_button_or_more_shortcut",
-      "emptyState": "no_filter_query",
+      "emptyState": "no_conversation_history",
       "errorState": "local_only_no_backend_error",
       "loadingState": "not_applicable_local_only"
     },
@@ -371,7 +422,7 @@
     },
     {
       "id": "SearchPanel",
-      "role": "recent_session_history",
+      "role": "conversation_history_search",
       "placement": "secondary_sheet"
     },
     {
@@ -407,6 +458,12 @@
       "id": "OutputPreview",
       "role": "output_ref_preview_export",
       "mustNotOwn": ["artifact_body_authority"]
+    },
+    {
+      "id": "MoreOverflow",
+      "role": "empty_light_overflow_surface",
+      "defaultState": "empty",
+      "mustNotOwn": ["settings_status", "account_lifecycle", "api_key_form", "provider_base_url"]
     },
     {
       "id": "ApiKeyDialog",
@@ -480,7 +537,7 @@
     "Skills",
     "Workflows",
     "Projects",
-    "MorePage",
+    "MoreOverflow",
     "InspectorSheet",
     "ModalOverlay",
     "OutputPreview"
