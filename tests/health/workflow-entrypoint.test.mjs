@@ -189,7 +189,10 @@ test('github cloud rollout workflow manually gates production rollout', () => {
 
   assert.doesNotMatch(workflow, /staging\.opl\.medopl\.cn/);
   assert.doesNotMatch(workflow, /opl-webui-staging/);
-  assert.doesNotMatch(workflow, /TCR_PASSWORD|docker\s+push|docker\/build-push-action|OPL_DATABASE_URL|PGPASSWORD/i);
+  assert.match(workflow, /production-image-preflight:[\s\S]*?TCR_USERNAME:\s*\$\{\{\s*secrets\.TCR_USERNAME\s*\}\}/);
+  assert.match(workflow, /production-image-preflight:[\s\S]*?TCR_PASSWORD:\s*\$\{\{\s*secrets\.TCR_PASSWORD\s*\}\}/);
+  assert.match(workflow, /production-image-preflight:[\s\S]*?docker login uswccr\.ccs\.tencentyun\.com/);
+  assert.doesNotMatch(workflow, /docker\s+push|docker\/build-push-action|OPL_DATABASE_URL|PGPASSWORD/i);
   assert.doesNotMatch(workflow, /KUBECONFIG:\s*\$\{\{\s*secrets\.KUBECONFIG\s*\}\}/);
 
   const dryRunJob = workflow.slice(workflow.indexOf('production-dry-run:'), workflow.indexOf('rollout-mutation-guard:'));
@@ -203,7 +206,10 @@ test('github cloud rollout workflow manually gates production rollout', () => {
     workflow.indexOf('production-apply:'),
   );
   assert.doesNotMatch(imagePreflightJob, /environment:\s*production/);
-  assert.doesNotMatch(imagePreflightJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD|secrets\./i);
+  assert.match(imagePreflightJob, /TCR_USERNAME:\s*\$\{\{\s*secrets\.TCR_USERNAME\s*\}\}/);
+  assert.match(imagePreflightJob, /TCR_PASSWORD:\s*\$\{\{\s*secrets\.TCR_PASSWORD\s*\}\}/);
+  assert.match(imagePreflightJob, /echo "\$TCR_PASSWORD" \| docker login uswccr\.ccs\.tencentyun\.com --username "\$TCR_USERNAME" --password-stdin/);
+  assert.doesNotMatch(imagePreflightJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD|OPL_DOGFOOD|MEDOPL_TOKEN/i);
   assert.match(imagePreflightJob, /OPL_IMAGE/);
   assert.match(imagePreflightJob, /node scripts\/cloud-rollout\.mjs --image-preflight/);
 

@@ -229,6 +229,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.imagePreflight.requiresImage, true);
   assert.equal(release.rolloutPipeline.imagePreflight.requiresKubeconfig, false);
   assert.equal(release.rolloutPipeline.imagePreflight.mutatesCluster, false);
+  assert.equal(release.rolloutPipeline.imagePreflight.registryAuth, 'private_tcr_manifest_read');
+  assert.deepEqual(release.rolloutPipeline.imagePreflight.requiredSecrets, ['TCR_USERNAME', 'TCR_PASSWORD']);
+  for (const forbidden of ['KUBECONFIG', 'OPL_DATABASE_URL', 'PGPASSWORD', 'OPL_DOGFOOD_API_KEY', 'OPL_DOGFOOD_PASSWORD', 'MEDOPL_TOKEN']) {
+    assert.equal(release.rolloutPipeline.imagePreflight.forbiddenSecrets.includes(forbidden), true, `image preflight must not need ${forbidden}`);
+  }
   assert.equal(release.rolloutPipeline.imagePreflight.afterStage, 'production_dry_run');
   assert.equal(release.rolloutPipeline.imagePreflight.beforeStage, 'production_apply');
   assert.equal(release.rolloutPipeline.imagePreflight.failureKind, 'image_missing_rollout_order_issue');

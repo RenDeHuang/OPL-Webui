@@ -64,6 +64,19 @@
       "requiresImage": true,
       "requiresKubeconfig": false,
       "mutatesCluster": false,
+      "registryAuth": "private_tcr_manifest_read",
+      "requiredSecrets": [
+        "TCR_USERNAME",
+        "TCR_PASSWORD"
+      ],
+      "forbiddenSecrets": [
+        "KUBECONFIG",
+        "OPL_DATABASE_URL",
+        "PGPASSWORD",
+        "OPL_DOGFOOD_API_KEY",
+        "OPL_DOGFOOD_PASSWORD",
+        "MEDOPL_TOKEN"
+      ],
       "afterStage": "production_dry_run",
       "beforeStage": "production_apply",
       "failureKind": "image_missing_rollout_order_issue",
