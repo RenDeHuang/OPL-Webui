@@ -469,14 +469,14 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
   assert.doesNotMatch(status, /本阶段没有执行 production availability probe/);
   assert.match(status, /Next Priorities/);
-  assert.match(status, /current non-HA gap set is now machine-owned/);
+  assert.match(status, /current gap set is now machine-owned/);
   assert.match(status, /UI\/UX product depth now has source-level Figma MCP evidence pinned/);
   assert.match(status, /Runtime execution remains a launch-blocking fail-closed admission contract/);
   assert.match(status, /Operations maturity now has explicit future evidence contracts/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
 });
 
-test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
+test('active vision gaps are machine-owned and Figma-gated', () => {
   const product = readJson('contracts/web-product-profile.json');
   const gui = readJson('contracts/web-gui-product-contract.json');
   const runtime = readJson('contracts/web-runtime-bridge.json');
@@ -484,7 +484,7 @@ test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
   const active = readFileSync('docs/active/README.md', 'utf8');
   const decisions = readFileSync('docs/decisions.md', 'utf8');
 
-  assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
+  assert.equal(product.visionGaps.state, 'active_gap_acceptance');
   assert.equal(product.visionGaps.haPolicy.state, 'paused');
   assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), [
     'ui_ux_product_depth',
@@ -492,6 +492,9 @@ test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
     'runtime_execution_boundary',
     'commercial_saas_depth',
     'operations_maturity',
+    'ha_and_resilience',
+    'concurrency_and_load',
+    'opl_auto_update_from_github',
   ]);
   assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
   assert.equal(gui.figmaSource.nodeId, '0:1');
@@ -519,7 +522,7 @@ test('active non-HA vision gaps are machine-owned and Figma-gated', () => {
   assert.match(status, /production deploy is release evidence only and must not substitute for product\/eval work/);
   assert.match(active, /production deploy is not the default next action unless the user explicitly asks for release evidence/);
   assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
-  assert.match(decisions, /Non-HA gaps use acceptance contracts before deploy evidence/);
+  assert.match(decisions, /Product gaps use acceptance contracts before deploy evidence/);
   assert.match(decisions, /UI work starts from Figma MCP source context/);
 });
 

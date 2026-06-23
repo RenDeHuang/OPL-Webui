@@ -49,6 +49,9 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     'runtime_execution_boundary',
     'commercial_saas_depth',
     'operations_maturity',
+    'ha_and_resilience',
+    'concurrency_and_load',
+    'opl_auto_update_from_github',
   ]);
 
   for (const gap of registry.gaps) {
@@ -141,12 +144,18 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_future_contract_placeholders').evidenceSource,
     'evidenceConditions',
   );
+  assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'single_node_pause_policy').status, 'pass');
+  assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'multi_node_ha_evidence').status, 'blocked');
+  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'local_tenant_isolation_contract').status, 'pass');
+  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'production_load_evidence').status, 'blocked');
+  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
+  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'blocked');
 
   assert.equal(report.readyToAdvanceCount, 1);
   assert.deepEqual(report.summary, {
     done: 1,
     partial: 1,
-    blocked: 3,
+    blocked: 6,
     not_started: 0,
   });
 });

@@ -739,6 +739,72 @@
       "production-ready SaaS"
     ]
   },
+  "oplAutoUpdateReadiness": {
+    "mode": "build_time_pinned_opl_context",
+    "state": "image_release_pipeline_only_no_runtime_sync",
+    "owner": "deploy",
+    "consumer": "production_release_operator",
+    "runtimeGithubSync": "not_implemented",
+    "currentMechanism": [
+      "GitHub Actions release builds cloud image",
+      "Dockerfile.cloud copies OPL CLI, contracts, dist, and node_modules from build context",
+      "Cloud Rollout deploys explicit immutable image tag"
+    ],
+    "buildTimeInputs": [
+      "/bin/opl",
+      "/contracts/opl-framework",
+      "/src",
+      "/package.json",
+      "/package-lock.json"
+    ],
+    "forbiddenRuntimeMechanisms": [
+      "git_pull_inside_pod",
+      "background_self_update",
+      "runtime_npm_install",
+      "unverified_github_head_sync",
+      "tenant_visible_update_toggle"
+    ],
+    "requiredBeforeRuntimeSyncClaim": [
+      "owner_receipt_for_runtime_update_policy",
+      "signed_source_or_release_verification",
+      "rollback_plan",
+      "registered_eval",
+      "tenant_safe_maintenance_window"
+    ],
+    "evidenceConditions": [
+      {
+        "id": "image_build_pinned_opl_context",
+        "status": "present",
+        "owner": "deploy",
+        "evidence": "Dockerfile.cloud"
+      },
+      {
+        "id": "runtime_github_sync_loop",
+        "status": "missing",
+        "owner": "deploy",
+        "evidence": "contract_and_eval"
+      },
+      {
+        "id": "owner_update_policy",
+        "status": "missing",
+        "owner": "external_owner",
+        "evidence": "owner_receipt"
+      },
+      {
+        "id": "runtime_sync_rollback_plan",
+        "status": "missing",
+        "owner": "release_operator",
+        "evidence": "contract"
+      }
+    ],
+    "latestSuccessfulRun": null,
+    "cannotClaim": [
+      "runtime continuous GitHub sync",
+      "background updater parity with one-person-lab-app",
+      "self-healing OPL framework updates",
+      "runtime update rollback"
+    ]
+  },
   "productionRollbackReadiness": {
     "mode": "manual_environment_approved_rollback",
     "state": "manual_harness_ready_pending_first_run",

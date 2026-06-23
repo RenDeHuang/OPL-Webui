@@ -33,20 +33,12 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.publicUi.primarySurface, 'ai_native_research_homepage');
   assert.deepEqual(product.publicUi.visibleRoutes, ['home', 'skills', 'workflows', 'projects', 'more']);
-  assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
+  assert.equal(product.visionGaps.state, 'active_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
-  assert.deepEqual(product.visionGaps.items.map((gap) => [gap.id, gap.ownerSurface, gap.disposition]), [
-    ['ui_ux_product_depth', 'apps-web', 'ui_ux_v1_production_accepted_current_head'],
-    ['medopl_readonly_evidence', 'release-evidence', 'awaiting_secret_gated_foldback'],
-    ['runtime_execution_boundary', 'runtime-gate', 'fail_closed_until_admission_contract'],
-    ['commercial_saas_depth', 'product-boundary', 'readonly_personal_projection_only'],
-    ['operations_maturity', 'release-evidence', 'baseline_plus_next_evidence_contracts'],
-  ]);
+  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
   assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
-  assert.equal(visionGap('ui_ux_product_depth').acceptanceContract, 'contracts/web-gui-product-contract.json');
-  assert.equal(visionGap('medopl_readonly_evidence').acceptanceContract, 'contracts/web-release-profile.json#/productionDogfoodReadiness');
-  assert.equal(visionGap('runtime_execution_boundary').acceptanceContract, 'contracts/web-runtime-bridge.json');
+  assert.deepEqual([visionGap('ha_and_resilience').acceptanceContract, visionGap('concurrency_and_load').acceptanceContract, visionGap('opl_auto_update_from_github').acceptanceContract], ['contracts/web-release-profile.json#/productionHAReadiness', 'contracts/web-product-profile.json#/concurrencyAndLoad', 'contracts/web-release-profile.json#/oplAutoUpdateReadiness']);
   assert.equal(visionGap('runtime_execution_boundary').launchBlocking, true);
   assert.equal(visionGap('commercial_saas_depth').launchBlocking, true);
   assert.deepEqual([
@@ -79,6 +71,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   ]);
   assertIncludesAll(product.publicUi.hiddenConcepts, ['workspace', 'runtime', 'nodePool', 'storage', 'billing'], 'hidden concept');
   assertIncludesAll(product.nonOwnedTruth, ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth'], 'non-owned truth');
+  assert.deepEqual(product.concurrencyAndLoad.mode, 'local_contract_only_no_production_load_proof');
+  assert.deepEqual(product.concurrencyAndLoad.localEvidence.proves, ['tenant scoped account/session/API key/chat isolation contracts', 'Postgres-backed store path exists when OPL_DATABASE_URL is set']);
+  assertIncludesAll(product.concurrencyAndLoad.requiredBeforeProductionClaim, ['production_or_staging_concurrent_register_login_chat_api_key_quota_test', 'database_pool_sizing_evidence', 'slow_upstream_backpressure_or_rate_limit_evidence'], 'concurrency required evidence');
+  assert.equal(product.concurrencyAndLoad.productionEvidence.status, 'missing');
+  assert.equal(product.concurrencyAndLoad.cannotClaim.includes('production concurrent SaaS readiness'), true);
 
   assert.deepEqual(pageStates.routes.map((route) => route.id), ['home', 'skills', 'workflows', 'projects', 'more']);
   assert.equal(pageStates.routes.find((route) => route.id === 'home').surface, 'ai_native_research_homepage');
@@ -264,6 +261,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
   assertIncludesAll(release.productionHAReadiness.requiredEvidence, ['two_ready_pods', 'distinct_nodes', 'ingress_backend_at_least_2'], 'HA evidence');
   assertIncludesAll(release.productionHAReadiness.cannotClaim, ['multi-node HA'], 'HA cannot-claim');
+  assert.deepEqual(release.oplAutoUpdateReadiness.mode, 'build_time_pinned_opl_context');
+  assert.equal(release.oplAutoUpdateReadiness.runtimeGithubSync, 'not_implemented');
+  assertIncludesAll(release.oplAutoUpdateReadiness.cannotClaim, ['runtime continuous GitHub sync', 'background updater parity with one-person-lab-app'], 'OPL auto-update cannot-claim');
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);
   assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');

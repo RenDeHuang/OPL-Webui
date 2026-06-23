@@ -169,6 +169,9 @@ function evaluateGap(gap, phase, context) {
     runtime_execution_boundary: evaluateRuntimeGap(context),
     commercial_saas_depth: evaluateCommercialGap(context),
     operations_maturity: evaluateOperationsGap(context),
+    ha_and_resilience: evaluateHaGap(context),
+    concurrency_and_load: evaluateConcurrencyGap(context),
+    opl_auto_update_from_github: evaluateOplAutoUpdateGap(context),
   }[gap.id] ?? [];
 
   return [...common, ...specific];
@@ -390,6 +393,127 @@ function evaluateOperationsGap({ release }) {
       status: release?.productionRollbackReadiness?.latestAttempt ? 'pass' : 'blocked',
       proves: ['production rollback record exists when present'],
       doesNotProve: ['automatic rollback', 'data migration rollback', 'multi-node HA'],
+    }),
+  ];
+}
+
+function evaluateHaGap({ release }) {
+  const ha = release?.productionHAReadiness;
+  const requiredEvidence = ha?.requiredEvidence ?? [];
+  return [
+    evalResult({
+      id: 'single_node_pause_policy',
+      dimension: 'repo_local',
+      status: ha?.state === 'paused_single_pod_launch_pending_second_node'
+        && ha?.currentApplyManifest?.replicas === 1
+        && ha?.currentApplyManifest?.haPaused === true
+        ? 'pass'
+        : 'fail',
+      proves: ['current production deployment shape is explicitly single-node launch-safe while HA is paused'],
+      doesNotProve: ['multi-node HA', 'zero-downtime rollout', 'CLB two-backend health'],
+    }),
+    evalResult({
+      id: 'ha_required_evidence_contract',
+      dimension: 'contract',
+      status: ['replicas_2', 'two_ready_pods', 'distinct_nodes', 'ingress_backend_at_least_2'].every((id) =>
+        requiredEvidence.includes(id))
+        ? 'pass'
+        : 'fail',
+      proves: ['future HA evidence requirements are explicit'],
+      doesNotProve: ['the production cluster has multiple schedulable nodes', 'production HA was executed'],
+    }),
+    evalResult({
+      id: 'multi_node_ha_evidence',
+      dimension: 'production',
+      status: ha?.latestSuccessfulRun?.twoReadyPods === true
+        && ha?.latestSuccessfulRun?.distinctNodes === true
+        && ha?.latestSuccessfulRun?.ingressBackendsHealthy >= 2
+        ? 'pass'
+        : 'blocked',
+      proves: ['multi-node HA production evidence exists when folded back'],
+      doesNotProve: ['database HA', 'runtime execution resilience', 'payment readiness'],
+    }),
+  ];
+}
+
+function evaluateConcurrencyGap({ product }) {
+  const concurrency = product?.concurrencyAndLoad;
+  const conditions = concurrency?.evidenceConditions ?? [];
+  const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
+  return [
+    evalResult({
+      id: 'local_tenant_isolation_contract',
+      dimension: 'repo_local',
+      status: conditionStatus('local_tenant_isolation_contract') === 'present'
+        && conditionStatus('postgres_store_path') === 'present'
+        ? 'pass'
+        : 'fail',
+      proves: ['local tenant isolation and Postgres-backed store path evidence exist'],
+      doesNotProve: ['production concurrent SaaS readiness', 'load-tested multi-user chat'],
+    }),
+    evalResult({
+      id: 'load_boundary_contract',
+      dimension: 'contract',
+      status: concurrency?.mode === 'local_contract_only_no_production_load_proof'
+        && concurrency?.productionEvidence?.status === 'missing'
+        && concurrency?.requiredBeforeProductionClaim?.includes('production_or_staging_concurrent_register_login_chat_api_key_quota_test')
+        ? 'pass'
+        : 'fail',
+      proves: ['local proof and production load proof are separated by contract'],
+      doesNotProve: ['production throughput', 'database pool sizing', 'slow upstream backpressure readiness'],
+    }),
+    evalResult({
+      id: 'production_load_evidence',
+      dimension: 'production',
+      status: conditionStatus('production_load_test') === 'pass'
+        && conditionStatus('database_pool_sizing') === 'present'
+        && conditionStatus('slow_upstream_backpressure') === 'pass'
+        ? 'pass'
+        : 'blocked',
+      evidenceSource: 'evidenceConditions',
+      proves: ['production or staging concurrent load evidence exists when present'],
+      doesNotProve: ['multi-node HA', 'payment lifecycle', 'runtime execution'],
+    }),
+  ];
+}
+
+function evaluateOplAutoUpdateGap({ release }) {
+  const readiness = release?.oplAutoUpdateReadiness;
+  const conditions = readiness?.evidenceConditions ?? [];
+  const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
+  return [
+    evalResult({
+      id: 'image_build_pinned_opl_context',
+      dimension: 'repo_local',
+      status: readiness?.mode === 'build_time_pinned_opl_context'
+        && conditionStatus('image_build_pinned_opl_context') === 'present'
+        ? 'pass'
+        : 'fail',
+      proves: ['OPL CLI/framework context is pinned into immutable Web image builds'],
+      doesNotProve: ['runtime continuous GitHub sync', 'background updater parity with one-person-lab-app'],
+    }),
+    evalResult({
+      id: 'runtime_sync_forbidden_mechanisms',
+      dimension: 'contract',
+      status: readiness?.runtimeGithubSync === 'not_implemented'
+        && readiness?.forbiddenRuntimeMechanisms?.includes('git_pull_inside_pod')
+        && readiness?.forbiddenRuntimeMechanisms?.includes('unverified_github_head_sync')
+        ? 'pass'
+        : 'fail',
+      proves: ['runtime sync mechanisms remain forbidden without admission evidence'],
+      doesNotProve: ['self-healing OPL framework updates', 'runtime update rollback'],
+    }),
+    evalResult({
+      id: 'runtime_github_sync_loop',
+      dimension: 'owner',
+      status: conditionStatus('runtime_github_sync_loop') === 'present'
+        && conditionStatus('owner_update_policy') === 'accepted'
+        && conditionStatus('runtime_sync_rollback_plan') === 'present'
+        ? 'pass'
+        : 'blocked',
+      evidenceSource: 'evidenceConditions',
+      proves: ['runtime GitHub sync admission evidence exists when present'],
+      doesNotProve: ['domain-agent correctness', 'tenant data migration safety'],
     }),
   ];
 }

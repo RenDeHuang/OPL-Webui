@@ -72,7 +72,7 @@
     "visibleRoutes": ["home", "skills", "workflows", "projects", "more"]
   },
   "visionGaps": {
-    "state": "active_non_ha_gap_acceptance",
+    "state": "active_gap_acceptance",
     "haPolicy": {
       "state": "paused",
       "reason": "single-node launch safety"
@@ -142,6 +142,43 @@
           "alerting_contract",
           "error_budget_contract",
           "rollback_record_contract"
+        ]
+      },
+      {
+        "id": "ha_and_resilience",
+        "ownerSurface": "release-evidence",
+        "acceptanceContract": "contracts/web-release-profile.json#/productionHAReadiness",
+        "disposition": "paused_single_node_launch_safe_not_ha",
+        "evidenceRequired": [
+          "replicas_2",
+          "two_ready_pods",
+          "distinct_nodes",
+          "ingress_backend_at_least_2",
+          "zero_downtime_rollout_evidence"
+        ]
+      },
+      {
+        "id": "concurrency_and_load",
+        "ownerSurface": "control-plane-go",
+        "acceptanceContract": "contracts/web-product-profile.json#/concurrencyAndLoad",
+        "disposition": "local_isolation_contract_no_load_proof",
+        "evidenceRequired": [
+          "production_or_staging_concurrent_register_login_chat_api_key_quota_test",
+          "database_pool_sizing_evidence",
+          "slow_upstream_backpressure_or_rate_limit_evidence"
+        ]
+      },
+      {
+        "id": "opl_auto_update_from_github",
+        "ownerSurface": "deploy",
+        "acceptanceContract": "contracts/web-release-profile.json#/oplAutoUpdateReadiness",
+        "disposition": "build_time_pinned_opl_context_no_runtime_sync",
+        "evidenceRequired": [
+          "owner_receipt_for_runtime_update_policy",
+          "signed_source_or_release_verification",
+          "rollback_plan",
+          "registered_eval",
+          "tenant_safe_maintenance_window"
         ]
       }
     ]
@@ -223,6 +260,76 @@
       "commercial_admin_console"
     ]
   },
+  "concurrencyAndLoad": {
+    "mode": "local_contract_only_no_production_load_proof",
+    "currentPhase": "production_concurrency_load_evidence",
+    "nextPhase": "production_load_contract_closeout",
+    "owner": "one-person-lab-web-control-plane",
+    "consumer": "production_release_operator",
+    "localEvidence": {
+      "commands": [
+        "node --test tests/contract/go-control-plane-http.test.mjs",
+        "node --test tests/contract/one-person-lab-chat-upstream.test.mjs"
+      ],
+      "proves": [
+        "tenant scoped account/session/API key/chat isolation contracts",
+        "Postgres-backed store path exists when OPL_DATABASE_URL is set"
+      ],
+      "doesNotProve": [
+        "production concurrent SaaS readiness",
+        "database pool sizing",
+        "slow upstream backpressure or rate limiting"
+      ]
+    },
+    "requiredBeforeProductionClaim": [
+      "production_or_staging_concurrent_register_login_chat_api_key_quota_test",
+      "database_pool_sizing_evidence",
+      "slow_upstream_backpressure_or_rate_limit_evidence"
+    ],
+    "productionEvidence": {
+      "status": "missing",
+      "latestSuccessfulRun": null,
+      "foldback": "sanitized_summary_only"
+    },
+    "evidenceConditions": [
+      {
+        "id": "local_tenant_isolation_contract",
+        "status": "present",
+        "owner": "control-plane-go",
+        "evidence": "contract_tests"
+      },
+      {
+        "id": "postgres_store_path",
+        "status": "present",
+        "owner": "control-plane-go",
+        "evidence": "store_contract"
+      },
+      {
+        "id": "production_load_test",
+        "status": "missing",
+        "owner": "release_operator",
+        "evidence": "production_or_staging_run"
+      },
+      {
+        "id": "database_pool_sizing",
+        "status": "missing",
+        "owner": "control-plane-go",
+        "evidence": "load_profile"
+      },
+      {
+        "id": "slow_upstream_backpressure",
+        "status": "missing",
+        "owner": "control-plane-go",
+        "evidence": "backpressure_eval"
+      }
+    ],
+    "cannotClaim": [
+      "production concurrent SaaS readiness",
+      "load-tested multi-user chat",
+      "database pool sizing readiness",
+      "slow upstream backpressure readiness"
+    ]
+  },
   "claims": {
     "canClaim": [
       "One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab.",
@@ -242,7 +349,9 @@
       "pricing lifecycle",
       "subscription lifecycle",
       "payment lifecycle",
+      "production concurrent SaaS readiness",
       "runtime execution owner",
+      "runtime continuous GitHub sync",
       "node pool lifecycle owner",
       "storage owner",
       "domain agent quality verdict owner",

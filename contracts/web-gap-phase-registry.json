@@ -279,6 +279,135 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ha_and_resilience",
+      "ownerSurface": "release-evidence",
+      "state": "paused",
+      "currentPhaseId": "single_node_launch_pause",
+      "currentStatus": "blocked",
+      "cannotClaim": ["multi-node HA", "zero-downtime rolling update evidence", "CLB two-backend health"],
+      "phases": [
+        {
+          "id": "single_node_launch_pause",
+          "objective": "Keep current single-node launch shape explicit and prevent HA claims until two-pod, multi-node, ingress backend, and rollout evidence exist.",
+          "entryCriteria": ["productionHAReadiness contract exists", "single-node launch safety is the current operator policy"],
+          "exitCriteria": ["replicas=2 is approved", "two Ready Pods exist", "pods are on distinct nodes", "Ingress/CLB has at least two healthy backends", "zero-downtime rollout evidence is folded back"],
+          "evidenceSources": ["repo_local", "production_secret_gated", "external_owner"],
+          "blockerTypes": ["missing_production_evidence", "missing_owner_receipt"],
+          "acceptance": [
+            "current production shape stays launch-safe at one pod while HA is paused",
+            "required HA evidence remains explicit in the release contract",
+            "repo-local deploy manifest evidence cannot claim multi-node HA",
+            "multi-node HA, zero-downtime rollout, and CLB two-backend health stay cannot-claim"
+          ],
+          "nextStepOpeners": [
+            "Open HA rollout only after a cloud operator approves a second node or schedulable topology",
+            "Add production evidence for two Ready Pods, distinct nodes, and at least two healthy ingress backends before claiming HA",
+            "Keep the current single-node deployment if the cluster still has only one schedulable worker"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "external_owner",
+            "reason": "HA changes cloud cost, topology, and rollout safety and cannot be inferred from repo-local tests"
+          },
+          "requiredEvals": [
+            {
+              "id": "ha_resilience_eval",
+              "contract": "contracts/web-release-profile.json#/productionHAReadiness",
+              "proves": ["HA claim is blocked until topology and production rollout evidence exists"],
+              "doesNotProve": ["multi-node HA", "zero-downtime rollout", "CLB two-backend health"],
+              "failureBlocks": ["multi-node HA", "zero-downtime rolling update evidence", "CLB two-backend health"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "concurrency_and_load",
+      "ownerSurface": "control-plane-go",
+      "state": "active",
+      "currentPhaseId": "production_concurrency_load_evidence",
+      "currentStatus": "blocked",
+      "cannotClaim": ["production concurrent SaaS readiness", "load-tested multi-user chat", "database pool sizing readiness", "slow upstream backpressure readiness"],
+      "phases": [
+        {
+          "id": "production_concurrency_load_evidence",
+          "objective": "Keep local tenant-isolation evidence separate from production concurrency and load claims until load, DB pool, and slow-upstream evidence exist.",
+          "entryCriteria": ["local auth/session/API key/chat contract tests exist", "Postgres-backed store path exists"],
+          "exitCriteria": ["production or staging concurrent register/login/chat/API key/quota test passes", "DB pool sizing evidence is folded back", "slow upstream backpressure or rate limit eval passes"],
+          "evidenceSources": ["repo_local", "production_secret_gated"],
+          "blockerTypes": ["missing_eval", "missing_production_evidence"],
+          "acceptance": [
+            "local tests may claim tenant isolation and API boundary behavior only",
+            "production concurrency requires a registered load eval or equivalent staging run",
+            "DB pool sizing and slow upstream backpressure evidence are required before SaaS concurrency claims",
+            "production concurrent SaaS readiness remains cannot-claim while production evidence is missing"
+          ],
+          "nextStepOpeners": [
+            "Open load eval only after the owner picks staging or production as the evidence environment",
+            "Add registered eval for concurrent register, login, chat, API key binding, and quota",
+            "Fold back sanitized aggregate results only; raw emails, API keys, request bodies, and DB URLs stay out of git"
+          ],
+          "ownerReceipt": {
+            "required": false,
+            "source": "repo_local",
+            "reason": "the current blocker is missing load evidence, not missing product owner approval"
+          },
+          "requiredEvals": [
+            {
+              "id": "concurrency_load_eval",
+              "contract": "contracts/web-product-profile.json#/concurrencyAndLoad",
+              "proves": ["local isolation evidence is separated from production concurrency and load claims"],
+              "doesNotProve": ["production concurrent SaaS readiness", "database pool sizing", "slow upstream backpressure readiness"],
+              "failureBlocks": ["production concurrent SaaS readiness", "load-tested multi-user chat"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "opl_auto_update_from_github",
+      "ownerSurface": "deploy",
+      "state": "active",
+      "currentPhaseId": "runtime_sync_admission",
+      "currentStatus": "blocked",
+      "cannotClaim": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app", "self-healing OPL framework updates", "runtime update rollback"],
+      "phases": [
+        {
+          "id": "runtime_sync_admission",
+          "objective": "Keep OPL framework updates tied to immutable Web image releases until a runtime GitHub sync policy, verification, eval, and rollback plan exist.",
+          "entryCriteria": ["Dockerfile.cloud pins OPL context at image build time", "Cloud Rollout deploys immutable image tags"],
+          "exitCriteria": ["owner receipt accepts runtime update policy", "signed source or release verification exists", "rollback plan exists", "registered eval passes", "tenant-safe maintenance window exists"],
+          "evidenceSources": ["repo_local", "external_owner"],
+          "blockerTypes": ["missing_contract", "missing_eval", "missing_owner_receipt"],
+          "acceptance": [
+            "current mechanism is build-time pinned OPL context inside the Web image",
+            "runtime pod does not git pull, self-update, npm install, or sync unverified GitHub HEAD",
+            "one-person-lab-app background updater parity remains cannot-claim",
+            "runtime continuous GitHub sync stays blocked until owner policy, verification, eval, and rollback plan exist"
+          ],
+          "nextStepOpeners": [
+            "Open runtime sync only after owner chooses Web-owned or App-owned updater authority",
+            "Add signed-source verification, rollback, tenant-safe maintenance, and registered eval before runtime sync",
+            "Prefer image rebuild and Cloud Rollout while runtime update authority is external"
+          ],
+          "ownerReceipt": {
+            "required": true,
+            "source": "external_owner",
+            "reason": "runtime update authority changes release safety and OPL ownership boundaries"
+          },
+          "requiredEvals": [
+            {
+              "id": "opl_auto_update_admission_eval",
+              "contract": "contracts/web-release-profile.json#/oplAutoUpdateReadiness",
+              "proves": ["OPL updates are image-release pinned until runtime sync admission evidence exists"],
+              "doesNotProve": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app", "runtime update rollback"],
+              "failureBlocks": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app"]
+            }
+          ]
+        }
+      ]
     }
   ]
 }
