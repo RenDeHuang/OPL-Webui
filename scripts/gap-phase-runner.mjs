@@ -6,8 +6,7 @@ import { fileURLToPath } from 'node:url';
 const registryPath = 'contracts/web-gap-phase-registry.json';
 const defaultRuntimeRoot = '.runtime/phase-runs';
 
-export function buildPhaseStatusReport(registry) {
-  const context = readEvalContext();
+export function buildPhaseStatusReport(registry, context = readEvalContext()) {
   const gaps = registry.gaps.map((gap) => {
     const currentPhase = gap.phases.find((phase) => phase.id === gap.currentPhaseId);
     const status = gap.currentStatus ?? statusFromPhase(currentPhase);

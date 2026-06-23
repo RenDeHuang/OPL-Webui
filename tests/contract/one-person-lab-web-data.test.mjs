@@ -36,7 +36,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.visionGaps.state, 'active_non_ha_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
   assert.deepEqual(product.visionGaps.items.map((gap) => [gap.id, gap.ownerSurface, gap.disposition]), [
-    ['ui_ux_product_depth', 'apps-web', 'production_ui_quality_claim_pending_owner_receipt_and_production_evidence'],
+    ['ui_ux_product_depth', 'apps-web', 'ui_ux_v1_production_accepted_current_head'],
     ['medopl_readonly_evidence', 'release-evidence', 'awaiting_secret_gated_foldback'],
     ['runtime_execution_boundary', 'runtime-gate', 'fail_closed_until_admission_contract'],
     ['commercial_saas_depth', 'product-boundary', 'readonly_personal_projection_only'],
@@ -47,6 +47,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(visionGap('ui_ux_product_depth').acceptanceContract, 'contracts/web-gui-product-contract.json');
   assert.equal(visionGap('medopl_readonly_evidence').acceptanceContract, 'contracts/web-release-profile.json#/productionDogfoodReadiness');
   assert.equal(visionGap('runtime_execution_boundary').acceptanceContract, 'contracts/web-runtime-bridge.json');
+  assert.equal(visionGap('runtime_execution_boundary').launchBlocking, true);
+  assert.equal(visionGap('commercial_saas_depth').launchBlocking, true);
   assert.deepEqual([
     product.provider.fixedBaseUrl,
     product.provider.wireApi,
@@ -199,10 +201,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(release.localNoSecretReadiness.coverage, ['register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'ordinary_chat_mock_upstream', 'quota_exceeded', 'runtime_gate', 'sanitized_audit', 'desktop_shell', 'mobile_shell', 'more_empty_overflow']);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_27876229568_real_chat_readonly_unconfirmed');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'a3f7c399872a70332bd9e9465c05d11c9c2bd4ad');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28009300822_real_chat_readonly_unconfirmed');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'b0562b4070a4165f55798addd0305e8c32072e52');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, 'unconfirmed');
   assertIncludesAll(release.productionDogfoodReadiness.latestSuccessfulRun.coverage, ['ordinary_chat_real_completion'], 'dogfood coverage');
@@ -223,11 +225,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.forbidRawLogs, true);
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.forbidSecretValues, true);
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.claimWhenConfirmed, 'production MedOPL readonly projection dogfood');
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_27876229568_after_apply');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_28009300822_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822');
   assertIncludesAll(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage, ['HTTPS /readyz'], 'availability coverage');
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
-  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_27876229568_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28009300822_scheduled_canary_success_pending_long_term_ops');
   assert.equal(release.productionObservabilityBaseline.currentPhase, 'ops_evidence_contracts');
   assert.equal(release.productionObservabilityBaseline.nextPhase, 'ops_contract_detail');
   assert.equal(release.productionObservabilityBaseline.blockedBy, 'missing_contract');
@@ -237,7 +239,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'concrete contract exists for the selected operations surface',
     'registered eval exists before any new operations surface ships',
   ]);
-  assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568');
+  assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'scheduled_canary_first_success_run_27874732529_pending_ops_consumer');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
@@ -269,11 +271,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
-  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_27876229568');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28009300822');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 27876229568);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 28009300822);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, null);
   assertIncludesAll(release.productionBrowserE2EReadiness.latestAttempt.canClaim, ['production browser e2e executed against https://opl.medopl.cn'], 'browser can-claim');
@@ -356,8 +358,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['account_popover_status', 'missing_api_key_resource_gate', 'side_navigation_new_chat_projects_skill_workflow_search_more', 'ai_native_center_composer', 'starter_chips', 'prompt_command_center', 'research_skill_launcher', 'agentic_workflow_cards', 'inspector_sheet_tabs_files_progress_output', 'running_blocked_turn_state']);
   assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_video_skills', 'default_tech_blue_primary_palette', 'dominant_purple_primary_palette', 'purple_blue_gradient_primary_style', 'heavy_glassmorphism_primary_style', 'neumorphism_primary_style']);
   assert.equal(gui.visualGrammar.currentUiVariant, 'ai_native_research_home_v1');
-  assert.deepEqual([gui.visualQualityGate.state, gui.visualQualityGate.completedPhase, gui.visualQualityGate.currentPhase, gui.visualQualityGate.nextPhase], ['production_ui_quality_claim_pending_owner_receipt_and_production_evidence', 'responsive_visual_qa', 'production_ui_quality_claim', null]);
-  assert.deepEqual(gui.visualQualityGate.ownerReceipt, { required: true, status: 'pending', source: 'human_owner_receipt', acceptedClaim: null, cannotBeInferredBy: ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt'], reason: 'repo-local baseline and responsive screenshots prove mechanics, but production UI quality needs owner review' });
+  assert.deepEqual([gui.visualQualityGate.state, gui.visualQualityGate.completedPhase, gui.visualQualityGate.currentPhase, gui.visualQualityGate.nextPhase], ['production_ui_quality_claim_accepted_current_head', 'responsive_visual_qa', 'production_ui_quality_claim', null]);
+  assert.deepEqual(gui.visualQualityGate.ownerReceipt, { required: true, status: 'accepted', source: 'human_owner_receipt', acceptedClaim: 'ui_ux_v1_production_accepted', acceptedAt: '2026-06-23', acceptedScope: 'current production UI/UX v1 product surface only', cannotBeInferredBy: ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt'], reason: 'human owner accepted current UI/UX v1 as production v1 while explicitly not claiming a complete design system' });
   assert.deepEqual(gui.visualQualityGate.requiredBeforeProductionUiClaim, [
     'Figma MCP source context refreshed',
     'desktop screenshot captured and layout-reviewed in local browser',
@@ -388,7 +390,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     hidden_overlay_input_check: 'done',
     responsive_visual_qa_closeout: 'done',
     ai_native_research_home_v1_shell: 'done',
-    owner_receipt_closeout: 'pending',
+    owner_receipt_closeout: 'done',
   });
   assert.equal(gui.visualQualityGate.acceptance.find((item) => item.id === 'browser_interaction_e2e').command, 'npm run verify:browser');
   assert.equal(gui.visualQualityGate.baselineEvidence.command, 'npm run verify:browser');
@@ -397,21 +399,12 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.visualQualityGate.responsiveVisualQaEvidence.checks, ['noHorizontalOverflow', 'noStaticTextOverflow', 'inspectorWithinViewport', 'activeInspectorPanelVisible', 'hiddenOverlayDoesNotInterceptInput', 'chatInputHitTarget', 'touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'keyboardPathPass', 'modalFocusTrapPass', 'contrastPass', 'oplGreenTokenGuard', 'prefersReducedMotionPresent', 'mobileInspectorBottomSheet', 'desktopInspectorStablePanel', 'lightweightMobileInspectorSheet', 'researchArtifactDensity']);
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.phaseId, 'production_ui_quality_claim');
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.targetClaim, 'ui_ux_v1_production_accepted');
-  assert.equal(gui.visualQualityGate.productionUiQualityClaim.status, 'pending_owner_receipt_and_production_evidence');
-  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.designSystemBoundary, {
-    claimed: 'ui_ux_v1_product_surface',
-    notClaimed: 'complete_ui_ux_design_system',
-  });
+  assert.equal(gui.visualQualityGate.productionUiQualityClaim.status, 'accepted');
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.designSystemBoundary, { claimed: 'ui_ux_v1_product_surface', notClaimed: 'complete_ui_ux_design_system' });
   assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.requiredEvidence, ['owner_receipt', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
   assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.lifecycle.longTermTruth, ['contracts/web-gui-product-contract.json', 'contracts/web-gap-phase-registry.json', 'contracts/web-product-profile.json', 'registered tests', 'docs/status.md', 'docs/active/README.md']);
   assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.lifecycle.temporaryArtifacts, ['.runtime/browser-visual/*', '.runtime/phase-runs/*', 'production raw logs', 'raw screenshots', 'CI raw output']);
-  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.productionEvidence, {
-    status: 'pending',
-    requiredHost: 'https://opl.medopl.cn',
-    acceptedSources: ['production_browser_e2e', 'production_screenshot_evidence'],
-    rawArtifactsInGit: false,
-    foldback: 'sanitized_summary_only',
-  });
+  assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.productionEvidence, { status: 'done', requiredHost: 'https://opl.medopl.cn', acceptedSources: ['production_browser_e2e', 'production_screenshot_evidence'], latestAcceptedSource: { type: 'production_browser_e2e', runId: 28009300822, runUrl: 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822', commit: 'b0562b4070a4165f55798addd0305e8c32072e52', image: 'uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4', targetHost: 'https://opl.medopl.cn', foldback: 'sanitized_summary_only' }, rawArtifactsInGit: false, foldback: 'sanitized_summary_only' });
   assert.deepEqual(gui.visualQualityGate.productionUiQualityClaim.accessibilityCloseout, {
     status: 'repo_local_browser_closeout_done_production_owner_pending',
     completedRepoLocalChecks: ['touchTargetsPass', 'namedControlsPass', 'keyboardFocusVisible', 'noStaticTextOverflow', 'hiddenOverlayDoesNotInterceptInput', 'keyboardPathPass', 'modalFocusTrapPass', 'contrastPass'],

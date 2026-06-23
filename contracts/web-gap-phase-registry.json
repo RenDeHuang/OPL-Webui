@@ -33,7 +33,7 @@
       "ownerSurface": "apps-web",
       "state": "active",
       "currentPhaseId": "production_ui_quality_claim",
-      "currentStatus": "blocked",
+      "currentStatus": "done",
       "cannotClaim": ["complete UI/UX design system", "production visual polish complete"],
       "phases": [
         {
@@ -42,7 +42,7 @@
           "entryCriteria": [
             "repo-local responsive visual QA evidence is folded into web GUI product contract",
             "Figma MCP source context remains pinned",
-            "human owner approved opening the claim phase but has not signed acceptance"
+            "human owner accepted the current production v1 surface claim"
           ],
           "exitCriteria": [
             "human owner receipt acceptedClaim=ui_ux_v1_production_accepted",
@@ -53,21 +53,22 @@
           "evidenceSources": ["browser", "production_secret_gated", "human_owner_receipt"],
           "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
           "acceptance": [
-            "owner receipt remains pending until the human owner explicitly accepts ui_ux_v1_production_accepted",
-            "production UI evidence must be folded back as a sanitized summary, not raw logs or screenshots in git",
+            "owner receipt accepted ui_ux_v1_production_accepted for the current production v1 surface",
+            "production UI evidence is folded back as a sanitized summary, not raw logs or screenshots in git",
             "repo-local accessibility closeout may claim contrast, keyboard path, and API key modal focus trap browser checks only; full accessibility still requires assistive technology review",
             "complete UI/UX design system remains cannot-claim"
           ],
           "nextStepOpeners": [
-            "Close production_ui_quality_claim only after owner receipt and sanitized production evidence exist",
             "Open complete design system work only after a separate owner, consumer, contract, and eval are approved",
-            "Keep this gap blocked while owner receipt or production evidence is missing"
+            "Keep complete design system and production visual polish out of the current claim"
           ],
           "ownerReceipt": {
             "required": true,
             "source": "human_owner_receipt",
-            "status": "pending",
-            "acceptedClaim": null,
+            "status": "accepted",
+            "acceptedClaim": "ui_ux_v1_production_accepted",
+            "acceptedAt": "2026-06-23",
+            "acceptedScope": "current production UI/UX v1 product surface only",
             "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"]
           },
           "artifactLifecycle": {
@@ -154,6 +155,7 @@
       "state": "active",
       "currentPhaseId": "execution_admission",
       "currentStatus": "blocked",
+      "launchBlocking": true,
       "cannotClaim": ["OPL runtime execution from Web", "artifact body authority"],
       "phases": [
         {
@@ -197,6 +199,7 @@
       "state": "active",
       "currentPhaseId": "commercial_contract",
       "currentStatus": "blocked",
+      "launchBlocking": true,
       "cannotClaim": ["complete commercial SaaS lifecycle", "billing source of truth", "payment readiness"],
       "phases": [
         {

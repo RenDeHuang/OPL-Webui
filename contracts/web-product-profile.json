@@ -82,7 +82,7 @@
         "id": "ui_ux_product_depth",
         "ownerSurface": "apps-web",
         "acceptanceContract": "contracts/web-gui-product-contract.json",
-        "disposition": "production_ui_quality_claim_pending_owner_receipt_and_production_evidence",
+        "disposition": "ui_ux_v1_production_accepted_current_head",
         "evidenceRequired": [
           "figma_mcp_source_context",
           "component_state_contract",
@@ -111,6 +111,7 @@
         "ownerSurface": "runtime-gate",
         "acceptanceContract": "contracts/web-runtime-bridge.json",
         "disposition": "fail_closed_until_admission_contract",
+        "launchBlocking": true,
         "evidenceRequired": [
           "go_side_execution_contract",
           "registered_eval",
@@ -123,6 +124,7 @@
         "ownerSurface": "product-boundary",
         "acceptanceContract": "contracts/web-product-profile.json#/commercialLifecycle",
         "disposition": "readonly_personal_projection_only",
+        "launchBlocking": true,
         "evidenceRequired": [
           "real_consumer",
           "contract",

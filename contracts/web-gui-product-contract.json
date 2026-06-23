@@ -672,17 +672,19 @@
     ]
   },
   "visualQualityGate": {
-    "state": "production_ui_quality_claim_pending_owner_receipt_and_production_evidence",
+    "state": "production_ui_quality_claim_accepted_current_head",
     "completedPhase": "responsive_visual_qa",
     "currentPhase": "production_ui_quality_claim",
     "nextPhase": null,
     "ownerReceipt": {
       "required": true,
-      "status": "pending",
+      "status": "accepted",
       "source": "human_owner_receipt",
-      "acceptedClaim": null,
+      "acceptedClaim": "ui_ux_v1_production_accepted",
+      "acceptedAt": "2026-06-23",
+      "acceptedScope": "current production UI/UX v1 product surface only",
       "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"],
-      "reason": "repo-local baseline and responsive screenshots prove mechanics, but production UI quality needs owner review"
+      "reason": "human owner accepted current UI/UX v1 as production v1 while explicitly not claiming a complete design system"
     },
     "requiredBeforeProductionUiClaim": [
       "Figma MCP source context refreshed",
@@ -765,7 +767,7 @@
     "productionUiQualityClaim": {
       "phaseId": "production_ui_quality_claim",
       "targetClaim": "ui_ux_v1_production_accepted",
-      "status": "pending_owner_receipt_and_production_evidence",
+      "status": "accepted",
       "designSystemBoundary": {
         "claimed": "ui_ux_v1_product_surface",
         "notClaimed": "complete_ui_ux_design_system"
@@ -794,9 +796,18 @@
         ]
       },
       "productionEvidence": {
-        "status": "pending",
+        "status": "done",
         "requiredHost": "https://opl.medopl.cn",
         "acceptedSources": ["production_browser_e2e", "production_screenshot_evidence"],
+        "latestAcceptedSource": {
+          "type": "production_browser_e2e",
+          "runId": 28009300822,
+          "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
+          "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
+          "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+          "targetHost": "https://opl.medopl.cn",
+          "foldback": "sanitized_summary_only"
+        },
         "rawArtifactsInGit": false,
         "foldback": "sanitized_summary_only"
       },
@@ -865,8 +876,8 @@
       },
       {
         "id": "owner_receipt_closeout",
-        "state": "pending",
-        "evidence": "production UI owner receipt is not folded back"
+        "state": "done",
+        "evidence": "human owner accepted ui_ux_v1_production_accepted on 2026-06-23 for the current production v1 surface; complete design system remains unclaimed"
       }
     ],
     "cannotClaim": [

@@ -19,7 +19,7 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-figma-pattern="agentic_workflow_cards"/);
   assert.match(html, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
   assert.match(html, /data-figma-pattern="running_blocked_turn_state"/);
-  assert.match(html, /data-visual-quality-gate="repo_local_responsive_visual_qa_captured_pending_owner_receipt"/);
+  assert.match(html, /data-visual-quality-gate="ui_ux_v1_production_accepted_current_head"/);
   assert.match(html, /data-ui-variant="ai_native_research_home_v1"/);
   assert.match(html, /data-visual-density="low_stimulus_command_home"/);
   assert.match(html, /data-view="home"/);

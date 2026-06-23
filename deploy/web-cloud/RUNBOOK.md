@@ -103,7 +103,7 @@ cannot claim: multi-node HA, production browser e2e, production authenticated do
 
 Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboard 或 alerting surface。`/metricsz` 必须包含 `observabilitySchemaVersion=1`、`releaseProbeContract=production_observability_baseline_v1`、`publicProbeEndpoints=["/healthz","/readyz","/metricsz","/"]`；helper 输出每个 endpoint 的 `samples`、`successes`、`failures`、`maxDurationMs`，并继续不保存 raw response body、cookie 或 secret。
 
-Latest folded evidence is run `27876229568`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39`, after production apply. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. scheduled canary first success: 27874732529.
+Latest folded evidence is run `28009300822`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4`, after production apply. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. scheduled canary first success: 27874732529.
 
 ```text
 required future evidence: dashboard, alerting, error_budget, rollback_record
@@ -148,11 +148,11 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/payment/storage/nod
 Latest compressed evidence:
 
 ```text
-run id: 27876229568
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568
-commit: a3f7c399872a70332bd9e9465c05d11c9c2bd4ad
+run id: 28009300822
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822
+commit: b0562b4070a4165f55798addd0305e8c32072e52
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4
 real chat: true (confirmed by production browser e2e in the same run)
 readonly projection: unconfirmed; public GitHub job metadata does not expose OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY or dogfood stdout
 stages: Production Dry Run success, Production Apply success, Production Availability Probe After Apply success, Production Authenticated Dogfood E2E success, Production Browser E2E success
@@ -166,9 +166,9 @@ cannot claim: MedOPL runtime execution, billing/storage/node pool mutation, quot
 Production availability probe closeout:
 
 ```text
-run id: 27876229568
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39
+run id: 28009300822
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4
 stage: Production Availability Probe After Apply success
 coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
 cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
@@ -180,16 +180,16 @@ Production browser e2e harness:
 - 该 lane 使用真实 Chromium/CDP 打开 `https://opl.medopl.cn`，通过生产 dogfood 账号执行登录、API Key 绑定、普通科研 chat、`@论文`/`@基金` runtime gate 和 audit evidence 检查。
 - 该 lane 需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，并在 job 中 mask password/API key。
 - 该 lane 不执行 kubectl，不读取 kubeconfig，不读取数据库 secret，不连接 MedOPL private API，不执行 OPL runtime mutation。
-- 本 harness 已在 GitHub Actions run `27876229568` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
+- 本 harness 已在 GitHub Actions run `28009300822` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
 
 Production browser e2e closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password、email 或 request payload：
 
 ```text
-run id: 27876229568
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568
-job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/27876229568/job/82496106849
+run id: 28009300822
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822
+job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822/job/82904870952
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:a3f7c39
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4
 browser: chromium
 steps: real_browser_login,api_key_binding,research_task_template_selected,ordinary_chat,paper_runtime_gate,grant_runtime_gate,audit_events
 audit kinds: chat.completed,runtime_gate.required

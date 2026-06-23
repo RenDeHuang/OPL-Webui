@@ -93,12 +93,12 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
   assert.ok(report.blockedClaims.includes('production MedOPL readonly projection dogfood'));
   assert.ok(report.blockedClaims.includes('OPL runtime execution from Web'));
   assert.ok(report.blockedClaims.includes('complete commercial SaaS lifecycle'));
-  assert.ok(report.blockedClaims.includes('complete UI/UX design system'));
+  assert.equal(report.blockedClaims.includes('complete UI/UX design system'), false);
   for (const gap of report.gaps) {
     assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
-    assert.equal(gap.readyToAdvance, gap.status === 'done');
+    assert.equal(gap.readyToAdvance, gap.id === 'ui_ux_product_depth');
   }
 });
 
@@ -119,8 +119,8 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     assert.ok(gap.evalResults.every((result) => Array.isArray(result.doesNotProve) && result.doesNotProve.length > 0), `${gap.id} evals must declare doesNotProve`);
   }
 
-  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'blocked');
-  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'blocked');
+  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'pass');
+  assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
   assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'blocked');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
@@ -142,11 +142,11 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     'evidenceConditions',
   );
 
-  assert.equal(report.readyToAdvanceCount, 0);
+  assert.equal(report.readyToAdvanceCount, 1);
   assert.deepEqual(report.summary, {
-    done: 0,
+    done: 1,
     partial: 1,
-    blocked: 4,
+    blocked: 3,
     not_started: 0,
   });
 });
@@ -155,10 +155,27 @@ test('gap phase runner refuses advancement when a done status lacks required eva
   const runner = await import('../../scripts/gap-phase-runner.mjs');
   const registry = readJson(registryPath);
   const forgedRegistry = structuredClone(registry);
+  const originalGui = readJson('contracts/web-gui-product-contract.json');
+  const forgedGui = structuredClone(originalGui);
   const uiGap = forgedRegistry.gaps.find((gap) => gap.id === 'ui_ux_product_depth');
   uiGap.currentStatus = 'done';
+  const productionClaim = uiGap.phases.find((phase) => phase.id === 'production_ui_quality_claim');
+  productionClaim.ownerReceipt = {
+    ...productionClaim.ownerReceipt,
+    status: 'pending',
+    acceptedClaim: null,
+  };
+  forgedGui.visualQualityGate.ownerReceipt.acceptedClaim = null;
+  forgedGui.visualQualityGate.productionUiQualityClaim.status = 'pending_owner_receipt_and_production_evidence';
+  forgedGui.visualQualityGate.productionUiQualityClaim.productionEvidence.status = 'pending';
 
-  const report = runner.buildPhaseStatusReport(forgedRegistry);
+  const report = runner.buildPhaseStatusReport(forgedRegistry, {
+    gui: forgedGui,
+    release: readJson('contracts/web-release-profile.json'),
+    runtime: readJson('contracts/web-runtime-bridge.json'),
+    product: readJson('contracts/web-product-profile.json'),
+    registry: forgedRegistry,
+  });
   const uiReport = report.gaps.find((gap) => gap.id === 'ui_ux_product_depth');
 
   assert.equal(uiReport.status, 'done');
@@ -174,7 +191,7 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
 
   assert.equal(uiGap.currentPhaseId, 'production_ui_quality_claim');
   assert.deepEqual(uiGap.phases.map((phase) => phase.id), ['production_ui_quality_claim']);
-  assert.equal(uiGap.currentStatus, 'blocked');
+  assert.equal(uiGap.currentStatus, 'done');
   assert.equal(
     productionClaim.objective,
     'Claim UI/UX v1 production acceptance only after human owner receipt and sanitized production evidence exist, without claiming a complete design system.',
@@ -182,7 +199,7 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
   assert.deepEqual(productionClaim.entryCriteria, [
     'repo-local responsive visual QA evidence is folded into web GUI product contract',
     'Figma MCP source context remains pinned',
-    'human owner approved opening the claim phase but has not signed acceptance',
+    'human owner accepted the current production v1 surface claim',
   ]);
   assert.equal(productionClaim.nextStepOpeners.every((item) => !item.includes('partial')), true);
   assert.deepEqual(productionClaim.exitCriteria, [
@@ -194,8 +211,10 @@ test('UI/UX production claim phase keeps owner receipt and raw artifacts out of 
   assert.deepEqual(productionClaim.ownerReceipt, {
     required: true,
     source: 'human_owner_receipt',
-    status: 'pending',
-    acceptedClaim: null,
+    status: 'accepted',
+    acceptedClaim: 'ui_ux_v1_production_accepted',
+    acceptedAt: '2026-06-23',
+    acceptedScope: 'current production UI/UX v1 product surface only',
     cannotBeInferredBy: ['repo_local_tests', 'browser_screenshots', 'production_e2e_without_human_receipt'],
   });
   assert.deepEqual(productionClaim.artifactLifecycle.longTermTruth, [
