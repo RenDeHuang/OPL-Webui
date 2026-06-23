@@ -526,18 +526,21 @@
   },
   "productionObservabilityBaseline": {
     "mode": "no_secret_public_http_observability_baseline_v1",
-    "state": "release_probe_executed_run_28039468173_scheduled_canary_success_pending_long_term_ops",
+    "state": "v1_accepted_observability_baseline_plus_rollback_record_contract",
     "currentPhase": "ops_evidence_contracts",
     "nextPhase": "ops_contract_detail",
-    "blockedBy": "missing_contract",
+    "blockedBy": null,
     "ownerReceipt": {
       "required": true,
-      "source": "external_owner"
+      "source": "human_owner_receipt",
+      "status": "accepted",
+      "acceptedAt": "2026-06-24",
+      "acceptedClaim": "operations_maturity_v1_baseline_and_rollback_record_contract_accepted"
     },
     "nextStepOpeners": [
-      "operations owner chooses dashboard, alerting, error budget, or rollback record as next consumer",
-      "concrete contract exists for the selected operations surface",
-      "registered eval exists before any new operations surface ships"
+      "fold back real production rollback record after manual environment-approved rollback executes",
+      "open dashboard, alerting, or error budget only with a separate operations owner contract",
+      "keep automatic rollback out of scope until separately admitted"
     ],
     "owner": "one-person-lab-web-release",
     "consumer": "cloud_rollout_closeout",
@@ -584,7 +587,7 @@
     "nextReadiness": {
       "owner": "operations_owner",
       "consumer": "production_operations_review",
-      "state": "scheduled_canary_first_success_run_27874732529_pending_ops_consumer",
+      "state": "rollback_record_contract_present_dashboard_alerting_error_budget_deferred",
       "implementedEvidence": [
         "scheduled_canary_workflow",
         "scheduled_canary_first_success"
@@ -657,7 +660,7 @@
         {
           "id": "rollback_record",
           "owner": "release_operator",
-          "state": "contract_required"
+          "state": "contract_present"
         }
       ],
       "evidenceConditions": [
@@ -681,13 +684,13 @@
         },
         {
           "id": "rollback_record_contract",
-          "status": "missing",
+          "status": "present",
           "owner": "release_operator",
           "evidence": "contract"
         },
         {
           "id": "production_rollback_record",
-          "status": "missing",
+          "status": "contract_only_pending_first_run",
           "owner": "release_operator",
           "evidence": "production_evidence"
         }
@@ -698,7 +701,35 @@
         "error_budget_contract=present",
         "rollback_record_contract=present",
         "production_rollback_record=present"
-      ]
+      ],
+      "rollbackRecordV1": {
+        "state": "contract_present_pending_first_production_run",
+        "owner": "release_operator",
+        "consumer": "production_operations_review",
+        "acceptedAt": "2026-06-24",
+        "source": "human_owner_receipt",
+        "requiredSummaryFields": [
+          "runId",
+          "runUrl",
+          "commit",
+          "imageBefore",
+          "imageAfter",
+          "rolledBackToRevision",
+          "canaryDb",
+          "canaryOplCli",
+          "availabilityProbeAfterRollback",
+          "rawLogPolicy"
+        ],
+        "rawLogPolicy": {
+          "storesRawLogs": false,
+          "storesSecretValues": false
+        },
+        "doesNotProve": [
+          "automatic rollback",
+          "data migration rollback",
+          "multi-node HA"
+        ]
+      }
     },
     "cannotClaim": [
       "multi-node HA",
@@ -706,6 +737,7 @@
       "dashboard",
       "alerting",
       "error budget enforcement",
+      "automatic rollback",
       "production-ready SaaS"
     ]
   },
@@ -754,14 +786,15 @@
   },
   "oplAutoUpdateReadiness": {
     "mode": "build_time_pinned_opl_context",
-    "state": "image_release_pipeline_only_no_runtime_sync",
+    "state": "build_time_pinned_policy_accepted_no_runtime_sync",
     "owner": "deploy",
     "consumer": "production_release_operator",
-    "runtimeGithubSync": "not_implemented",
+    "runtimeGithubSync": "forbidden_by_current_policy",
     "currentMechanism": [
       "GitHub Actions release builds cloud image",
       "Dockerfile.cloud copies OPL CLI, contracts, dist, and node_modules from build context",
-      "Cloud Rollout deploys explicit immutable image tag"
+      "Cloud Rollout deploys explicit immutable image tag",
+      "runtime pod does not sync GitHub or self-update"
     ],
     "buildTimeInputs": [
       "/bin/opl",
@@ -793,21 +826,21 @@
       },
       {
         "id": "runtime_github_sync_loop",
-        "status": "missing",
+        "status": "forbidden_by_policy",
         "owner": "deploy",
-        "evidence": "contract_and_eval"
+        "evidence": "admission_policy"
       },
       {
         "id": "owner_update_policy",
-        "status": "missing",
+        "status": "accepted",
         "owner": "external_owner",
         "evidence": "owner_receipt"
       },
       {
         "id": "runtime_sync_rollback_plan",
-        "status": "missing",
+        "status": "not_required_for_build_time_pinned_policy",
         "owner": "release_operator",
-        "evidence": "contract"
+        "evidence": "policy_boundary"
       }
     ],
     "latestSuccessfulRun": null,
@@ -816,11 +849,32 @@
       "background updater parity with one-person-lab-app",
       "self-healing OPL framework updates",
       "runtime update rollback"
-    ]
+    ],
+    "ownerReceipt": {
+      "required": true,
+      "source": "human_owner_receipt",
+      "status": "accepted",
+      "acceptedAt": "2026-06-24",
+      "acceptedClaim": "opl_update_build_time_pinned_policy_accepted"
+    },
+    "admissionPolicy": {
+      "state": "accepted_build_time_pinned_only",
+      "acceptedAt": "2026-06-24",
+      "acceptedClaim": "opl_update_build_time_pinned_policy_accepted",
+      "runtimeSyncAdmitted": false,
+      "updateAuthority": "image_release_pipeline",
+      "nextRuntimeSyncRequires": [
+        "owner_receipt_for_runtime_update_policy",
+        "signed_source_or_release_verification",
+        "rollback_plan",
+        "registered_eval",
+        "tenant_safe_maintenance_window"
+      ]
+    }
   },
   "productionRollbackReadiness": {
     "mode": "manual_environment_approved_rollback",
-    "state": "manual_harness_ready_pending_first_run",
+    "state": "manual_harness_ready_rollback_record_contract_present_pending_first_run",
     "defaultEnabled": false,
     "requiresKubeconfig": true,
     "requiresEnvironmentApproval": true,
@@ -873,6 +927,26 @@
       "production-ready SaaS",
       "multi-node HA",
       "data migration rollback"
-    ]
+    ],
+    "recordContract": {
+      "state": "present",
+      "acceptedAt": "2026-06-24",
+      "owner": "release_operator",
+      "consumer": "production_operations_review",
+      "foldback": "sanitized_summary_only",
+      "storesRawLogs": false,
+      "storesSecretValues": false,
+      "requiredSummaryFields": [
+        "runId",
+        "runUrl",
+        "commit",
+        "imageBefore",
+        "imageAfter",
+        "rolledBackToRevision",
+        "canaryDb",
+        "canaryOplCli",
+        "availabilityProbeAfterRollback"
+      ]
+    }
   }
 }

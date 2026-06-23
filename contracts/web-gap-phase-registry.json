@@ -16,16 +16,53 @@
     "foldback": "sanitized_summary_only",
     "cleanupCommand": "node scripts/gap-phase-runner.mjs cleanup"
   },
-  "statusValues": ["done", "partial", "blocked", "not_started"],
-  "evidenceSources": ["repo_local", "browser", "production_secret_gated", "external_owner", "human_owner_receipt"],
-  "blockerTypes": ["missing_eval", "missing_contract", "missing_production_evidence", "missing_owner_receipt", "missing_product_decision"],
+  "statusValues": [
+    "done",
+    "partial",
+    "blocked",
+    "not_started"
+  ],
+  "evidenceSources": [
+    "repo_local",
+    "browser",
+    "production_secret_gated",
+    "external_owner",
+    "human_owner_receipt"
+  ],
+  "blockerTypes": [
+    "missing_eval",
+    "missing_contract",
+    "missing_production_evidence",
+    "missing_owner_receipt",
+    "missing_product_decision"
+  ],
   "evalDimensionPolicy": {
-    "dimensions": ["contract", "repo_local", "browser", "production", "owner", "cleanup"],
-    "statusValues": ["pass", "blocked", "fail"],
+    "dimensions": [
+      "contract",
+      "repo_local",
+      "browser",
+      "production",
+      "owner",
+      "cleanup"
+    ],
+    "statusValues": [
+      "pass",
+      "blocked",
+      "fail"
+    ],
     "advanceRule": "currentStatus=done and all evalResults pass",
     "externalEvidenceCannotBeInferredFromRepoLocal": true,
-    "externalEvidenceDimensions": ["production", "owner"],
-    "requiredFields": ["id", "dimension", "status", "proves", "doesNotProve"]
+    "externalEvidenceDimensions": [
+      "production",
+      "owner"
+    ],
+    "requiredFields": [
+      "id",
+      "dimension",
+      "status",
+      "proves",
+      "doesNotProve"
+    ]
   },
   "gaps": [
     {
@@ -34,7 +71,10 @@
       "state": "active",
       "currentPhaseId": "production_ui_quality_claim",
       "currentStatus": "done",
-      "cannotClaim": ["complete UI/UX design system", "production visual polish complete"],
+      "cannotClaim": [
+        "complete UI/UX design system",
+        "production visual polish complete"
+      ],
       "phases": [
         {
           "id": "production_ui_quality_claim",
@@ -50,8 +90,15 @@
             "repo-local accessibility closeout boundary remains folded back without claiming assistive technology conformance",
             "complete design system remains explicitly not claimed"
           ],
-          "evidenceSources": ["browser", "production_secret_gated", "human_owner_receipt"],
-          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
+          "evidenceSources": [
+            "browser",
+            "production_secret_gated",
+            "human_owner_receipt"
+          ],
+          "blockerTypes": [
+            "missing_owner_receipt",
+            "missing_production_evidence"
+          ],
           "acceptance": [
             "owner receipt accepted ui_ux_v1_production_accepted for the current production v1 surface",
             "production UI evidence is folded back as a sanitized summary, not raw logs or screenshots in git",
@@ -69,7 +116,11 @@
             "acceptedClaim": "ui_ux_v1_production_accepted",
             "acceptedAt": "2026-06-23",
             "acceptedScope": "current production UI/UX v1 product surface only",
-            "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"]
+            "cannotBeInferredBy": [
+              "repo_local_tests",
+              "browser_screenshots",
+              "production_e2e_without_human_receipt"
+            ]
           },
           "artifactLifecycle": {
             "longTermTruth": [
@@ -98,9 +149,18 @@
             {
               "id": "ui_production_quality_claim_eval",
               "contract": "contracts/web-gui-product-contract.json#/visualQualityGate/productionUiQualityClaim",
-              "proves": ["UI/UX v1 production acceptance claim is gated by owner receipt and sanitized production evidence"],
-              "doesNotProve": ["complete UI/UX design system", "assistive technology conformance", "production visual polish complete without owner receipt"],
-              "failureBlocks": ["complete UI/UX design system", "production visual polish complete"]
+              "proves": [
+                "UI/UX v1 production acceptance claim is gated by owner receipt and sanitized production evidence"
+              ],
+              "doesNotProve": [
+                "complete UI/UX design system",
+                "assistive technology conformance",
+                "production visual polish complete without owner receipt"
+              ],
+              "failureBlocks": [
+                "complete UI/UX design system",
+                "production visual polish complete"
+              ]
             }
           ]
         }
@@ -112,15 +172,31 @@
       "state": "active",
       "currentPhaseId": "production_readonly_foldback",
       "currentStatus": "done",
-      "cannotClaim": ["MedOPL runtime execution", "billing source of truth", "payment readiness", "long-term production stability"],
+      "cannotClaim": [
+        "MedOPL runtime execution",
+        "billing source of truth",
+        "payment readiness",
+        "long-term production stability"
+      ],
       "phases": [
         {
           "id": "production_readonly_foldback",
           "objective": "Confirm readonly projection with secret-gated production dogfood and fold back only sanitized evidence.",
-          "entryCriteria": ["production dogfood workflow available", "readonly foldback policy exists"],
-          "exitCriteria": ["OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 confirmed", "sanitized dogfood stdout folded back", "raw secret absence confirmed"],
-          "evidenceSources": ["production_secret_gated"],
-          "blockerTypes": ["missing_production_evidence"],
+          "entryCriteria": [
+            "production dogfood workflow available",
+            "readonly foldback policy exists"
+          ],
+          "exitCriteria": [
+            "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 confirmed",
+            "sanitized dogfood stdout folded back",
+            "raw secret absence confirmed"
+          ],
+          "evidenceSources": [
+            "production_secret_gated"
+          ],
+          "blockerTypes": [
+            "missing_production_evidence"
+          ],
           "acceptance": [
             "readonly foldback policy requires OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
             "dogfood stdout confirms runtime status, materials/deliverables, and billing readonly projection checks",
@@ -141,9 +217,17 @@
             {
               "id": "medopl_readonly_foldback_eval",
               "contract": "contracts/web-release-profile.json#/productionDogfoodReadiness/readonlyFoldbackPolicy",
-              "proves": ["production readonly projection dogfood confirmed"],
-              "doesNotProve": ["runtime execution correctness", "billing source of truth", "long-term production stability"],
-              "failureBlocks": ["production MedOPL readonly projection dogfood"]
+              "proves": [
+                "production readonly projection dogfood confirmed"
+              ],
+              "doesNotProve": [
+                "runtime execution correctness",
+                "billing source of truth",
+                "long-term production stability"
+              ],
+              "failureBlocks": [
+                "production MedOPL readonly projection dogfood"
+              ]
             }
           ]
         }
@@ -157,15 +241,31 @@
       "currentStatus": "done",
       "launchBlocking": true,
       "durableCannotClaim": true,
-      "cannotClaim": ["OPL runtime execution from Web", "artifact body authority"],
+      "cannotClaim": [
+        "OPL runtime execution from Web",
+        "artifact body authority"
+      ],
       "phases": [
         {
           "id": "execution_admission",
           "objective": "Accept the current runtime execution boundary as fail-closed with an empty allowlist; Web remains gate plus readonly projection only.",
-          "entryCriteria": ["runtime bridge contract exists", "Go control plane remains only backend business entry"],
-          "exitCriteria": ["owner accepts fail-closed boundary", "current allowlist is empty", "Web runtime mutation remains forbidden", "MedOPL and OPL Framework remain execution authority"],
-          "evidenceSources": ["repo_local", "human_owner_receipt"],
-          "blockerTypes": ["future_execution_not_admitted"],
+          "entryCriteria": [
+            "runtime bridge contract exists",
+            "Go control plane remains only backend business entry"
+          ],
+          "exitCriteria": [
+            "owner accepts fail-closed boundary",
+            "current allowlist is empty",
+            "Web runtime mutation remains forbidden",
+            "MedOPL and OPL Framework remain execution authority"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "human_owner_receipt"
+          ],
+          "blockerTypes": [
+            "future_execution_not_admitted"
+          ],
           "acceptance": [
             "executionAdmission currentStatus stays not_admitted",
             "current allowlist is empty and Web may not install, repair, module exec, return artifact body, or mutate runtime",
@@ -189,9 +289,17 @@
             {
               "id": "runtime_execution_admission_eval",
               "contract": "contracts/web-runtime-bridge.json#/executionAdmission",
-              "proves": ["runtime execution admission is either fully satisfied or fail-closed"],
-              "doesNotProve": ["MedOPL runtime execution", "artifact body authority"],
-              "failureBlocks": ["OPL runtime execution from Web", "artifact body authority"]
+              "proves": [
+                "runtime execution admission is either fully satisfied or fail-closed"
+              ],
+              "doesNotProve": [
+                "MedOPL runtime execution",
+                "artifact body authority"
+              ],
+              "failureBlocks": [
+                "OPL runtime execution from Web",
+                "artifact body authority"
+              ]
             }
           ]
         }
@@ -204,15 +312,33 @@
       "currentPhaseId": "commercial_contract",
       "currentStatus": "blocked",
       "launchBlocking": true,
-      "cannotClaim": ["complete commercial SaaS lifecycle", "billing source of truth", "payment readiness"],
+      "cannotClaim": [
+        "complete commercial SaaS lifecycle",
+        "billing source of truth",
+        "payment readiness"
+      ],
       "phases": [
         {
           "id": "commercial_contract",
           "objective": "Keep commercial lifecycle as readonly personal projection until team, RBAC, billing, and payment consumers have contracts and tests.",
-          "entryCriteria": ["commercial lifecycle projection contract exists"],
-          "exitCriteria": ["real consumer exists", "contract exists", "registered tests exist", "MedOPL billing authority preserved"],
-          "evidenceSources": ["repo_local", "external_owner"],
-          "blockerTypes": ["missing_contract", "missing_product_decision", "missing_owner_receipt"],
+          "entryCriteria": [
+            "commercial lifecycle projection contract exists"
+          ],
+          "exitCriteria": [
+            "real consumer exists",
+            "contract exists",
+            "registered tests exist",
+            "MedOPL billing authority preserved"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "external_owner"
+          ],
+          "blockerTypes": [
+            "missing_contract",
+            "missing_product_decision",
+            "missing_owner_receipt"
+          ],
           "acceptance": [
             "commercialLifecycle remains authenticated_readonly_personal_status_projection",
             "team invite, RBAC, pricing, subscription, payment mutation, billing source of truth, and commercial admin console remain forbidden expansions",
@@ -233,9 +359,19 @@
             {
               "id": "commercial_saas_readiness_eval",
               "contract": "contracts/web-product-profile.json#/commercialLifecycle",
-              "proves": ["commercial lifecycle claims stay readonly until real SaaS contracts and tests exist"],
-              "doesNotProve": ["billing source of truth", "payment readiness", "team RBAC readiness"],
-              "failureBlocks": ["complete commercial SaaS lifecycle", "billing source of truth", "payment readiness"]
+              "proves": [
+                "commercial lifecycle claims stay readonly until real SaaS contracts and tests exist"
+              ],
+              "doesNotProve": [
+                "billing source of truth",
+                "payment readiness",
+                "team RBAC readiness"
+              ],
+              "failureBlocks": [
+                "complete commercial SaaS lifecycle",
+                "billing source of truth",
+                "payment readiness"
+              ]
             }
           ]
         }
@@ -246,43 +382,79 @@
       "ownerSurface": "release-evidence",
       "state": "active",
       "currentPhaseId": "ops_evidence_contracts",
-      "currentStatus": "partial",
-      "cannotClaim": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"],
+      "currentStatus": "done",
+      "cannotClaim": [
+        "automatic rollback",
+        "dashboard",
+        "alerting",
+        "error budget enforcement",
+        "multi-node HA",
+        "production-ready SaaS"
+      ],
       "phases": [
         {
           "id": "ops_evidence_contracts",
-          "objective": "Preserve current observability baseline and require explicit contracts before dashboard, alerting, error budget, or automatic rollback claims.",
-          "entryCriteria": ["/metricsz exists", "availability probe exists", "manual rollback harness exists"],
-          "exitCriteria": ["dashboard contract exists", "alerting contract exists", "error budget contract exists", "rollback record contract exists"],
-          "evidenceSources": ["repo_local", "production_secret_gated"],
-          "blockerTypes": ["missing_contract", "missing_production_evidence"],
+          "objective": "Accept operations maturity v1 as observability baseline plus rollback-record contract, while dashboard, alerting, error budget, and automatic rollback remain explicitly out of scope.",
+          "entryCriteria": [
+            "/metricsz exists",
+            "availability probe exists",
+            "manual rollback harness exists"
+          ],
+          "exitCriteria": [
+            "observability baseline evidence is folded back",
+            "rollback record contract exists",
+            "operations owner accepts v1 boundary",
+            "automatic rollback, dashboard, alerting, and error budget remain cannot-claim"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "production_secret_gated",
+            "external_owner"
+          ],
+          "blockerTypes": [
+            "future_operations_surface_not_admitted"
+          ],
           "acceptance": [
             "production observability baseline preserves metricsz, availability probe, scheduled canary, and manual rollback harness evidence",
-            "future evidence contracts list dashboard, alerting, error_budget, and rollback_record",
-            "automatic rollback, dashboard, alerting, and error budget enforcement remain cannot-claim",
-            "production evidence is required before claiming rollback record or long-term operations maturity"
+            "rollback record v1 contract exists with sanitized summary fields and no raw logs or secret values",
+            "operations owner accepted the current v1 boundary without admitting dashboard, alerting, error budget, or automatic rollback",
+            "automatic rollback, dashboard, alerting, and error budget enforcement remain cannot-claim"
           ],
           "nextStepOpeners": [
-            "Open ops_contract_detail when an operations owner chooses dashboard, alerting, error budget, or rollback record as the next consumer",
-            "Add a concrete contract and registered eval before adding any new operations surface",
-            "Keep operations maturity partial until production evidence and owner receipt exist"
+            "Open dashboard, alerting, or error budget only after an operations owner names the consumer and contract",
+            "Fold back a real production rollback record only after manual environment-approved rollback executes",
+            "Keep automatic rollback out of scope until a separate owner, contract, eval, and rollback safety record exist"
           ],
           "ownerReceipt": {
             "required": true,
-            "source": "external_owner",
-            "reason": "long-term dashboard, alerting, error budget, and rollback record semantics need an operations owner"
+            "source": "human_owner_receipt",
+            "status": "accepted",
+            "acceptedAt": "2026-06-24",
+            "acceptedClaim": "operations_maturity_v1_baseline_and_rollback_record_contract_accepted",
+            "acceptedScope": "observability baseline plus manual rollback record contract only"
           },
           "requiredEvals": [
             {
               "id": "ops_maturity_eval",
               "contract": "contracts/web-release-profile.json#/productionObservabilityBaseline",
-              "proves": ["operations maturity claims are limited to existing baseline until future evidence contracts land"],
-              "doesNotProve": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"],
-              "failureBlocks": ["automatic rollback", "dashboard", "alerting", "error budget enforcement"]
+              "proves": [
+                "operations maturity v1 claim is limited to observability baseline plus rollback-record contract"
+              ],
+              "doesNotProve": [
+                "automatic rollback",
+                "dashboard",
+                "alerting",
+                "error budget enforcement",
+                "production rollback executed"
+              ],
+              "failureBlocks": [
+                "operations maturity v1 boundary"
+              ]
             }
           ]
         }
-      ]
+      ],
+      "durableCannotClaim": true
     },
     {
       "id": "ha_and_resilience",
@@ -290,15 +462,35 @@
       "state": "paused",
       "currentPhaseId": "single_node_launch_pause",
       "currentStatus": "blocked",
-      "cannotClaim": ["multi-node HA", "zero-downtime rolling update evidence", "CLB two-backend health"],
+      "cannotClaim": [
+        "multi-node HA",
+        "zero-downtime rolling update evidence",
+        "CLB two-backend health"
+      ],
       "phases": [
         {
           "id": "single_node_launch_pause",
           "objective": "Keep current single-node launch shape explicit and prevent HA claims until two-pod, multi-node, ingress backend, and rollout evidence exist.",
-          "entryCriteria": ["productionHAReadiness contract exists", "single-node launch safety is the current operator policy"],
-          "exitCriteria": ["replicas=2 is approved", "two Ready Pods exist", "pods are on distinct nodes", "Ingress/CLB has at least two healthy backends", "zero-downtime rollout evidence is folded back"],
-          "evidenceSources": ["repo_local", "production_secret_gated", "external_owner"],
-          "blockerTypes": ["missing_production_evidence", "missing_owner_receipt"],
+          "entryCriteria": [
+            "productionHAReadiness contract exists",
+            "single-node launch safety is the current operator policy"
+          ],
+          "exitCriteria": [
+            "replicas=2 is approved",
+            "two Ready Pods exist",
+            "pods are on distinct nodes",
+            "Ingress/CLB has at least two healthy backends",
+            "zero-downtime rollout evidence is folded back"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "production_secret_gated",
+            "external_owner"
+          ],
+          "blockerTypes": [
+            "missing_production_evidence",
+            "missing_owner_receipt"
+          ],
           "acceptance": [
             "current production shape stays launch-safe at one pod while HA is paused",
             "required HA evidence remains explicit in the release contract",
@@ -319,9 +511,19 @@
             {
               "id": "ha_resilience_eval",
               "contract": "contracts/web-release-profile.json#/productionHAReadiness",
-              "proves": ["HA claim is blocked until topology and production rollout evidence exists"],
-              "doesNotProve": ["multi-node HA", "zero-downtime rollout", "CLB two-backend health"],
-              "failureBlocks": ["multi-node HA", "zero-downtime rolling update evidence", "CLB two-backend health"]
+              "proves": [
+                "HA claim is blocked until topology and production rollout evidence exists"
+              ],
+              "doesNotProve": [
+                "multi-node HA",
+                "zero-downtime rollout",
+                "CLB two-backend health"
+              ],
+              "failureBlocks": [
+                "multi-node HA",
+                "zero-downtime rolling update evidence",
+                "CLB two-backend health"
+              ]
             }
           ]
         }
@@ -332,86 +534,143 @@
       "ownerSurface": "control-plane-go",
       "state": "active",
       "currentPhaseId": "production_concurrency_load_evidence",
-      "currentStatus": "blocked",
-      "cannotClaim": ["production concurrent SaaS readiness", "load-tested multi-user chat", "database pool sizing readiness", "slow upstream backpressure readiness"],
+      "currentStatus": "done",
+      "cannotClaim": [
+        "production concurrent SaaS readiness",
+        "production load-tested multi-user chat",
+        "production database pool sizing readiness",
+        "production slow upstream backpressure readiness"
+      ],
       "phases": [
         {
           "id": "production_concurrency_load_evidence",
-          "objective": "Keep local tenant-isolation evidence separate from production concurrency and load claims until load, DB pool, and slow-upstream evidence exist.",
-          "entryCriteria": ["local auth/session/API key/chat contract tests exist", "Postgres-backed store path exists"],
-          "exitCriteria": ["production or staging concurrent register/login/chat/API key/quota test passes", "DB pool sizing evidence is folded back", "slow upstream backpressure or rate limit eval passes"],
-          "evidenceSources": ["repo_local", "production_secret_gated"],
-          "blockerTypes": ["missing_eval", "missing_production_evidence"],
+          "objective": "Accept concurrency/load v1 as staging-safe 10-user baseline evidence, while production concurrency readiness remains explicitly unclaimed.",
+          "entryCriteria": [
+            "local auth/session/API key/chat contract tests exist",
+            "Postgres-backed store path exists"
+          ],
+          "exitCriteria": [
+            "staging-safe 10-user concurrent register/login/API key/chat/quota baseline passes locally",
+            "DB pool sizing baseline is configurable and tested",
+            "slow upstream timeout/fail-closed baseline is tested",
+            "production concurrency readiness remains cannot-claim"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "ci"
+          ],
+          "blockerTypes": [
+            "future_production_load_not_admitted"
+          ],
           "acceptance": [
-            "local tests may claim tenant isolation and API boundary behavior only",
-            "production concurrency requires a registered load eval or equivalent staging run",
-            "DB pool sizing and slow upstream backpressure evidence are required before SaaS concurrency claims",
-            "production concurrent SaaS readiness remains cannot-claim while production evidence is missing"
+            "registered local eval covers 10 concurrent account, API key, chat, quota, and tenant isolation flows",
+            "DB pool sizing baseline is explicit and bounded by Go-side tests",
+            "slow upstream timeout and sanitized fail-closed behavior are covered by Go-side tests",
+            "production concurrent SaaS readiness remains cannot-claim until staging or production load evidence is folded back"
           ],
           "nextStepOpeners": [
-            "Open load eval only after the owner picks staging or production as the evidence environment",
-            "Add registered eval for concurrent register, login, chat, API key binding, and quota",
-            "Fold back sanitized aggregate results only; raw emails, API keys, request bodies, and DB URLs stay out of git"
+            "Open production load claim only after staging or production run evidence is folded back as sanitized aggregate summary",
+            "Keep raw emails, API keys, request bodies, DB URLs, and upstream payloads out of git",
+            "Scale beyond 10 users only through a new owner-approved load profile contract"
           ],
           "ownerReceipt": {
             "required": false,
             "source": "repo_local",
-            "reason": "the current blocker is missing load evidence, not missing product owner approval"
+            "reason": "owner authorized staging-first 10-user baseline and no production load claim is made"
           },
           "requiredEvals": [
             {
               "id": "concurrency_load_eval",
               "contract": "contracts/web-product-profile.json#/concurrencyAndLoad",
-              "proves": ["local isolation evidence is separated from production concurrency and load claims"],
-              "doesNotProve": ["production concurrent SaaS readiness", "database pool sizing", "slow upstream backpressure readiness"],
-              "failureBlocks": ["production concurrent SaaS readiness", "load-tested multi-user chat"]
+              "proves": [
+                "staging-safe 10-user baseline separates local concurrency proof from production load readiness"
+              ],
+              "doesNotProve": [
+                "production concurrent SaaS readiness",
+                "production database pool sizing",
+                "production slow upstream backpressure readiness"
+              ],
+              "failureBlocks": [
+                "staging-safe concurrency baseline"
+              ]
             }
           ]
         }
-      ]
+      ],
+      "durableCannotClaim": true
     },
     {
       "id": "opl_auto_update_from_github",
       "ownerSurface": "deploy",
       "state": "active",
       "currentPhaseId": "runtime_sync_admission",
-      "currentStatus": "blocked",
-      "cannotClaim": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app", "self-healing OPL framework updates", "runtime update rollback"],
+      "currentStatus": "done",
+      "cannotClaim": [
+        "runtime continuous GitHub sync",
+        "background updater parity with one-person-lab-app",
+        "self-healing OPL framework updates",
+        "runtime update rollback"
+      ],
       "phases": [
         {
           "id": "runtime_sync_admission",
-          "objective": "Keep OPL framework updates tied to immutable Web image releases until a runtime GitHub sync policy, verification, eval, and rollback plan exist.",
-          "entryCriteria": ["Dockerfile.cloud pins OPL context at image build time", "Cloud Rollout deploys immutable image tags"],
-          "exitCriteria": ["owner receipt accepts runtime update policy", "signed source or release verification exists", "rollback plan exists", "registered eval passes", "tenant-safe maintenance window exists"],
-          "evidenceSources": ["repo_local", "external_owner"],
-          "blockerTypes": ["missing_contract", "missing_eval", "missing_owner_receipt"],
+          "objective": "Accept OPL update v1 as build-time pinned image-release policy; runtime GitHub sync remains forbidden and out of scope.",
+          "entryCriteria": [
+            "Dockerfile.cloud pins OPL context at image build time",
+            "Cloud Rollout deploys immutable image tags"
+          ],
+          "exitCriteria": [
+            "owner accepts build-time pinned update policy",
+            "image release pipeline remains the update mechanism",
+            "runtime GitHub sync mechanisms remain forbidden",
+            "future runtime sync admission requirements stay explicit"
+          ],
+          "evidenceSources": [
+            "repo_local",
+            "external_owner"
+          ],
+          "blockerTypes": [
+            "future_runtime_sync_not_admitted"
+          ],
           "acceptance": [
-            "current mechanism is build-time pinned OPL context inside the Web image",
+            "current mechanism is build-time pinned OPL context inside immutable Web images",
+            "owner accepted no runtime GitHub sync or background updater in Web for this phase",
             "runtime pod does not git pull, self-update, npm install, or sync unverified GitHub HEAD",
-            "one-person-lab-app background updater parity remains cannot-claim",
-            "runtime continuous GitHub sync stays blocked until owner policy, verification, eval, and rollback plan exist"
+            "runtime continuous GitHub sync, background updater parity, self-healing updates, and runtime update rollback remain cannot-claim"
           ],
           "nextStepOpeners": [
-            "Open runtime sync only after owner chooses Web-owned or App-owned updater authority",
+            "Open runtime sync only after owner chooses Web-owned updater authority",
             "Add signed-source verification, rollback, tenant-safe maintenance, and registered eval before runtime sync",
             "Prefer image rebuild and Cloud Rollout while runtime update authority is external"
           ],
           "ownerReceipt": {
             "required": true,
-            "source": "external_owner",
-            "reason": "runtime update authority changes release safety and OPL ownership boundaries"
+            "source": "human_owner_receipt",
+            "status": "accepted",
+            "acceptedAt": "2026-06-24",
+            "acceptedClaim": "opl_update_build_time_pinned_policy_accepted",
+            "acceptedScope": "Web updates OPL context through image release and Cloud Rollout only"
           },
           "requiredEvals": [
             {
               "id": "opl_auto_update_admission_eval",
               "contract": "contracts/web-release-profile.json#/oplAutoUpdateReadiness",
-              "proves": ["OPL updates are image-release pinned until runtime sync admission evidence exists"],
-              "doesNotProve": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app", "runtime update rollback"],
-              "failureBlocks": ["runtime continuous GitHub sync", "background updater parity with one-person-lab-app"]
+              "proves": [
+                "OPL updates are image-release pinned and runtime sync remains forbidden"
+              ],
+              "doesNotProve": [
+                "runtime continuous GitHub sync",
+                "background updater parity with one-person-lab-app",
+                "runtime update rollback"
+              ],
+              "failureBlocks": [
+                "OPL build-time pinned update policy"
+              ]
             }
           ]
         }
-      ]
+      ],
+      "durableCannotClaim": true
     }
   ]
 }

@@ -3,6 +3,7 @@ package webapp
 import (
 	"context"
 	"crypto/x509"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net"
@@ -110,6 +111,52 @@ func TestChatClientDefaultTimeoutBudgetSupportsSlowProductionHeaders(t *testing.
 
 	if got := client.HTTPTimeout(); got != 60*time.Second {
 		t.Fatalf("default upstream timeout = %s, want 60s", got)
+	}
+}
+
+func TestConfigurePostgresPoolUsesBoundedDefaults(t *testing.T) {
+	t.Setenv("OPL_DATABASE_MAX_OPEN_CONNS", "")
+	t.Setenv("OPL_DATABASE_MAX_IDLE_CONNS", "")
+	t.Setenv("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", "")
+	db := new(sql.DB)
+
+	ConfigurePostgresPool(db)
+
+	stats := db.Stats()
+	if stats.MaxOpenConnections != 10 {
+		t.Fatalf("MaxOpenConnections = %d, want 10", stats.MaxOpenConnections)
+	}
+}
+
+func TestConfigurePostgresPoolAcceptsSafeEnvironmentOverrides(t *testing.T) {
+	t.Setenv("OPL_DATABASE_MAX_OPEN_CONNS", "12")
+	t.Setenv("OPL_DATABASE_MAX_IDLE_CONNS", "6")
+	t.Setenv("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", "60")
+	db := new(sql.DB)
+
+	ConfigurePostgresPool(db)
+
+	if got := db.Stats().MaxOpenConnections; got != 12 {
+		t.Fatalf("MaxOpenConnections = %d, want 12", got)
+	}
+	if got := postgresPoolDuration("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", 300*time.Second); got != 60*time.Second {
+		t.Fatalf("postgresPoolDuration override = %s, want 60s", got)
+	}
+}
+
+func TestConfigurePostgresPoolRejectsUnsafeEnvironmentOverrides(t *testing.T) {
+	t.Setenv("OPL_DATABASE_MAX_OPEN_CONNS", "0")
+	t.Setenv("OPL_DATABASE_MAX_IDLE_CONNS", "999")
+	t.Setenv("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", "bad")
+	db := new(sql.DB)
+
+	ConfigurePostgresPool(db)
+
+	if got := db.Stats().MaxOpenConnections; got != 10 {
+		t.Fatalf("MaxOpenConnections = %d, want fallback 10", got)
+	}
+	if got := postgresPoolDuration("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", 300*time.Second); got != 300*time.Second {
+		t.Fatalf("postgresPoolDuration fallback = %s, want 300s", got)
 	}
 }
 

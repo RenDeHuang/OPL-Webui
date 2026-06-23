@@ -235,6 +235,63 @@ test('ordinary chat quota guard fails closed and writes sanitized audit events',
   }
 });
 
+test('staging baseline covers 10 concurrent account key chat and quota flows without cross-user leakage', async () => {
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+    OPL_CHAT_MONTHLY_QUOTA: '1',
+  });
+  try {
+    const users = Array.from({ length: 10 }, (_, index) => index + 1);
+    const results = await Promise.all(users.map(async (index) => {
+      const session = await register(baseUrl, `load-user-${index}@example.com`);
+      const apiKey = `sk-load-${String(index).padStart(2, '0')}-secret`;
+      const saved = await jsonFetch(`${baseUrl}/api/settings/model-provider`, {
+        method: 'PUT',
+        headers: { cookie: session.cookieHeader },
+        body: { apiKey },
+      });
+      assert.equal(saved.response.status, 200);
+      assert.doesNotMatch(JSON.stringify(saved.body), new RegExp(apiKey));
+
+      const chat = await jsonFetch(`${baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { cookie: session.cookieHeader },
+        body: { message: `普通并发基线 ${index}` },
+      });
+      assert.equal(chat.response.status, 200);
+
+      const overQuota = await jsonFetch(`${baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { cookie: session.cookieHeader },
+        body: { message: `第二次并发基线 ${index}` },
+      });
+      assert.equal(overQuota.response.status, 429);
+      assert.equal(overQuota.body.quota.used, 1);
+      assert.equal(overQuota.body.quota.remaining, 0);
+
+      const conversations = await jsonFetch(`${baseUrl}/api/chat/conversations`, {
+        headers: { cookie: session.cookieHeader },
+      });
+      assert.equal(conversations.response.status, 200);
+      assert.equal(conversations.body.conversations.length, 2);
+      return { session, conversationId: chat.body.conversationId };
+    }));
+
+    assert.equal(upstream.requests.length, 10);
+    assert.equal(new Set(upstream.requests.map((request) => request.authorization)).size, 10);
+    const firstUserReadsSecond = await jsonFetch(`${baseUrl}/api/chat/conversations/${results[1].conversationId}`, {
+      headers: { cookie: results[0].session.cookieHeader },
+    });
+    assert.equal(firstUserReadsSecond.response.status, 404);
+    assertNoSensitiveMaterial(firstUserReadsSecond.body);
+  } finally {
+    await stopGoServer(child);
+    await upstream.close();
+  }
+});
+
 async function startFakeUpstream(options = {}) {
   const status = options.status ?? 200;
   const body = options.body ?? { output_text: '上游响应' };

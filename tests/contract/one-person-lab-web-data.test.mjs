@@ -73,11 +73,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   ]);
   assertIncludesAll(product.publicUi.hiddenConcepts, ['workspace', 'runtime', 'nodePool', 'storage', 'billing'], 'hidden concept');
   assertIncludesAll(product.nonOwnedTruth, ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth'], 'non-owned truth');
-  assert.deepEqual(product.concurrencyAndLoad.mode, 'local_contract_only_no_production_load_proof');
-  assert.deepEqual(product.concurrencyAndLoad.localEvidence.proves, ['tenant scoped account/session/API key/chat isolation contracts', 'Postgres-backed store path exists when OPL_DATABASE_URL is set']);
+  assert.deepEqual(product.concurrencyAndLoad.mode, 'staging_safe_10_user_baseline_no_production_load_claim');
+  assertIncludesAll(product.concurrencyAndLoad.localEvidence.proves, ['tenant scoped account/session/API key/chat isolation contracts', 'Postgres-backed store path exists when OPL_DATABASE_URL is set', 'staging-safe 10-user concurrent account/API key/chat/quota baseline', 'bounded Postgres pool sizing defaults and environment overrides', 'slow upstream timeout fails closed with sanitized diagnostics'], 'concurrency proof');
   assertIncludesAll(product.concurrencyAndLoad.requiredBeforeProductionClaim, ['production_or_staging_concurrent_register_login_chat_api_key_quota_test', 'database_pool_sizing_evidence', 'slow_upstream_backpressure_or_rate_limit_evidence'], 'concurrency required evidence');
-  assert.equal(product.concurrencyAndLoad.productionEvidence.status, 'missing');
-  assert.equal(product.concurrencyAndLoad.cannotClaim.includes('production concurrent SaaS readiness'), true);
+  assert.equal(product.concurrencyAndLoad.productionEvidence.status, 'not_claimed');
+  assert.deepEqual([product.concurrencyAndLoad.stagingBaseline.users, product.concurrencyAndLoad.databasePoolSizing.defaults.maxOpenConns, product.concurrencyAndLoad.slowUpstreamBackpressure.state], [10, 10, 'repo_local_timeout_fail_closed']);
   assert.deepEqual(pageStates.routes.map((route) => route.id), ['home', 'skills', 'workflows', 'projects', 'more']);
   assert.equal(pageStates.routes.find((route) => route.id === 'home').surface, 'ai_native_research_homepage');
   assert.deepEqual(pageStates.accountStates, ['anonymous', 'authenticated_unbound', 'authenticated_bound']);
@@ -238,18 +238,18 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173');
   assertIncludesAll(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage, ['HTTPS /readyz'], 'availability coverage');
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
-  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28039468173_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.state, 'v1_accepted_observability_baseline_plus_rollback_record_contract');
   assert.equal(release.productionObservabilityBaseline.currentPhase, 'ops_evidence_contracts');
   assert.equal(release.productionObservabilityBaseline.nextPhase, 'ops_contract_detail');
-  assert.equal(release.productionObservabilityBaseline.blockedBy, 'missing_contract');
-  assert.deepEqual(release.productionObservabilityBaseline.ownerReceipt, { required: true, source: 'external_owner' });
+  assert.equal(release.productionObservabilityBaseline.blockedBy, null);
+  assert.equal(release.productionObservabilityBaseline.ownerReceipt.acceptedClaim, 'operations_maturity_v1_baseline_and_rollback_record_contract_accepted');
   assert.deepEqual(release.productionObservabilityBaseline.nextStepOpeners, [
-    'operations owner chooses dashboard, alerting, error budget, or rollback record as next consumer',
-    'concrete contract exists for the selected operations surface',
-    'registered eval exists before any new operations surface ships',
+    'fold back real production rollback record after manual environment-approved rollback executes',
+    'open dashboard, alerting, or error budget only with a separate operations owner contract',
+    'keep automatic rollback out of scope until separately admitted',
   ]);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173');
-  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'scheduled_canary_first_success_run_27874732529_pending_ops_consumer');
+  assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'rollback_record_contract_present_dashboard_alerting_error_budget_deferred');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
   assertIncludesAll(release.productionObservabilityBaseline.nextReadiness.implementedEvidence, ['scheduled_canary_first_success'], 'implemented ops evidence');
@@ -260,9 +260,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
     { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
     { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
-    { id: 'rollback_record', owner: 'release_operator', state: 'contract_required' },
+    { id: 'rollback_record', owner: 'release_operator', state: 'contract_present' },
   ]);
-  assertIncludesAll(release.productionObservabilityBaseline.cannotClaim, ['dashboard', 'alerting'], 'ops cannot-claim');
+  assertIncludesAll(release.productionObservabilityBaseline.cannotClaim, ['dashboard', 'alerting', 'automatic rollback'], 'ops cannot-claim');
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
   assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, {
     'medopl.cn/webui': 'true',
@@ -274,7 +274,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assertIncludesAll(release.productionHAReadiness.requiredEvidence, ['two_ready_pods', 'distinct_nodes', 'ingress_backend_at_least_2'], 'HA evidence');
   assertIncludesAll(release.productionHAReadiness.cannotClaim, ['multi-node HA'], 'HA cannot-claim');
   assert.deepEqual(release.oplAutoUpdateReadiness.mode, 'build_time_pinned_opl_context');
-  assert.equal(release.oplAutoUpdateReadiness.runtimeGithubSync, 'not_implemented');
+  assert.deepEqual([release.oplAutoUpdateReadiness.runtimeGithubSync, release.oplAutoUpdateReadiness.ownerReceipt.acceptedClaim], ['forbidden_by_current_policy', 'opl_update_build_time_pinned_policy_accepted']);
   assertIncludesAll(release.oplAutoUpdateReadiness.cannotClaim, ['runtime continuous GitHub sync', 'background updater parity with one-person-lab-app'], 'OPL auto-update cannot-claim');
   assert.equal(release.localBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.localBrowserE2EReadiness.releaseGate, true);

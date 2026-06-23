@@ -92,7 +92,6 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
 
   assert.equal(report.goalComplete, false);
   assert.ok(report.gaps.some((gap) => gap.status === 'blocked'));
-  assert.ok(report.gaps.some((gap) => gap.status === 'partial'));
   assert.equal(report.blockedClaims.includes('production MedOPL readonly projection dogfood'), false);
   assert.ok(report.blockedClaims.includes('OPL runtime execution from Web'));
   assert.ok(report.blockedClaims.includes('complete commercial SaaS lifecycle'));
@@ -101,7 +100,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
-    assert.equal(['ui_ux_product_depth', 'medopl_readonly_evidence', 'runtime_execution_boundary'].includes(gap.id), gap.readyToAdvance);
+    assert.equal(!['commercial_saas_depth', 'ha_and_resilience'].includes(gap.id), gap.readyToAdvance);
   }
 });
 
@@ -140,23 +139,27 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     'expansionConditions',
   );
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'observability_baseline').status, 'pass');
-  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_owner_receipt').status, 'blocked');
+  assert.equal(byGap.operations_maturity.status, 'done');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_owner_receipt').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'rollback_record_evidence').status, 'pass');
   assert.equal(
     byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_future_contract_placeholders').evidenceSource,
     'evidenceConditions',
   );
   assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'single_node_pause_policy').status, 'pass');
   assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'multi_node_ha_evidence').status, 'blocked');
+  assert.equal(byGap.concurrency_and_load.status, 'done');
   assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'local_tenant_isolation_contract').status, 'pass');
-  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'production_load_evidence').status, 'blocked');
+  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'production_load_evidence').status, 'pass');
+  assert.equal(byGap.opl_auto_update_from_github.status, 'done');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
-  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'blocked');
+  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 3);
+  assert.equal(report.readyToAdvanceCount, 6);
   assert.deepEqual(report.summary, {
-    done: 3,
-    partial: 1,
-    blocked: 4,
+    done: 6,
+    partial: 0,
+    blocked: 2,
     not_started: 0,
   });
 });

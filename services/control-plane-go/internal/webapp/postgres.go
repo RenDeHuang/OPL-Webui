@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -97,11 +100,42 @@ func OpenStoreFromEnv() (Store, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("ping webapp postgres: %w", err)
 	}
+	ConfigurePostgresPool(db)
 	if _, err := db.ExecContext(context.Background(), postgresSchema); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("initialize webapp schema: %w", err)
 	}
 	return PostgresStore{db: db}, nil
+}
+
+func ConfigurePostgresPool(db *sql.DB) {
+	db.SetMaxOpenConns(postgresPoolInt("OPL_DATABASE_MAX_OPEN_CONNS", 10))
+	db.SetMaxIdleConns(postgresPoolInt("OPL_DATABASE_MAX_IDLE_CONNS", 5))
+	db.SetConnMaxLifetime(postgresPoolDuration("OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS", 300*time.Second))
+}
+
+func postgresPoolInt(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 || parsed > 200 {
+		return fallback
+	}
+	return parsed
+}
+
+func postgresPoolDuration(key string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 || parsed > 86400 {
+		return fallback
+	}
+	return time.Duration(parsed) * time.Second
 }
 
 func (store PostgresStore) CreateUser(email string, passwordHash string) (User, error) {

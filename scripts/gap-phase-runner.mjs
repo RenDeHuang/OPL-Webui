@@ -364,6 +364,7 @@ function evaluateOperationsGap({ release }) {
   const contracts = baseline?.nextReadiness?.evidenceContracts ?? [];
   const conditions = baseline?.nextReadiness?.evidenceConditions ?? [];
   const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
+  const rollbackRecord = baseline?.nextReadiness?.rollbackRecordV1;
   return [
     evalResult({
       id: 'observability_baseline',
@@ -377,8 +378,9 @@ function evaluateOperationsGap({ release }) {
     evalResult({
       id: 'ops_future_contract_placeholders',
       dimension: 'contract',
-      status: ['dashboard', 'alerting', 'error_budget', 'rollback_record'].every((id) =>
+      status: ['dashboard', 'alerting', 'error_budget'].every((id) =>
         contracts.some((contract) => contract.id === id && contract.state === 'contract_required'))
+        && contracts.some((contract) => contract.id === 'rollback_record' && contract.state === 'contract_present')
         && ['dashboard_contract', 'alerting_contract', 'error_budget_contract', 'rollback_record_contract'].every((id) =>
           conditionStatus(id) === 'missing' || conditionStatus(id) === 'present')
         ? 'pass'
@@ -391,15 +393,19 @@ function evaluateOperationsGap({ release }) {
       id: 'ops_owner_receipt',
       dimension: 'owner',
       status: baseline?.ownerReceipt?.acceptedClaim ? 'pass' : 'blocked',
-      proves: ['operations owner selected and accepted the next operations surface when present'],
-      doesNotProve: ['production rollback record', 'automatic rollback', 'long-term operations maturity'],
+      proves: ['operations owner accepted the v1 baseline plus rollback-record contract boundary when present'],
+      doesNotProve: ['production rollback executed', 'automatic rollback', 'long-term operations maturity'],
     }),
     evalResult({
       id: 'rollback_record_evidence',
       dimension: 'production',
-      status: release?.productionRollbackReadiness?.latestAttempt ? 'pass' : 'blocked',
-      proves: ['production rollback record exists when present'],
-      doesNotProve: ['automatic rollback', 'data migration rollback', 'multi-node HA'],
+      status: rollbackRecord?.state === 'contract_present_pending_first_production_run'
+        && rollbackRecord?.rawLogPolicy?.storesRawLogs === false
+        && release?.productionRollbackReadiness?.recordContract?.state === 'present'
+        ? 'pass'
+        : 'blocked',
+      proves: ['rollback record contract exists without raw logs or secret values'],
+      doesNotProve: ['production rollback executed', 'automatic rollback', 'data migration rollback', 'multi-node HA'],
     }),
   ];
 }
@@ -461,25 +467,25 @@ function evaluateConcurrencyGap({ product }) {
     evalResult({
       id: 'load_boundary_contract',
       dimension: 'contract',
-      status: concurrency?.mode === 'local_contract_only_no_production_load_proof'
-        && concurrency?.productionEvidence?.status === 'missing'
+      status: concurrency?.mode === 'staging_safe_10_user_baseline_no_production_load_claim'
+        && concurrency?.productionEvidence?.status === 'not_claimed'
         && concurrency?.requiredBeforeProductionClaim?.includes('production_or_staging_concurrent_register_login_chat_api_key_quota_test')
         ? 'pass'
         : 'fail',
-      proves: ['local proof and production load proof are separated by contract'],
+      proves: ['staging-safe local proof and production load proof are separated by contract'],
       doesNotProve: ['production throughput', 'database pool sizing', 'slow upstream backpressure readiness'],
     }),
     evalResult({
       id: 'production_load_evidence',
       dimension: 'production',
-      status: conditionStatus('production_load_test') === 'pass'
+      status: conditionStatus('staging_10_user_baseline') === 'pass'
         && conditionStatus('database_pool_sizing') === 'present'
         && conditionStatus('slow_upstream_backpressure') === 'pass'
         ? 'pass'
         : 'blocked',
       evidenceSource: 'evidenceConditions',
-      proves: ['production or staging concurrent load evidence exists when present'],
-      doesNotProve: ['multi-node HA', 'payment lifecycle', 'runtime execution'],
+      proves: ['staging-safe 10-user concurrency baseline exists when present'],
+      doesNotProve: ['production concurrent SaaS readiness', 'multi-node HA', 'payment lifecycle', 'runtime execution'],
     }),
   ];
 }
@@ -502,7 +508,7 @@ function evaluateOplAutoUpdateGap({ release }) {
     evalResult({
       id: 'runtime_sync_forbidden_mechanisms',
       dimension: 'contract',
-      status: readiness?.runtimeGithubSync === 'not_implemented'
+      status: ['not_implemented', 'forbidden_by_current_policy'].includes(readiness?.runtimeGithubSync)
         && readiness?.forbiddenRuntimeMechanisms?.includes('git_pull_inside_pod')
         && readiness?.forbiddenRuntimeMechanisms?.includes('unverified_github_head_sync')
         ? 'pass'
@@ -513,14 +519,14 @@ function evaluateOplAutoUpdateGap({ release }) {
     evalResult({
       id: 'runtime_github_sync_loop',
       dimension: 'owner',
-      status: conditionStatus('runtime_github_sync_loop') === 'present'
+      status: conditionStatus('runtime_github_sync_loop') === 'forbidden_by_policy'
         && conditionStatus('owner_update_policy') === 'accepted'
-        && conditionStatus('runtime_sync_rollback_plan') === 'present'
+        && conditionStatus('runtime_sync_rollback_plan') === 'not_required_for_build_time_pinned_policy'
         ? 'pass'
         : 'blocked',
       evidenceSource: 'evidenceConditions',
-      proves: ['runtime GitHub sync admission evidence exists when present'],
-      doesNotProve: ['domain-agent correctness', 'tenant data migration safety'],
+      proves: ['owner accepted build-time pinned update policy and runtime sync remains forbidden'],
+      doesNotProve: ['runtime continuous GitHub sync', 'domain-agent correctness', 'tenant data migration safety'],
     }),
   ];
 }

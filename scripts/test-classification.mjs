@@ -337,9 +337,9 @@ const TEST_ENTRIES = Object.freeze([
       'services/control-plane-go/internal/webapp/handlers.go',
       'services/control-plane-go/internal/webapp/store_guardrails.go',
     ],
-    proves: ['ordinary chat calls the OpenAI-compatible upstream with user API key and sanitized diagnostics'],
-    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE],
-    riskTriggers: ['public-api', 'byok', 'tenant-isolation'],
+    proves: ['ordinary chat calls the OpenAI-compatible upstream with user API key, sanitized diagnostics, quota guard, and 10-user staging-safe concurrency baseline'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE, 'production concurrent SaaS readiness'],
+    riskTriggers: ['public-api', 'byok', 'tenant-isolation', 'concurrency-load'],
     verifySuites: ['current', 'contract'],
   }),
   testEntry({

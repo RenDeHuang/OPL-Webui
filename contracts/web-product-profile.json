@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "productId": "one-person-lab-web",
   "canonicalProductName": "One Person Lab Web",
-  "legacyNames": ["OPL-WebUI", "OPL-Webui"],
+  "legacyNames": [
+    "OPL-WebUI",
+    "OPL-Webui"
+  ],
   "repoRole": "product_repo",
   "positioning": "Multi-tenant SaaS Web edition of One Person Lab",
   "publicHost": "opl.medopl.cn",
@@ -16,7 +19,13 @@
   ],
   "primaryUserPath": "ai_native_research_homepage",
   "primaryEntryModel": "at_mention_research_capabilities",
-  "primaryEntryMarkers": ["@科研", "@论文", "@基金", "@综述", "@文件"],
+  "primaryEntryMarkers": [
+    "@科研",
+    "@论文",
+    "@基金",
+    "@综述",
+    "@文件"
+  ],
   "ownedSurfaces": [
     "multi_tenant_saas_product",
     "web_product_surface",
@@ -68,8 +77,20 @@
   },
   "publicUi": {
     "primarySurface": "ai_native_research_homepage",
-    "hiddenConcepts": ["workspace", "runtime", "nodePool", "storage", "billing"],
-    "visibleRoutes": ["home", "skills", "workflows", "projects", "more"]
+    "hiddenConcepts": [
+      "workspace",
+      "runtime",
+      "nodePool",
+      "storage",
+      "billing"
+    ],
+    "visibleRoutes": [
+      "home",
+      "skills",
+      "workflows",
+      "projects",
+      "more"
+    ]
   },
   "visionGaps": {
     "state": "active_gap_acceptance",
@@ -199,7 +220,9 @@
     "currentLifecycleState": "active",
     "projectionOnly": true,
     "webRoutesMayMutateBilling": false,
-    "allowedCurrentActions": ["view_medopl_billing"],
+    "allowedCurrentActions": [
+      "view_medopl_billing"
+    ],
     "expansionRequires": [
       "real_consumer",
       "contract",
@@ -261,7 +284,7 @@
     ]
   },
   "concurrencyAndLoad": {
-    "mode": "local_contract_only_no_production_load_proof",
+    "mode": "staging_safe_10_user_baseline_no_production_load_claim",
     "currentPhase": "production_concurrency_load_evidence",
     "nextPhase": "production_load_contract_closeout",
     "owner": "one-person-lab-web-control-plane",
@@ -269,16 +292,20 @@
     "localEvidence": {
       "commands": [
         "node --test tests/contract/go-control-plane-http.test.mjs",
-        "node --test tests/contract/one-person-lab-chat-upstream.test.mjs"
+        "node --test tests/contract/one-person-lab-chat-upstream.test.mjs",
+        "go test ./internal/webapp"
       ],
       "proves": [
         "tenant scoped account/session/API key/chat isolation contracts",
-        "Postgres-backed store path exists when OPL_DATABASE_URL is set"
+        "Postgres-backed store path exists when OPL_DATABASE_URL is set",
+        "staging-safe 10-user concurrent account/API key/chat/quota baseline",
+        "bounded Postgres pool sizing defaults and environment overrides",
+        "slow upstream timeout fails closed with sanitized diagnostics"
       ],
       "doesNotProve": [
         "production concurrent SaaS readiness",
-        "database pool sizing",
-        "slow upstream backpressure or rate limiting"
+        "production database pool sizing",
+        "production slow upstream backpressure or rate limiting"
       ]
     },
     "requiredBeforeProductionClaim": [
@@ -287,7 +314,7 @@
       "slow_upstream_backpressure_or_rate_limit_evidence"
     ],
     "productionEvidence": {
-      "status": "missing",
+      "status": "not_claimed",
       "latestSuccessfulRun": null,
       "foldback": "sanitized_summary_only"
     },
@@ -305,30 +332,84 @@
         "evidence": "store_contract"
       },
       {
-        "id": "production_load_test",
-        "status": "missing",
-        "owner": "release_operator",
-        "evidence": "production_or_staging_run"
+        "id": "staging_10_user_baseline",
+        "status": "pass",
+        "owner": "control-plane-go",
+        "evidence": "contract_test"
       },
       {
         "id": "database_pool_sizing",
-        "status": "missing",
+        "status": "present",
         "owner": "control-plane-go",
-        "evidence": "load_profile"
+        "evidence": "go_test"
       },
       {
         "id": "slow_upstream_backpressure",
-        "status": "missing",
+        "status": "pass",
         "owner": "control-plane-go",
-        "evidence": "backpressure_eval"
+        "evidence": "go_test"
       }
     ],
     "cannotClaim": [
       "production concurrent SaaS readiness",
-      "load-tested multi-user chat",
-      "database pool sizing readiness",
-      "slow upstream backpressure readiness"
-    ]
+      "production load-tested multi-user chat",
+      "production database pool sizing readiness",
+      "production slow upstream backpressure readiness"
+    ],
+    "stagingBaseline": {
+      "state": "repo_local_passed",
+      "users": 10,
+      "environment": "local_fake_upstream_staging_safe",
+      "command": "node --test tests/contract/one-person-lab-chat-upstream.test.mjs",
+      "covers": [
+        "register",
+        "API key binding",
+        "ordinary chat",
+        "quota exceeded",
+        "conversation isolation"
+      ],
+      "rawLogPolicy": {
+        "storesRawLogs": false,
+        "storesSecretValues": false
+      },
+      "doesNotProve": [
+        "production concurrent SaaS readiness",
+        "real gflabtoken quota behavior",
+        "multi-node HA"
+      ]
+    },
+    "databasePoolSizing": {
+      "state": "repo_local_configured",
+      "defaults": {
+        "maxOpenConns": 10,
+        "maxIdleConns": 5,
+        "connMaxLifetimeSeconds": 300
+      },
+      "env": [
+        "OPL_DATABASE_MAX_OPEN_CONNS",
+        "OPL_DATABASE_MAX_IDLE_CONNS",
+        "OPL_DATABASE_CONN_MAX_LIFETIME_SECONDS"
+      ],
+      "command": "go test ./internal/webapp",
+      "doesNotProve": [
+        "production pool saturation limit",
+        "managed Postgres capacity"
+      ]
+    },
+    "slowUpstreamBackpressure": {
+      "state": "repo_local_timeout_fail_closed",
+      "command": "go test ./internal/webapp",
+      "covers": [
+        "60s default upstream timeout",
+        "response_header_timeout maps to 504",
+        "sanitized audit event"
+      ],
+      "doesNotProve": [
+        "production upstream SLA",
+        "queue-based backpressure",
+        "global rate limiting"
+      ]
+    }
   },
   "claims": {
     "canClaim": [
