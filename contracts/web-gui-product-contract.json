@@ -318,6 +318,34 @@
       "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."
     ]
   },
+  "visualIdentity": {
+    "subject": "ai_native_research_composer",
+    "signatureElements": ["evidence_stack", "citation_trail", "protocol_steps", "research_artifact"],
+    "typographyRole": "quiet_research_notebook",
+    "copyVoice": "concise_research_operator",
+    "motionPurpose": "state_change_orientation_only",
+    "forbiddenDefaults": ["generic_chatbot", "dashboard_template", "marketing_hero", "decorative_glass", "neumorphism", "settings_center"]
+  },
+  "visualQualityRubric": {
+    "criteria": [
+      { "id": "hierarchy_clarity", "measurement": "browser_or_owner_review_boolean", "required": true },
+      { "id": "copy_density", "measurement": "browser_static_copy_budget", "required": true },
+      { "id": "spacing_rhythm", "measurement": "browser_layout_review_boolean", "required": true },
+      { "id": "mobile_comfort", "measurement": "browser_mobile_sheet_and_touch_boolean", "required": true },
+      { "id": "focus_path", "measurement": "browser_keyboard_path_boolean", "required": true },
+      { "id": "empty_error_loading_clarity", "measurement": "contract_state_presence_boolean", "required": true },
+      { "id": "surface_ownership", "measurement": "contract_forbidden_content_boolean", "required": true },
+      { "id": "scientific_artifact_density", "measurement": "browser_artifact_shape_boolean", "required": true }
+    ],
+    "doesNotMeasure": ["pixel_perfect_figma_match", "complete_design_system", "assistive_technology_conformance", "production_owner_acceptance"]
+  },
+  "ownerReceiptProtocol": {
+    "targetClaim": "ui_ux_v1_production_accepted",
+    "requiredEvidence": ["current_head", "desktop_tablet_mobile_compact_production_or_owner_review_evidence", "owner_explicit_acceptance", "sanitized_foldback"],
+    "requiredSurfaces": ["home", "skills", "workflows", "projects", "more", "search_sheet", "account_popover", "model_selector", "inspector", "api_key_modal"],
+    "rawArtifactsInGit": false,
+    "cannotClaimWithout": ["human_owner_receipt", "current_head_production_evidence"]
+  },
   "designQualityGates": {
     "accessibility": {
       "longTerm": true,

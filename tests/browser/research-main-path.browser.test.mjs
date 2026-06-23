@@ -69,6 +69,16 @@ test('research main path runs in a real browser and records page-state evidence'
     rawAssistantTranscriptCount: 0,
     researchArtifactCardCount: 1,
   });
+  assert.deepEqual(evidence.visualQuality.visualQualityRubric, {
+    hierarchyClarityPass: true,
+    copyDensityPass: true,
+    spacingRhythmPass: true,
+    mobileComfortPass: true,
+    focusPathPass: true,
+    emptyErrorLoadingClarityPass: true,
+    surfaceOwnershipPass: true,
+    scientificArtifactDensityPass: true,
+  });
   assert.equal(evidence.visualQuality.inspectorChecks.desktopStablePanelPass, true);
   assert.equal(evidence.visualQuality.inspectorChecks.mobileSheetPressurePass, true);
 });

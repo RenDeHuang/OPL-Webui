@@ -24,6 +24,9 @@
 - Current subject: AI-native research composer with project/session/result workflow. It is not a dashboard template, CRM template, settings center, runtime console, or card grid first surface.
 - Components follow surface ownership and behavior, not visual similarity. Account and compact model metadata use popovers; conversation history and mobile inspector use sheets; API Key unblock uses a dialog; destructive confirmation alone uses alert dialog.
 - Surface budget comes before component polish. Home is composer-first and low-copy; More stays empty overflow until it has a named consumer; Search stays conversation history only.
+- Visual identity is part of the contract: the UI should read as a quiet research composer with evidence stacks, citation trails, protocol steps, and research artifacts, not as a generic chatbot, dashboard, marketing hero, decorative glass surface, or settings center.
+- Visual quality rubric is pass/fail, not ornamental prose: hierarchy clarity, copy density, spacing rhythm, mobile comfort, focus path, empty/error/loading clarity, surface ownership, and scientific artifact density must change the next correct agent action.
+- Owner receipt protocol is explicit: `ui_ux_v1_production_accepted` requires current HEAD evidence, desktop/tablet/mobile/compact review, human owner acceptance, and sanitized foldback; repo-local tests alone cannot grant it.
 - Do not create new UI governance files while `contracts/web-gui-product-contract.json`, `contracts/web-page-state-matrix.json`, `contracts/web-shell-adapter.json`, this file, `docs/status.md`, and `docs/active/README.md` can carry the rule.
 - If a UI rule will not change the next correct agent action, leave it in code/tests or remove it instead of adding prose.
 

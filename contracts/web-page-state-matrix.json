@@ -127,6 +127,37 @@
       "account": ["primary_navigation_item", "more_route_panel"],
       "model_selector": ["visible_gateway_url", "base_url_editor"]
     },
+    "surfaceInteractionAcceptance": {
+      "search": {
+        "openTrigger": "side_nav_search",
+        "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
+        "focusReturn": "side_nav_search",
+        "emptyState": "conversation_history_empty",
+        "forbiddenContent": ["skills", "workflows", "prompts", "provider_settings"]
+      },
+      "more": {
+        "openTrigger": "side_nav_more",
+        "closeTrigger": ["route_change"],
+        "emptyState": "empty_overflow",
+        "forbiddenContent": ["settings", "account_lifecycle", "quota", "provider_base_url", "api_key_form"]
+      },
+      "account": {
+        "openTrigger": "bottom_avatar",
+        "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
+        "focusReturn": "bottom_avatar",
+        "placement": "bottom_avatar_popover"
+      },
+      "model_selector": {
+        "openTrigger": "composer_model_choice",
+        "closeTrigger": ["selection", "escape", "outside_click"],
+        "forbiddenContent": ["gateway_url", "base_url_editor"]
+      },
+      "inspector": {
+        "desktop": "stable_right_work_panel",
+        "mobile": "light_bottom_sheet",
+        "focusReturn": "right_utility_rail"
+      }
+    },
     "sideNavigation": {
       "defaultState": "visible",
       "actions": [

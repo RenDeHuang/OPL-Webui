@@ -14,12 +14,7 @@ const productionChatResultTimeoutMs = 120000;
 
 try {
   if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1') {
-    console.log(JSON.stringify({
-      ok: true,
-      skipped: true,
-      mode,
-      reason: 'OPL_PRODUCTION_BROWSER_E2E is not enabled',
-    }));
+    console.log(JSON.stringify({ ok: true, skipped: true, mode, reason: 'OPL_PRODUCTION_BROWSER_E2E is not enabled' }));
     process.exit(0);
   }
   const config = resolveRunConfig(mode);
@@ -102,18 +97,7 @@ try {
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));
   const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
 
-  console.log(JSON.stringify({
-    ok: true,
-    mode,
-    path: 'research-main-path',
-    browser: browserBinary,
-    baseUrl: sanitizeBaseUrl(app.baseUrl),
-    pageStates,
-    auditKinds: relevantAuditKinds,
-    allAuditKinds: [...new Set(kinds)],
-    upstreamRequests: upstream?.requests.length ?? undefined,
-    visualQuality,
-  }));
+  console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
 } catch (error) {
   console.error(error?.stack || error);
   process.exitCode = 1;
@@ -609,6 +593,7 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     accessibilityCloseout,
     visualFitChecks: summarizeVisualFitChecks(viewports),
     artifactChecks,
+    visualQualityRubric: summarizeVisualQualityRubric(viewports, accessibilityCloseout, artifactChecks),
     inspectorChecks: {
       desktopStablePanelPass: viewports.desktop.layout.inspector.desktopStablePanel === true,
       mobileSheetPressurePass: ['mobile', 'compact'].every((id) => viewports[id].layout.inspector.mobileSheetHeightRatio <= 0.64),
@@ -848,6 +833,9 @@ async function readVisualLayout(cdp) {
     const focusableWithoutName = interactiveTargets
       .filter((target) => !target.text)
       .map((target) => ({ tag: target.tag, width: target.width, height: target.height }));
+    const bodyText = document.body.innerText || '';
+    const visibleParagraphs = visibleElements.filter((element) => ['P', 'SMALL', 'DD'].includes(element.tagName) && (element.textContent || '').trim().length > 18).length;
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3')).filter((element) => !element.hidden && !element.closest('[hidden]') && element.getBoundingClientRect().width > 0).map((element) => element.tagName.toLowerCase());
     return {
       viewport,
       horizontalOverflowPx: Math.max(0, viewport.scrollWidth - viewport.width),
@@ -869,6 +857,7 @@ async function readVisualLayout(cdp) {
           || focusProbeStyle.boxShadow !== 'none'
         )),
       },
+      visualRubricProbe: { headingSequence: headings, visibleParagraphs, forbiddenVisibleText: /Model gateway|fixed base_url|账号生命周期|额度状态|最近审计|dashboard|runtime console/i.test(bodyText) },
       inspector: {
         visible: Boolean(inspector && !inspector.hidden && inspectorRect && inspectorRect.width > 0 && inspectorRect.height > 0),
         state: inspector?.dataset.inspectorState || '',
@@ -908,6 +897,12 @@ function summarizeVisualFitChecks(viewports) {
     noTextOverflow: results.every((result) => result.layout.textOverflowCount === 0),
     noHorizontalOverflow: results.every((result) => result.layout.horizontalOverflowPx === 0),
   };
+}
+
+function summarizeVisualQualityRubric(viewports, closeout, artifactChecks) {
+  const results = Object.values(viewports);
+  const cleanLayout = results.every((result) => result.layout.horizontalOverflowPx === 0 && result.layout.textOverflowCount === 0);
+  return { hierarchyClarityPass: results.every((result) => result.layout.visualRubricProbe.headingSequence.includes('h1')), copyDensityPass: results.every((result) => result.layout.visualRubricProbe.visibleParagraphs <= 24), spacingRhythmPass: cleanLayout, mobileComfortPass: ['mobile', 'compact'].every((id) => viewports[id].layout.inspector.mobileBottomSheet === true && viewports[id].layout.inspector.mobileSheetHeightRatio <= 0.64), focusPathPass: closeout.keyboardPath.homeToSkills === true && closeout.keyboardPath.skillsToHome === true && closeout.keyboardPath.escapeClosesModal === true, emptyErrorLoadingClarityPass: results.every((result) => result.layout.visualRubricProbe.visibleParagraphs > 0), surfaceOwnershipPass: results.every((result) => result.layout.visualRubricProbe.forbiddenVisibleText === false), scientificArtifactDensityPass: artifactChecks.researchArtifactDensityPass === true };
 }
 
 async function captureScreenshot(cdp, relativePath) {
