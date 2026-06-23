@@ -243,11 +243,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionObservabilityBaseline.nextPhase, 'ops_contract_detail');
   assert.equal(release.productionObservabilityBaseline.blockedBy, null);
   assert.equal(release.productionObservabilityBaseline.ownerReceipt.acceptedClaim, 'operations_maturity_v1_baseline_and_rollback_record_contract_accepted');
-  assert.deepEqual(release.productionObservabilityBaseline.nextStepOpeners, [
-    'fold back real production rollback record after manual environment-approved rollback executes',
-    'open dashboard, alerting, or error budget only with a separate operations owner contract',
-    'keep automatic rollback out of scope until separately admitted',
-  ]);
+  assert.deepEqual(release.productionObservabilityBaseline.nextStepOpeners, ['fold back real production rollback record after manual environment-approved rollback executes', 'open dashboard, alerting, or error budget only with a separate operations owner contract', 'keep automatic rollback out of scope until separately admitted']);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.state, 'rollback_record_contract_present_dashboard_alerting_error_budget_deferred');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.workflow, '.github/workflows/production-canary.yml');
@@ -256,20 +252,17 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.latestSuccessfulRun.runId, 27874732529);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence.includes('scheduled_canary_first_success'), false);
   assertIncludesAll(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence, ['error_budget'], 'future ops evidence');
-  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
-    { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
-    { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
-    { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
-    { id: 'rollback_record', owner: 'release_operator', state: 'contract_present' },
-  ]);
+  assert.deepEqual(release.productionObservabilityBaseline.productionReadinessLevels.map((level) => [level.id, level.requiredBefore]), [['p0_launch_operations', 'public_single_node_launch'], ['p1_commercial_operations', 'commercial_scale_claim'], ['p2_sla_operations', 'sla_or_ha_claim']]);
+  const opsLevel = (id) => release.productionObservabilityBaseline.productionReadinessLevels.find((level) => level.id === id);
+  assertIncludesAll(opsLevel('p0_launch_operations').gates, ['rollback_path', 'alerting_boundary', 'db_backup_restore_strategy', 'security_ops_baseline', 'incident_runbook_owner', 'cost_quota_guard'], 'P0 ops gate');
+  assertIncludesAll(opsLevel('p1_commercial_operations').gates, ['staging_or_production_concurrency_evidence', 'upstream_backpressure_boundary', 'migration_schema_compatibility_policy', 'observability_dashboard_entry'], 'P1 ops gate');
+  assertIncludesAll(opsLevel('p2_sla_operations').gates, ['ha_topology_evidence', 'slo_error_budget_contract', 'automatic_rollback_admission_policy'], 'P2 ops gate');
+  assert.deepEqual(Object.fromEntries(['alertingBoundary', 'dbBackupRestore', 'securityOpsBaseline', 'costQuotaGuard', 'migrationSchemaCompatibility', 'observabilityDashboard', 'automaticRollbackAdmission'].map((id) => [id, release.productionObservabilityBaseline.productionReadinessGates[id].state])), { alertingBoundary: 'contract_present_pending_alert_route', dbBackupRestore: 'contract_present_pending_restore_drill', securityOpsBaseline: 'contract_present', costQuotaGuard: 'contract_present', migrationSchemaCompatibility: 'contract_present_pending_migration_drill', observabilityDashboard: 'contract_present_pending_dashboard_url', automaticRollbackAdmission: 'not_admitted_manual_only' });
+  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [{ id: 'dashboard', owner: 'operations_owner', state: 'contract_required' }, { id: 'alerting', owner: 'operations_owner', state: 'contract_required' }, { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' }, { id: 'rollback_record', owner: 'release_operator', state: 'contract_present' }]);
   assertIncludesAll(release.productionObservabilityBaseline.cannotClaim, ['dashboard', 'alerting', 'automatic rollback'], 'ops cannot-claim');
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
-  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, {
-    'medopl.cn/webui': 'true',
-  });
-  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.preserve, {
-    'medopl.cn/workload': 'medopl',
-  });
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, { 'medopl.cn/webui': 'true' });
+  assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.preserve, { 'medopl.cn/workload': 'medopl' });
   assert.equal(release.productionHAReadiness.latestSuccessfulRun, null);
   assertIncludesAll(release.productionHAReadiness.requiredEvidence, ['two_ready_pods', 'distinct_nodes', 'ingress_backend_at_least_2'], 'HA evidence');
   assertIncludesAll(release.productionHAReadiness.cannotClaim, ['multi-node HA'], 'HA cannot-claim');

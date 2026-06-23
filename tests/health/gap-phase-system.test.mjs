@@ -100,7 +100,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
-    assert.equal(!['commercial_saas_depth', 'ha_and_resilience'].includes(gap.id), gap.readyToAdvance);
+    assert.equal(!['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id), gap.readyToAdvance);
   }
 });
 
@@ -139,9 +139,13 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     'expansionConditions',
   );
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'observability_baseline').status, 'pass');
-  assert.equal(byGap.operations_maturity.status, 'done');
+  assert.equal(byGap.operations_maturity.status, 'partial');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_owner_receipt').status, 'pass');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'rollback_record_evidence').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p0_launch_operations_contract').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p1_commercial_operations_contract').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p2_sla_operations_contract').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'production_ops_external_evidence').status, 'blocked');
   assert.equal(
     byGap.operations_maturity.evalResults.find((result) => result.id === 'ops_future_contract_placeholders').evidenceSource,
     'evidenceConditions',
@@ -155,10 +159,10 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 6);
+  assert.equal(report.readyToAdvanceCount, 5);
   assert.deepEqual(report.summary, {
-    done: 6,
-    partial: 0,
+    done: 5,
+    partial: 1,
     blocked: 2,
     not_started: 0,
   });

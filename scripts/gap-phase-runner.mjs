@@ -365,6 +365,8 @@ function evaluateOperationsGap({ release }) {
   const conditions = baseline?.nextReadiness?.evidenceConditions ?? [];
   const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
   const rollbackRecord = baseline?.nextReadiness?.rollbackRecordV1;
+  const readinessLevel = (id) => baseline?.productionReadinessLevels?.find((level) => level.id === id);
+  const gate = (id) => baseline?.productionReadinessGates?.[id];
   return [
     evalResult({
       id: 'observability_baseline',
@@ -406,6 +408,64 @@ function evaluateOperationsGap({ release }) {
         : 'blocked',
       proves: ['rollback record contract exists without raw logs or secret values'],
       doesNotProve: ['production rollback executed', 'automatic rollback', 'data migration rollback', 'multi-node HA'],
+    }),
+    evalResult({
+      id: 'p0_launch_operations_contract',
+      dimension: 'contract',
+      status: readinessLevel('p0_launch_operations')?.gates?.includes('rollback_path')
+        && readinessLevel('p0_launch_operations')?.gates?.includes('alerting_boundary')
+        && readinessLevel('p0_launch_operations')?.gates?.includes('db_backup_restore_strategy')
+        && gate('alertingBoundary')?.state === 'contract_present_pending_alert_route'
+        && gate('dbBackupRestore')?.state === 'contract_present_pending_restore_drill'
+        && gate('securityOpsBaseline')?.state === 'contract_present'
+        && gate('incidentRunbookOwner')?.state === 'contract_present'
+        && gate('costQuotaGuard')?.state === 'contract_present'
+        ? 'pass'
+        : 'fail',
+      proves: ['P0 launch operations gates are explicit without claiming external production evidence'],
+      doesNotProve: ['production rollback executed', 'external alert routing exists', 'production DB restore drill executed'],
+    }),
+    evalResult({
+      id: 'p1_commercial_operations_contract',
+      dimension: 'contract',
+      status: readinessLevel('p1_commercial_operations')?.gates?.includes('staging_or_production_concurrency_evidence')
+        && readinessLevel('p1_commercial_operations')?.gates?.includes('upstream_backpressure_boundary')
+        && readinessLevel('p1_commercial_operations')?.gates?.includes('migration_schema_compatibility_policy')
+        && readinessLevel('p1_commercial_operations')?.gates?.includes('observability_dashboard_entry')
+        && gate('concurrencyEvidence')?.state === 'staging_safe_baseline_present_production_claim_pending'
+        && gate('upstreamBackpressure')?.state === 'repo_local_timeout_fail_closed_pending_production_sla'
+        && gate('migrationSchemaCompatibility')?.state === 'contract_present_pending_migration_drill'
+        && gate('observabilityDashboard')?.state === 'contract_present_pending_dashboard_url'
+        ? 'pass'
+        : 'fail',
+      proves: ['P1 commercial operations gates are explicit and keep production scale claims pending'],
+      doesNotProve: ['production concurrent SaaS readiness', 'production migration drill executed', 'external dashboard exists'],
+    }),
+    evalResult({
+      id: 'p2_sla_operations_contract',
+      dimension: 'contract',
+      status: readinessLevel('p2_sla_operations')?.gates?.includes('ha_topology_evidence')
+        && readinessLevel('p2_sla_operations')?.gates?.includes('slo_error_budget_contract')
+        && readinessLevel('p2_sla_operations')?.gates?.includes('automatic_rollback_admission_policy')
+        && gate('haTopologyEvidence')?.state === 'paused_pending_second_node'
+        && gate('sloErrorBudget')?.state === 'contract_required_pending_owner_receipt'
+        && gate('automaticRollbackAdmission')?.state === 'not_admitted_manual_only'
+        ? 'pass'
+        : 'fail',
+      proves: ['P2 SLA and HA gates are explicit while HA and automatic rollback remain unclaimed'],
+      doesNotProve: ['multi-node HA', 'error budget enforcement', 'automatic rollback readiness'],
+    }),
+    evalResult({
+      id: 'production_ops_external_evidence',
+      dimension: 'production',
+      status: gate('rollbackPath')?.state === 'production_rollback_record_folded_back'
+        && gate('dbBackupRestore')?.state === 'restore_drill_folded_back'
+        && gate('observabilityDashboard')?.state === 'dashboard_url_folded_back'
+        && gate('haTopologyEvidence')?.state === 'multi_node_ha_folded_back'
+        ? 'pass'
+        : 'blocked',
+      proves: ['external production operations evidence exists when folded back'],
+      doesNotProve: ['repo-local contract readiness', 'billing source of truth', 'OPL runtime execution'],
     }),
   ];
 }

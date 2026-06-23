@@ -106,8 +106,11 @@ Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboa
 Latest folded evidence is run `28039468173`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da`, after production apply. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. scheduled canary first success: 27874732529.
 
 ```text
-required future evidence: dashboard, alerting, error_budget, rollback_record
-cannot claim: dashboard, alerting, error budget enforcement, automatic rollback, multi-node HA, production-ready SaaS
+P0 launch operations contracts present: rollback_path, alerting_boundary, db_backup_restore_strategy, security_ops_baseline, incident_runbook_owner, cost_quota_guard
+P1 commercial operations contracts present: staging_or_production_concurrency_evidence, upstream_backpressure_boundary, migration_schema_compatibility_policy, observability_dashboard_entry
+P2 SLA/HA operations contracts present: ha_topology_evidence, slo_error_budget_contract, automatic_rollback_admission_policy
+pending external evidence: production_rollback_record, alert_route, db_restore_drill, dashboard_url, production_load_run, multi_node_ha_run, slo_enforcement, automatic_rollback_admission
+cannot claim: dashboard URL, alert route, DB restore drill, production load readiness, error budget enforcement, automatic rollback, multi-node HA, production-ready SaaS
 ```
 
 ## Production authenticated dogfood e2e

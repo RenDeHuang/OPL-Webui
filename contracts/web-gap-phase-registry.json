@@ -382,7 +382,7 @@
       "ownerSurface": "release-evidence",
       "state": "active",
       "currentPhaseId": "ops_evidence_contracts",
-      "currentStatus": "done",
+      "currentStatus": "partial",
       "cannotClaim": [
         "automatic rollback",
         "dashboard",
@@ -394,7 +394,7 @@
       "phases": [
         {
           "id": "ops_evidence_contracts",
-          "objective": "Accept operations maturity v1 as observability baseline plus rollback-record contract, while dashboard, alerting, error budget, and automatic rollback remain explicitly out of scope.",
+          "objective": "Accept operations maturity as P0/P1/P2 contracts plus existing observability baseline while external production evidence remains pending.",
           "entryCriteria": [
             "/metricsz exists",
             "availability probe exists",
@@ -403,8 +403,9 @@
           "exitCriteria": [
             "observability baseline evidence is folded back",
             "rollback record contract exists",
+            "P0/P1/P2 operations readiness gates are explicit",
             "operations owner accepts v1 boundary",
-            "automatic rollback, dashboard, alerting, and error budget remain cannot-claim"
+            "external production evidence for rollback, alert routing, DB restore, production load, dashboard, HA, SLO, and automatic rollback remains cannot-claim unless folded back"
           ],
           "evidenceSources": [
             "repo_local",
@@ -417,11 +418,12 @@
           "acceptance": [
             "production observability baseline preserves metricsz, availability probe, scheduled canary, and manual rollback harness evidence",
             "rollback record v1 contract exists with sanitized summary fields and no raw logs or secret values",
-            "operations owner accepted the current v1 boundary without admitting dashboard, alerting, error budget, or automatic rollback",
-            "automatic rollback, dashboard, alerting, and error budget enforcement remain cannot-claim"
+            "P0 launch operations, P1 commercial operations, and P2 SLA/HA operations gates are present in the release profile",
+            "operations owner accepted the current contract boundary without admitting external production evidence",
+            "automatic rollback, dashboard URL, alert routing, DB restore drill, production load, HA, and error budget enforcement remain cannot-claim until evidence is folded back"
           ],
           "nextStepOpeners": [
-            "Open dashboard, alerting, or error budget only after an operations owner names the consumer and contract",
+            "Fold back alert route, DB restore drill, dashboard URL, production load, or HA evidence only after the responsible operator executes it",
             "Fold back a real production rollback record only after manual environment-approved rollback executes",
             "Keep automatic rollback out of scope until a separate owner, contract, eval, and rollback safety record exist"
           ],

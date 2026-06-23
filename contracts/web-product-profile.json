@@ -157,12 +157,22 @@
         "id": "operations_maturity",
         "ownerSurface": "release-evidence",
         "acceptanceContract": "contracts/web-release-profile.json#/productionObservabilityBaseline",
-        "disposition": "baseline_plus_next_evidence_contracts",
+        "disposition": "p0_p1_p2_operations_contracts_present_external_evidence_pending",
         "evidenceRequired": [
-          "dashboard_contract",
-          "alerting_contract",
-          "error_budget_contract",
-          "rollback_record_contract"
+          "rollback_record_contract",
+          "alerting_boundary_contract",
+          "db_backup_restore_contract",
+          "security_ops_baseline_contract",
+          "incident_runbook_owner_contract",
+          "cost_quota_guard_contract",
+          "concurrency_evidence_contract",
+          "upstream_backpressure_contract",
+          "migration_schema_compatibility_contract",
+          "observability_dashboard_contract",
+          "ha_topology_contract",
+          "slo_error_budget_contract",
+          "automatic_rollback_admission_contract",
+          "external_production_evidence_foldback"
         ]
       },
       {

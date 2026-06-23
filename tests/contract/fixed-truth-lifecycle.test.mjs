@@ -347,12 +347,18 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresProductionSecrets, false);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.requiresKubeconfig, false);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.scheduledCanary.mutatesCluster, false);
-  assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.requiredFutureEvidence, [
-    'dashboard',
-    'alerting',
-    'error_budget',
-    'rollback_record',
+  assert.deepEqual(release.productionObservabilityBaseline.productionReadinessLevels.map((level) => [level.id, level.requiredBefore]), [
+    ['p0_launch_operations', 'public_single_node_launch'],
+    ['p1_commercial_operations', 'commercial_scale_claim'],
+    ['p2_sla_operations', 'sla_or_ha_claim'],
   ]);
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.rollbackPath.state, 'manual_harness_ready_pending_first_real_rollback_record');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.alertingBoundary.state, 'contract_present_pending_alert_route');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.dbBackupRestore.state, 'contract_present_pending_restore_drill');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.observabilityDashboard.state, 'contract_present_pending_dashboard_url');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.sloErrorBudget.state, 'contract_required_pending_owner_receipt');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.haTopologyEvidence.state, 'paused_pending_second_node');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.automaticRollbackAdmission.state, 'not_admitted_manual_only');
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [
     { id: 'dashboard', owner: 'operations_owner', state: 'contract_required' },
     { id: 'alerting', owner: 'operations_owner', state: 'contract_required' },
@@ -434,7 +440,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(runbook, /OPL_AVAILABILITY_PROBE_SAMPLES=3/);
   assert.match(runbook, /Production observability baseline v1/);
   assert.match(runbook, /scheduled canary first success: 27874732529/);
-  assert.match(runbook, /required future evidence: dashboard, alerting, error_budget, rollback_record/);
+  assert.match(runbook, /P0 launch operations contracts present/);
+  assert.match(runbook, /P1 commercial operations contracts present/);
+  assert.match(runbook, /P2 SLA\/HA operations contracts present/);
+  assert.match(runbook, /pending external evidence: production_rollback_record, alert_route, db_restore_drill, dashboard_url, production_load_run, multi_node_ha_run, slo_enforcement, automatic_rollback_admission/);
   assert.match(runbook, /\.github\/workflows\/production-canary\.yml/);
   assert.match(runbook, /Production HA readiness contract/);
   assert.match(runbook, /HA is paused for the current single-node launch/);
@@ -461,8 +470,13 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Production availability probe executed successfully/);
   assert.match(status, /Production observability baseline v1 is now folded back to run `28039468173`/);
   assert.match(status, /A no-secret scheduled availability canary first succeeded in GitHub Actions run `27874732529`/);
-  assert.match(status, /Operations maturity v1 is accepted as baseline plus rollback-record contract/);
+  assert.match(status, /Operations maturity now has partial evidence boundaries/);
   assert.match(status, /Production HA is paused for the current single-node launch/);
+  assert.match(status, /Production operations readiness is now split into P0, P1, and P2 gates/);
+  assert.match(status, /P0 launch operations contracts are present/);
+  assert.match(status, /P1 commercial operations contracts are present/);
+  assert.match(status, /P2 SLA\/HA operations contracts are present/);
+  assert.match(status, /external production evidence remains pending/);
   assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
@@ -472,7 +486,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /current gap set is now machine-owned/);
   assert.match(status, /UI\/UX product depth now has source-level Figma MCP evidence pinned/);
   assert.match(status, /Runtime execution boundary is now owner-accepted as fail-closed with an empty allowlist/);
-  assert.match(status, /Operations maturity now has accepted v1 evidence boundaries/);
+  assert.match(status, /Operations maturity now has partial evidence boundaries/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
 });
 
@@ -608,6 +622,10 @@ test('operations maturity and gap phase advancement require structured eval evid
     ['rollback_record_contract', 'present', 'contract'],
     ['production_rollback_record', 'contract_only_pending_first_run', 'production_evidence'],
   ]);
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.costQuotaGuard.state, 'contract_present');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.migrationSchemaCompatibility.state, 'contract_present_pending_migration_drill');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.upstreamBackpressure.state, 'repo_local_timeout_fail_closed_pending_production_sla');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.state, 'staging_safe_baseline_present_production_claim_pending');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.rollbackRecordV1.state, 'contract_present_pending_first_production_run');
   assert.equal(release.productionRollbackReadiness.recordContract.state, 'present');
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.maturityAdmittedWhen, [
