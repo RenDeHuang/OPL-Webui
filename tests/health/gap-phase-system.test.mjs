@@ -93,7 +93,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
   assert.equal(report.goalComplete, false);
   assert.ok(report.gaps.some((gap) => gap.status === 'blocked'));
   assert.ok(report.gaps.some((gap) => gap.status === 'partial'));
-  assert.ok(report.blockedClaims.includes('production MedOPL readonly projection dogfood'));
+  assert.equal(report.blockedClaims.includes('production MedOPL readonly projection dogfood'), false);
   assert.ok(report.blockedClaims.includes('OPL runtime execution from Web'));
   assert.ok(report.blockedClaims.includes('complete commercial SaaS lifecycle'));
   assert.equal(report.blockedClaims.includes('complete UI/UX design system'), false);
@@ -101,7 +101,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
-    assert.equal(gap.readyToAdvance, gap.id === 'ui_ux_product_depth');
+    assert.equal(['ui_ux_product_depth', 'medopl_readonly_evidence', 'runtime_execution_boundary'].includes(gap.id), gap.readyToAdvance);
   }
 });
 
@@ -125,9 +125,10 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
-  assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'blocked');
+  assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
-  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'blocked');
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_allowlist_eval').status, 'pass');
   assert.equal(
     byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_allowlist_eval').evidenceSource,
     'conditions',
@@ -151,11 +152,11 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'blocked');
 
-  assert.equal(report.readyToAdvanceCount, 1);
+  assert.equal(report.readyToAdvanceCount, 3);
   assert.deepEqual(report.summary, {
-    done: 1,
+    done: 3,
     partial: 1,
-    blocked: 6,
+    blocked: 4,
     not_started: 0,
   });
 });

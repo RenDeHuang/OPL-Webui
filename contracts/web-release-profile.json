@@ -134,7 +134,7 @@
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
-    "state": "executed_success_run_28009300822_real_chat_readonly_unconfirmed",
+    "state": "executed_success_run_28039468173_real_chat_readonly_confirmed",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -183,7 +183,7 @@
     "readonlyFoldbackPolicy": {
       "currentPhase": "production_readonly_foldback",
       "nextPhase": "readonly_foldback_closeout",
-      "blockedBy": "missing_production_evidence",
+      "blockedBy": null,
       "ownerReceipt": {
         "required": false,
         "source": "production_secret_gated"
@@ -200,7 +200,17 @@
       ],
       "forbidRawLogs": true,
       "forbidSecretValues": true,
-      "claimWhenConfirmed": "production MedOPL readonly projection dogfood"
+      "claimWhenConfirmed": "production MedOPL readonly projection dogfood",
+      "confirmedBy": {
+        "runId": 28039468173,
+        "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+        "source": "owner_confirmed_production_environment_and_sanitized_release_evidence",
+        "foldedAt": "2026-06-24",
+        "rawLogPolicy": {
+          "storesRawLogs": false,
+          "storesSecretValues": false
+        }
+      }
     },
     "cannotClaim": [
       "browser e2e",
@@ -210,17 +220,17 @@
       "storage or node pool mutation"
     ],
     "latestSuccessfulRun": {
-      "runId": 28009300822,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
-      "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+      "runId": 28039468173,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+      "commit": "c1787da0c13aedf75b84b12c29f26b13193fce74",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-23T07:59:48Z",
+      "completedAt": "2026-06-23T16:09:23Z",
       "realChat": true,
-      "medoplReadonly": "unconfirmed",
-      "publicMetadataConfirmsReadonlySwitch": false,
-      "readonlyEvidenceBoundary": "Public GitHub job metadata confirms Production Authenticated Dogfood E2E success but does not expose repository variable values or dogfood stdout; do not claim MedOPL readonly production coverage until log or variable evidence is folded back.",
+      "medoplReadonly": true,
+      "publicMetadataConfirmsReadonlySwitch": true,
+      "readonlyEvidenceBoundary": "Folded evidence explicitly confirmed OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.",
       "stages": [
         "production_dry_run",
         "production_apply",
@@ -244,7 +254,10 @@
         "ordinary_chat_real_completion",
         "chat_completed_audit",
         "runtime_gate_audit",
-        "sanitized_audit"
+        "sanitized_audit",
+        "medopl_readonly_runtime_status",
+        "medopl_readonly_materials_deliverables",
+        "medopl_readonly_billing_summary"
       ],
       "rawLogPolicy": {
         "storesRawLogs": false,
@@ -255,7 +268,7 @@
   },
   "productionAvailabilityReadiness": {
     "mode": "no_secret_public_http_probe",
-    "state": "executed_success_run_28009300822_after_apply",
+    "state": "executed_success_run_28039468173_after_apply",
     "defaultEnabled": false,
     "requiresProductionSecrets": false,
     "requiresKubeconfig": false,
@@ -304,13 +317,13 @@
       "billing/payment/storage/node pool mutation"
     ],
     "latestSuccessfulRun": {
-      "runId": 28009300822,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
-      "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+      "runId": 28039468173,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+      "commit": "c1787da0c13aedf75b84b12c29f26b13193fce74",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-23T07:59:48Z",
+      "completedAt": "2026-06-23T16:09:23Z",
       "afterStage": "production_apply_canary_smoke",
       "samples": 3,
       "stages": [
@@ -333,7 +346,7 @@
   },
   "productionBrowserE2EReadiness": {
     "mode": "secret_gated_chromium_research_main_path",
-    "state": "executed_success_run_28009300822",
+    "state": "executed_success_run_28039468173",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
     "requiresSuccessfulRolloutEvidence": true,
@@ -371,10 +384,10 @@
       "sanitized_browser_evidence"
     ],
     "latestAttempt": {
-      "runId": 28009300822,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
-      "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+      "runId": 28039468173,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+      "commit": "c1787da0c13aedf75b84b12c29f26b13193fce74",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da",
       "workflow": "Cloud Rollout",
       "targetHost": "https://opl.medopl.cn",
       "status": "success",
@@ -513,7 +526,7 @@
   },
   "productionObservabilityBaseline": {
     "mode": "no_secret_public_http_observability_baseline_v1",
-    "state": "release_probe_executed_run_28009300822_scheduled_canary_success_pending_long_term_ops",
+    "state": "release_probe_executed_run_28039468173_scheduled_canary_success_pending_long_term_ops",
     "currentPhase": "ops_evidence_contracts",
     "nextPhase": "ops_contract_detail",
     "blockedBy": "missing_contract",
@@ -553,13 +566,13 @@
       "storesSecretValues": false
     },
     "latestSuccessfulRun": {
-      "runId": 28009300822,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
-      "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+      "runId": 28039468173,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+      "commit": "c1787da0c13aedf75b84b12c29f26b13193fce74",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-23T07:59:48Z",
+      "completedAt": "2026-06-23T16:09:23Z",
       "coverage": [
         "/healthz repeated samples",
         "/readyz repeated samples",

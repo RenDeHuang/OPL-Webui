@@ -111,8 +111,8 @@
       "ownerSurface": "release-evidence",
       "state": "active",
       "currentPhaseId": "production_readonly_foldback",
-      "currentStatus": "blocked",
-      "cannotClaim": ["production MedOPL readonly projection dogfood"],
+      "currentStatus": "done",
+      "cannotClaim": ["MedOPL runtime execution", "billing source of truth", "payment readiness", "long-term production stability"],
       "phases": [
         {
           "id": "production_readonly_foldback",
@@ -125,12 +125,12 @@
             "readonly foldback policy requires OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
             "dogfood stdout confirms runtime status, materials/deliverables, and billing readonly projection checks",
             "release evidence foldback stores sanitized summary only and forbids raw logs or secret values",
-            "status remains blocked while production readonly switch or stdout evidence is unavailable"
+            "production readonly switch and sanitized stdout evidence are folded back for run 28039468173"
           ],
           "nextStepOpeners": [
-            "Open readonly_foldback_closeout only after approved production dogfood evidence exists",
-            "Run release:evidence with readonly confirmation and fold summary into release profile and status",
-            "Keep production MedOPL readonly projection dogfood in cannot-claim if variable or stdout evidence is not public or folded back"
+            "Keep future readonly evidence folded back through release:evidence with sanitized summaries only",
+            "Do not infer MedOPL runtime execution, payment readiness, or long-term stability from readonly projection dogfood",
+            "Reopen production_readonly_foldback only if a future rollout regresses readonly projection coverage"
           ],
           "ownerReceipt": {
             "required": false,
@@ -154,32 +154,36 @@
       "ownerSurface": "runtime-gate",
       "state": "active",
       "currentPhaseId": "execution_admission",
-      "currentStatus": "blocked",
+      "currentStatus": "done",
       "launchBlocking": true,
+      "durableCannotClaim": true,
       "cannotClaim": ["OPL runtime execution from Web", "artifact body authority"],
       "phases": [
         {
           "id": "execution_admission",
-          "objective": "Keep runtime mutation fail-closed until Go-side execution contract, eval, allowlist, and human authorization exist.",
+          "objective": "Accept the current runtime execution boundary as fail-closed with an empty allowlist; Web remains gate plus readonly projection only.",
           "entryCriteria": ["runtime bridge contract exists", "Go control plane remains only backend business entry"],
-          "exitCriteria": ["Go-side execution contract exists", "registered eval covers command allowlist", "human authorization boundary exists", "tenant-scoped audit events exist"],
+          "exitCriteria": ["owner accepts fail-closed boundary", "current allowlist is empty", "Web runtime mutation remains forbidden", "MedOPL and OPL Framework remain execution authority"],
           "evidenceSources": ["repo_local", "human_owner_receipt"],
-          "blockerTypes": ["missing_contract", "missing_eval", "missing_owner_receipt"],
+          "blockerTypes": ["future_execution_not_admitted"],
           "acceptance": [
             "executionAdmission currentStatus stays not_admitted",
-            "requiredBeforeAnyExecution lists Go-side contract, registered eval, command allowlist, human authorization, tenant audit, and artifact/body authority contract",
-            "failClosedUntil lists contract_exists, eval_passes, allowlist_exists, and authorization_boundary_exists",
-            "Web runtime mutation remains forbidden until all admission conditions and owner receipt exist"
+            "current allowlist is empty and Web may not install, repair, module exec, return artifact body, or mutate runtime",
+            "MedOPL and OPL Framework remain execution authority while Web remains gate plus readonly projection",
+            "future runtime execution still requires Go-side contract, registered eval, explicit command allowlist, human authorization, tenant audit, and artifact/body authority contract"
           ],
           "nextStepOpeners": [
-            "Open runtime_execution_contract_design only after a human owner receipt names the real consumer and command class",
-            "Add Go-side execution contract, allowlist eval, and authorization boundary before any Web runtime mutation route",
-            "Keep runtime gate behavior if owner receipt or eval is missing"
+            "Keep runtime execution disabled unless a future owner explicitly opens runtime_execution_contract_design",
+            "If future execution is requested, add Go-side contract, allowlist eval, and authorization boundary before any Web runtime mutation route",
+            "Continue to list OPL runtime execution from Web and artifact body authority as cannot-claim"
           ],
           "ownerReceipt": {
             "required": true,
             "source": "human_owner_receipt",
-            "reason": "runtime execution changes authority boundaries and cannot be admitted by repo-local tests alone"
+            "status": "accepted",
+            "acceptedAt": "2026-06-24",
+            "acceptedClaim": "runtime_fail_closed_empty_allowlist_boundary_accepted",
+            "reason": "owner accepted the current fail-closed runtime boundary rather than admitting execution"
           },
           "requiredEvals": [
             {

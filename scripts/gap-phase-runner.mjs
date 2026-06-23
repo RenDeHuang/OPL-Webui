@@ -37,9 +37,12 @@ export function buildPhaseStatusReport(registry, context = readEvalContext()) {
     };
   });
   const blockedClaims = uniqueStrings(
-    gaps
+    registry.gaps
+      .filter((gap) => gap.durableCannotClaim === true)
+      .flatMap((gap) => gap.cannotClaim)
+      .concat(gaps
       .filter((gap) => gap.status !== 'done')
-      .flatMap((gap) => gap.cannotClaim),
+      .flatMap((gap) => gap.cannotClaim)),
   );
   const summary = {
     done: gaps.filter((gap) => gap.status === 'done').length,
@@ -261,6 +264,9 @@ function evaluateRuntimeGap({ runtime }) {
   const admission = runtime?.executionAdmission;
   const conditions = admission?.conditions ?? [];
   const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
+  const emptyAllowlistAccepted = Array.isArray(admission?.currentAllowlist)
+    && admission.currentAllowlist.length === 0
+    && admission?.ownerReceipt?.acceptedClaim === 'runtime_fail_closed_empty_allowlist_boundary_accepted';
   return [
     evalResult({
       id: 'runtime_fail_closed',
@@ -286,20 +292,21 @@ function evaluateRuntimeGap({ runtime }) {
     evalResult({
       id: 'runtime_owner_receipt',
       dimension: 'owner',
-      status: admission?.ownerReceipt?.acceptedClaim ? 'pass' : 'blocked',
-      proves: ['runtime owner accepted a real execution consumer and command class when present'],
-      doesNotProve: ['allowlist implementation', 'runtime eval pass', 'artifact body authority'],
+      status: emptyAllowlistAccepted ? 'pass' : 'blocked',
+      proves: ['runtime owner accepted the fail-closed empty-allowlist boundary when present'],
+      doesNotProve: ['runtime execution readiness', 'non-empty command allowlist', 'artifact body authority'],
     }),
     evalResult({
       id: 'runtime_allowlist_eval',
       dimension: 'repo_local',
-      status: conditionStatus('registered_allowlist_eval') === 'pass'
+      status: emptyAllowlistAccepted
+        && conditionStatus('registered_allowlist_eval') === 'pass'
         && conditionStatus('command_allowlist') === 'present'
         ? 'pass'
         : 'blocked',
       evidenceSource: 'conditions',
-      proves: ['command allowlist and authorization eval passed when admitted'],
-      doesNotProve: ['production runtime execution', 'domain-agent quality'],
+      proves: ['empty command allowlist is the accepted fail-closed runtime boundary'],
+      doesNotProve: ['production runtime execution', 'domain-agent quality', 'non-empty command allowlist'],
     }),
   ];
 }

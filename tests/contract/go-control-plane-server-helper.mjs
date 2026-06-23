@@ -1,5 +1,6 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -35,17 +36,38 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function availablePort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const { port } = server.address();
+  await new Promise((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  });
+  return String(port);
+}
+
 export async function startGoServer() {
   return startGoServerWithEnv({});
 }
 
 export async function startGoServerWithEnv(extraEnv) {
-  const port = String(45000 + Math.floor(Math.random() * 1000));
+  const port = await availablePort();
   const child = spawn(binaryPath, [], {
     env: { ...process.env, OPL_DATABASE_URL: '', ...extraEnv, PORT: port, OPL_CLI_PATH: fakeOplPath },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const baseUrl = `http://127.0.0.1:${port}`;
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', (chunk) => {
+    stdout = `${stdout}${chunk}`.slice(-2000);
+  });
+  child.stderr.on('data', (chunk) => {
+    stderr = `${stderr}${chunk}`.slice(-2000);
+  });
 
   for (let attempt = 0; attempt < 50; attempt += 1) {
     if (child.exitCode !== null) break;
@@ -58,7 +80,7 @@ export async function startGoServerWithEnv(extraEnv) {
   }
 
   child.kill();
-  throw new Error('go control plane did not start');
+  throw new Error(`go control plane did not start at ${baseUrl}; exitCode=${child.exitCode}; signal=${child.signalCode}; stdout=${JSON.stringify(stdout)}; stderr=${JSON.stringify(stderr)}`);
 }
 
 export async function stopGoServer(child) {

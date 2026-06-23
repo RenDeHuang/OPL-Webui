@@ -28,108 +28,20 @@
     "appShell": "side_nav_command_home",
     "gensparkInfluence": "homepage_structure_reference",
     "codexInfluence": "contract_first_surface_builder",
-    "mustShow": [
-      "side_navigation_new_chat_projects_skill_workflow_search_more",
-      "centered_brand_title",
-      "primary_research_composer",
-      "starter_chips",
-      "project_session_history_as_secondary_surface",
-      "inspector_on_user_request",
-      "conversation_history_search_sheet",
-      "empty_more_overflow_surface",
-      "optional_model_selector_without_visible_base_url",
-      "bottom_avatar_account_entry",
-      "api_key_required_before_chat_send_when_missing",
-      "structured_research_artifact_result_stream",
-      "desktop_inspector_stable_work_panel",
-      "lightweight_mobile_inspector_sheet"
-    ],
-    "mustNotShow": [
-      "dashboard_first_app_home",
-      "explanatory_landing_inside_app_shell",
-      "left_rail_primary_navigation",
-      "workspace_sidebar_primary_shell",
-      "raw_trace_console",
-      "runtime_truth_panel",
-      "billing_source_of_truth",
-      "node_pool_console",
-      "artifact_body_authority",
-      "multi_column_sidebar_sprawl",
-      "duplicated_files_progress_panels",
-      "raw_upstream_transcript_for_structured_research_result",
-      "floating_desktop_inspector_overlay",
-      "heavy_mobile_inspector_sheet",
-      "visible_fixed_base_url_in_user_shell",
-      "model_gateway_url_pill",
-      "settings_status_dump_in_more",
-      "test_evidence_copy_in_inspector",
-      "fake_input_progress_output_refs",
-      "account_glyph_text_person"
-    ]
+    "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "project_session_history_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
+    "mustNotShow": ["dashboard_first_app_home", "explanatory_landing_inside_app_shell", "left_rail_primary_navigation", "workspace_sidebar_primary_shell", "raw_trace_console", "runtime_truth_panel", "billing_source_of_truth", "node_pool_console", "artifact_body_authority", "multi_column_sidebar_sprawl", "duplicated_files_progress_panels", "raw_upstream_transcript_for_structured_research_result", "floating_desktop_inspector_overlay", "heavy_mobile_inspector_sheet", "visible_fixed_base_url_in_user_shell", "model_gateway_url_pill", "settings_status_dump_in_more", "test_evidence_copy_in_inspector", "fake_input_progress_output_refs", "account_glyph_text_person"]
   },
   "objectGrammar": {
-    "allowedPrimaryObjects": [
-      "Project",
-      "Session",
-      "Message",
-      "Skill",
-      "InputFile",
-      "OutputFile",
-      "ProgressStage",
-      "ApiKey",
-      "Model",
-      "Export"
-    ],
-    "allowedSecondaryObjects": [
-      "ProjectFileRefs",
-      "FileReference",
-      "OutputVersion",
-      "AuditProjection",
-      "RuntimeGateProjection"
-    ],
-    "forbiddenPrimaryObjects": [
-      "RuntimeTruth",
-      "BillingSourceOfTruth",
-      "NodePool",
-      "RawTrace",
-      "CloudConsole",
-      "DomainVerdict",
-      "ArtifactBodyAuthority"
-    ],
+    "allowedPrimaryObjects": ["Project", "Session", "Message", "Skill", "InputFile", "OutputFile", "ProgressStage", "ApiKey", "Model", "Export"],
+    "allowedSecondaryObjects": ["ProjectFileRefs", "FileReference", "OutputVersion", "AuditProjection", "RuntimeGateProjection"],
+    "forbiddenPrimaryObjects": ["RuntimeTruth", "BillingSourceOfTruth", "NodePool", "RawTrace", "CloudConsole", "DomainVerdict", "ArtifactBodyAuthority"],
     "fileHierarchy": ["project", "session", "input_output_refs"],
-    "ownershipRules": [
-      "User owns projects.",
-      "Project owns sessions.",
-      "Session owns messages, input files, output files, and progress stages.",
-      "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."
-    ]
+    "ownershipRules": ["User owns projects.", "Project owns sessions.", "Session owns messages, input files, output files, and progress stages.", "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."]
   },
   "taskFlow": {
-    "primaryFlow": [
-      "home",
-      "compose_prompt_or_pick_starter_chip",
-      "login_or_register_if_needed",
-      "api_key_modal_if_needed",
-      "attach_input_files_optional",
-      "run_chat_or_runtime_gate",
-      "inspect_progress_files_output",
-      "export_or_continue"
-    ],
-    "apiKeyFlow": [
-      "api_key_optional_at_register",
-      "app_shell_access_allowed_without_api_key",
-      "chat_send_requires_api_key",
-      "api_key_required_modal",
-      "save_api_key",
-      "return_to_composer"
-    ],
-    "fileFlow": [
-      "open_inspector_files",
-      "select_project",
-      "select_session",
-      "inspect_input_output_refs",
-      "preview_or_export_output"
-    ]
+    "primaryFlow": ["home", "compose_prompt_or_pick_starter_chip", "login_or_register_if_needed", "api_key_modal_if_needed", "attach_input_files_optional", "run_chat_or_runtime_gate", "inspect_progress_files_output", "export_or_continue"],
+    "apiKeyFlow": ["api_key_optional_at_register", "app_shell_access_allowed_without_api_key", "chat_send_requires_api_key", "api_key_required_modal", "save_api_key", "return_to_composer"],
+    "fileFlow": ["open_inspector_files", "select_project", "select_session", "inspect_input_output_refs", "preview_or_export_output"]
   },
   "informationArchitecture": {
     "publicShell": ["side_navigation", "first_view", "secondary_surfaces", "overlay_layer"],
@@ -192,15 +104,29 @@
       "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
-      "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
-      "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
-      "projects": { "scopes": ["my_projects"], "actions": ["create_project"], "forbiddenApis": ["/api/projects"] }
+      "skills": {
+        "scopes": ["my_skills", "opl_skills"],
+        "actions": ["import_skill"]
+      },
+      "workflows": {
+        "scopes": ["my_workflows", "opl_workflows"],
+        "actions": ["create_workflow", "import_workflow"]
+      },
+      "projects": {
+        "scopes": ["my_projects"],
+        "actions": ["create_project"],
+        "forbiddenApis": ["/api/projects"]
+      }
     },
     "inspector": ["files", "progress", "output"],
     "rightInspector": {
       "launcher": "right_utility_rail",
       "tabs": ["files", "progress", "output"],
-      "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
+      "resize": {
+        "enabled": true,
+        "minWidth": 320,
+        "maxWidth": 520
+      },
       "desktopBehavior": "stable_right_work_panel_without_main_overlap",
       "mobileBehavior": "light_bottom_sheet_with_rail_yield",
       "mobileMaxHeightVh": 64,
@@ -231,7 +157,10 @@
     "firstViewContract": {
       "allowedElements": ["side_navigation", "brand_title", "primary_composer", "starter_chips", "right_inspector_utility_rail"],
       "forbiddenElements": ["left_rail", "workspace_sidebar", "summary_strip", "settings_form", "chat_history", "right_inspector_content_by_default", "runtime_gate", "long_explanatory_copy"],
-      "starterChipCount": { "min": 3, "max": 5 },
+      "starterChipCount": {
+        "min": 3,
+        "max": 5
+      },
       "maxBodyParagraphs": 1,
       "primaryComposerRequired": true
     },
@@ -244,11 +173,36 @@
       "homeFirstViewMaxCards": 0,
       "secondarySurfaceMaxCards": 6,
       "routeBudgets": {
-        "home": { "maxSections": 1, "maxCards": 0, "maxBodyParagraphs": 1, "maxCta": 1 },
-        "skills": { "maxSections": 2, "maxCards": 6, "maxBodyParagraphs": 2, "maxCta": 1 },
-        "workflows": { "maxSections": 2, "maxCards": 6, "maxBodyParagraphs": 2, "maxCta": 2 },
-        "projects": { "maxSections": 2, "maxCards": 4, "maxBodyParagraphs": 1, "maxCta": 1 },
-        "more": { "maxSections": 1, "maxCards": 0, "maxBodyParagraphs": 1, "maxCta": 0 }
+        "home": {
+          "maxSections": 1,
+          "maxCards": 0,
+          "maxBodyParagraphs": 1,
+          "maxCta": 1
+        },
+        "skills": {
+          "maxSections": 2,
+          "maxCards": 6,
+          "maxBodyParagraphs": 2,
+          "maxCta": 1
+        },
+        "workflows": {
+          "maxSections": 2,
+          "maxCards": 6,
+          "maxBodyParagraphs": 2,
+          "maxCta": 2
+        },
+        "projects": {
+          "maxSections": 2,
+          "maxCards": 4,
+          "maxBodyParagraphs": 1,
+          "maxCta": 1
+        },
+        "more": {
+          "maxSections": 1,
+          "maxCards": 0,
+          "maxBodyParagraphs": 1,
+          "maxCta": 0
+        }
       }
     },
     "resultStreamContract": {
@@ -285,7 +239,11 @@
       "allowedDepth": "flat_with_soft_depth_only"
     },
     "motionPolicy": {
-      "durationMs": { "fast": 120, "base": 160, "sheet": 180 },
+      "durationMs": {
+        "fast": 120,
+        "base": 160,
+        "sheet": 180
+      },
       "easing": "ease-out",
       "allowedProperties": ["opacity", "transform", "background-color", "border-color", "box-shadow", "color"],
       "forbidden": ["layout_animation", "long_blocking_transition", "motion_without_prefers_reduced_motion"],
@@ -303,20 +261,7 @@
       "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_inspector_bottom_sheet", "account_popover_for_auth_and_api_key"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
-    "layoutRules": [
-      "Home must use a centered AI-native composer-first composition.",
-      "Side navigation hosts New Chat, Projects, Skill, 工作流, Search, and More; each primary item owns exactly one task class.",
-      "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.",
-      "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.",
-      "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.",
-      "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.",
-      "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.",
-      "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.",
-      "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.",
-      "The first viewport must not show summary strips, settings forms, chat history, or card grids.",
-      "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.",
-      "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."
-    ]
+    "layoutRules": ["Home must use a centered AI-native composer-first composition.", "Side navigation hosts New Chat, Projects, Skill, 工作流, Search, and More; each primary item owns exactly one task class.", "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.", "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.", "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.", "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.", "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.", "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.", "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.", "The first viewport must not show summary strips, settings forms, chat history, or card grids.", "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.", "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."]
   },
   "visualIdentity": {
     "subject": "ai_native_research_composer",
@@ -328,14 +273,46 @@
   },
   "visualQualityRubric": {
     "criteria": [
-      { "id": "hierarchy_clarity", "measurement": "browser_or_owner_review_boolean", "required": true },
-      { "id": "copy_density", "measurement": "browser_static_copy_budget", "required": true },
-      { "id": "spacing_rhythm", "measurement": "browser_layout_review_boolean", "required": true },
-      { "id": "mobile_comfort", "measurement": "browser_mobile_sheet_and_touch_boolean", "required": true },
-      { "id": "focus_path", "measurement": "browser_keyboard_path_boolean", "required": true },
-      { "id": "empty_error_loading_clarity", "measurement": "contract_state_presence_boolean", "required": true },
-      { "id": "surface_ownership", "measurement": "contract_forbidden_content_boolean", "required": true },
-      { "id": "scientific_artifact_density", "measurement": "browser_artifact_shape_boolean", "required": true }
+      {
+        "id": "hierarchy_clarity",
+        "measurement": "browser_or_owner_review_boolean",
+        "required": true
+      },
+      {
+        "id": "copy_density",
+        "measurement": "browser_static_copy_budget",
+        "required": true
+      },
+      {
+        "id": "spacing_rhythm",
+        "measurement": "browser_layout_review_boolean",
+        "required": true
+      },
+      {
+        "id": "mobile_comfort",
+        "measurement": "browser_mobile_sheet_and_touch_boolean",
+        "required": true
+      },
+      {
+        "id": "focus_path",
+        "measurement": "browser_keyboard_path_boolean",
+        "required": true
+      },
+      {
+        "id": "empty_error_loading_clarity",
+        "measurement": "contract_state_presence_boolean",
+        "required": true
+      },
+      {
+        "id": "surface_ownership",
+        "measurement": "contract_forbidden_content_boolean",
+        "required": true
+      },
+      {
+        "id": "scientific_artifact_density",
+        "measurement": "browser_artifact_shape_boolean",
+        "required": true
+      }
     ],
     "doesNotMeasure": ["pixel_perfect_figma_match", "complete_design_system", "assistive_technology_conformance", "production_owner_acceptance"]
   },
@@ -527,8 +504,16 @@
       "role": "secondary_context_surface",
       "defaultState": "hidden",
       "tabs": ["files", "progress", "output"],
-      "resize": { "enabled": true, "minWidth": 320, "maxWidth": 520 },
-      "responsivePlacement": { "desktop": "right_resizable_panel", "tablet": "right_sheet", "mobile": "bottom_sheet" },
+      "resize": {
+        "enabled": true,
+        "minWidth": 320,
+        "maxWidth": 520
+      },
+      "responsivePlacement": {
+        "desktop": "right_resizable_panel",
+        "tablet": "right_sheet",
+        "mobile": "bottom_sheet"
+      },
       "mustNotOwn": ["runtime_truth", "artifact_body_authority"]
     },
     {
@@ -619,16 +604,7 @@
       "states": ["closed", "open", "empty", "error", "loading"]
     }
   },
-  "pageTemplates": [
-    "HomeFirstView",
-    "Skills",
-    "Workflows",
-    "Projects",
-    "MoreOverflow",
-    "InspectorSheet",
-    "ModalOverlay",
-    "OutputPreview"
-  ],
+  "pageTemplates": ["HomeFirstView", "Skills", "Workflows", "Projects", "MoreOverflow", "InspectorSheet", "ModalOverlay", "OutputPreview"],
   "accessibility": {
     "keyboardRequired": true,
     "focusVisibleRequired": true,
@@ -640,36 +616,9 @@
   "figmaSource": {
     "fileKey": "E8nYfNFc2D9P01FYZ8UwBW",
     "nodeId": "0:1",
-    "requiredSourceFiles": [
-      "src/app/App.tsx",
-      "src/styles/theme.css",
-      "src/styles/index.css"
-    ],
-    "adoptedPatterns": [
-      "account_popover_status",
-      "missing_api_key_resource_gate",
-      "side_navigation_new_chat_projects_skill_workflow_search_more",
-      "ai_native_center_composer",
-      "starter_chips",
-      "prompt_command_center",
-      "research_skill_launcher",
-      "agentic_workflow_cards",
-      "inspector_sheet_tabs_files_progress_output",
-      "running_blocked_turn_state"
-    ],
-    "rejectedPatterns": [
-      "drive_or_cloud_storage_ownership",
-      "runtime_truth_ownership",
-      "founder_plan_upsell",
-      "unlimited_compute_claim",
-      "dashboard_crm_primary_app",
-      "generic_office_content_design_video_skills",
-      "default_tech_blue_primary_palette",
-      "dominant_purple_primary_palette",
-      "purple_blue_gradient_primary_style",
-      "heavy_glassmorphism_primary_style",
-      "neumorphism_primary_style"
-    ]
+    "requiredSourceFiles": ["src/app/App.tsx", "src/styles/theme.css", "src/styles/index.css"],
+    "adoptedPatterns": ["account_popover_status", "missing_api_key_resource_gate", "side_navigation_new_chat_projects_skill_workflow_search_more", "ai_native_center_composer", "starter_chips", "prompt_command_center", "research_skill_launcher", "agentic_workflow_cards", "inspector_sheet_tabs_files_progress_output", "running_blocked_turn_state"],
+    "rejectedPatterns": ["drive_or_cloud_storage_ownership", "runtime_truth_ownership", "founder_plan_upsell", "unlimited_compute_claim", "dashboard_crm_primary_app", "generic_office_content_design_video_skills", "default_tech_blue_primary_palette", "dominant_purple_primary_palette", "purple_blue_gradient_primary_style", "heavy_glassmorphism_primary_style", "neumorphism_primary_style"]
   },
   "visualQualityGate": {
     "state": "production_ui_quality_claim_accepted_current_head",
@@ -686,83 +635,47 @@
       "cannotBeInferredBy": ["repo_local_tests", "browser_screenshots", "production_e2e_without_human_receipt"],
       "reason": "human owner accepted current UI/UX v1 as production v1 while explicitly not claiming a complete design system"
     },
-    "requiredBeforeProductionUiClaim": [
-      "Figma MCP source context refreshed",
-      "desktop screenshot captured and layout-reviewed in local browser",
-      "tablet screenshot captured and layout-reviewed in local browser",
-      "mobile screenshot captured and layout-reviewed in local browser",
-      "compact screenshot captured and layout-reviewed in local browser",
-      "browser interaction e2e passed",
-      "no hidden overlay intercepts input",
-      "no static text overflow across registered responsive breakpoints",
-      "interactive touch targets and named controls pass registered browser checks",
-      "keyboard focus ring is visible on the primary chat submit control",
-      "repo-local keyboard path, API key modal focus trap, and contrast closeout pass browser evidence",
-      "structured @科研 result stream is artifact-first without duplicated raw upstream assistant transcript",
-      "desktop inspector is verified as a stable right work panel without overlapping main content",
-      "OPL green token guard rejects default tech blue or purple primary palette",
-      "prefers-reduced-motion path is implemented for UI motion",
-      "mobile inspector is verified as a lightweight bottom sheet within height budget",
-      "production UI owner receipt completed"
-    ],
+    "requiredBeforeProductionUiClaim": ["Figma MCP source context refreshed", "desktop screenshot captured and layout-reviewed in local browser", "tablet screenshot captured and layout-reviewed in local browser", "mobile screenshot captured and layout-reviewed in local browser", "compact screenshot captured and layout-reviewed in local browser", "browser interaction e2e passed", "no hidden overlay intercepts input", "no static text overflow across registered responsive breakpoints", "interactive touch targets and named controls pass registered browser checks", "keyboard focus ring is visible on the primary chat submit control", "repo-local keyboard path, API key modal focus trap, and contrast closeout pass browser evidence", "structured @科研 result stream is artifact-first without duplicated raw upstream assistant transcript", "desktop inspector is verified as a stable right work panel without overlapping main content", "OPL green token guard rejects default tech blue or purple primary palette", "prefers-reduced-motion path is implemented for UI motion", "mobile inspector is verified as a lightweight bottom sheet within height budget", "production UI owner receipt completed"],
     "baselineEvidence": {
       "command": "npm run verify:browser",
       "runner": "tests/browser/research-main-path-runner.mjs",
       "test": "tests/browser/research-main-path.browser.test.mjs",
       "viewports": ["desktop", "tablet", "mobile", "compact"],
       "screenshotPathPattern": ".runtime/browser-visual/research-main-path-{mode}-{viewport}-{timestamp}.png",
-      "layoutChecks": [
-        "horizontalOverflowPx=0",
-        "inspector.visible=true",
-        "inspector.withinViewport=true",
-        "inspector.mobileBottomSheet=true on mobile and compact viewports",
-        "inspector.desktopStablePanel=true on desktop viewport",
-        "inspector.mobileSheetHeightRatio<=0.64 on mobile and compact viewports",
-        "artifactChecks.researchArtifactDensityPass=true",
-        "activeInspectorPanel.visible=true",
-        "hiddenOverlayInterceptsInput=false",
-        "chatInputHitTarget=true",
-        "textOverflowCount=0",
-        "interactiveTargetFailures.length=0",
-        "focusableWithoutName.length=0",
-        "focusRingProbe.visible=true"
-      ],
+      "layoutChecks": ["horizontalOverflowPx=0", "inspector.visible=true", "inspector.withinViewport=true", "inspector.mobileBottomSheet=true on mobile and compact viewports", "inspector.desktopStablePanel=true on desktop viewport", "inspector.mobileSheetHeightRatio<=0.64 on mobile and compact viewports", "artifactChecks.researchArtifactDensityPass=true", "activeInspectorPanel.visible=true", "hiddenOverlayInterceptsInput=false", "chatInputHitTarget=true", "textOverflowCount=0", "interactiveTargetFailures.length=0", "focusableWithoutName.length=0", "focusRingProbe.visible=true"],
       "artifactPolicy": "screenshots are temporary .runtime artifacts and are not git-tracked"
     },
     "responsiveVisualQaEvidence": {
       "command": "npm run verify:browser",
       "source": "real Chromium/CDP Page.captureScreenshot and DOM layout metrics",
       "breakpoints": [
-        { "id": "desktop", "width": 1440, "height": 1200, "deviceScaleFactor": 1 },
-        { "id": "tablet", "width": 834, "height": 1200, "deviceScaleFactor": 2 },
-        { "id": "mobile", "width": 390, "height": 1200, "deviceScaleFactor": 2 },
-        { "id": "compact", "width": 360, "height": 1200, "deviceScaleFactor": 3 }
+        {
+          "id": "desktop",
+          "width": 1440,
+          "height": 1200,
+          "deviceScaleFactor": 1
+        },
+        {
+          "id": "tablet",
+          "width": 834,
+          "height": 1200,
+          "deviceScaleFactor": 2
+        },
+        {
+          "id": "mobile",
+          "width": 390,
+          "height": 1200,
+          "deviceScaleFactor": 2
+        },
+        {
+          "id": "compact",
+          "width": 360,
+          "height": 1200,
+          "deviceScaleFactor": 3
+        }
       ],
-      "checks": [
-        "noHorizontalOverflow",
-        "noStaticTextOverflow",
-        "inspectorWithinViewport",
-        "activeInspectorPanelVisible",
-        "hiddenOverlayDoesNotInterceptInput",
-        "chatInputHitTarget",
-        "touchTargetsPass",
-        "namedControlsPass",
-        "keyboardFocusVisible",
-        "keyboardPathPass",
-        "modalFocusTrapPass",
-        "contrastPass",
-        "oplGreenTokenGuard",
-        "prefersReducedMotionPresent",
-        "mobileInspectorBottomSheet",
-        "desktopInspectorStablePanel",
-        "lightweightMobileInspectorSheet",
-        "researchArtifactDensity"
-      ],
-      "doesNotProve": [
-        "human owner accepted production UI quality",
-        "complete UI/UX design system",
-        "assistive technology conformance"
-      ]
+      "checks": ["noHorizontalOverflow", "noStaticTextOverflow", "inspectorWithinViewport", "activeInspectorPanelVisible", "hiddenOverlayDoesNotInterceptInput", "chatInputHitTarget", "touchTargetsPass", "namedControlsPass", "keyboardFocusVisible", "keyboardPathPass", "modalFocusTrapPass", "contrastPass", "oplGreenTokenGuard", "prefersReducedMotionPresent", "mobileInspectorBottomSheet", "desktopInspectorStablePanel", "lightweightMobileInspectorSheet", "researchArtifactDensity"],
+      "doesNotProve": ["human owner accepted production UI quality", "complete UI/UX design system", "assistive technology conformance"]
     },
     "productionUiQualityClaim": {
       "phaseId": "production_ui_quality_claim",
@@ -772,28 +685,10 @@
         "claimed": "ui_ux_v1_product_surface",
         "notClaimed": "complete_ui_ux_design_system"
       },
-      "requiredEvidence": [
-        "owner_receipt",
-        "production_browser_e2e_or_screenshot_evidence",
-        "accessibility_closeout_boundary",
-        "sanitized_foldback"
-      ],
+      "requiredEvidence": ["owner_receipt", "production_browser_e2e_or_screenshot_evidence", "accessibility_closeout_boundary", "sanitized_foldback"],
       "lifecycle": {
-        "longTermTruth": [
-          "contracts/web-gui-product-contract.json",
-          "contracts/web-gap-phase-registry.json",
-          "contracts/web-product-profile.json",
-          "registered tests",
-          "docs/status.md",
-          "docs/active/README.md"
-        ],
-        "temporaryArtifacts": [
-          ".runtime/browser-visual/*",
-          ".runtime/phase-runs/*",
-          "production raw logs",
-          "raw screenshots",
-          "CI raw output"
-        ]
+        "longTermTruth": ["contracts/web-gui-product-contract.json", "contracts/web-gap-phase-registry.json", "contracts/web-product-profile.json", "registered tests", "docs/status.md", "docs/active/README.md"],
+        "temporaryArtifacts": [".runtime/browser-visual/*", ".runtime/phase-runs/*", "production raw logs", "raw screenshots", "CI raw output"]
       },
       "productionEvidence": {
         "status": "done",
@@ -801,10 +696,10 @@
         "acceptedSources": ["production_browser_e2e", "production_screenshot_evidence"],
         "latestAcceptedSource": {
           "type": "production_browser_e2e",
-          "runId": 28009300822,
-          "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28009300822",
-          "commit": "b0562b4070a4165f55798addd0305e8c32072e52",
-          "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b0562b4",
+          "runId": 28039468173,
+          "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28039468173",
+          "commit": "c1787da0c13aedf75b84b12c29f26b13193fce74",
+          "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da",
           "targetHost": "https://opl.medopl.cn",
           "foldback": "sanitized_summary_only"
         },
@@ -813,19 +708,8 @@
       },
       "accessibilityCloseout": {
         "status": "repo_local_browser_closeout_done_production_owner_pending",
-        "completedRepoLocalChecks": [
-          "touchTargetsPass",
-          "namedControlsPass",
-          "keyboardFocusVisible",
-          "noStaticTextOverflow",
-          "hiddenOverlayDoesNotInterceptInput",
-          "keyboardPathPass",
-          "modalFocusTrapPass",
-          "contrastPass"
-        ],
-        "requiredBeforeFullA11yClaim": [
-          "assistive_technology_review"
-        ]
+        "completedRepoLocalChecks": ["touchTargetsPass", "namedControlsPass", "keyboardFocusVisible", "noStaticTextOverflow", "hiddenOverlayDoesNotInterceptInput", "keyboardPathPass", "modalFocusTrapPass", "contrastPass"],
+        "requiredBeforeFullA11yClaim": ["assistive_technology_review"]
       }
     },
     "acceptance": [
@@ -880,17 +764,8 @@
         "evidence": "human owner accepted ui_ux_v1_production_accepted on 2026-06-23 for the current production v1 surface; complete design system remains unclaimed"
       }
     ],
-    "cannotClaim": [
-      "complete UI/UX design system",
-      "production visual polish complete"
-    ]
+    "cannotClaim": ["complete UI/UX design system", "production visual polish complete"]
   },
   "acceptanceLayers": ["contract", "component_state", "interaction", "visual"],
-  "cannotClaim": [
-    "pixel-perfect production UI from this contract alone",
-    "runtime execution ready",
-    "artifact body authority",
-    "full accessibility conformance without browser and assistive checks",
-    "visual quality without Figma and screenshot review"
-  ]
+  "cannotClaim": ["pixel-perfect production UI from this contract alone", "runtime execution ready", "artifact body authority", "full accessibility conformance without browser and assistive checks", "visual quality without Figma and screenshot review"]
 }

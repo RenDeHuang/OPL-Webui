@@ -99,7 +99,7 @@
         "id": "medopl_readonly_evidence",
         "ownerSurface": "release-evidence",
         "acceptanceContract": "contracts/web-release-profile.json#/productionDogfoodReadiness",
-        "disposition": "awaiting_secret_gated_foldback",
+        "disposition": "production_readonly_projection_dogfood_confirmed_run_28039468173",
         "evidenceRequired": [
           "readonly_switch_confirmed",
           "sanitized_dogfood_stdout_foldback",
@@ -110,7 +110,7 @@
         "id": "runtime_execution_boundary",
         "ownerSurface": "runtime-gate",
         "acceptanceContract": "contracts/web-runtime-bridge.json",
-        "disposition": "fail_closed_until_admission_contract",
+        "disposition": "fail_closed_empty_allowlist_boundary_accepted",
         "launchBlocking": true,
         "evidenceRequired": [
           "go_side_execution_contract",

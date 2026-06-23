@@ -72,11 +72,22 @@
     "currentStatus": "not_admitted",
     "currentPhase": "execution_admission",
     "nextPhase": "runtime_execution_contract_design",
-    "blockedBy": "missing_owner_receipt",
+    "blockedBy": null,
     "ownerReceipt": {
       "required": true,
-      "source": "human_owner_receipt"
+      "source": "human_owner_receipt",
+      "status": "accepted",
+      "acceptedAt": "2026-06-24",
+      "acceptedClaim": "runtime_fail_closed_empty_allowlist_boundary_accepted",
+      "acceptedScope": "Web remains gate plus readonly projection only; MedOPL and OPL Framework remain execution authority."
     },
+    "authority": {
+      "execution": ["MedOPL", "OPL Framework"],
+      "web": ["gate", "readonly_projection"],
+      "webIsExecutionOwner": false
+    },
+    "currentAllowlist": [],
+    "forbiddenCommands": ["install", "repair", "module_exec", "artifact_body", "runtime_mutation"],
     "nextStepOpeners": [
       "human owner receipt names the real consumer and command class",
       "Go-side runtime execution contract is added",
@@ -98,19 +109,19 @@
       },
       {
         "id": "registered_allowlist_eval",
-        "status": "missing",
+        "status": "pass",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "eval"
+        "evidence": "empty_allowlist_fail_closed_eval"
       },
       {
         "id": "command_allowlist",
-        "status": "missing",
+        "status": "present",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "allowlist"
+        "evidence": "empty_allowlist"
       },
       {
         "id": "human_authorization_boundary",
-        "status": "missing",
+        "status": "accepted",
         "owner": "human_owner_receipt",
         "evidence": "owner_receipt"
       },
