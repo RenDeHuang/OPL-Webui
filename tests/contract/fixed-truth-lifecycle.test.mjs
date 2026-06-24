@@ -188,11 +188,21 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_fallback'), true);
   assert.equal(product.ownedSurfaces.includes('page_state'), true);
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_capability_entry'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_authorization_status_projection'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_progress_refs_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.nonOwnedTruth.includes('billing_source_of_truth'), true);
   assert.equal(product.nonOwnedTruth.includes('runtime_truth'), true);
+  assert.equal(product.nonOwnedTruth.includes('artifact_body_authority'), true);
   assert.equal(product.consumedAuthorities.includes('one-person-lab-app/contracts/app-product-profile.json'), true);
   assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
+  assert.equal(product.capabilityGoal.mode, 'medopl_authorized_runtime_storage_capabilities_without_web_authority');
+  assert.deepEqual(product.capabilityGoal.targetCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs']);
+  assert.deepEqual(product.capabilityGoal.webOwnedExperience, ['entry', 'authorization_status', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'deeplink', 'fail_closed_gate']);
+  assert.deepEqual(product.capabilityGoal.authorityOwners, { runtime: 'MedOPL / OPL Framework', storage: 'MedOPL / OPL Framework', artifactBody: 'MedOPL / OPL Framework' });
+  assert.equal(product.capabilityGoal.webMayExecuteRuntime, false);
+  assert.equal(product.capabilityGoal.webMayOwnStorageTruth, false);
 
   assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
   assert.equal(api.paths['/api/account/commercial-status'].get.responses['200'].description, 'Readonly commercial account lifecycle projection.');
@@ -208,6 +218,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
   assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件']);
   assert.equal(runtime.runtimeRequiredMarkers.includes('@长任务'), false);
+  assert.equal(runtime.capabilityGoal.mode, 'medopl_authorized_capability_entry_and_refs_projection');
+  assert.deepEqual(runtime.capabilityGoal.userCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs']);
+  assert.deepEqual(runtime.capabilityGoal.webRole, ['gate', 'authorization_status', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'deeplink']);
+  assert.deepEqual(runtime.capabilityGoal.authorityOwners, ['MedOPL', 'OPL Framework']);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
@@ -603,6 +617,37 @@ test('commercial lifecycle expansion stays a readonly personal projection until 
   assert.match(active, /Commercial lifecycle remains launch-blocking beyond the readonly personal projection/);
   assert.match(decisions, /Commercial lifecycle stays a readonly personal projection/);
   assert.match(decisions, /team invite\/RBAC\/pricing\/subscription\/payment/i);
+});
+
+test('MedOPL runtime and storage capabilities are product goals without Web authority', () => {
+  const pageState = readJson('contracts/web-page-state-matrix.json');
+  const product = readJson('contracts/web-product-profile.json');
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.equal(pageState.medoplCapabilityStates.mode, 'authorized_capability_projection_without_web_authority');
+  assert.deepEqual(pageState.medoplCapabilityStates.states, [
+    'medopl_not_authorized',
+    'medopl_authorized',
+    'runtime_status_readonly',
+    'storage_status_readonly',
+    'progress_refs_readonly',
+    'deliverable_refs_readonly',
+  ]);
+  assert.deepEqual(pageState.medoplCapabilityStates.forbiddenClaims, [
+    'web_runtime_execution',
+    'web_storage_truth',
+    'artifact_body_authority',
+    'node_pool_lifecycle',
+  ]);
+  assert.equal(pageState.medoplCapabilityStates.authorityOwner, 'MedOPL / OPL Framework');
+  assert.equal(product.capabilityGoal.pageStateContract, 'contracts/web-page-state-matrix.json#/medoplCapabilityStates');
+  assert.equal(runtime.projectionPolicy.allowedPayload.includes('status'), true);
+  assert.equal(runtime.projectionPolicy.allowedPayload.includes('deliverable_refs'), true);
+  assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('private_state_path'), true);
+  assert.match(status, /runtime\/storage are product target capabilities when opened through MedOPL/);
+  assert.match(active, /runtime\/storage are target user capabilities through MedOPL authorization/);
 });
 
 test('operations maturity and gap phase advancement require structured eval evidence', () => {

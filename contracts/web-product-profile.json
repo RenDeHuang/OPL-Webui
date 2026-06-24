@@ -39,7 +39,10 @@
     "web_release_deploy",
     "sanitized_audit_projection",
     "commercial_account_lifecycle_projection",
-    "runtime_gate_projection"
+    "runtime_gate_projection",
+    "medopl_capability_entry",
+    "medopl_authorization_status_projection",
+    "medopl_progress_refs_projection"
   ],
   "consumedAuthorities": [
     "one-person-lab-app/contracts/app-product-profile.json",
@@ -58,6 +61,34 @@
     "domain_judgment_truth",
     "artifact_body_authority"
   ],
+  "capabilityGoal": {
+    "mode": "medopl_authorized_runtime_storage_capabilities_without_web_authority",
+    "targetCapabilities": [
+      "runtime",
+      "storage",
+      "progress_refs",
+      "deliverable_refs",
+      "materials_refs"
+    ],
+    "webOwnedExperience": [
+      "entry",
+      "authorization_status",
+      "readonly_projection",
+      "progress_refs_projection",
+      "deliverable_refs_projection",
+      "deeplink",
+      "fail_closed_gate"
+    ],
+    "authorityOwners": {
+      "runtime": "MedOPL / OPL Framework",
+      "storage": "MedOPL / OPL Framework",
+      "artifactBody": "MedOPL / OPL Framework"
+    },
+    "pageStateContract": "contracts/web-page-state-matrix.json#/medoplCapabilityStates",
+    "webMayExecuteRuntime": false,
+    "webMayOwnStorageTruth": false,
+    "claimBoundary": "runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly projection, refs projection, deeplink, and fail-closed gate only."
+  },
   "provider": {
     "id": "gflabtoken",
     "fixedBaseUrl": "https://gflabtoken.cn/v1",
@@ -77,6 +108,7 @@
   },
   "publicUi": {
     "primarySurface": "ai_native_research_homepage",
+    "hiddenConceptSemantics": "These implementation concepts are hidden from the default public shell; this does not remove runtime or storage from the product goal when opened through MedOPL authorization.",
     "hiddenConcepts": [
       "workspace",
       "runtime",
@@ -430,6 +462,7 @@
       "Users bind their own provider key while base_url remains fixed.",
       "Ordinary chat is available for low-risk explanation and organization, while research Skill entry remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
+      "Runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly refs projection, deeplink, and fail-closed gate.",
       "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only."
     ],
     "cannotClaim": [
@@ -445,7 +478,7 @@
       "runtime execution owner",
       "runtime continuous GitHub sync",
       "node pool lifecycle owner",
-      "storage owner",
+      "storage truth owner",
       "domain agent quality verdict owner",
       "real OPL mutation or artifact body authority"
     ]

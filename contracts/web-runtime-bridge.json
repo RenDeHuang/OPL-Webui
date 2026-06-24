@@ -5,6 +5,29 @@
   "mode": "gate_and_readonly_projection_v1",
   "webuiRuntimeExecution": "forbidden",
   "medoplDeepLink": "https://medopl.medopl.cn",
+  "capabilityGoal": {
+    "mode": "medopl_authorized_capability_entry_and_refs_projection",
+    "userCapabilities": [
+      "runtime",
+      "storage",
+      "progress_refs",
+      "deliverable_refs",
+      "materials_refs"
+    ],
+    "webRole": [
+      "gate",
+      "authorization_status",
+      "readonly_projection",
+      "progress_refs_projection",
+      "deliverable_refs_projection",
+      "deeplink"
+    ],
+    "authorityOwners": [
+      "MedOPL",
+      "OPL Framework"
+    ],
+    "claimBoundary": "Web can expose authorized MedOPL capability entry and sanitized refs/status only; it cannot execute runtime commands, own storage truth, or return artifact bodies."
+  },
   "runtimeRequiredMarkers": ["@论文", "@基金", "@综述", "@文件"],
   "lightweightMarkers": ["@科研"],
   "markerSemantics": [

@@ -7,7 +7,7 @@
 
 ## Current State
 
-One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. The repo currently owns the public Web product surface, Go control plane API, multi-tenant account/session path, tenant isolation, BYOK binding, research capability entry, ordinary chat fallback, page state, sanitized audit projection, and release/deploy evidence.
+One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab. The repo currently owns the public Web product surface, Go control plane API, multi-tenant account/session path, tenant isolation, BYOK binding, research capability entry, ordinary chat fallback, MedOPL capability entry, authorization/status/refs projection, page state, sanitized audit projection, and release/deploy evidence. Stable capability claim phrase: runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly/progress/refs projection, deeplink, and fail-closed gate only.
 
 The current stage is research SaaS product engineering. Product work now moves one gap at a time through contracts, source, tests, cleanup, and fresh evidence.
 
@@ -63,6 +63,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - Ordinary chat upstream calls use the fixed `gpt-5.5` Responses API profile with `service_tier=fast`, `reasoning.effort=xhigh`, and a configurable response-header timeout budget. The default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`; timeout failures remain fail-closed with sanitized `chat.upstream_failed` audit evidence.
 - Desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, and artifact/body authority are not owned by this repo.
 - Runtime-requiring markers such as `@论文`, `@基金`, `@综述`, and `@文件` stop at a MedOPL Runtime gate unless a Go-side contract, eval, whitelist, and authorization boundary admits more.
+- Runtime/storage are product target capabilities when opened through MedOPL authorization; current Web evidence covers authorized entry, status, readonly refs/progress/deliverables projection, deeplink, and fail-closed gate, not runtime execution, storage truth, node lifecycle, or artifact body authority.
 - Local no-secret readiness is machine-owned by `contracts/web-release-profile.json` as HTTP contract, static shell evidence, and browser e2e evidence. The explicit browser lane ran real Chromium/CDP automation through `npm run verify:browser`.
 - Production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `28039468173` for commit `c1787da0c13aedf75b84b12c29f26b13193fce74`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:c1787da`, after dry-run, image preflight, production apply, availability probe, dogfood, and production browser e2e success. production real ordinary chat completion, `chat.completed` audit evidence, and MedOPL readonly projection checks are folded back as sanitized release evidence. This is not MedOPL runtime execution evidence.
 - Real local Chromium browser e2e executed successfully through `npm run verify:browser`, covering register, login, API Key binding, ordinary chat with mock upstream, `@论文`/`@基金` runtime gates, sanitized audit evidence, and user-like CDP input.
@@ -91,7 +92,7 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 - 本阶段没有证明 multi-node HA；当前 availability probe 只证明 public HTTP endpoints 的重复可用性。
 - 本阶段没有 dashboard、alerting、error budget enforcement、production rollback execution 或 automatic rollback；只存在 rollback record contract。
 - 本阶段没有新增 team invite、RBAC、pricing、subscription、payment mutation、billing source of truth、workspace-visible UI 或 commercial admin console；当前只能 claim authenticated readonly personal commercial status projection。
-- 本阶段没有新增 billing、storage、runtime bridge、OPL worker、object storage、artifact body endpoint 或 production MedOPL runtime bridge。
+- 本阶段没有新增 billing truth、storage truth/mutation owner、runtime execution bridge、OPL worker、object storage mutation、artifact body endpoint 或 production MedOPL runtime execution bridge。
 - 不能执行 OPL install、repair、module exec、family-runtime mutation、engine install/update/remove。
 - 不能返回 artifact body、memory body、domain verdict、private state path、mutation result 或 raw provider secret。
 - 不能 claim complete UI/UX design system、assistive technology conformance 或 production visual polish；当前只接受 `ui_ux_v1_production_accepted` 作为 current production v1 product surface claim。

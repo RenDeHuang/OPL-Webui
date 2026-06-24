@@ -49,6 +49,34 @@
     "service_unavailable",
     "network_unreachable"
   ],
+  "medoplCapabilityStates": {
+    "mode": "authorized_capability_projection_without_web_authority",
+    "states": [
+      "medopl_not_authorized",
+      "medopl_authorized",
+      "runtime_status_readonly",
+      "storage_status_readonly",
+      "progress_refs_readonly",
+      "deliverable_refs_readonly"
+    ],
+    "ownedExperience": [
+      "entry",
+      "authorization_status",
+      "readonly_projection",
+      "progress_refs_projection",
+      "deliverable_refs_projection",
+      "deeplink",
+      "fail_closed_gate"
+    ],
+    "forbiddenClaims": [
+      "web_runtime_execution",
+      "web_storage_truth",
+      "artifact_body_authority",
+      "node_pool_lifecycle"
+    ],
+    "authorityOwner": "MedOPL / OPL Framework",
+    "contractBoundary": "runtime/storage are target user capabilities through MedOPL authorization; Web page state may show authorization, status, refs, and links only."
+  },
   "reliabilityModel": {
     "owner": "one-person-lab-web",
     "consumer": "browser_reliability_status_surface",
