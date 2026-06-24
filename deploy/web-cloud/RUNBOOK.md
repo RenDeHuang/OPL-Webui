@@ -125,6 +125,18 @@ npm run release:evidence -- \
 
 The closeout JSON must not contain raw logs, cookies, API keys, DB URLs, upstream bodies, or screenshots. Until this receipt is folded back, do not claim long soak, production load readiness, rollback execution, alert routing, DB restore drill, dashboard readiness, HA, SLO enforcement, automatic rollback, or production-ready SaaS.
 
+P0/P1 single-node launch operations closeout is narrower than final HA/SLO closeout. After the operator has real rollback, alerting, DB restore, monitoring/dashboard, soak, load, DB pool, upstream backpressure, and migration-compatibility evidence, fold only the sanitized summary:
+
+```bash
+npm run release:evidence -- \
+  --run-id <github-run-id> \
+  --jobs-json <jobs.json> \
+  --ops-closeout-json <sanitized-ops-closeout.json> \
+  --update-release-profile contracts/web-release-profile.json
+```
+
+This receipt can support a controlled single-node public launch decision, but it must still not claim multi-node HA, automatic rollback, complete commercial SaaS, billing source of truth, or runtime execution.
+
 ## Production authenticated dogfood e2e
 
 该 harness 只证明 OPL-Webui 自己的 production authenticated 用户路径，默认跳过，不属于 rollout mutation。GitHub `Cloud Rollout` 手动 input `authenticated_dogfood_e2e=false` 为默认；打开后必须同时设置 `apply=true`，并且只能在该 workflow 的 `production-apply`、canary、smoke 成功后运行。Environment secrets 只需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，不要给该 job 注入 `KUBECONFIG`、`OPL_DATABASE_URL`、PostgreSQL 密码、MedOPL token 或 TCR 凭据。`OPL_DOGFOOD_EMAIL` 必须是邮箱格式，`OPL_DOGFOOD_PASSWORD` 必须至少 12 个字符；helper 会在发起 production 请求前本地 fail-closed。

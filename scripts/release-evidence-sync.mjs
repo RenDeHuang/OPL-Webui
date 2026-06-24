@@ -63,7 +63,8 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   const withAvailability = foldAvailabilityIntoReleaseProfile({ profile: withDogfood, summary });
   const withScheduledCanary = foldScheduledCanaryIntoReleaseProfile({ profile: withAvailability, summary });
   const withRollback = foldRollbackIntoReleaseProfile({ profile: withScheduledCanary, summary });
-  const withLaunchCloseout = foldLaunchCloseoutIntoReleaseProfile({ profile: withRollback, summary });
+  const withOpsCloseout = foldOperationsCloseoutIntoReleaseProfile({ profile: withRollback, summary });
+  const withLaunchCloseout = foldLaunchCloseoutIntoReleaseProfile({ profile: withOpsCloseout, summary });
   const browser = withLaunchCloseout.productionBrowserE2EReadiness ?? {};
   if (!summary.browserJobObserved) return withLaunchCloseout;
 
@@ -106,6 +107,79 @@ function foldLaunchCloseoutIntoReleaseProfile({ profile, summary }) {
         ...decision.cannotClaim,
       ]),
     },
+  };
+}
+
+function foldOperationsCloseoutIntoReleaseProfile({ profile, summary }) {
+  if (!summary.opsCloseout) return profile;
+  const closeout = profile.productionOperationsCloseout ?? {};
+  const evidence = buildOperationsCloseoutEvidence(summary);
+  const gates = profile.productionObservabilityBaseline?.productionReadinessGates ?? {};
+  return {
+    ...profile,
+    productionOperationsCloseout: {
+      ...closeout,
+      state: evidence.status === 'accepted' ? `accepted_p0_p1_run_${summary.runId}` : `incomplete_p0_p1_run_${summary.runId}`,
+      latestEvidence: evidence,
+      cannotClaim: uniqueStrings([...(closeout.cannotClaim ?? []), ...evidence.cannotClaim]),
+    },
+    productionObservabilityBaseline: {
+      ...(profile.productionObservabilityBaseline ?? {}),
+      productionReadinessGates: {
+        ...gates,
+        rollbackPath: { ...(gates.rollbackPath ?? {}), state: evidence.p0.rollback?.state === 'executed' ? 'production_rollback_record_folded_back' : gates.rollbackPath?.state },
+        alertingBoundary: { ...(gates.alertingBoundary ?? {}), state: evidence.p0.alerting?.state === 'verified' ? 'alert_route_folded_back' : gates.alertingBoundary?.state },
+        dbBackupRestore: { ...(gates.dbBackupRestore ?? {}), state: evidence.p0.dbRestore?.state === 'executed' ? 'restore_drill_folded_back' : gates.dbBackupRestore?.state },
+        observabilityDashboard: { ...(gates.observabilityDashboard ?? {}), state: evidence.p0.monitoring?.dashboardUrl ? 'dashboard_url_folded_back' : gates.observabilityDashboard?.state },
+        concurrencyEvidence: { ...(gates.concurrencyEvidence ?? {}), state: evidence.p1.load?.state === 'executed' ? 'staging_or_production_load_folded_back' : gates.concurrencyEvidence?.state },
+        upstreamBackpressure: { ...(gates.upstreamBackpressure ?? {}), state: evidence.p1.upstreamBackpressure?.failClosed === true ? 'upstream_backpressure_folded_back' : gates.upstreamBackpressure?.state },
+        migrationSchemaCompatibility: { ...(gates.migrationSchemaCompatibility ?? {}), state: evidence.p1.migrationCompatibility?.state === 'verified' ? 'migration_compatibility_folded_back' : gates.migrationSchemaCompatibility?.state },
+      },
+    },
+  };
+}
+
+function buildOperationsCloseoutEvidence(summary) {
+  const receipt = summary.opsCloseout;
+  const p0 = receipt.p0 ?? {};
+  const p1 = receipt.p1 ?? {};
+  const rawLogPolicy = {
+    storesRawLogs: receipt.rawLogPolicy?.storesRawLogs === true ? true : false,
+    storesSecretValues: receipt.rawLogPolicy?.storesSecretValues === true ? true : false,
+  };
+  const sanitized = {
+    runId: summary.runId,
+    runUrl: summary.runUrl,
+    commit: summary.commit,
+    workflow: summary.workflow || 'Cloud Rollout',
+    completedAt: summary.completedAt,
+    owner: typeof receipt.owner === 'string' ? receipt.owner : 'release_operator',
+    acceptedAt: typeof receipt.acceptedAt === 'string' ? receipt.acceptedAt : summary.completedAt,
+    acceptedClaim: typeof receipt.acceptedClaim === 'string' ? receipt.acceptedClaim : null,
+    p0: {
+      rollback: pickEvidence(p0.rollback, ['state', 'runId', 'automatic']),
+      alerting: pickEvidence(p0.alerting, ['state', 'route', 'severityPolicy']),
+      dbRestore: pickEvidence(p0.dbRestore, ['state', 'drillId', 'sanitizedVerification']),
+      monitoring: pickEvidence(p0.monitoring, ['state', 'dashboardUrl']),
+    },
+    p1: {
+      soak: pickEvidence(p1.soak, ['state', 'runId', 'durationMinutes', 'maxFailures']),
+      load: pickEvidence(p1.load, ['state', 'runId', 'concurrentUsers', 'p95Ms', 'upstreamQuotaAuthorized']),
+      dbPool: pickEvidence(p1.dbPool, ['state', 'maxOpenConns', 'maxIdleConns']),
+      upstreamBackpressure: pickEvidence(p1.upstreamBackpressure, ['state', 'timeoutMs', 'failClosed']),
+      migrationCompatibility: pickEvidence(p1.migrationCompatibility, ['state', 'drillId']),
+    },
+    rawLogPolicy,
+  };
+  const required = [['p0', 'rollback'], ['p0', 'alerting'], ['p0', 'dbRestore'], ['p0', 'monitoring'], ['p1', 'soak'], ['p1', 'load'], ['p1', 'dbPool'], ['p1', 'upstreamBackpressure'], ['p1', 'migrationCompatibility']];
+  const missingEvidence = required.filter(([group, key]) => !sanitized[group][key]).map(([group, key]) => `${group}.${key}`);
+  const unsafe = rawLogPolicy.storesRawLogs || rawLogPolicy.storesSecretValues;
+  return {
+    ...sanitized,
+    status: missingEvidence.length === 0 && !unsafe ? 'accepted' : 'incomplete',
+    missingEvidence,
+    canClaim: missingEvidence.length === 0 && !unsafe ? ['P0/P1 single-node launch operations ready'] : [],
+    cannotClaim: uniqueStrings(['multi-node HA', 'automatic rollback', 'complete commercial SaaS lifecycle', ...(missingEvidence.length === 0 && !unsafe ? [] : ['production-ready SaaS'])]),
   };
 }
 
@@ -541,6 +615,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (token === '--ops-closeout-json') {
+      options.opsCloseoutJson = value;
+      index += 1;
+      continue;
+    }
     if (token === '--image') {
       options.image = value;
       index += 1;
@@ -582,6 +661,9 @@ function runCli() {
   summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true;
   if (options.launchCloseoutJson) {
     summary.launchCloseout = JSON.parse(readFileSync(options.launchCloseoutJson, 'utf8'));
+  }
+  if (options.opsCloseoutJson) {
+    summary.opsCloseout = JSON.parse(readFileSync(options.opsCloseoutJson, 'utf8'));
   }
   if (options.output) {
     writeFileSync(options.output, `${JSON.stringify(summary, null, 2)}\n`);

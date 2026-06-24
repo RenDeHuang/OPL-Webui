@@ -146,6 +146,8 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p1_commercial_operations_contract').status, 'pass');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p2_sla_operations_contract').status, 'pass');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'launch_closeout_contract').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p0_p1_operations_closeout_contract').status, 'pass');
+  assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'p0_p1_operations_external_evidence').status, 'blocked');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'final_release_decision_receipt').status, 'blocked');
   assert.equal(byGap.operations_maturity.evalResults.find((result) => result.id === 'production_ops_external_evidence').status, 'blocked');
   assert.equal(

@@ -905,6 +905,16 @@
     "latestDecision": null,
     "cannotClaim": ["production-ready SaaS", "long-term production stability", "production concurrent SaaS readiness", "production rollback executed", "external alert routing exists", "production DB restore drill executed", "dashboard URL exists", "multi-node HA", "SLO is enforced", "automatic rollback"]
   },
+  "productionOperationsCloseout": {
+    "mode": "p0_p1_single_node_operations_closeout",
+    "state": "contract_present_pending_p0_p1_evidence",
+    "owner": "release_operator", "consumer": "public_single_node_launch_decision",
+    "entrypoint": "npm run release:evidence -- --ops-closeout-json <sanitized-json>",
+    "foldback": "sanitized_summary_only",
+    "requiredEvidence": ["p0.rollback", "p0.alerting", "p0.dbRestore", "p0.monitoring", "p1.soak", "p1.load", "p1.dbPool", "p1.upstreamBackpressure", "p1.migrationCompatibility"],
+    "rawLogPolicy": { "storesRawLogs": false, "storesSecretValues": false },
+    "latestEvidence": null, "cannotClaim": ["multi-node HA", "automatic rollback", "complete commercial SaaS lifecycle", "billing source of truth"]
+  },
   "productionRollbackReadiness": {
     "mode": "manual_environment_approved_rollback",
     "state": "manual_harness_ready_rollback_record_contract_present_pending_first_run",

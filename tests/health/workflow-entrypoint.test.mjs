@@ -682,3 +682,63 @@ test('release evidence sync folds final launch closeout receipt only from explic
   assert.equal(profile.productionLaunchCloseout.cannotClaim.includes('multi-node HA'), true);
   assert.equal(profile.productionLaunchCloseout.cannotClaim.includes('automatic rollback'), true);
 });
+
+test('release evidence sync folds P0 P1 operations closeout without claiming HA or automatic rollback', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-ops-closeout-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+  const opsCloseoutPath = join(fixtureRoot, 'ops-closeout.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Rollback', conclusion: 'success', html_url: 'https://example.test/rollback' },
+      { name: 'Production Availability Probe After Rollback', conclusion: 'success', html_url: 'https://example.test/availability' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(opsCloseoutPath, `${JSON.stringify({
+    acceptedAt: '2026-06-24T11:00:00Z',
+    owner: 'release_operator',
+    acceptedClaim: 'p0_p1_single_node_launch_operations_ready',
+    p0: {
+      rollback: { state: 'executed', runId: 28060000001, automatic: false },
+      alerting: { state: 'verified', route: 'production_oncall', severityPolicy: 'p1_web_unavailable' },
+      dbRestore: { state: 'executed', drillId: 'restore-2026-06-24', sanitizedVerification: true },
+      monitoring: { state: 'linked', dashboardUrl: 'https://grafana.example.test/d/opl-webui' },
+    },
+    p1: {
+      soak: { state: 'executed', runId: 28060000002, durationMinutes: 180, maxFailures: 0 },
+      load: { state: 'executed', runId: 28060000003, concurrentUsers: 25, p95Ms: 900, upstreamQuotaAuthorized: true },
+      dbPool: { state: 'verified', maxOpenConns: 20, maxIdleConns: 10 },
+      upstreamBackpressure: { state: 'verified', timeoutMs: 60000, failClosed: true },
+      migrationCompatibility: { state: 'verified', drillId: 'migration-compat-2026-06-24' },
+    },
+    rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionOperationsCloseout: { state: 'contract_present_pending_p0_p1_evidence', latestEvidence: null, cannotClaim: ['multi-node HA', 'automatic rollback'] },
+    productionObservabilityBaseline: { productionReadinessGates: { rollbackPath: {}, alertingBoundary: {}, dbBackupRestore: {}, observabilityDashboard: {}, concurrencyEvidence: {}, upstreamBackpressure: {}, migrationSchemaCompatibility: {}, haTopologyEvidence: { state: 'paused_pending_second_node' } } },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '28060000000',
+    '--commit', 'def9999',
+    '--jobs-json', jobsPath,
+    '--ops-closeout-json', opsCloseoutPath,
+    '--update-release-profile', profilePath,
+  ], { encoding: 'utf8' });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionOperationsCloseout.state, 'accepted_p0_p1_run_28060000000');
+  assert.equal(profile.productionOperationsCloseout.latestEvidence.acceptedClaim, 'p0_p1_single_node_launch_operations_ready');
+  assert.equal(profile.productionOperationsCloseout.latestEvidence.p0.rollback.automatic, false);
+  assert.equal(profile.productionOperationsCloseout.latestEvidence.p1.load.concurrentUsers, 25);
+  assert.equal(profile.productionOperationsCloseout.latestEvidence.rawLogPolicy.storesRawLogs, false);
+  assert.equal(profile.productionObservabilityBaseline.productionReadinessGates.rollbackPath.state, 'production_rollback_record_folded_back');
+  assert.equal(profile.productionObservabilityBaseline.productionReadinessGates.dbBackupRestore.state, 'restore_drill_folded_back');
+  assert.equal(profile.productionObservabilityBaseline.productionReadinessGates.observabilityDashboard.state, 'dashboard_url_folded_back');
+  assert.equal(profile.productionObservabilityBaseline.productionReadinessGates.haTopologyEvidence.state, 'paused_pending_second_node');
+  assert.equal(profile.productionOperationsCloseout.cannotClaim.includes('multi-node HA'), true);
+  assert.equal(profile.productionOperationsCloseout.cannotClaim.includes('automatic rollback'), true);
+});

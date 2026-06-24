@@ -369,6 +369,8 @@ function evaluateOperationsGap({ release }) {
   const gate = (id) => baseline?.productionReadinessGates?.[id];
   const closeout = release?.productionLaunchCloseout;
   const closeoutDecision = closeout?.latestDecision;
+  const opsCloseout = release?.productionOperationsCloseout;
+  const opsEvidence = opsCloseout?.latestEvidence;
   return [
     evalResult({
       id: 'observability_baseline',
@@ -468,6 +470,31 @@ function evaluateOperationsGap({ release }) {
         : 'fail',
       proves: ['final release decision receipt requires soak, load, rollback, canary, alerting, restore, monitoring, HA, and SLO evidence'],
       doesNotProve: ['the final release decision exists', 'external evidence executed', 'production-ready SaaS'],
+    }),
+    evalResult({
+      id: 'p0_p1_operations_closeout_contract',
+      dimension: 'contract',
+      status: Array.isArray(opsCloseout?.requiredEvidence)
+        && ['p0.rollback', 'p0.alerting', 'p0.dbRestore', 'p0.monitoring', 'p1.soak', 'p1.load', 'p1.dbPool', 'p1.upstreamBackpressure', 'p1.migrationCompatibility'].every((id) => opsCloseout.requiredEvidence.includes(id))
+        && opsCloseout?.rawLogPolicy?.storesRawLogs === false
+        && opsCloseout?.rawLogPolicy?.storesSecretValues === false
+        ? 'pass'
+        : 'fail',
+      proves: ['P0/P1 single-node operations closeout contract is explicit'],
+      doesNotProve: ['P0/P1 evidence executed', 'multi-node HA', 'automatic rollback'],
+    }),
+    evalResult({
+      id: 'p0_p1_operations_external_evidence',
+      dimension: 'production',
+      status: opsEvidence?.status === 'accepted'
+        && Array.isArray(opsEvidence?.missingEvidence)
+        && opsEvidence.missingEvidence.length === 0
+        && opsEvidence?.rawLogPolicy?.storesRawLogs === false
+        && opsEvidence?.rawLogPolicy?.storesSecretValues === false
+        ? 'pass'
+        : 'blocked',
+      proves: ['P0/P1 single-node operations evidence exists when folded back'],
+      doesNotProve: ['multi-node HA', 'automatic rollback', 'complete commercial SaaS lifecycle'],
     }),
     evalResult({
       id: 'final_release_decision_receipt',
