@@ -561,6 +561,7 @@
     "rawAssistantTranscriptForStructuredResult": "forbidden",
     "maxRawAssistantMessagesPerStructuredResult": 0,
     "runtimeGateCard": "refs_only_medopl_deeplink",
+    "serviceUnavailableFallback": "sanitized_fail_closed_no_structured_result_fabrication",
     "forbiddenPayload": ["artifact_body", "private_state_path", "mutation_result", "raw_provider_secret"]
   }
 }

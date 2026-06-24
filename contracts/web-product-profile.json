@@ -489,10 +489,13 @@
       "Ordinary chat is available for low-risk explanation and organization, while research Skill entry remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
       "Runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly refs projection, deeplink, and fail-closed gate.",
-      "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only."
+      "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only.",
+      "single-node controlled launch readiness"
     ],
     "cannotClaim": [
       "complete production-ready SaaS",
+      "production-ready SaaS",
+      "upstream provider availability",
       "desktop App packaging or updater owner",
       "billing source of truth",
       "team invite lifecycle",

@@ -714,6 +714,46 @@ test('operations maturity and gap phase advancement require structured eval evid
   assert.match(active, /rollback drill run id, DB restore drill, dashboard URL, and concrete alert channel remain pending external evidence/);
 });
 
+test('controlled launch readiness separates hard launch gates from upstream quality evidence', () => {
+  const release = readJson('contracts/web-release-profile.json');
+  const product = readJson('contracts/web-product-profile.json');
+  const pageState = readJson('contracts/web-page-state-matrix.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.equal(release.controlledLaunchReadiness.mode, 'single_node_controlled_launch_v1');
+  assert.equal(release.controlledLaunchReadiness.claim, 'controlled_launch_readiness');
+  assert.equal(release.controlledLaunchReadiness.owner, 'one-person-lab-web-release');
+  assert.equal(release.controlledLaunchReadiness.consumer, 'release_operator');
+  assert.deepEqual(release.controlledLaunchReadiness.hardGates, [
+    'release_image_exists',
+    'production_dry_run',
+    'production_apply',
+    'canary_smoke',
+    'availability_probe',
+    'account_session_byok_audit_quota_postgres_contracts',
+    'service_unavailable_fail_closed_contract',
+  ]);
+  assert.deepEqual(release.controlledLaunchReadiness.supportingEvidence, [
+    'production_authenticated_dogfood_real_upstream_structured_research_success',
+    'production_browser_e2e_real_upstream_structured_research_success',
+    'medopl_readonly_projection_dogfood',
+    'scheduled_canary_first_success',
+  ]);
+  assert.equal(release.controlledLaunchReadiness.realUpstreamStructuredResearch.hardGateForControlledLaunch, false);
+  assert.equal(release.controlledLaunchReadiness.serviceUnavailableFailClosed.hardGateForControlledLaunch, true);
+  assert.deepEqual(release.controlledLaunchReadiness.longTaskContinuity.requiredProjection, ['refs', 'progress_refs', 'deliverable_refs', 'deeplink', 'blocker_next_step']);
+  assert.deepEqual(release.controlledLaunchReadiness.saasControlPlane.requiredContracts, ['account_session', 'tenant_isolation', 'BYOK', 'sanitized_audit', 'quota_guard', 'postgres_store_path', 'release_canary']);
+  assert.equal(release.controlledLaunchReadiness.cannotClaim.includes('production-ready SaaS'), true);
+  assert.equal(release.controlledLaunchReadiness.cannotClaim.includes('upstream provider availability'), true);
+  assert.equal(release.controlledLaunchReadiness.cannotClaim.includes('production concurrent SaaS readiness'), true);
+  assert.equal(product.claims.canClaim.includes('single-node controlled launch readiness'), true);
+  assert.equal(product.claims.cannotClaim.includes('production-ready SaaS'), true);
+  assert.equal(pageState.structuredResultShape.serviceUnavailableFallback, 'sanitized_fail_closed_no_structured_result_fabrication');
+  assert.match(status, /Controlled launch readiness is a separate release claim/);
+  assert.match(active, /controlled launch readiness is separate from real upstream structured research success/);
+});
+
 test('owner decisions keep commercial and HA boundaries explicit without false completion claims', () => {
   const product = readJson('contracts/web-product-profile.json');
   const release = readJson('contracts/web-release-profile.json');
