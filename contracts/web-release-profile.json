@@ -892,6 +892,19 @@
       ]
     }
   },
+  "productionLaunchCloseout": {
+    "mode": "explicit_final_release_decision_receipt",
+    "state": "contract_present_pending_final_release_decision",
+    "owner": "release_operator",
+    "consumer": "production_release_decision",
+    "entrypoint": "npm run release:evidence -- --launch-closeout-json <sanitized-json>",
+    "foldback": "sanitized_summary_only",
+    "requiredEvidence": ["soak", "load", "rollback", "canary", "alerting", "dbRestore", "monitoring", "ha", "slo"],
+    "requiredReceiptFields": ["decision", "owner", "acceptedAt", "acceptedClaim", "evidence", "rawLogPolicy"],
+    "rawLogPolicy": { "storesRawLogs": false, "storesSecretValues": false },
+    "latestDecision": null,
+    "cannotClaim": ["production-ready SaaS", "long-term production stability", "production concurrent SaaS readiness", "production rollback executed", "external alert routing exists", "production DB restore drill executed", "dashboard URL exists", "multi-node HA", "SLO is enforced", "automatic rollback"]
+  },
   "productionRollbackReadiness": {
     "mode": "manual_environment_approved_rollback",
     "state": "manual_harness_ready_rollback_record_contract_present_pending_first_run",

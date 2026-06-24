@@ -612,3 +612,73 @@ test('release evidence sync ignores skipped rollback jobs', () => {
   assert.equal(profile.productionRollbackReadiness.state, 'manual_harness_ready_pending_first_run');
   assert.equal(profile.productionRollbackReadiness.latestAttempt, null);
 });
+
+test('release evidence sync folds final launch closeout receipt only from explicit sanitized evidence', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-closeout-'));
+  const jobsPath = join(fixtureRoot, 'jobs.json');
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+  const closeoutPath = join(fixtureRoot, 'closeout.json');
+
+  writeFileSync(jobsPath, `${JSON.stringify({
+    jobs: [
+      { name: 'Production Dry Run', conclusion: 'success', html_url: 'https://example.test/dry' },
+      { name: 'Production Apply', conclusion: 'success', html_url: 'https://example.test/apply' },
+      { name: 'Production Availability Probe After Apply', conclusion: 'success', html_url: 'https://example.test/availability' },
+      { name: 'Production Authenticated Dogfood E2E', conclusion: 'success', html_url: 'https://example.test/dogfood' },
+      { name: 'Production Browser E2E', conclusion: 'success', html_url: 'https://example.test/browser' },
+      { name: 'Production Rollback', conclusion: 'success', html_url: 'https://example.test/rollback' },
+      { name: 'Production Availability Probe After Rollback', conclusion: 'success', html_url: 'https://example.test/rollback-availability' },
+      { name: 'Scheduled Production Availability Probe', conclusion: 'success', html_url: 'https://example.test/canary' },
+    ],
+  }, null, 2)}\n`);
+  writeFileSync(closeoutPath, `${JSON.stringify({
+    decision: 'go',
+    owner: 'release_operator',
+    acceptedAt: '2026-06-24T10:00:00Z',
+    acceptedClaim: 'single_node_public_launch_ready',
+    evidence: {
+      soak: { state: 'executed', runId: 28050000001, durationMinutes: 120, maxFailures: 0 },
+      load: { state: 'executed', runId: 28050000002, concurrentUsers: 25, p95Ms: 900, upstreamQuotaAuthorized: true },
+      rollback: { state: 'executed', runId: 28050000003 },
+      canary: { state: 'executed', runId: 28050000004, windowMinutes: 240 },
+      alerting: { state: 'verified', route: 'production_oncall', severityPolicy: 'p1_web_unavailable' },
+      dbRestore: { state: 'executed', drillId: 'restore-2026-06-24', sanitizedVerification: true },
+      monitoring: { state: 'linked', dashboardUrl: 'https://grafana.example.test/d/opl-webui' },
+      ha: { state: 'paused_single_node', ownerAccepted: true },
+      slo: { state: 'defined', availabilityTarget: '99.5%', window: '30d' },
+    },
+    rawLogPolicy: { storesRawLogs: false, storesSecretValues: false },
+  }, null, 2)}\n`);
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    productionLaunchCloseout: {
+      state: 'contract_present_pending_final_release_decision',
+      latestDecision: null,
+      cannotClaim: ['production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '28050000000',
+    '--commit', 'abc9999',
+    '--jobs-json', jobsPath,
+    '--launch-closeout-json', closeoutPath,
+    '--update-release-profile', profilePath,
+  ], {
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  assert.equal(profile.productionLaunchCloseout.state, 'accepted_go_run_28050000000');
+  assert.equal(profile.productionLaunchCloseout.latestDecision.decision, 'go');
+  assert.equal(profile.productionLaunchCloseout.latestDecision.acceptedClaim, 'single_node_public_launch_ready');
+  assert.equal(profile.productionLaunchCloseout.latestDecision.evidence.soak.durationMinutes, 120);
+  assert.equal(profile.productionLaunchCloseout.latestDecision.evidence.load.concurrentUsers, 25);
+  assert.equal(profile.productionLaunchCloseout.latestDecision.evidence.alerting.route, 'production_oncall');
+  assert.equal(profile.productionLaunchCloseout.latestDecision.evidence.monitoring.dashboardUrl, 'https://grafana.example.test/d/opl-webui');
+  assert.equal(profile.productionLaunchCloseout.latestDecision.rawLogPolicy.storesRawLogs, false);
+  assert.equal(profile.productionLaunchCloseout.latestDecision.rawLogPolicy.storesSecretValues, false);
+  assert.equal(profile.productionLaunchCloseout.cannotClaim.includes('multi-node HA'), true);
+  assert.equal(profile.productionLaunchCloseout.cannotClaim.includes('automatic rollback'), true);
+});

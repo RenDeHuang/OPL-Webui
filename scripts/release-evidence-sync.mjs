@@ -63,8 +63,9 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   const withAvailability = foldAvailabilityIntoReleaseProfile({ profile: withDogfood, summary });
   const withScheduledCanary = foldScheduledCanaryIntoReleaseProfile({ profile: withAvailability, summary });
   const withRollback = foldRollbackIntoReleaseProfile({ profile: withScheduledCanary, summary });
-  const browser = withRollback.productionBrowserE2EReadiness ?? {};
-  if (!summary.browserJobObserved) return withRollback;
+  const withLaunchCloseout = foldLaunchCloseoutIntoReleaseProfile({ profile: withRollback, summary });
+  const browser = withLaunchCloseout.productionBrowserE2EReadiness ?? {};
+  if (!summary.browserJobObserved) return withLaunchCloseout;
 
   const latestAttempt = buildBrowserLatestAttempt(summary);
   const preservedCannotClaim = summary.canClaim.productionBrowserE2E
@@ -76,7 +77,7 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   ]);
 
   return {
-    ...withRollback,
+    ...withLaunchCloseout,
     productionBrowserE2EReadiness: {
       ...browser,
       state: summary.canClaim.productionBrowserE2E
@@ -86,6 +87,83 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
       cannotClaim: nextCannotClaim,
     },
   };
+}
+
+function foldLaunchCloseoutIntoReleaseProfile({ profile, summary }) {
+  if (!summary.launchCloseout) return profile;
+  const closeout = profile.productionLaunchCloseout ?? {};
+  const decision = buildLaunchCloseoutDecision(summary);
+  return {
+    ...profile,
+    productionLaunchCloseout: {
+      ...closeout,
+      state: decision.decision === 'go'
+        ? `accepted_go_run_${summary.runId}`
+        : `accepted_no_go_run_${summary.runId}`,
+      latestDecision: decision,
+      cannotClaim: uniqueStrings([
+        ...(closeout.cannotClaim ?? []),
+        ...decision.cannotClaim,
+      ]),
+    },
+  };
+}
+
+function buildLaunchCloseoutDecision(summary) {
+  const receipt = summary.launchCloseout;
+  const evidence = receipt.evidence ?? {};
+  const decision = receipt.decision === 'go' ? 'go' : 'no_go';
+  const requiredEvidence = ['soak', 'load', 'rollback', 'canary', 'alerting', 'dbRestore', 'monitoring', 'ha', 'slo'];
+  const missingEvidence = requiredEvidence.filter((id) => !evidence[id]);
+  const rawLogPolicy = {
+    storesRawLogs: receipt.rawLogPolicy?.storesRawLogs === true ? true : false,
+    storesSecretValues: receipt.rawLogPolicy?.storesSecretValues === true ? true : false,
+  };
+  const hasUnsafeRawArtifacts = rawLogPolicy.storesRawLogs || rawLogPolicy.storesSecretValues;
+  const sanitizedDecision = {
+    runId: summary.runId,
+    runUrl: summary.runUrl,
+    commit: summary.commit,
+    workflow: summary.workflow || 'Cloud Rollout',
+    completedAt: summary.completedAt,
+    decision: hasUnsafeRawArtifacts || missingEvidence.length > 0 ? 'no_go' : decision,
+    owner: typeof receipt.owner === 'string' ? receipt.owner : 'release_operator',
+    acceptedAt: typeof receipt.acceptedAt === 'string' ? receipt.acceptedAt : summary.completedAt,
+    acceptedClaim: typeof receipt.acceptedClaim === 'string' ? receipt.acceptedClaim : null,
+    evidence: sanitizeLaunchCloseoutEvidence(evidence),
+    missingEvidence,
+    rawLogPolicy,
+  };
+  const cannotClaim = ['complete commercial SaaS lifecycle', 'billing source of truth', 'OPL runtime execution'];
+  if (sanitizedDecision.evidence.ha?.state !== 'multi_node_verified') cannotClaim.push('multi-node HA');
+  if (sanitizedDecision.evidence.rollback?.automatic !== true) cannotClaim.push('automatic rollback');
+  if (sanitizedDecision.decision !== 'go') cannotClaim.push('production-ready SaaS');
+  return {
+    ...sanitizedDecision,
+    canClaim: sanitizedDecision.decision === 'go' ? [sanitizedDecision.acceptedClaim].filter(Boolean) : [],
+    cannotClaim: uniqueStrings(cannotClaim),
+  };
+}
+
+function sanitizeLaunchCloseoutEvidence(evidence) {
+  return {
+    soak: pickEvidence(evidence.soak, ['state', 'runId', 'durationMinutes', 'maxFailures']),
+    load: pickEvidence(evidence.load, ['state', 'runId', 'concurrentUsers', 'p95Ms', 'upstreamQuotaAuthorized']),
+    rollback: pickEvidence(evidence.rollback, ['state', 'runId', 'automatic']),
+    canary: pickEvidence(evidence.canary, ['state', 'runId', 'windowMinutes']),
+    alerting: pickEvidence(evidence.alerting, ['state', 'route', 'severityPolicy']),
+    dbRestore: pickEvidence(evidence.dbRestore, ['state', 'drillId', 'sanitizedVerification']),
+    monitoring: pickEvidence(evidence.monitoring, ['state', 'dashboardUrl']),
+    ha: pickEvidence(evidence.ha, ['state', 'ownerAccepted']),
+    slo: pickEvidence(evidence.slo, ['state', 'availabilityTarget', 'window']),
+  };
+}
+
+function pickEvidence(source, keys) {
+  if (!source || typeof source !== 'object') return null;
+  return Object.fromEntries(keys
+    .filter((key) => ['string', 'number', 'boolean'].includes(typeof source[key]))
+    .map((key) => [key, source[key]]));
 }
 
 function foldReleaseFailureIntoProfile({ profile, summary }) {
@@ -458,6 +536,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (token === '--launch-closeout-json') {
+      options.launchCloseoutJson = value;
+      index += 1;
+      continue;
+    }
     if (token === '--image') {
       options.image = value;
       index += 1;
@@ -497,6 +580,9 @@ function runCli() {
   });
   summary.image = options.image ?? null;
   summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true;
+  if (options.launchCloseoutJson) {
+    summary.launchCloseout = JSON.parse(readFileSync(options.launchCloseoutJson, 'utf8'));
+  }
   if (options.output) {
     writeFileSync(options.output, `${JSON.stringify(summary, null, 2)}\n`);
   }

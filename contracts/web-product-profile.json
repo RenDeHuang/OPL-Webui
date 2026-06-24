@@ -172,6 +172,7 @@
           "ha_topology_contract",
           "slo_error_budget_contract",
           "automatic_rollback_admission_contract",
+          "final_release_decision_receipt_contract",
           "external_production_evidence_foldback"
         ]
       },

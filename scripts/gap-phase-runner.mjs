@@ -367,6 +367,8 @@ function evaluateOperationsGap({ release }) {
   const rollbackRecord = baseline?.nextReadiness?.rollbackRecordV1;
   const readinessLevel = (id) => baseline?.productionReadinessLevels?.find((level) => level.id === id);
   const gate = (id) => baseline?.productionReadinessGates?.[id];
+  const closeout = release?.productionLaunchCloseout;
+  const closeoutDecision = closeout?.latestDecision;
   return [
     evalResult({
       id: 'observability_baseline',
@@ -454,6 +456,31 @@ function evaluateOperationsGap({ release }) {
         : 'fail',
       proves: ['P2 SLA and HA gates are explicit while HA and automatic rollback remain unclaimed'],
       doesNotProve: ['multi-node HA', 'error budget enforcement', 'automatic rollback readiness'],
+    }),
+    evalResult({
+      id: 'launch_closeout_contract',
+      dimension: 'contract',
+      status: Array.isArray(closeout?.requiredEvidence)
+        && ['soak', 'load', 'rollback', 'canary', 'alerting', 'dbRestore', 'monitoring', 'ha', 'slo'].every((id) => closeout.requiredEvidence.includes(id))
+        && closeout?.rawLogPolicy?.storesRawLogs === false
+        && closeout?.rawLogPolicy?.storesSecretValues === false
+        ? 'pass'
+        : 'fail',
+      proves: ['final release decision receipt requires soak, load, rollback, canary, alerting, restore, monitoring, HA, and SLO evidence'],
+      doesNotProve: ['the final release decision exists', 'external evidence executed', 'production-ready SaaS'],
+    }),
+    evalResult({
+      id: 'final_release_decision_receipt',
+      dimension: 'owner',
+      status: closeoutDecision?.decision === 'go'
+        && closeoutDecision?.rawLogPolicy?.storesRawLogs === false
+        && closeoutDecision?.rawLogPolicy?.storesSecretValues === false
+        && Array.isArray(closeoutDecision?.missingEvidence)
+        && closeoutDecision.missingEvidence.length === 0
+        ? 'pass'
+        : 'blocked',
+      proves: ['final release owner accepted the explicit release decision when present'],
+      doesNotProve: ['complete commercial SaaS lifecycle', 'billing source of truth', 'OPL runtime execution'],
     }),
     evalResult({
       id: 'production_ops_external_evidence',

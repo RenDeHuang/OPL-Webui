@@ -626,6 +626,10 @@ test('operations maturity and gap phase advancement require structured eval evid
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.migrationSchemaCompatibility.state, 'contract_present_pending_migration_drill');
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.upstreamBackpressure.state, 'repo_local_timeout_fail_closed_pending_production_sla');
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.state, 'staging_safe_baseline_present_production_claim_pending');
+  assert.equal(release.productionLaunchCloseout.mode, 'explicit_final_release_decision_receipt');
+  assert.equal(release.productionLaunchCloseout.entrypoint, 'npm run release:evidence -- --launch-closeout-json <sanitized-json>');
+  assert.deepEqual(release.productionLaunchCloseout.requiredReceiptFields, ['decision', 'owner', 'acceptedAt', 'acceptedClaim', 'evidence', 'rawLogPolicy']);
+  assert.equal(release.productionLaunchCloseout.cannotClaim.includes('production-ready SaaS'), true);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.rollbackRecordV1.state, 'contract_present_pending_first_production_run');
   assert.equal(release.productionRollbackReadiness.recordContract.state, 'present');
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.maturityAdmittedWhen, [

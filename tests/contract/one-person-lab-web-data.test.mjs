@@ -260,6 +260,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(Object.fromEntries(['alertingBoundary', 'dbBackupRestore', 'securityOpsBaseline', 'costQuotaGuard', 'migrationSchemaCompatibility', 'observabilityDashboard', 'automaticRollbackAdmission'].map((id) => [id, release.productionObservabilityBaseline.productionReadinessGates[id].state])), { alertingBoundary: 'contract_present_pending_alert_route', dbBackupRestore: 'contract_present_pending_restore_drill', securityOpsBaseline: 'contract_present', costQuotaGuard: 'contract_present', migrationSchemaCompatibility: 'contract_present_pending_migration_drill', observabilityDashboard: 'contract_present_pending_dashboard_url', automaticRollbackAdmission: 'not_admitted_manual_only' });
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.evidenceContracts, [{ id: 'dashboard', owner: 'operations_owner', state: 'contract_required' }, { id: 'alerting', owner: 'operations_owner', state: 'contract_required' }, { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' }, { id: 'rollback_record', owner: 'release_operator', state: 'contract_present' }]);
   assertIncludesAll(release.productionObservabilityBaseline.cannotClaim, ['dashboard', 'alerting', 'automatic rollback'], 'ops cannot-claim');
+  assert.equal(release.productionLaunchCloseout.state, 'contract_present_pending_final_release_decision');
+  assertIncludesAll(release.productionLaunchCloseout.requiredEvidence, ['soak', 'load', 'rollback', 'canary', 'alerting', 'dbRestore', 'monitoring', 'ha', 'slo'], 'launch closeout evidence');
+  assert.deepEqual(release.productionLaunchCloseout.rawLogPolicy, { storesRawLogs: false, storesSecretValues: false });
+  assert.equal(release.productionLaunchCloseout.latestDecision, null);
+  assertIncludesAll(release.productionLaunchCloseout.cannotClaim, ['production-ready SaaS', 'long-term production stability', 'automatic rollback'], 'launch closeout cannot-claim');
   assert.equal(release.productionHAReadiness.state, 'paused_single_pod_launch_pending_second_node');
   assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeSelector, { 'medopl.cn/webui': 'true' });
   assert.deepEqual(release.productionHAReadiness.currentApplyManifest.nodeLabelPolicy.preserve, { 'medopl.cn/workload': 'medopl' });
