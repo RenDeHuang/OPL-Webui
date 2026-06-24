@@ -5,7 +5,7 @@
 - state: active_truth
 - machine boundary: human-readable navigation; contracts, source, tests, scripts, and API behavior are authoritative.
 
-One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through `@科研`, `@论文`, `@基金`, `@综述`, and `@文件` research capability entries.
+One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书` research capability entries.
 
 This repo owns the browser product surface, multi-tenant account/session experience, tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, and Web release/deploy evidence.
 

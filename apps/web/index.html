@@ -90,12 +90,12 @@
           <div class="home-copy">
             <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
             <h1>One Person Lab Web</h1>
-            <p>面向科研工作人员、硕博、PI 与科研团队。输入研究问题，用 @科研、@论文、@基金、@综述、@文件 调用 OPL 能力。</p>
+            <p>面向科研工作人员、硕博、PI 与科研团队。输入研究问题，用 @科研、@论文、@基金、@综述、@文件、@PPT、@书 调用 OPL 能力。</p>
           </div>
 
           <form class="prompt-console prompt-command-center research-command-band" data-chat-form data-figma-pattern="prompt_command_center" aria-label="主研究输入">
             <label for="chat-input">输入研究问题，调用 OPL</label>
-            <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金：输入研究问题或选择一个 starter chip"></textarea>
+            <textarea id="chat-input" name="message" rows="4" placeholder="@科研、@论文、@基金、@PPT、@书：输入研究问题或选择一个 starter chip"></textarea>
             <div class="prompt-footer">
               <button class="model-selector" type="button" data-model-selector aria-label="模型选择">模型：自动</button>
               <button class="primary-button" type="submit" data-chat-submit>发送</button>
@@ -117,6 +117,12 @@
             </button>
             <button type="button" data-starter-chip data-research-task data-research-task-intent="materials_refs" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">
               <span>@文件</span><strong>材料线索</strong>
+            </button>
+            <button type="button" data-starter-chip data-research-task data-research-task-intent="presentation_foundry" data-capability-marker="@PPT" data-capability-mode="runtime_gate" data-prompt="@PPT 规划研究演示结构、证据线和交付物 refs">
+              <span>@PPT</span><strong>演示/PPT</strong>
+            </button>
+            <button type="button" data-starter-chip data-research-task data-research-task-intent="book_foundry" data-capability-marker="@书" data-capability-mode="runtime_gate" data-prompt="@书 规划书稿结构、章节路线和资料 refs">
+              <span>@书</span><strong>写书/长稿</strong>
             </button>
           </div>
         </section>
@@ -176,6 +182,12 @@
             <button type="button" class="foundry-card" data-prompt="@基金 帮我拆解标书结构" data-capability-marker="@基金" data-capability-mode="runtime_gate">
               <span>02</span><strong>基金</strong><small>拆解研究目标与执行路径。</small>
             </button>
+            <button type="button" class="foundry-card" data-prompt="@PPT 规划研究演示结构、证据线和交付物 refs" data-capability-marker="@PPT" data-capability-mode="runtime_gate">
+              <span>03</span><strong>演示/PPT</strong><small>RCA 能力由 MedOPL 授权后继续。</small>
+            </button>
+            <button type="button" class="foundry-card" data-prompt="@书 规划书稿结构、章节路线和资料 refs" data-capability-marker="@书" data-capability-mode="runtime_gate">
+              <span>04</span><strong>写书/长稿</strong><small>BookForge 能力由 MedOPL 授权后继续。</small>
+            </button>
           </div>
         </section>
 
@@ -199,6 +211,9 @@
             <button type="button" class="foundry-card" data-prompt="@文件 整理材料引用和交付物 refs">
               <span>02</span><strong>材料线索</strong><small>材料、引用和 refs。</small>
             </button>
+            <button type="button" class="foundry-card" data-prompt="@PPT 规划研究演示结构、证据线和交付物 refs">
+              <span>03</span><strong>演示工作流</strong><small>研究演示结构和交付物 refs。</small>
+            </button>
           </div>
           <h3 class="library-heading">OPL 工作流</h3>
           <div class="foundry-grid">
@@ -207,6 +222,9 @@
             </button>
             <button type="button" class="foundry-card" data-prompt="@综述 帮我整理综述结构、证据线索和引用计划">
               <span>02</span><strong>综述工作流</strong><small>结构、线索、引用计划。</small>
+            </button>
+            <button type="button" class="foundry-card" data-prompt="@书 规划书稿结构、章节路线和资料 refs">
+              <span>03</span><strong>写书工作流</strong><small>书稿结构、章节路线、资料 refs。</small>
             </button>
           </div>
         </section>

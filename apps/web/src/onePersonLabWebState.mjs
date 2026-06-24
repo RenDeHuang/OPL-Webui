@@ -2,13 +2,15 @@ export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
 export const FIGMA_MAKE_SOURCE = 'E8nYfNFc2D9P01FYZ8UwBW';
 export const LIGHTWEIGHT_MARKERS = ['@科研'];
-export const RUNTIME_REQUIRED_MARKERS = ['@论文', '@基金', '@综述', '@文件'];
+export const RUNTIME_REQUIRED_MARKERS = ['@论文', '@基金', '@综述', '@文件', '@PPT', '@书'];
 export const CAPABILITY_MARKER_SEMANTICS = [
   { marker: '@科研', workflow: 'research_planning', runtimePolicy: 'ordinary_chat_fallback' },
   { marker: '@论文', workflow: 'paper_review_workflow', runtimePolicy: 'runtime_gate' },
   { marker: '@基金', workflow: 'grant_workflow', runtimePolicy: 'runtime_gate' },
   { marker: '@综述', workflow: 'review_workflow', runtimePolicy: 'runtime_gate' },
   { marker: '@文件', workflow: 'materials_refs_workflow', runtimePolicy: 'runtime_gate' },
+  { marker: '@PPT', workflow: 'presentation_foundry_workflow', runtimePolicy: 'runtime_gate' },
+  { marker: '@书', workflow: 'book_foundry_workflow', runtimePolicy: 'runtime_gate' },
 ];
 export const RESEARCH_TASK_INTENTS = [
   {
@@ -56,6 +58,24 @@ export const RESEARCH_TASK_INTENTS = [
     expectedChatState: 'materials_refs_pending',
     consumer: 'research_user_prompt',
   },
+  {
+    id: 'presentation_foundry',
+    label: '演示/PPT',
+    marker: '@PPT',
+    prompt: '@PPT 规划研究演示结构、证据线和交付物 refs',
+    runtimePolicy: 'runtime_gate',
+    expectedChatState: 'presentation_entry_selected',
+    consumer: 'research_user_prompt',
+  },
+  {
+    id: 'book_foundry',
+    label: '写书/长稿',
+    marker: '@书',
+    prompt: '@书 规划书稿结构、章节路线和资料 refs',
+    runtimePolicy: 'runtime_gate',
+    expectedChatState: 'book_entry_selected',
+    consumer: 'research_user_prompt',
+  },
 ];
 export const RESEARCH_RESULT_SECTIONS = [
   {
@@ -83,6 +103,8 @@ export const OPL_CAPABILITY_MANIFEST = {
     ['论文/综述', '@论文 生成研究选题和证据计划', true, 'mas'],
     ['基金', '@基金 帮我拆解标书结构', true, 'mag'],
     ['材料/文件', '@文件 整理材料引用和交付物 refs', true, 'medopl'],
+    ['演示/PPT', '@PPT 规划研究演示结构、证据线和交付物 refs', true, 'rca'],
+    ['写书/长稿', '@书 规划书稿结构、章节路线和资料 refs', true, 'bookforge'],
     ['普通问答', '解释 OPL 如何帮助复杂知识工作', false, 'chat'],
   ],
 };
@@ -191,6 +213,8 @@ export function chatStateForPrompt(message) {
   if (text.includes('@科研')) return 'research_entry_selected';
   if (text.includes('@论文')) return 'paper_entry_selected';
   if (text.includes('@基金')) return 'grant_entry_selected';
+  if (text.includes('@PPT')) return 'presentation_entry_selected';
+  if (text.includes('@书')) return 'book_entry_selected';
   if (text.includes('@文件') || text.includes('@综述')) return 'materials_refs_pending';
   return 'idle';
 }
@@ -283,6 +307,8 @@ export function createOnePersonLabViewModel(state) {
       { title: '基金工作流', description: '拆解标书结构、研究目标和执行路径。' },
       { title: '综述工作流', description: '整理综述结构、证据线索和引用计划。' },
       { title: '材料线索', description: '围绕材料、引用和交付物 refs 组织输入。' },
+      { title: '演示工作流', description: '规划研究演示结构、证据线和交付物 refs。' },
+      { title: '写书工作流', description: '规划书稿结构、章节路线和资料 refs。' },
     ],
     runtimeGate: {
       title: '需要 MedOPL 授权',

@@ -20,7 +20,7 @@ This directory records retired surfaces that must not return as active product, 
 | `/api/mvp/task` and MVP transition vocabulary | Public Web API uses current one-person-lab-web routes only. | `tests/health/stale-retirement-guard.test.mjs` |
 | `demoData` and fake storage/billing/runtime execution | Test fixtures may mock upstreams, but active product surfaces must not present fake platform ownership. | `tests/health/stale-retirement-guard.test.mjs` |
 | `apps/web/styles/v3.css` | The current Web shell uses `apps/web/styles.css`. | `tests/contract/fixed-truth-lifecycle.test.mjs` |
-| `@长任务` as an active Web runtime marker | Current runtime-required markers are contract-defined as `@论文`, `@基金`, `@综述`, and `@文件`. | `contracts/web-runtime-bridge.json` |
+| `@长任务` as an active Web runtime marker | Current runtime-required markers are contract-defined as `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`. | `contracts/web-runtime-bridge.json` |
 | Go task projection store, `task_projections`, `usage_events`, and `tenant_plans` | Current Go control plane owns authenticated Web account, chat, audit, quota, and refs-only projection surfaces under `internal/webapp`; `canary db` now validates current Web SaaS schema. | `tests/health/stale-retirement-guard.test.mjs` |
 | `opl.cli.readonly.task-route` adapter | Current readonly OPL bridge exposes `/api/opl/snapshot` only; task-route passthrough needs a new contract, eval, whitelist, and authorization boundary before returning. | `services/control-plane-go/internal/oplbridge/snapshot_test.go` |
 

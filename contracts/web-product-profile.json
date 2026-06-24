@@ -24,7 +24,9 @@
     "@论文",
     "@基金",
     "@综述",
-    "@文件"
+    "@文件",
+    "@PPT",
+    "@书"
   ],
   "ownedSurfaces": [
     "multi_tenant_saas_product",
@@ -68,7 +70,15 @@
       "storage",
       "progress_refs",
       "deliverable_refs",
-      "materials_refs"
+      "materials_refs",
+      "presentation_refs",
+      "book_refs"
+    ],
+    "upstreamPurposeEntries": [
+      "research",
+      "grant",
+      "presentation_foundry",
+      "book_foundry"
     ],
     "webOwnedExperience": [
       "entry",
@@ -87,6 +97,7 @@
     "pageStateContract": "contracts/web-page-state-matrix.json#/medoplCapabilityStates",
     "webMayExecuteRuntime": false,
     "webMayOwnStorageTruth": false,
+    "webMayOwnArtifactBody": false,
     "claimBoundary": "runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly projection, refs projection, deeplink, and fail-closed gate only."
   },
   "provider": {

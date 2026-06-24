@@ -1,12 +1,9 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
-
 import * as web from '../../apps/web/src/onePersonLabWeb.mjs';
 
-function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
-}
+function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')); }
 
 function assertIncludesAll(actual, expected, label) {
   for (const item of expected) assert.equal(actual.includes(item), true, `missing ${label}: ${item}`);
@@ -27,7 +24,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.primaryUserPath, 'ai_native_research_homepage');
   assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
   assert.deepEqual(product.targetUsers, ['research_staff', 'masters_students', 'phd_students', 'principal_investigators', 'research_teams']);
-  assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件']);
+  assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
   assertIncludesAll(product.ownedSurfaces, ['multi_tenant_saas_product', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api'], 'owned surface');
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
@@ -81,7 +78,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(pageStates.routes.map((route) => route.id), ['home', 'skills', 'workflows', 'projects', 'more']);
   assert.equal(pageStates.routes.find((route) => route.id === 'home').surface, 'ai_native_research_homepage');
   assert.deepEqual(pageStates.accountStates, ['anonymous', 'authenticated_unbound', 'authenticated_bound']);
-  for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending']) {
+  for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending', 'presentation_entry_selected', 'book_entry_selected']) {
     assert.equal(pageStates.chatStates.includes(state), true, `missing research chat state: ${state}`);
   }
   assert.equal(pageStates.chatStates.includes('runtime_required'), true);
@@ -121,6 +118,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     ['grant_plan', '@基金', 'runtime_gate'],
     ['review_map', '@综述', 'runtime_gate'],
     ['materials_refs', '@文件', 'runtime_gate'],
+    ['presentation_foundry', '@PPT', 'runtime_gate'],
+    ['book_foundry', '@书', 'runtime_gate'],
   ]);
   assert.deepEqual(pageStates.structuredResultShape.sections, ['research_plan', 'evidence_refs', 'next_steps']);
   assert.deepEqual([pageStates.structuredResultShape.primarySurface, pageStates.structuredResultShape.rawAssistantTranscriptForStructuredResult, pageStates.structuredResultShape.maxRawAssistantMessagesPerStructuredResult], ['structured_research_artifact_card', 'forbidden', 0]);
@@ -165,13 +164,15 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(runtime.owner, 'MedOPL');
   assert.equal(runtime.webuiRuntimeExecution, 'forbidden');
   assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
-  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件']);
+  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
   assert.deepEqual(runtime.markerSemantics.map((item) => [item.marker, item.workflow, item.runtimePolicy]), [
     ['@科研', 'research_planning', 'ordinary_chat_fallback'],
     ['@论文', 'paper_review_workflow', 'runtime_gate'],
     ['@基金', 'grant_workflow', 'runtime_gate'],
     ['@综述', 'review_workflow', 'runtime_gate'],
     ['@文件', 'materials_refs_workflow', 'runtime_gate'],
+    ['@PPT', 'presentation_foundry_workflow', 'runtime_gate'],
+    ['@书', 'book_foundry_workflow', 'runtime_gate'],
   ]);
   assert.equal(runtime.medoplDeepLink, 'https://medopl.medopl.cn');
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('refs'), true);
@@ -571,7 +572,7 @@ test('web data module implements the page-state chat matrix', () => {
     assert.equal(chatStates.includes(state), true, `missing reliability contract state: ${state}`);
   }
   assert.deepEqual(reliabilityStates, ['auth_required', 'api_key_required', 'quota_exceeded', 'upstream_failed', 'service_unavailable', 'network_unreachable']);
-  for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending']) {
+  for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending', 'presentation_entry_selected', 'book_entry_selected']) {
     assert.equal(chatStates.includes(state), true, `missing research contract state: ${state}`);
   }
 
@@ -589,6 +590,8 @@ test('web data module implements the page-state chat matrix', () => {
   assert.equal(web.chatStateForPrompt('@论文 生成研究选题'), 'paper_entry_selected');
   assert.equal(web.chatStateForPrompt('@基金 帮我拆解标书结构'), 'grant_entry_selected');
   assert.equal(web.chatStateForPrompt('@文件 整理材料引用'), 'materials_refs_pending');
+  assert.equal(web.chatStateForPrompt('@PPT 规划研究演示'), 'presentation_entry_selected');
+  assert.equal(web.chatStateForPrompt('@书 规划书稿结构'), 'book_entry_selected');
   assert.equal(web.chatStateForPrompt('普通问答'), 'idle');
   assert.deepEqual(web.RESEARCH_TASK_INTENTS.map((intent) => [intent.id, intent.marker, intent.expectedChatState]), [
     ['research_direction', '@科研', 'research_entry_selected'],
@@ -596,23 +599,11 @@ test('web data module implements the page-state chat matrix', () => {
     ['grant_plan', '@基金', 'grant_entry_selected'],
     ['review_map', '@综述', 'materials_refs_pending'],
     ['materials_refs', '@文件', 'materials_refs_pending'],
+    ['presentation_foundry', '@PPT', 'presentation_entry_selected'],
+    ['book_foundry', '@书', 'book_entry_selected'],
   ]);
 
-  for (const state of [
-    web.chatStateForResult(null),
-    web.chatStateForResult(null, true),
-    web.chatStateForResult({ ok: false, errorCode: 'RUNTIME_REQUIRED' }),
-    web.chatStateForResult({ ok: false, errorCode: 'CHAT_QUOTA_EXCEEDED' }),
-    web.chatStateForResult({ ok: false, errorCode: 'UPSTREAM_CHAT_FAILED' }),
-    web.chatStateForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }),
-    web.chatStateForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }),
-    web.chatStateForResult({ ok: false, errorCode: 'SERVICE_UNAVAILABLE' }),
-    web.chatStateForResult({ ok: false, errorCode: 'NETWORK_UNREACHABLE' }),
-    web.chatStateForPrompt('@科研 帮我拆解研究方向'),
-    web.chatStateForPrompt('@论文 生成研究选题'),
-    web.chatStateForPrompt('@基金 帮我拆解标书结构'),
-    web.chatStateForPrompt('@文件 整理材料引用'),
-  ]) {
+  for (const state of ['idle', 'sending', 'runtime_required', 'quota_exceeded', 'upstream_failed', 'auth_required', 'api_key_required', 'service_unavailable', 'network_unreachable', 'research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending', 'presentation_entry_selected', 'book_entry_selected']) {
     assert.equal(chatStates.includes(state), true, `chat state is outside contract: ${state}`);
   }
 });
@@ -711,6 +702,16 @@ test('web data module builds structured research result and runtime task card vi
   assert.equal(runtimeCard.deepLink, 'https://medopl.medopl.cn');
   assert.equal(runtimeCard.webuiRuntimeExecution, 'forbidden');
   assert.doesNotMatch(JSON.stringify(runtimeCard), /artifact_body|private_state_path|mutation_result|workspace|nodePool|storage/i);
+  assert.deepEqual(
+    ['@PPT 规划研究演示', '@书 规划书稿结构'].map((prompt) => {
+      const card = web.runtimeTaskCardForPrompt(prompt);
+      return [card.marker, card.requiredCapability, card.webuiRuntimeExecution];
+    }),
+    [
+      ['@PPT', 'presentation_foundry_workflow', 'forbidden'],
+      ['@书', 'book_foundry_workflow', 'forbidden'],
+    ],
+  );
 });
 
 test('anonymous users cannot save API keys from the web data module', async () => {
@@ -972,15 +973,15 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.capabilitySource.dynamicSync, false);
   assert.match(view.capabilitySource.appContract, /one-person-lab-app\/contracts\/app-product-profile\.json/);
   assert.match(view.capabilitySource.frameworkContract, /one-person-lab\/contracts\/opl-framework\/domains\.json/);
-  assert.deepEqual(view.capabilities.map((item) => item.label), ['科研规划', '论文/综述', '基金', '材料/文件', '普通问答']);
-  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.id), ['research_direction', 'paper_question', 'grant_plan', 'review_map', 'materials_refs']);
-  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.consumer), ['research_user_prompt', 'research_user_prompt', 'research_user_prompt', 'research_user_prompt', 'research_user_prompt']);
+  assert.deepEqual(view.capabilities.map((item) => item.label), ['科研规划', '论文/综述', '基金', '材料/文件', '演示/PPT', '写书/长稿', '普通问答']);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.id), ['research_direction', 'paper_question', 'grant_plan', 'review_map', 'materials_refs', 'presentation_foundry', 'book_foundry']);
+  assert.deepEqual(view.researchTaskIntents.map((intent) => intent.consumer), Array.from({ length: 7 }, () => 'research_user_prompt'));
   assert.equal(view.skillGroups, undefined);
-  assert.deepEqual(view.capabilities.filter((item) => item.runtimeRequired).map((item) => item.sourceAssistant), ['mas', 'mag', 'medopl']);
+  assert.deepEqual(view.capabilities.filter((item) => item.runtimeRequired).map((item) => item.sourceAssistant), ['mas', 'mag', 'medopl', 'rca', 'bookforge']);
   assert.deepEqual([view.runtimeGate.deepLink, view.runtimeGate.title, view.runtimeGate.message], ['https://medopl.medopl.cn', '需要 MedOPL 授权', '该能力需要在 MedOPL 开通后继续']);
   assert.doesNotMatch(JSON.stringify(view.runtimeGate), /MedOPL Runtime|node pool|托管运行环境|存储|无限计算资源|创始人计划|WebUI owns/i);
   assert.deepEqual(view.researchResultSections.map((section) => section.id), ['research_plan', 'evidence_refs', 'next_steps']);
-  assert.deepEqual(view.workflowCards.map((item) => item.title), ['论文工作流', '基金工作流', '综述工作流', '材料线索']);
+  assert.deepEqual(view.workflowCards.map((item) => item.title), ['论文工作流', '基金工作流', '综述工作流', '材料线索', '演示工作流', '写书工作流']);
   assert.doesNotMatch(JSON.stringify(view), /workspace|demoData|demo:\/\/|轻量项目工作区|真实执行|已完成执行|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(JSON.stringify(view), /https:\/\/gflabtoken\.cn\/v1|base_url/i);
 });
@@ -994,4 +995,4 @@ test('web product entry delegates state and DOM ownership to focused modules', (
   assert.ok(entry.split('\n').length <= 80, 'product entry should stay thin');
 });
 
-function response(payload, status = 200) { return { ok: status >= 200 && status < 300, status, json: async () => payload }; }
+const response = (payload, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => payload });

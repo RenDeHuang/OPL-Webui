@@ -12,7 +12,9 @@
       "storage",
       "progress_refs",
       "deliverable_refs",
-      "materials_refs"
+      "materials_refs",
+      "presentation_refs",
+      "book_refs"
     ],
     "webRole": [
       "gate",
@@ -28,7 +30,7 @@
     ],
     "claimBoundary": "Web can expose authorized MedOPL capability entry and sanitized refs/status only; it cannot execute runtime commands, own storage truth, or return artifact bodies."
   },
-  "runtimeRequiredMarkers": ["@论文", "@基金", "@综述", "@文件"],
+  "runtimeRequiredMarkers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
   "lightweightMarkers": ["@科研"],
   "markerSemantics": [
     {
@@ -54,6 +56,16 @@
     {
       "marker": "@文件",
       "workflow": "materials_refs_workflow",
+      "runtimePolicy": "runtime_gate"
+    },
+    {
+      "marker": "@PPT",
+      "workflow": "presentation_foundry_workflow",
+      "runtimePolicy": "runtime_gate"
+    },
+    {
+      "marker": "@书",
+      "workflow": "book_foundry_workflow",
       "runtimePolicy": "runtime_gate"
     }
   ],

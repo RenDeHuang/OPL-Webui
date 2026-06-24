@@ -6,19 +6,19 @@
       "id": "home",
       "hash": "",
       "surface": "ai_native_research_homepage",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "sending", "runtime_required", "upstream_failed", "quota_exceeded", "auth_required", "api_key_required", "service_unavailable", "network_unreachable"]
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "presentation_entry_selected", "book_entry_selected", "sending", "runtime_required", "upstream_failed", "quota_exceeded", "auth_required", "api_key_required", "service_unavailable", "network_unreachable"]
     },
     {
       "id": "skills",
       "hash": "#skills",
       "surface": "research_skill_plaza",
-      "states": ["readonly_catalog", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "runtime_required"]
+      "states": ["readonly_catalog", "research_entry_selected", "paper_entry_selected", "grant_entry_selected", "presentation_entry_selected", "book_entry_selected", "runtime_required"]
     },
     {
       "id": "workflows",
       "hash": "#workflows",
       "surface": "agentic_research_workflows",
-      "states": ["readonly_catalog", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "runtime_required"]
+      "states": ["readonly_catalog", "paper_entry_selected", "grant_entry_selected", "materials_refs_pending", "presentation_entry_selected", "book_entry_selected", "runtime_required"]
     },
     {
       "id": "projects",
@@ -40,6 +40,8 @@
     "paper_entry_selected",
     "grant_entry_selected",
     "materials_refs_pending",
+    "presentation_entry_selected",
+    "book_entry_selected",
     "sending",
     "runtime_required",
     "upstream_failed",
@@ -337,6 +339,24 @@
       "runtimePolicy": "runtime_gate",
       "expectedChatState": "materials_refs_pending",
       "consumer": "research_user_prompt"
+    },
+    {
+      "id": "presentation_foundry",
+      "label": "演示/PPT",
+      "marker": "@PPT",
+      "prompt": "@PPT 规划研究演示结构、证据线和交付物 refs",
+      "runtimePolicy": "runtime_gate",
+      "expectedChatState": "presentation_entry_selected",
+      "consumer": "research_user_prompt"
+    },
+    {
+      "id": "book_foundry",
+      "label": "写书/长稿",
+      "marker": "@书",
+      "prompt": "@书 规划书稿结构、章节路线和资料 refs",
+      "runtimePolicy": "runtime_gate",
+      "expectedChatState": "book_entry_selected",
+      "consumer": "research_user_prompt"
     }
   ],
   "pageStateRules": [
@@ -374,6 +394,16 @@
       "when": "materials_refs_pending",
       "requiredApi": ["/api/medopl/materials-deliverables/projection"],
       "allowedAction": "show_refs_only_material_projection"
+    },
+    {
+      "when": "presentation_entry_selected",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "show_runtime_gate_for_presentation_foundry"
+    },
+    {
+      "when": "book_entry_selected",
+      "requiredApi": ["/api/chat"],
+      "allowedAction": "show_runtime_gate_for_book_foundry"
     },
     {
       "when": "runtime_required",

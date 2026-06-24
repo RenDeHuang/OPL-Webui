@@ -37,7 +37,7 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-first-view-contract="side_nav_brand_composer_chips_right_inspector_rail"/);
   assert.match(html, /research-command-band/);
   assert.match(html, /data-starter-chips/);
-  assert.equal((html.match(/data-starter-chip(?=[\s>])/g) ?? []).length, 5);
+  assert.equal((html.match(/data-starter-chip(?=[\s>])/g) ?? []).length, 7);
   assert.match(html, /输入研究问题，调用 OPL/);
   assert.doesNotMatch(html, /hero-shell/);
   assert.match(html, /app-shell/);
@@ -82,7 +82,7 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-capability-mode/);
   assert.match(html, /MedOPL/);
   assert.match(html, /prompt-console/);
-  assert.match(html, /@科研、@论文、@基金/);
+  assert.match(html, /@科研、@论文、@基金、@PPT、@书/);
   assert.match(html, /输入研究问题或选择一个 starter chip/);
   assert.match(html, /导入 Skill/);
   assert.match(html, /我的 Skill/);
@@ -100,6 +100,8 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /@论文/);
   assert.match(html, /@基金/);
   assert.match(html, /@综述/);
+  assert.match(html, /@PPT/);
+  assert.match(html, /@书/);
   assert.match(html, /注册/);
   assert.match(html, /登录/);
   assert.match(html, /API Key/);
@@ -115,10 +117,14 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /基金计划/);
   assert.match(html, /综述地图/);
   assert.match(html, /材料线索/);
+  assert.match(html, /演示\/PPT/);
+  assert.match(html, /写书\/长稿/);
   assert.match(html, /论文/);
   assert.match(html, /基金/);
   assert.match(html, /综述/);
   assert.match(html, /材料/);
+  assert.match(html, /演示工作流/);
+  assert.match(html, /写书工作流/);
   assert.match(html, /@基金/);
   assert.match(html, /@文件/);
   assert.doesNotMatch(html, /@RCA/);

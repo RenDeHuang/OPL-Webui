@@ -81,7 +81,7 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   }
 
   assert.match(readme, /multi-tenant SaaS Web edition of One Person Lab/);
-  assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, and `@文件`/);
+  assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
   assert.match(status, /research SaaS product engineering/);
@@ -172,7 +172,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
   assert.equal(product.primaryUserPath, 'ai_native_research_homepage');
   assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
-  assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件']);
+  assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(product.provider.wireApi, 'responses');
   assert.equal(product.provider.defaultModel, 'gpt-5.5');
@@ -198,11 +198,19 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.consumedAuthorities.includes('one-person-lab-app/contracts/app-product-profile.json'), true);
   assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
   assert.equal(product.capabilityGoal.mode, 'medopl_authorized_runtime_storage_capabilities_without_web_authority');
-  assert.deepEqual(product.capabilityGoal.targetCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs']);
+  assert.deepEqual(product.capabilityGoal.targetCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs', 'presentation_refs', 'book_refs']);
   assert.deepEqual(product.capabilityGoal.webOwnedExperience, ['entry', 'authorization_status', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'deeplink', 'fail_closed_gate']);
   assert.deepEqual(product.capabilityGoal.authorityOwners, { runtime: 'MedOPL / OPL Framework', storage: 'MedOPL / OPL Framework', artifactBody: 'MedOPL / OPL Framework' });
   assert.equal(product.capabilityGoal.webMayExecuteRuntime, false);
   assert.equal(product.capabilityGoal.webMayOwnStorageTruth, false);
+
+  assert.deepEqual(product.capabilityGoal.upstreamPurposeEntries, [
+    'research',
+    'grant',
+    'presentation_foundry',
+    'book_foundry',
+  ]);
+  assert.equal(product.capabilityGoal.webMayOwnArtifactBody, false);
 
   assert.equal(api.paths['/api/account/audit-events'].get.responses['200'].description, 'Sanitized user audit events.');
   assert.equal(api.paths['/api/account/commercial-status'].get.responses['200'].description, 'Readonly commercial account lifecycle projection.');
@@ -216,10 +224,10 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(api.components.schemas.ApiErrorCode.enum.includes('CHAT_QUOTA_EXCEEDED'), true);
   assert.equal(api.components.schemas.ChatErrorCode, undefined);
   assert.deepEqual(runtime.lightweightMarkers, ['@科研']);
-  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件']);
+  assert.deepEqual(runtime.runtimeRequiredMarkers, ['@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
   assert.equal(runtime.runtimeRequiredMarkers.includes('@长任务'), false);
   assert.equal(runtime.capabilityGoal.mode, 'medopl_authorized_capability_entry_and_refs_projection');
-  assert.deepEqual(runtime.capabilityGoal.userCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs']);
+  assert.deepEqual(runtime.capabilityGoal.userCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs', 'presentation_refs', 'book_refs']);
   assert.deepEqual(runtime.capabilityGoal.webRole, ['gate', 'authorization_status', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'deeplink']);
   assert.deepEqual(runtime.capabilityGoal.authorityOwners, ['MedOPL', 'OPL Framework']);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('progress_refs'), true);
