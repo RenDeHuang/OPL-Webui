@@ -188,7 +188,8 @@
         "ownerSurface": "product-boundary",
         "acceptanceContract": "contracts/web-product-profile.json#/commercialLifecycle",
         "disposition": "readonly_personal_projection_only",
-        "launchBlocking": true,
+        "launchBlocking": false,
+        "launchBlockingRationale": "not blocking single-node controlled launch because owner accepted readonly personal projection boundary; full commercial lifecycle remains blocked without buyer/operator workflow",
         "evidenceRequired": [
           "real_consumer",
           "contract",
@@ -262,10 +263,23 @@
     "mode": "authenticated_readonly_personal_status_projection",
     "currentPhase": "commercial_contract",
     "nextPhase": "commercial_consumer_contract",
-    "blockedBy": "missing_product_decision",
+    "blockedBy": "missing_real_buyer_or_operator_workflow",
     "ownerReceipt": {
       "required": true,
-      "source": "external_owner"
+      "source": "human_owner_receipt",
+      "status": "accepted",
+      "acceptedAt": "2026-06-25",
+      "acceptedClaim": "commercial_readonly_personal_projection_boundary_accepted",
+      "acceptedScope": "OPL-Webui keeps readonly personal projection only; MedOPL remains billing/payment source of truth",
+      "doesNotAdmit": [
+        "team_invite",
+        "team_rbac",
+        "pricing",
+        "subscription",
+        "payment_mutation",
+        "billing_source_of_truth",
+        "commercial_admin_console"
+      ]
     },
     "owner": "one-person-lab-web",
     "consumer": "settings_lifecycle_summary",
@@ -335,7 +349,8 @@
       "payment_mutation",
       "billing_source_of_truth",
       "commercial_admin_console"
-    ]
+    ],
+    "billingPaymentSourceOfTruth": "MedOPL"
   },
   "concurrencyAndLoad": {
     "mode": "staging_safe_10_user_baseline_no_production_load_claim",

@@ -133,7 +133,8 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     'conditions',
   );
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_readonly_projection').status, 'pass');
-  assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_owner_receipt').status, 'blocked');
+  assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_owner_receipt').status, 'pass');
+  assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_consumer_contract').status, 'blocked');
   assert.equal(
     byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_consumer_contract').evidenceSource,
     'expansionConditions',

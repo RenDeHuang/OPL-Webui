@@ -311,7 +311,7 @@
       "state": "active",
       "currentPhaseId": "commercial_contract",
       "currentStatus": "blocked",
-      "launchBlocking": true,
+      "launchBlocking": false,
       "cannotClaim": [
         "complete commercial SaaS lifecycle",
         "billing source of truth",
@@ -335,9 +335,9 @@
             "external_owner"
           ],
           "blockerTypes": [
+            "missing_real_consumer",
             "missing_contract",
-            "missing_product_decision",
-            "missing_owner_receipt"
+            "missing_registered_tests"
           ],
           "acceptance": [
             "commercialLifecycle remains authenticated_readonly_personal_status_projection",
@@ -352,8 +352,20 @@
           ],
           "ownerReceipt": {
             "required": true,
-            "source": "external_owner",
-            "reason": "commercial lifecycle expansion needs a real consumer and billing authority decision outside repo-local implementation"
+            "source": "human_owner_receipt",
+            "status": "accepted",
+            "acceptedAt": "2026-06-25",
+            "acceptedClaim": "commercial_readonly_personal_projection_boundary_accepted",
+            "acceptedScope": "readonly personal projection only; MedOPL remains billing/payment source of truth",
+            "doesNotAdmit": [
+              "team_invite",
+              "team_rbac",
+              "pricing",
+              "subscription",
+              "payment_mutation",
+              "billing_source_of_truth",
+              "commercial_admin_console"
+            ]
           },
           "requiredEvals": [
             {
@@ -375,7 +387,8 @@
             }
           ]
         }
-      ]
+      ],
+      "launchBlockingRationale": "not blocking single-node controlled launch because owner accepted readonly personal projection boundary; full commercial lifecycle remains blocked without buyer/operator workflow"
     },
     {
       "id": "operations_maturity",
@@ -431,9 +444,16 @@
             "required": true,
             "source": "human_owner_receipt",
             "status": "accepted",
-            "acceptedAt": "2026-06-24",
+            "acceptedAt": "2026-06-25",
             "acceptedClaim": "operations_maturity_v1_baseline_and_rollback_record_contract_accepted",
-            "acceptedScope": "observability baseline plus manual rollback record contract only"
+            "acceptedScope": "observability baseline plus manual rollback record contract only",
+            "pendingExternalEvidence": [
+              "rollback_drill_run_id",
+              "db_restore_drill_summary",
+              "alert_channel",
+              "dashboard_url",
+              "soak_or_load_result"
+            ]
           },
           "requiredEvals": [
             {
@@ -490,8 +510,7 @@
             "external_owner"
           ],
           "blockerTypes": [
-            "missing_production_evidence",
-            "missing_owner_receipt"
+            "missing_production_evidence"
           ],
           "acceptance": [
             "current production shape stays launch-safe at one pod while HA is paused",
@@ -506,8 +525,19 @@
           ],
           "ownerReceipt": {
             "required": true,
-            "source": "external_owner",
-            "reason": "HA changes cloud cost, topology, and rollout safety and cannot be inferred from repo-local tests"
+            "source": "human_owner_receipt",
+            "status": "accepted",
+            "acceptedAt": "2026-06-25",
+            "acceptedClaim": "ha_paused_for_single_node_controlled_launch",
+            "acceptedScope": "single-node controlled launch; no second TKE node and no replicas=2 in this phase",
+            "secondNodeApproved": false,
+            "replicasApproved": 1,
+            "costWindowApproved": false,
+            "doesNotProve": [
+              "multi-node HA",
+              "zero-downtime rolling update evidence",
+              "CLB two-backend health"
+            ]
           },
           "requiredEvals": [
             {
@@ -529,7 +559,9 @@
             }
           ]
         }
-      ]
+      ],
+      "launchBlocking": false,
+      "launchBlockingRationale": "not blocking single-node controlled launch; HA remains paused until cloud owner approves second node, replicas=2, and production topology evidence"
     },
     {
       "id": "concurrency_and_load",

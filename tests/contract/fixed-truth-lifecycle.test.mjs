@@ -622,7 +622,7 @@ test('commercial lifecycle expansion stays a readonly personal projection until 
   assert.match(status, /authenticated readonly personal commercial status projection/);
   assert.match(status, /team invite\/RBAC\/pricing\/subscription\/payment expansion requires structured `expansionConditions`/);
   assert.match(active, /authenticated readonly personal commercial status projection/);
-  assert.match(active, /Commercial lifecycle remains launch-blocking beyond the readonly personal projection/);
+  assert.match(active, /Commercial owner decision is accepted only for readonly personal projection/);
   assert.match(decisions, /Commercial lifecycle stays a readonly personal projection/);
   assert.match(decisions, /team invite\/RBAC\/pricing\/subscription\/payment/i);
 });
@@ -679,6 +679,17 @@ test('operations maturity and gap phase advancement require structured eval evid
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.migrationSchemaCompatibility.state, 'contract_present_pending_migration_drill');
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.upstreamBackpressure.state, 'repo_local_timeout_fail_closed_pending_production_sla');
   assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.state, 'staging_safe_baseline_present_production_claim_pending');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.alertingBoundary.ownerReceipt.owner, 'huangrende');
+  assert.deepEqual(release.productionObservabilityBaseline.productionReadinessGates.alertingBoundary.ownerReceipt.severityPolicy, {
+    p0: '5m_response',
+    p1: '30m_response',
+    p2: 'business_hours_response',
+  });
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.alertingBoundary.ownerReceipt.channelStatus, 'pending');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.observabilityDashboard.ownerReceipt.status, 'pending_dashboard_url');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.ownerReceipt.stagingUsers, 10);
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.ownerReceipt.productionPolicy, 'smoke_only');
+  assert.equal(release.productionObservabilityBaseline.productionReadinessGates.concurrencyEvidence.ownerReceipt.upstreamQuotaPolicy, 'no_real_gflabtoken_quota_without_explicit_authorization');
   assert.equal(release.productionLaunchCloseout.mode, 'explicit_final_release_decision_receipt');
   assert.equal(release.productionLaunchCloseout.entrypoint, 'npm run release:evidence -- --launch-closeout-json <sanitized-json>');
   assert.deepEqual(release.productionLaunchCloseout.requiredReceiptFields, ['decision', 'owner', 'acceptedAt', 'acceptedClaim', 'evidence', 'rawLogPolicy']);
@@ -689,6 +700,7 @@ test('operations maturity and gap phase advancement require structured eval evid
   assert.equal(release.productionOperationsCloseout.cannotClaim.includes('multi-node HA'), true);
   assert.equal(release.productionObservabilityBaseline.nextReadiness.rollbackRecordV1.state, 'contract_present_pending_first_production_run');
   assert.equal(release.productionRollbackReadiness.recordContract.state, 'present');
+  assert.equal(Object.hasOwn(release.productionRollbackReadiness, 'latestDrill'), false);
   assert.deepEqual(release.productionObservabilityBaseline.nextReadiness.maturityAdmittedWhen, [
     'dashboard_contract=present',
     'alerting_contract=present',
@@ -698,6 +710,42 @@ test('operations maturity and gap phase advancement require structured eval evid
   ]);
   assert.match(status, /a phase may advance only when `currentStatus=done` and all eval results pass/);
   assert.match(active, /Repo-local tests cannot infer production evidence or owner receipt/);
+  assert.match(status, /Alert route owner receipt is accepted for owner `huangrende` with P0 5 minutes, P1 30 minutes, and P2 business-hours response, but channel evidence remains pending/);
+  assert.match(active, /rollback drill run id, DB restore drill, dashboard URL, and concrete alert channel remain pending external evidence/);
+});
+
+test('owner decisions keep commercial and HA boundaries explicit without false completion claims', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const release = readJson('contracts/web-release-profile.json');
+  const gapRegistry = readJson('contracts/web-gap-phase-registry.json');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.equal(product.commercialLifecycle.ownerReceipt.status, 'accepted');
+  assert.equal(product.commercialLifecycle.ownerReceipt.acceptedClaim, 'commercial_readonly_personal_projection_boundary_accepted');
+  assert.equal(product.commercialLifecycle.blockedBy, 'missing_real_buyer_or_operator_workflow');
+  assert.equal(product.commercialLifecycle.billingPaymentSourceOfTruth, 'MedOPL');
+  assert.equal(product.commercialLifecycle.webRoutesMayMutateBilling, false);
+
+  const commercialGap = gapRegistry.gaps.find((gap) => gap.id === 'commercial_saas_depth');
+  assert.equal(commercialGap.currentStatus, 'blocked');
+  assert.equal(commercialGap.phases[0].ownerReceipt.status, 'accepted');
+  assert.equal(commercialGap.phases[0].ownerReceipt.acceptedClaim, 'commercial_readonly_personal_projection_boundary_accepted');
+  assert.equal(commercialGap.phases[0].ownerReceipt.doesNotAdmit.includes('team_rbac'), true);
+  assert.equal(commercialGap.phases[0].ownerReceipt.doesNotAdmit.includes('payment_mutation'), true);
+
+  assert.equal(release.productionHAReadiness.ownerReceipt.status, 'accepted');
+  assert.equal(release.productionHAReadiness.ownerReceipt.acceptedClaim, 'ha_paused_for_single_node_controlled_launch');
+  assert.equal(release.productionHAReadiness.ownerReceipt.secondNodeApproved, false);
+  assert.equal(release.productionHAReadiness.currentApplyManifest.replicas, 1);
+
+  const haGap = gapRegistry.gaps.find((gap) => gap.id === 'ha_and_resilience');
+  assert.equal(haGap.state, 'paused');
+  assert.equal(haGap.currentStatus, 'blocked');
+  assert.equal(haGap.phases[0].ownerReceipt.status, 'accepted');
+  assert.equal(haGap.phases[0].ownerReceipt.acceptedClaim, 'ha_paused_for_single_node_controlled_launch');
+  assert.match(status, /HA owner decision is accepted as paused/);
+  assert.match(active, /Commercial owner decision is accepted only for readonly personal projection/);
 });
 
 test('release automation evidence is historical after production-gated closeout', () => {

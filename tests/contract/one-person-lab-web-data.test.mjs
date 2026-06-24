@@ -39,7 +39,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(visionGap('runtime_execution_boundary').disposition, 'fail_closed_empty_allowlist_boundary_accepted');
   assert.deepEqual([visionGap('ha_and_resilience').acceptanceContract, visionGap('concurrency_and_load').acceptanceContract, visionGap('opl_auto_update_from_github').acceptanceContract], ['contracts/web-release-profile.json#/productionHAReadiness', 'contracts/web-product-profile.json#/concurrencyAndLoad', 'contracts/web-release-profile.json#/oplAutoUpdateReadiness']);
   assert.equal(visionGap('runtime_execution_boundary').launchBlocking, true);
-  assert.equal(visionGap('commercial_saas_depth').launchBlocking, true);
+  assert.equal(visionGap('commercial_saas_depth').launchBlocking, false);
   assert.deepEqual([
     product.provider.fixedBaseUrl,
     product.provider.wireApi,
@@ -60,9 +60,10 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     'authenticated_readonly_personal_status_projection',
     'commercial_contract',
     'commercial_consumer_contract',
-    'missing_product_decision',
+    'missing_real_buyer_or_operator_workflow',
   ]);
-  assert.deepEqual(product.commercialLifecycle.ownerReceipt, { required: true, source: 'external_owner' });
+  assert.equal(product.commercialLifecycle.ownerReceipt.acceptedClaim, 'commercial_readonly_personal_projection_boundary_accepted');
+  assert.equal(product.commercialLifecycle.billingPaymentSourceOfTruth, 'MedOPL');
   assert.deepEqual(product.commercialLifecycle.nextStepOpeners, [
     'real buyer or operator workflow is named',
     'contract exists for invite, RBAC, pricing, subscription, or payment surface',
