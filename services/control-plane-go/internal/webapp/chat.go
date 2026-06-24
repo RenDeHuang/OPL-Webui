@@ -194,7 +194,7 @@ func isConnectFailure(err error) bool {
 }
 
 func requiresRuntime(message string) bool {
-	for _, marker := range []string{"@基金", "@论文", "@综述", "@文件"} {
+	for _, marker := range []string{"@基金", "@论文", "@综述", "@文件", "@PPT", "@书"} {
 		if strings.Contains(message, marker) {
 			return true
 		}

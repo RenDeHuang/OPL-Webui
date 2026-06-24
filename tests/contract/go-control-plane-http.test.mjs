@@ -16,6 +16,10 @@ function readApiContract() {
   return JSON.parse(readFileSync('contracts/web-api.openapi.json', 'utf8'));
 }
 
+function readRuntimeBridgeContract() {
+  return JSON.parse(readFileSync('contracts/web-runtime-bridge.json', 'utf8'));
+}
+
 function responseCodes(api, path, method) {
   return Object.keys(api.paths[path][method].responses).sort();
 }
@@ -317,11 +321,14 @@ test('chat API requires auth and user API key, rejects client base_url override,
 
     await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-runtime-gate-secret' });
 
-    const gated = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@基金 帮我写标书' });
-    assert.equal(gated.response.status, 409);
-    assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
-    assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
-    assertNoSensitiveMaterial(gated.body);
+    const runtimeBridge = readRuntimeBridgeContract();
+    for (const marker of runtimeBridge.runtimeRequiredMarkers) {
+      const gated = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: `${marker} 帮我推进研究任务` });
+      assert.equal(gated.response.status, 409, `${marker} must stop at MedOPL runtime gate`);
+      assert.equal(gated.body.errorCode, 'RUNTIME_REQUIRED');
+      assert.match(gated.body.medoplDeepLink, /^https:\/\/medopl\.medopl\.cn/);
+      assertNoSensitiveMaterial(gated.body);
+    }
 
     const uncontractedAtMention = await authedPost(baseUrl, '/api/chat', session.cookieHeader, { message: '@RCA 规划可视化交付方案' });
     assert.equal(uncontractedAtMention.response.status, 200);
