@@ -5,9 +5,9 @@
 - state: active_truth
 - machine boundary: human-readable navigation; contracts, source, tests, scripts, and API behavior are authoritative.
 
-One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书` research capability entries.
+One Person Lab Web is the account-based Web edition of One Person Lab App at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through a simple path: open Web, log in, bind an API Key or use account capability, choose `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`, then continue through result, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL deeplink states.
 
-This repo owns the browser product surface, multi-tenant account/session experience, tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, and Web release/deploy evidence.
+This repo owns the browser product surface, account/session experience, hidden multi-tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, and Web release/deploy evidence.
 
 It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo owns the desktop product entry, while this repo owns the SaaS browser product entry.
 
@@ -26,7 +26,7 @@ It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo own
 
 ## Product Boundary
 
-- Web owns the multi-tenant SaaS product entry, static shell, account/session path, tenant isolation, fixed provider binding, research capability launcher, ordinary chat fallback, page state, sanitized audit projection, and Web release/deploy evidence.
+- Web owns the account-based product entry, static shell, account/session path, hidden tenant isolation, fixed provider binding, research capability launcher, ordinary chat fallback, page state, sanitized audit projection, and Web release/deploy evidence.
 - Go control plane is the only backend business entry for this repo.
 - This repo does not own desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, or artifact/body authority.
 

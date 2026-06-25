@@ -80,11 +80,11 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
     assert.match(text, /one-person-lab-web|One Person Lab Web/);
   }
 
-  assert.match(readme, /multi-tenant SaaS Web edition of One Person Lab/);
+  assert.match(readme, /account-based Web edition of One Person Lab App/);
   assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /research SaaS product engineering/);
+  assert.match(status, /account-based Web App product engineering/);
   assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work now moves one gap at a time/);
   assert.match(status, /current = smoke \+ contract \+ health \+ go/);
@@ -169,9 +169,24 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   const runbook = readFileSync('deploy/web-cloud/RUNBOOK.md', 'utf8');
 
   assert.equal(product.productId, 'one-person-lab-web');
-  assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
-  assert.equal(product.primaryUserPath, 'ai_native_research_homepage');
-  assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
+  assert.equal(product.positioning, 'Account-based Web edition of One Person Lab App');
+  assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
+  assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
+  assert.equal(product.accountBasedWebAppMainPath.mode, 'account_based_web_edition_main_path_v1');
+  assert.deepEqual(product.accountBasedWebAppMainPath.orderedSteps.map((step) => step.id), [
+    'open_web',
+    'login_account',
+    'bind_api_key_or_use_account_capability',
+    'choose_research_task',
+    'view_result_or_medopl_gate',
+    'view_progress_refs',
+    'view_deliverable_refs',
+    'view_blocker_next_step',
+    'continue_via_medopl_deeplink',
+  ]);
+  assert.equal(product.accountBasedWebAppMainPath.technicalCapability.multiTenant, 'hidden_enabler_not_product_positioning');
+  assert.equal(product.webBusinessCapabilityV1.claim, 'account_based_one_person_lab_web_app_business_capability_v1');
+  assert.equal(product.webBusinessCapabilityV1.mainPathContract, 'contracts/web-product-profile.json#/accountBasedWebAppMainPath');
   assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
   assert.equal(product.provider.fixedBaseUrl, 'https://gflabtoken.cn/v1');
   assert.equal(product.provider.wireApi, 'responses');
@@ -181,7 +196,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.provider.upstreamTimeoutSeconds, 60);
   assert.equal(product.provider.upstreamTimeoutEnv, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS');
   assert.equal(product.provider.userEditableBaseUrl, false);
-  assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), true);
+  assert.equal(product.ownedSurfaces.includes('account_based_web_app_entry'), true);
+  assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), false);
   assert.equal(product.ownedSurfaces.includes('web_product_surface'), true);
   assert.equal(product.ownedSurfaces.includes('tenant_isolation'), true);
   assert.equal(product.ownedSurfaces.includes('research_capability_entry'), true);
@@ -480,8 +496,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(status, /multi-tenant SaaS Web edition of One Person Lab/);
-  assert.match(JSON.stringify(product.claims.canClaim), /research Skill entry remains the primary product positioning/);
+  assert.match(status, /account-based Web edition of One Person Lab App/);
+  assert.match(JSON.stringify(product.claims.canClaim), /account-based task path remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
   assert.match(status, /production real ordinary chat completion/);
@@ -725,6 +741,8 @@ test('controlled launch readiness separates hard launch gates from upstream qual
   assert.equal(release.controlledLaunchReadiness.claim, 'controlled_launch_readiness');
   assert.equal(release.controlledLaunchReadiness.owner, 'one-person-lab-web-release');
   assert.equal(release.controlledLaunchReadiness.consumer, 'release_operator');
+  assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.contract, 'contracts/web-product-profile.json#/webBusinessCapabilityV1');
+  assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.hardGateForControlledLaunch, true);
   assert.deepEqual(release.controlledLaunchReadiness.hardGates, [
     'release_image_exists',
     'production_dry_run',

@@ -7,7 +7,7 @@
     "OPL-Webui"
   ],
   "repoRole": "product_repo",
-  "positioning": "Multi-tenant SaaS Web edition of One Person Lab",
+  "positioning": "Account-based Web edition of One Person Lab App",
   "publicHost": "opl.medopl.cn",
   "sourceApp": "one-person-lab-app",
   "targetUsers": [
@@ -17,8 +17,8 @@
     "principal_investigators",
     "research_teams"
   ],
-  "primaryUserPath": "ai_native_research_homepage",
-  "primaryEntryModel": "at_mention_research_capabilities",
+  "primaryUserPath": "account_based_web_app_main_path",
+  "primaryEntryModel": "login_bind_key_then_task_entry",
   "primaryEntryMarkers": [
     "@科研",
     "@论文",
@@ -29,7 +29,7 @@
     "@书"
   ],
   "ownedSurfaces": [
-    "multi_tenant_saas_product",
+    "account_based_web_app_entry",
     "web_product_surface",
     "public_account_session",
     "tenant_isolation",
@@ -46,6 +46,49 @@
     "medopl_authorization_status_projection",
     "medopl_progress_refs_projection"
   ],
+  "accountBasedWebAppMainPath": {
+    "mode": "account_based_web_edition_main_path_v1",
+    "owner": "one-person-lab-web",
+    "consumer": "research_user",
+    "orderedSteps": [
+      { "id": "open_web", "state": "anonymous", "surface": "home", "expectedUserOutcome": "open opl.medopl.cn and see the One Person Lab Web task entry" },
+      { "id": "login_account", "state": "authenticated_unbound", "surface": "account", "expectedUserOutcome": "log in or register a Web account" },
+      { "id": "bind_api_key_or_use_account_capability", "state": "authenticated_bound", "surface": "account_provider", "expectedUserOutcome": "bind a BYOK provider key or continue with account-enabled capability when admitted" },
+      { "id": "choose_research_task", "state": "research_entry_selected", "surface": "task_entry", "expectedUserOutcome": "choose research, paper, grant, review, file, PPT, or book task entry" },
+      { "id": "view_result_or_medopl_gate", "state": "runtime_required", "surface": "turn_state", "expectedUserOutcome": "see structured result for lightweight work or MedOPL gate for specialist execution" },
+      { "id": "view_progress_refs", "state": "progress_refs_readonly", "surface": "inspector_progress", "expectedUserOutcome": "see progress refs without artifact body authority" },
+      { "id": "view_deliverable_refs", "state": "deliverable_refs_readonly", "surface": "inspector_output", "expectedUserOutcome": "see deliverable refs without storage truth" },
+      { "id": "view_blocker_next_step", "state": "service_unavailable", "surface": "reliability_status", "expectedUserOutcome": "see blocker and next step when upstream or capability is unavailable" },
+      { "id": "continue_via_medopl_deeplink", "state": "medopl_authorized", "surface": "runtime_gate", "expectedUserOutcome": "continue specialist execution through MedOPL/OPL deeplink" }
+    ],
+    "technicalCapability": {
+      "multiTenant": "hidden_enabler_not_product_positioning",
+      "tenantIsolation": "required",
+      "postgresStore": "required_when_OPL_DATABASE_URL_is_set",
+      "controlPlane": "Go control plane is the only backend business entry"
+    },
+    "cannotClaim": [
+      "full SaaS platform",
+      "team/RBAC/payment lifecycle",
+      "Web-side runtime execution",
+      "storage truth",
+      "artifact body authority"
+    ]
+  },
+  "webBusinessCapabilityV1": {
+    "claim": "account_based_one_person_lab_web_app_business_capability_v1",
+    "mainPathContract": "contracts/web-product-profile.json#/accountBasedWebAppMainPath",
+    "pageStateContract": "contracts/web-page-state-matrix.json#/userMainPathStates",
+    "releaseContract": "contracts/web-release-profile.json#/controlledLaunchReadiness",
+    "proof": [
+      "tests/contract/one-person-lab-web-data.test.mjs",
+      "tests/browser/research-main-path.browser.test.mjs",
+      "Production Browser E2E run 28142197152"
+    ],
+    "webSideRuntimeExecution": false,
+    "billingPaymentOwner": "MedOPL",
+    "multiTenantRole": "technical_enabler"
+  },
   "consumedAuthorities": [
     "one-person-lab-app/contracts/app-product-profile.json",
     "one-person-lab/contracts/opl-framework/domains.json",
@@ -482,11 +525,11 @@
   },
   "claims": {
     "canClaim": [
-      "One Person Lab Web is the multi-tenant SaaS Web edition of One Person Lab.",
-      "Researchers, graduate students, PhD students, principal investigators, and research teams can enter OPL through an AI-native research homepage and Web research capability markers.",
+      "One Person Lab Web is the account-based Web edition of One Person Lab App.",
+      "Researchers, graduate students, PhD students, principal investigators, and research teams can open Web, log in, bind an API Key or use admitted account capability, choose a task, and continue through result/gate, refs, blocker/next step, and MedOPL/OPL deeplink states.",
       "Web UI calls the same-origin Go control plane HTTP API.",
       "Users bind their own provider key while base_url remains fixed.",
-      "Ordinary chat is available for low-risk explanation and organization, while research Skill entry remains the primary product positioning.",
+      "Ordinary chat is available for low-risk explanation and organization, while the account-based task path remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
       "Runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly refs projection, deeplink, and fail-closed gate.",
       "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only.",

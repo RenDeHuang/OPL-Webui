@@ -20,12 +20,16 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.canonicalProductName, 'One Person Lab Web');
-  assert.equal(product.positioning, 'Multi-tenant SaaS Web edition of One Person Lab');
-  assert.equal(product.primaryUserPath, 'ai_native_research_homepage');
-  assert.equal(product.primaryEntryModel, 'at_mention_research_capabilities');
+  assert.equal(product.positioning, 'Account-based Web edition of One Person Lab App');
+  assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
+  assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
+  assert.deepEqual(product.accountBasedWebAppMainPath.orderedSteps.map((step) => step.id), ['open_web', 'login_account', 'bind_api_key_or_use_account_capability', 'choose_research_task', 'view_result_or_medopl_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_medopl_deeplink']);
+  assert.equal(product.webBusinessCapabilityV1.claim, 'account_based_one_person_lab_web_app_business_capability_v1');
+  assert.equal(product.webBusinessCapabilityV1.webSideRuntimeExecution, false);
   assert.deepEqual(product.targetUsers, ['research_staff', 'masters_students', 'phd_students', 'principal_investigators', 'research_teams']);
   assert.deepEqual(product.primaryEntryMarkers, ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']);
-  assertIncludesAll(product.ownedSurfaces, ['multi_tenant_saas_product', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api'], 'owned surface');
+  assertIncludesAll(product.ownedSurfaces, ['account_based_web_app_entry', 'tenant_isolation', 'research_capability_entry', 'ordinary_chat_fallback', 'web_control_plane_api'], 'owned surface');
+  assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), false);
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
   assert.equal(product.publicUi.primarySurface, 'ai_native_research_homepage');
@@ -110,7 +114,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     ['more', 'More', 'route', 'more', true, 'empty_overflow_menu', ''],
   ]);
   assert.deepEqual(pageStates.shellStates.librarySurfaces, { skills: { scopes: ['my_skills', 'opl_skills'], actions: ['import_skill'] }, workflows: { scopes: ['my_workflows', 'opl_workflows'], actions: ['create_workflow', 'import_workflow'] }, projects: { scopes: ['my_projects'], actions: ['create_project'], forbiddenApis: ['/api/projects'] } });
-  assert.deepEqual(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'research_task_template_selected', 'research_skill_launcher', 'ordinary_chat_fallback', 'quota_exceeded', 'paper_runtime_gate', 'grant_runtime_gate', 'conversation_history_search_visible', 'more_empty_overflow_visible', 'reliability_status_visible', 'sanitized_audit']);
+  assertIncludesAll(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'api_key_binding', 'research_task_template_selected', 'choose_task', 'view_result_or_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_deeplink', 'paper_runtime_gate', 'grant_runtime_gate', 'sanitized_audit'], 'local readiness step');
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
   assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-side-navigation]', '[data-first-view]', '[data-starter-chips]', '[data-chat-log]', '[data-runtime-gate]', '[data-more-overflow]', '[data-project-library]', '[data-search-sheet]', '[data-conversation-search]', '[data-conversation-history]', '[data-conversation-empty]', '[data-model-selector]', '[data-overlay-close]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-reliability-status]'], 'observable selector');
   assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
@@ -183,14 +187,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(runtime.executionAdmission.currentPhase, 'execution_admission');
   assert.equal(runtime.executionAdmission.nextPhase, 'runtime_execution_contract_design');
   assert.equal(runtime.executionAdmission.blockedBy, null);
-  assert.deepEqual(runtime.executionAdmission.ownerReceipt, {
-    required: true,
-    source: 'human_owner_receipt',
-    status: 'accepted',
-    acceptedAt: '2026-06-24',
-    acceptedClaim: 'runtime_fail_closed_empty_allowlist_boundary_accepted',
-    acceptedScope: 'Web remains gate plus readonly projection only; MedOPL and OPL Framework remain execution authority.',
-  });
+  assert.deepEqual(runtime.executionAdmission.ownerReceipt, { required: true, source: 'human_owner_receipt', status: 'accepted', acceptedAt: '2026-06-24', acceptedClaim: 'runtime_fail_closed_empty_allowlist_boundary_accepted', acceptedScope: 'Web remains gate plus readonly projection only; MedOPL and OPL Framework remain execution authority.' });
   assert.deepEqual(runtime.executionAdmission.currentAllowlist, []);
   assert.deepEqual(runtime.executionAdmission.forbiddenCommands, ['install', 'repair', 'module_exec', 'artifact_body', 'runtime_mutation']);
   assert.deepEqual(runtime.executionAdmission.nextStepOpeners, [
@@ -206,7 +203,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localNoSecretReadiness.requiresProductionSecrets, false);
   assert.equal(release.localNoSecretReadiness.browserAutomation, false);
   assert.equal(release.localNoSecretReadiness.automationLevel, 'http_contract_and_static_shell');
-  assert.deepEqual(release.localNoSecretReadiness.coverage, ['register', 'login', 'current_session', 'browser_session_bootstrap', 'api_key_binding', 'ordinary_chat_mock_upstream', 'quota_exceeded', 'runtime_gate', 'sanitized_audit', 'desktop_shell', 'mobile_shell', 'more_empty_overflow']);
+  assertIncludesAll(release.localNoSecretReadiness.coverage, ['open_web', 'login', 'api_key_binding', 'choose_task', 'view_result_or_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_deeplink'], 'local readiness business path coverage');
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
   assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28142197152_real_chat_readonly_confirmed');
@@ -287,6 +284,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');
+  assert.equal(release.productionBrowserE2EReadiness.businessPathProof, 'account_based_web_app_main_path_v1');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 28142197152);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.failedStage, null);
@@ -294,7 +292,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, ['OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY']);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
-  assertIncludesAll(release.productionBrowserE2EReadiness.coverage, ['real_browser_login', 'paper_runtime_gate'], 'browser coverage');
+  assertIncludesAll(release.productionBrowserE2EReadiness.coverage, ['real_browser_login', 'api_key_binding', 'research_task_template_selected', 'structured_research_result_sections', 'paper_runtime_gate', 'grant_runtime_gate', 'progress_refs_projection', 'deliverable_refs_projection', 'blocker_next_step', 'medopl_deeplink'], 'browser coverage');
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
   assertIncludesAll(release.productionBrowserE2EReadiness.cannotClaim, ['MedOPL runtime execution'], 'browser cannot-claim');
   assert.equal(release.localNoSecretReadiness.cannotClaim.includes('production authenticated dogfood e2e executed'), false);

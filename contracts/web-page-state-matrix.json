@@ -34,6 +34,32 @@
     }
   ],
   "accountStates": ["anonymous", "authenticated_unbound", "authenticated_bound"],
+  "userMainPathStates": {
+    "mode": "account_based_web_app_main_path_v1",
+    "owner": "one-person-lab-web",
+    "consumer": "research_user",
+    "orderedStates": [
+      { "id": "open_web", "route": "home", "requiredState": "anonymous", "requiredSurface": "public_landing" },
+      { "id": "login", "route": "home", "requiredState": "authenticated_unbound", "requiredSurface": "auth_login_register" },
+      { "id": "bind_key_or_account_capability", "route": "home", "requiredState": "authenticated_bound", "requiredSurface": "api_key_required_modal" },
+      { "id": "choose_task", "route": "home", "requiredState": "research_entry_selected", "requiredSurface": "research_task_launcher" },
+      { "id": "view_result_or_gate", "route": "home", "requiredState": "runtime_required", "requiredSurface": "turn_state" },
+      { "id": "view_progress_refs", "route": "home", "requiredState": "progress_refs_readonly", "requiredSurface": "inspector_progress" },
+      { "id": "view_deliverable_refs", "route": "home", "requiredState": "deliverable_refs_readonly", "requiredSurface": "inspector_output" },
+      { "id": "view_blocker_next_step", "route": "home", "requiredState": "service_unavailable", "requiredSurface": "reliability_status" },
+      { "id": "continue_via_deeplink", "route": "home", "requiredState": "medopl_authorized", "requiredSurface": "runtime_gate" }
+    ],
+    "evidence": [
+      "tests/contract/one-person-lab-web-data.test.mjs",
+      "tests/browser/research-main-path.browser.test.mjs"
+    ],
+    "cannotClaim": [
+      "Web-side runtime execution",
+      "artifact body authority",
+      "payment lifecycle",
+      "team/RBAC lifecycle"
+    ]
+  },
   "chatStates": [
     "idle",
     "research_entry_selected",
@@ -489,6 +515,42 @@
         "id": "research_task_template_selected",
         "route": "home",
         "expectedState": "research_entry_selected",
+        "evidence": "tests/browser/research-main-path.browser.test.mjs"
+      },
+      {
+        "id": "choose_task",
+        "route": "home",
+        "expectedState": "research_entry_selected",
+        "evidence": "tests/browser/research-main-path.browser.test.mjs"
+      },
+      {
+        "id": "view_result_or_gate",
+        "route": "home",
+        "expectedState": "runtime_required",
+        "evidence": "tests/browser/research-main-path.browser.test.mjs"
+      },
+      {
+        "id": "view_progress_refs",
+        "route": "home",
+        "expectedState": "progress_refs_readonly",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+      },
+      {
+        "id": "view_deliverable_refs",
+        "route": "home",
+        "expectedState": "deliverable_refs_readonly",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+      },
+      {
+        "id": "view_blocker_next_step",
+        "route": "home",
+        "expectedState": "service_unavailable",
+        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+      },
+      {
+        "id": "continue_via_deeplink",
+        "route": "home",
+        "expectedState": "medopl_authorized",
         "evidence": "tests/browser/research-main-path.browser.test.mjs"
       },
       {
