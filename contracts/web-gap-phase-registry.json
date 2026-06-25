@@ -201,7 +201,7 @@
             "readonly foldback policy requires OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
             "dogfood stdout confirms runtime status, materials/deliverables, and billing readonly projection checks",
             "release evidence foldback stores sanitized summary only and forbids raw logs or secret values",
-            "production readonly switch and sanitized stdout evidence are folded back for run 28039468173"
+            "production readonly switch and sanitized stdout evidence are folded back for run 28142197152"
           ],
           "nextStepOpeners": [
             "Keep future readonly evidence folded back through release:evidence with sanitized summaries only",

@@ -163,7 +163,7 @@
         "id": "medopl_readonly_evidence",
         "ownerSurface": "release-evidence",
         "acceptanceContract": "contracts/web-release-profile.json#/productionDogfoodReadiness",
-        "disposition": "production_readonly_projection_dogfood_confirmed_run_28039468173",
+        "disposition": "production_readonly_projection_dogfood_confirmed_run_28142197152",
         "evidenceRequired": [
           "readonly_switch_confirmed",
           "sanitized_dogfood_stdout_foldback",
