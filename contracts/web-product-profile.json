@@ -28,6 +28,43 @@
     "@PPT",
     "@书"
   ],
+  "productLayers": [
+    {
+      "id": "public_growth_layer",
+      "status": "gap_next",
+      "audience": ["anonymous_user"],
+      "goal": "Help unauthenticated users understand the product, task entry points, use cases, expected outputs, and how to start.",
+      "referenceShape": "YouMind-style public product education surface",
+      "surfaces": ["public_homepage", "use_cases", "task_skill_catalog", "example_outputs", "updates", "login_cta"],
+      "taskFamilies": ["research", "paper", "grant", "review", "files", "ppt", "book"],
+      "ownsRuntimeExecution": false,
+      "ownsArtifactBody": false,
+      "ownsBillingTruth": false,
+      "cannotClaim": ["runtime execution", "artifact body authority", "billing truth", "full SaaS"]
+    },
+    {
+      "id": "account_based_user_product_layer",
+      "status": "basically_done",
+      "primary": true,
+      "contract": "contracts/web-product-profile.json#/accountBasedWebAppMainPath",
+      "claimStatus": "repo_current_basic_completion",
+      "userPath": ["open_web", "login_account", "bind_api_key_or_use_account_capability", "choose_research_task", "view_result_or_medopl_gate", "view_progress_refs", "view_deliverable_refs", "view_blocker_next_step", "continue_via_medopl_deeplink"],
+      "owned": ["account_session", "task_entry", "page_state", "sanitized_projection", "refs", "deeplink"],
+      "forbiddenClaims": ["full_saas", "payment", "team_rbac", "runtime_execution"]
+    },
+    {
+      "id": "minimal_admin_ops_layer",
+      "status": "gap_next",
+      "scope": "minimum account admission and operator controls only",
+      "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
+      "userStatusAllowed": ["active", "disabled"],
+      "firstPhaseSurfaces": ["operator_only_api_or_cli", "same_domain_hidden_ops_route"],
+      "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "view_dogfood_account", "view_release_evidence", "disable_user", "enable_user"],
+      "allAdminOperationsAudited": true,
+      "forbiddenCapabilities": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"],
+      "cannotClaim": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "HA", "runtime sync"]
+    }
+  ],
   "ownedSurfaces": [
     "account_based_web_app_entry",
     "web_product_surface",
@@ -666,6 +703,34 @@
         "contract": "contracts/web-runtime-bridge.json#/projectionPolicy",
         "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
         "cannotClaim": ["Web-owned domain verdict", "Web-owned artifact body"]
+      }
+    ]
+  },
+  "gapMap": {
+    "layers": [
+      {
+        "id": "growth_layer",
+        "status": "gap_next",
+        "evidence": "contracts/web-product-profile.json#/productLayers/0",
+        "remainingGap": "public homepage/use cases/task catalog/example outputs/updates/login CTA are not yet product-depth complete"
+      },
+      {
+        "id": "user_product_layer",
+        "status": "basically_done",
+        "evidence": "contracts/web-product-profile.json#/accountBasedWebAppMainPath + tests/contract/one-person-lab-web-data.test.mjs",
+        "remainingGap": "production/sandbox MedOPL account-resource-state evidence remains external"
+      },
+      {
+        "id": "admin_ops_layer",
+        "status": "gap_next",
+        "evidence": "contracts/web-product-profile.json#/productLayers/2",
+        "remainingGap": "registrationMode/userStatus/operator-only audited controls are contracted but not implemented as a new surface"
+      },
+      {
+        "id": "production_rollout",
+        "status": "partial",
+        "evidence": "contracts/web-release-profile.json",
+        "remainingGap": "release evidence exists, but it must not claim full SaaS, payment, team/RBAC, HA, or runtime sync"
       }
     ]
   },

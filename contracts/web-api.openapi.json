@@ -9,6 +9,21 @@
       "url": "/"
     }
   ],
+  "x-product-layers": {
+    "primary": "account_based_user_product_layer",
+    "publicGrowthLayer": {
+      "status": "gap_next",
+      "surfaces": ["public_homepage", "use_cases", "task_skill_catalog", "example_outputs", "updates", "login_cta"]
+    },
+    "minimalAdminOpsLayer": {
+      "status": "gap_next",
+      "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
+      "userStatusAllowed": ["active", "disabled"],
+      "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "view_dogfood_account", "view_release_evidence", "disable_user", "enable_user"],
+      "allAdminOperationsAudited": true,
+      "forbiddenCapabilities": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"]
+    }
+  },
   "paths": {
     "/api/auth/register": {
       "post": {

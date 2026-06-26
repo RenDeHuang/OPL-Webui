@@ -33,6 +33,10 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+function assertIncludesAll(actual, expected, label) {
+  for (const item of expected) assert.equal(actual.includes(item), true, `missing ${label}: ${item}`);
+}
+
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
     'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
@@ -868,6 +872,75 @@ test('post-Go cleanup removes retired Node adapter surfaces', () => {
   assert.equal(existsSync('packages/contracts/opl/command-policy.json'), false);
   assert.equal(existsSync('packages/contracts/opl/task-contract.schema.json'), false);
   assert.equal(existsSync('packages/contracts/opl/artifact-contract.schema.json'), false);
+});
+
+test('product truth is fixed to growth user and minimal ops layers without full SaaS expansion', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const pageState = readJson('contracts/web-page-state-matrix.json');
+  const release = readJson('contracts/web-release-profile.json');
+  const api = readJson('contracts/web-api.openapi.json');
+  const registry = readFileSync('scripts/test-classification.mjs', 'utf8');
+  const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
+
+  assert.deepEqual(product.productLayers.map((layer) => [layer.id, layer.status]), [
+    ['public_growth_layer', 'gap_next'],
+    ['account_based_user_product_layer', 'basically_done'],
+    ['minimal_admin_ops_layer', 'gap_next'],
+  ]);
+  const byLayer = Object.fromEntries(product.productLayers.map((layer) => [layer.id, layer]));
+  assert.deepEqual(byLayer.public_growth_layer.audience, ['anonymous_user']);
+  assert.deepEqual(byLayer.public_growth_layer.surfaces, ['public_homepage', 'use_cases', 'task_skill_catalog', 'example_outputs', 'updates', 'login_cta']);
+  assert.deepEqual(byLayer.public_growth_layer.taskFamilies, ['research', 'paper', 'grant', 'review', 'files', 'ppt', 'book']);
+  assert.equal(byLayer.public_growth_layer.referenceShape, 'YouMind-style public product education surface');
+  assert.equal(byLayer.public_growth_layer.ownsRuntimeExecution, false);
+  assert.equal(byLayer.public_growth_layer.ownsArtifactBody, false);
+  assert.equal(byLayer.public_growth_layer.ownsBillingTruth, false);
+  assert.equal(byLayer.account_based_user_product_layer.contract, 'contracts/web-product-profile.json#/accountBasedWebAppMainPath');
+  assert.equal(byLayer.account_based_user_product_layer.primary, true);
+  assert.equal(byLayer.account_based_user_product_layer.claimStatus, 'repo_current_basic_completion');
+  assertIncludesAll(byLayer.account_based_user_product_layer.owned, ['account_session', 'task_entry', 'page_state', 'sanitized_projection', 'refs', 'deeplink'], 'user layer owned surface');
+  assertIncludesAll(byLayer.account_based_user_product_layer.forbiddenClaims, ['full_saas', 'payment', 'team_rbac', 'runtime_execution'], 'user layer forbidden claim');
+  assert.deepEqual(byLayer.minimal_admin_ops_layer.registrationModeAllowed, ['open', 'invite_only', 'allowlist', 'disabled']);
+  assert.deepEqual(byLayer.minimal_admin_ops_layer.userStatusAllowed, ['active', 'disabled']);
+  assert.deepEqual(byLayer.minimal_admin_ops_layer.firstPhaseSurfaces, ['operator_only_api_or_cli', 'same_domain_hidden_ops_route']);
+  assertIncludesAll(byLayer.minimal_admin_ops_layer.operatorOnlyCapabilities, ['view_sanitized_user_status', 'view_quota', 'view_audit', 'view_dogfood_account', 'view_release_evidence', 'disable_user', 'enable_user'], 'ops capability');
+  assert.equal(byLayer.minimal_admin_ops_layer.allAdminOperationsAudited, true);
+  assertIncludesAll(byLayer.minimal_admin_ops_layer.forbiddenCapabilities, ['payment', 'pricing', 'subscription', 'invoice', 'refund', 'team_rbac', 'support_impersonation'], 'ops forbidden capability');
+
+  assert.deepEqual(product.gapMap.layers.map((layer) => [layer.id, layer.status]), [
+    ['growth_layer', 'gap_next'],
+    ['user_product_layer', 'basically_done'],
+    ['admin_ops_layer', 'gap_next'],
+    ['production_rollout', 'partial'],
+  ]);
+  assert.deepEqual(pageState.productLayers.map((layer) => [layer.id, layer.status]), [
+    ['public_growth_layer', 'gap_next'],
+    ['account_based_user_product_layer', 'current_primary'],
+    ['minimal_admin_ops_layer', 'gap_next'],
+  ]);
+  assert.equal(pageState.minimalAdminOpsLayer.registrationMode.default, 'open');
+  assert.deepEqual(pageState.minimalAdminOpsLayer.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
+  assert.deepEqual(pageState.minimalAdminOpsLayer.userStatus.allowed, ['active', 'disabled']);
+  assert.equal(pageState.minimalAdminOpsLayer.firstPhaseRouteOptions.includes('/_ops'), true);
+  assert.equal(pageState.minimalAdminOpsLayer.requiresAuditForAdminMutation, true);
+
+  assert.equal(api['x-product-layers'].primary, 'account_based_user_product_layer');
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.registrationModeAllowed.includes('allowlist'), true);
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.forbiddenCapabilities.includes('payment'), true);
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.allAdminOperationsAudited, true);
+  assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'basically_done');
+  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'gap_next');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'gap_next');
+  assertIncludesAll(release.productLayerReadiness.cannotClaimFromAdminOpsV0, ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'], 'admin ops cannot claim');
+  assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
+  assert.doesNotMatch(status, /sub2api/i);
+  assert.doesNotMatch(active, /sub2api/i);
+  assert.match(status, /Public Growth Layer/);
+  assert.match(status, /Account-based User Product Layer/);
+  assert.match(status, /Minimal Admin\/Ops Layer/);
+  assert.match(active, /public growth layer and minimal admin\/ops layer are next-stage gaps/i);
+  assert.match(registry, /Admin\/Ops v0 does not prove full SaaS/);
 });
 
 test('package does not introduce runtime or dev dependencies', () => {

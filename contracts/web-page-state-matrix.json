@@ -1,6 +1,18 @@
 {
   "schemaVersion": 1,
   "productId": "one-person-lab-web",
+  "productLayers": [
+    { "id": "public_growth_layer", "status": "gap_next", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
+    { "id": "account_based_user_product_layer", "status": "current_primary", "surfaceOwner": "account_based_web_app", "defaultAudience": "authenticated_research_user" },
+    { "id": "minimal_admin_ops_layer", "status": "gap_next", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
+  ],
+  "minimalAdminOpsLayer": {
+    "registrationMode": { "default": "open", "allowed": ["open", "invite_only", "allowlist", "disabled"] },
+    "userStatus": { "allowed": ["active", "disabled"] },
+    "firstPhaseRouteOptions": ["operator_only_api_or_cli", "/_ops"],
+    "requiresAuditForAdminMutation": true,
+    "forbiddenSurfaces": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"]
+  },
   "routes": [
     {
       "id": "home",

@@ -36,6 +36,13 @@ const NOT_USER_BEHAVIOR_EVIDENCE = Object.freeze([
   'browser user journey',
   'production user acceptance',
 ]);
+const NOT_ADMIN_OPS_EXPANSION_EVIDENCE = Object.freeze([
+  'Admin/Ops v0 does not prove full SaaS',
+  'payment lifecycle',
+  'team/RBAC lifecycle',
+  'HA',
+  'runtime sync',
+]);
 
 function assertValidStringArray(value, field, file) {
   if (!Array.isArray(value) || value.length === 0) {
@@ -304,8 +311,8 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'static',
     claimScope: 'repo',
     contracts: ['README.md', 'AGENTS.md', 'TASTE.md', 'docs/status.md', 'docs/decisions.md', 'docs/active/README.md', 'docs/history/process/closeouts.md', 'docs/history/tombstones/README.md', 'deploy/web-cloud/RUNBOOK.md', 'contracts/web-product-profile.json', 'contracts/web-api.openapi.json', 'contracts/web-release-profile.json', 'contracts/web-surface-inventory.json'],
-    proves: ['fixed truth docs and contracts describe the current product and release boundaries consistently'],
-    doesNotProve: NOT_PRODUCTION_EVIDENCE,
+    proves: ['fixed truth docs and contracts describe the current product, three-layer product truth, and release boundaries consistently'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE],
     riskTriggers: ['docs-truth', 'contract'],
     verifySuites: ['current', 'contract'],
   }),
@@ -409,8 +416,8 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'unit',
     claimScope: 'repo',
     contracts: ['apps/web/src/onePersonLabWeb.mjs', 'services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-api.openapi.json', 'contracts/web-runtime-bridge.json', 'contracts/web-release-profile.json'],
-    proves: ['Web data model and product contracts align on account-based Web App main path, page state, runtime gate, provider, commercial lifecycle, and release evidence boundaries'],
-    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE],
+    proves: ['Web data model and product contracts align on account-based Web App main path, three-layer product truth, page state, runtime gate, provider, commercial lifecycle, and release evidence boundaries'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE],
     riskTriggers: ['apps-web', 'page-state', 'public-api'],
     verifySuites: ['current', 'contract'],
   }),
