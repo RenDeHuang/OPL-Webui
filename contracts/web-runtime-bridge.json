@@ -82,6 +82,8 @@
       "return_to_opl_task_next_action",
       "webui_post_api_opl_runs_with_medopl_launch_and_file_refs",
       "refs_only_artifact_projection",
+      "progress_refs_projection_from_real_medopl_run_result",
+      "deliverable_refs_projection_from_real_medopl_run_result",
       "billing_ledger_refs_projection",
       "release_and_storage_destroy_readonly_projection_after_medopl_owner_actions"
     ],

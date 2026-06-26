@@ -143,6 +143,18 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
     assert.equal(typeof run.body.artifactRef, 'string');
     assert.ok(run.body.artifactRef.length > 0);
     assert.ok(run.body.artifacts.length > 0);
+    assert.deepEqual(run.body.progress, [
+      { stage: 'run_started', state: 'done', title: 'Run started' },
+      { stage: 'artifact_available', state: 'done', title: 'Artifact ref ready' },
+    ]);
+    assert.equal(run.body.deliverables.length, 1);
+    assert.equal(typeof run.body.deliverables[0].deliverableId, 'string');
+    assert.ok(run.body.deliverables[0].deliverableId.length > 0);
+    assert.equal(run.body.deliverables[0].artifactRef, run.body.artifactRef);
+    assert.equal(run.body.deliverables[0].ref, run.body.artifactRef);
+    assert.equal(run.body.deliverables[0].status, 'available');
+    assert.equal(run.body.deliverables[0].title, 'result.md');
+    assert.equal(run.body.deliverables[0].kind, 'outputs');
     assertNoSensitiveMaterial(run.body);
     assert.doesNotMatch(JSON.stringify(run.body), /"artifactBody"|signedUrl|objectKey|domainVerdict|relativePath|contentType/i);
 
