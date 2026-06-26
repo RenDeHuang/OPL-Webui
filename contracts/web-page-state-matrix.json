@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productId": "one-person-lab-web",
   "productLayers": [
-    { "id": "public_growth_layer", "status": "gap_next", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
+    { "id": "public_growth_layer", "status": "current_public_surface", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
     { "id": "account_based_user_product_layer", "status": "current_primary", "surfaceOwner": "account_based_web_app", "defaultAudience": "authenticated_research_user" },
     { "id": "minimal_admin_ops_layer", "status": "gap_next", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
   ],
@@ -12,6 +12,28 @@
     "firstPhaseRouteOptions": ["operator_only_api_or_cli", "/_ops"],
     "requiresAuditForAdminMutation": true,
     "forbiddenSurfaces": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"]
+  },
+  "publicGrowthLayer": {
+    "owner": "one-person-lab-web",
+    "defaultAudience": "anonymous_user",
+    "requiredSections": ["hero", "task_entries", "outputs", "audience", "trust_boundary", "start_path"],
+    "observableSelectors": [
+      "[data-public-growth-layer]",
+      "[data-public-hero]",
+      "[data-public-task-section]",
+      "[data-public-output-section]",
+      "[data-public-audience-section]",
+      "[data-public-trust-section]",
+      "[data-public-start-path]",
+      "[data-public-task-entry]",
+      "[data-public-start-cta]"
+    ],
+    "startPath": {
+      "anonymousAction": "open_login_register_popover",
+      "pendingTaskStorage": "document.body.dataset.pendingPublicTaskIntent",
+      "afterAuth": "restore_selected_task_prompt_and_focus_composer"
+    },
+    "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "full SaaS", "payment/team/RBAC/HA"]
   },
   "routes": [
     {

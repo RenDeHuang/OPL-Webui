@@ -29,6 +29,7 @@ export async function initOnePersonLabWeb() {
   window.addEventListener('hashchange', syncHashView);
   bindShellControls();
   bindCapabilityButtons();
+  bindPublicGrowthActions();
   bindAccountPopover();
   bindChatForm(() => view);
   bindSettingsForms(() => view, (next) => {
@@ -69,13 +70,7 @@ function syncHashView() {
 function bindCapabilityButtons() {
   for (const button of document.querySelectorAll('[data-prompt]')) {
     button.addEventListener('click', () => {
-      const input = document.querySelector('#chat-input');
-      input.value = button.dataset.prompt;
-      input.focus();
-      if (button.dataset.researchTaskIntent) {
-        document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
-      }
-      document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
+      applyTaskPrompt(button);
       if (requiresRuntimeGate(button.dataset.prompt)) {
         showRuntimeGate(button.dataset.prompt, {
           ok: false,
@@ -88,6 +83,36 @@ function bindCapabilityButtons() {
       }
     });
   }
+}
+
+function bindPublicGrowthActions() {
+  for (const action of document.querySelectorAll('[data-public-start-cta], [data-public-task-entry]')) {
+    action.addEventListener('click', (event) => {
+      if (document.body.dataset.authState !== 'anonymous') return;
+      event.stopPropagation();
+      const task = action.matches('[data-public-task-entry]')
+        ? action
+        : document.querySelector(`[data-research-task-intent="${action.dataset.loginReturnTaskIntent || 'research_direction'}"]`);
+      if (task) {
+        applyTaskPrompt(task);
+        document.body.dataset.pendingPublicTaskIntent = task.dataset.researchTaskIntent || '';
+        document.body.dataset.pendingPublicTaskPrompt = task.dataset.prompt || '';
+      }
+      document.body.dataset.loginReturnTarget = 'public_growth_home';
+      openAccountPopover(action);
+      document.querySelector('#auth-email')?.focus({ preventScroll: true });
+    });
+  }
+}
+
+function applyTaskPrompt(button) {
+  const input = document.querySelector('#chat-input');
+  input.value = button.dataset.prompt || '';
+  input.focus();
+  if (button.dataset.researchTaskIntent) {
+    document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
+  }
+  document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
 }
 
 function bindAccountPopover() {
@@ -486,7 +511,33 @@ async function authAction(kind, setView) {
     : await loginAccount(fetch, email, password);
   setSettingsMessage(result.ok ? '账号已就绪。' : result.message || result.errorCode || '认证失败。');
   if (!result.ok) renderReliabilityStatus(reliabilityStatusForResult(result));
-  if (result.ok) setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
+  if (result.ok) {
+    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
+    restorePublicGrowthTaskAfterAuth();
+  }
+}
+
+function restorePublicGrowthTaskAfterAuth() {
+  const intent = document.body.dataset.pendingPublicTaskIntent;
+  if (!intent) return;
+  setHashView('home');
+  const task = document.querySelector(`[data-public-task-entry][data-research-task-intent="${intent}"][data-prompt]`);
+  if (task) applyTaskPrompt(task);
+  else applyPendingPublicTask(intent);
+  document.body.dataset.loginReturnState = document.body.dataset.authState || '';
+  delete document.body.dataset.pendingPublicTaskIntent;
+  delete document.body.dataset.pendingPublicTaskPrompt;
+  closeAccountPopover();
+}
+
+function applyPendingPublicTask(intent) {
+  const prompt = document.body.dataset.pendingPublicTaskPrompt || '';
+  if (!prompt) return;
+  const input = document.querySelector('#chat-input');
+  input.value = prompt;
+  input.focus();
+  document.body.dataset.researchTaskIntent = intent;
+  document.body.dataset.chatState = chatStateForPrompt(prompt);
 }
 
 function renderView(view) {

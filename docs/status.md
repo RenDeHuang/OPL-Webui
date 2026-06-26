@@ -7,13 +7,13 @@
 
 ## Current State
 
-One Person Lab Web product truth is fixed to three layers. Public Growth Layer is for unauthenticated users to understand the product, use cases, task/skill entries, example outputs, updates, and login CTA; it does not own runtime execution, artifact body, or billing truth. Account-based User Product Layer is the current primary product: open Web, log in, bind an API Key or use MedOPL account/resource-state capability when ready, choose a research/fund/PPT/book task entry, then see result or MedOPL gate, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL continuation. Minimal Admin/Ops Layer is a next-stage gap for minimum account admission and operator controls only: `registrationMode=open|invite_only|allowlist|disabled`, `userStatus=active|disabled`, sanitized user/quota/audit/dogfood/release evidence views, and audited disable/enable user actions through operator-only API/CLI or same-domain hidden `/_ops`. It is not payment, team/RBAC, HA, runtime sync, or full SaaS.
+One Person Lab Web product truth is fixed to three layers. The top-level product is a One Person Lab knowledge delivery Web platform for personal researchers and research groups or organizations across research, paper, grant, review, file, PPT, and book knowledge delivery scenarios. Public Growth Layer is implemented at repo/browser evidence level for unauthenticated users to understand the product, use cases, task/skill entries, expected refs/outputs, trust boundary, and login CTA; it does not own runtime execution, artifact body, or billing truth. Account-based User Product Layer is the current basically done personal account product: open Web, log in, bind an API Key or use MedOPL account/resource-state capability when ready, choose a research/fund/PPT/book task entry, then see result or MedOPL gate, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL continuation. Minimal Admin/Ops Layer is a next-stage gap for minimum account admission and operator controls only: `registrationMode=open|invite_only|allowlist|disabled`, `userStatus=active|disabled`, sanitized user/quota/audit/dogfood/release evidence views, and audited disable/enable user actions through operator-only API/CLI or same-domain hidden `/_ops`. It is not payment, team/RBAC, HA, runtime sync, or full SaaS.
 
-The current stage is three-layer product truth cleanup inside account-based Web App product engineering. Product work now moves one gap at a time. The account-based user product layer is basically done at repo/current evidence level; public growth layer and minimal admin/ops layer are next-stage gaps.
+The current stage is Public Growth Layer closeout inside fixed three-layer product engineering. Product work moves one gap at a time. The account-based user product layer is basically done at repo/current evidence level; the public growth layer is basically done at repo/static/browser evidence level; minimal admin/ops remains a next-stage gap.
 
 `docs/active/README.md` now carries the lightweight current gap baton for worktree lanes and next-agent handoff. It supports the fixed truth set; it does not replace this status file or any machine contract.
 
-The current gap set is now machine-owned by `contracts/web-product-profile.json#/gapMap`: growth layer is `gap_next`, user product layer is `basically_done`, admin ops layer is `gap_next`, and production rollout is `partial`. production deploy is release evidence only and must not substitute for product/eval work.
+The current gap set is machine-owned by `contracts/web-product-profile.json#/gapMap`: growth layer is `basically_done`, user product layer is `basically_done`, admin ops layer is `gap_next`, and production rollout is `partial`. production deploy is release evidence only and must not substitute for product/eval work.
 
 ## Machine Truth
 
@@ -55,9 +55,10 @@ Markdown docs explain those contracts. If docs and contracts disagree, update th
 
 ## Can Claim
 
-- One Person Lab Web is the account-based Web edition of One Person Lab App at `opl.medopl.cn`.
+- One Person Lab Web is a One Person Lab knowledge delivery Web platform at `opl.medopl.cn`.
 - Three product layers are the fixed product truth: Public Growth Layer, Account-based User Product Layer, and Minimal Admin/Ops Layer.
 - The account-based user product layer is basically done at repo/current evidence level.
+- The public growth layer is basically done at repo/static/browser evidence level: anonymous users see the knowledge delivery positioning, task entries, output/ref expectations, audience, trust boundary, and login/register start path; clicking a public CTA or task entry opens login/register and restores the selected task entry after auth.
 - Research staff, master's students, PhD students, principal investigators, and research teams enter through `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`.
 - Ordinary chat is a fallback entry, not the primary product positioning.
 - The Web UI calls only the same-origin Go control plane HTTP API.
@@ -108,7 +109,7 @@ Machine-readable source: `contracts/web-product-profile.json#/businessFlowGapMap
 
 Layer gap source: `contracts/web-product-profile.json#/gapMap`.
 
-- `growth_layer`: gap_next. Needs public homepage, use cases, task/skill catalog, example outputs, updates, and login CTA. Cannot claim runtime execution, artifact body, billing truth, or full SaaS.
+- `growth_layer`: basically_done. Public homepage/use cases/task catalog/output refs/audience/trust boundary/login CTA and anonymous login-return task path are implemented with contract, smoke, and browser evidence. Cannot claim authenticated task success, runtime execution, artifact body authority, full SaaS, or payment/team/RBAC/HA.
 - `user_product_layer`: basically_done. Current account-based Web App path has repo/current contract and browser evidence. Remaining gap is production/sandbox MedOPL account-resource-state evidence outside OPL-Webui.
 - `admin_ops_layer`: gap_next. Needs minimal operator-only account admission/status/audit/quota/dogfood/release evidence controls. Cannot claim payment, pricing, subscription, invoice, refund, team/RBAC, support impersonation, HA, runtime sync, or full SaaS.
 - `production_rollout`: partial. Release evidence exists for controlled launch/readiness boundaries, but not full SaaS, HA, payment/team/RBAC, runtime sync, or production MedOPL runtime execution.

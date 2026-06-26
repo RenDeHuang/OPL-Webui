@@ -12,8 +12,10 @@
   "x-product-layers": {
     "primary": "account_based_user_product_layer",
     "publicGrowthLayer": {
-      "status": "gap_next",
-      "surfaces": ["public_homepage", "use_cases", "task_skill_catalog", "example_outputs", "updates", "login_cta"]
+      "status": "basically_done",
+      "surfaces": ["public_homepage", "use_cases", "task_skill_catalog", "example_outputs", "updates", "login_cta"],
+      "usesExistingAuthRoutesOnly": true,
+      "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "full SaaS", "payment/team/RBAC/HA"]
     },
     "minimalAdminOpsLayer": {
       "status": "gap_next",

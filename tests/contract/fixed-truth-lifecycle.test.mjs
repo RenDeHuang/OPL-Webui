@@ -84,13 +84,14 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
     assert.match(text, /one-person-lab-web|One Person Lab Web/);
   }
 
-  assert.match(readme, /account-based Web edition of One Person Lab App/);
+  assert.match(readme, /One Person Lab knowledge delivery Web platform/);
+  assert.match(readme, /personal account-based Web edition/);
   assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /account-based Web App product engineering/);
+  assert.match(status, /Public Growth Layer closeout/);
   assert.match(status, /docs\/active\/README\.md/);
-  assert.match(status, /Product work now moves one gap at a time/);
+  assert.match(status, /Product work moves one gap at a time/);
   assert.match(status, /current = smoke \+ contract \+ health \+ go/);
   assert.match(status, /scripts\/lane-advisory\.mjs/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
@@ -173,7 +174,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   const runbook = readFileSync('deploy/web-cloud/RUNBOOK.md', 'utf8');
 
   assert.equal(product.productId, 'one-person-lab-web');
-  assert.equal(product.positioning, 'Account-based Web edition of One Person Lab App');
+  assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
+  assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
   assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
   assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
   assert.equal(product.accountBasedWebAppMainPath.mode, 'account_based_web_edition_main_path_v1');
@@ -503,7 +505,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(status, /account-based Web edition of One Person Lab App/);
+  assert.match(status, /One Person Lab knowledge delivery Web platform/);
+  assert.match(status, /Account-based User Product Layer is the current basically done personal account product/);
   assert.match(JSON.stringify(product.claims.canClaim), /account-based task path remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
   assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
@@ -528,7 +531,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
   assert.doesNotMatch(status, /本阶段没有执行 production availability probe/);
   assert.match(status, /Next Priorities/);
-  assert.match(status, /current gap set is now machine-owned/);
+  assert.match(status, /current gap set is machine-owned/);
   assert.match(status, /UI\/UX product depth now has source-level Figma MCP evidence pinned/);
   assert.match(status, /Runtime bridge boundary now has a local Go-side MedOPL API bridge/);
   assert.match(status, /Operations maturity now has partial evidence boundaries/);
@@ -884,7 +887,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   const active = readFileSync('docs/active/README.md', 'utf8');
 
   assert.deepEqual(product.productLayers.map((layer) => [layer.id, layer.status]), [
-    ['public_growth_layer', 'gap_next'],
+    ['public_growth_layer', 'basically_done'],
     ['account_based_user_product_layer', 'basically_done'],
     ['minimal_admin_ops_layer', 'gap_next'],
   ]);
@@ -909,13 +912,13 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assertIncludesAll(byLayer.minimal_admin_ops_layer.forbiddenCapabilities, ['payment', 'pricing', 'subscription', 'invoice', 'refund', 'team_rbac', 'support_impersonation'], 'ops forbidden capability');
 
   assert.deepEqual(product.gapMap.layers.map((layer) => [layer.id, layer.status]), [
-    ['growth_layer', 'gap_next'],
+    ['growth_layer', 'basically_done'],
     ['user_product_layer', 'basically_done'],
     ['admin_ops_layer', 'gap_next'],
     ['production_rollout', 'partial'],
   ]);
   assert.deepEqual(pageState.productLayers.map((layer) => [layer.id, layer.status]), [
-    ['public_growth_layer', 'gap_next'],
+    ['public_growth_layer', 'current_public_surface'],
     ['account_based_user_product_layer', 'current_primary'],
     ['minimal_admin_ops_layer', 'gap_next'],
   ]);
@@ -930,7 +933,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.forbiddenCapabilities.includes('payment'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.allAdminOperationsAudited, true);
   assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'basically_done');
-  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'gap_next');
+  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'basically_done');
   assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'gap_next');
   assertIncludesAll(release.productLayerReadiness.cannotClaimFromAdminOpsV0, ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'], 'admin ops cannot claim');
   assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
@@ -939,7 +942,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.match(status, /Public Growth Layer/);
   assert.match(status, /Account-based User Product Layer/);
   assert.match(status, /Minimal Admin\/Ops Layer/);
-  assert.match(active, /public growth layer and minimal admin\/ops layer are next-stage gaps/i);
+  assert.match(active, /minimal admin\/ops layer is a next-stage gap/i);
   assert.match(registry, /Admin\/Ops v0 does not prove full SaaS/);
 });
 

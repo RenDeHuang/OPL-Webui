@@ -6,8 +6,8 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   const html = readFileSync('apps/web/index.html', 'utf8');
 
   assert.match(html, /One Person Lab Web/);
-  assert.match(html, /多租户 SaaS 版 One Person Lab/);
-  assert.match(html, /科研工作人员、硕博、PI 与科研团队/);
+  assert.match(html, /One Person Lab 的 Web 知识交付入口/);
+  assert.match(html, /面向个人、课题组\/单位/);
   assert.match(html, /figma-make-webui-alignment/);
   assert.match(html, /data-figma-source="E8nYfNFc2D9P01FYZ8UwBW"/);
   assert.match(html, /data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more"/);
@@ -34,6 +34,27 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-nav-item="more"[^>]*data-shell-action="more"[^>]*>More/);
   assert.match(html, /data-search-trigger/);
   assert.match(html, /data-first-view/);
+  assert.match(html, /data-public-growth-layer/);
+  assert.match(html, /data-public-hero/);
+  assert.match(html, /data-public-task-section/);
+  assert.match(html, /data-public-output-section/);
+  assert.match(html, /data-public-audience-section/);
+  assert.match(html, /data-public-trust-section/);
+  assert.match(html, /data-public-start-path/);
+  assert.match(html, /data-public-start-cta/);
+  assert.equal((html.match(/data-public-task-entry(?=[\s>])/g) ?? []).length, 7);
+  for (const marker of ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']) {
+    assert.match(html, new RegExp(`data-public-task-entry[\\s\\S]{0,240}${marker}`));
+  }
+  for (const required of ['progress refs', 'deliverable refs', 'materials refs', 'blocker/next step', 'MedOPL/OPL deeplink']) {
+    assert.match(html, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  for (const audience of ['个人研究者', '博士/硕士', 'PI', '课题组/单位']) {
+    assert.match(html, new RegExp(audience.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(html, /fail-closed/);
+  assert.match(html, /不伪造结果/);
+  assert.match(html, /专业执行和 artifact\/storage truth 在 MedOPL\/OPL/);
   assert.match(html, /data-first-view-contract="side_nav_brand_composer_chips_right_inspector_rail"/);
   assert.match(html, /research-command-band/);
   assert.match(html, /data-starter-chips/);

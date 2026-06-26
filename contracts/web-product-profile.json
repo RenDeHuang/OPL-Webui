@@ -7,7 +7,8 @@
     "OPL-Webui"
   ],
   "repoRole": "product_repo",
-  "positioning": "Account-based Web edition of One Person Lab App",
+  "positioning": "One Person Lab knowledge delivery Web platform",
+  "topLevelProductCategory": "knowledge_delivery_web_platform",
   "publicHost": "opl.medopl.cn",
   "sourceApp": "one-person-lab-app",
   "targetUsers": [
@@ -31,7 +32,7 @@
   "productLayers": [
     {
       "id": "public_growth_layer",
-      "status": "gap_next",
+      "status": "basically_done",
       "audience": ["anonymous_user"],
       "goal": "Help unauthenticated users understand the product, task entry points, use cases, expected outputs, and how to start.",
       "referenceShape": "YouMind-style public product education surface",
@@ -40,7 +41,7 @@
       "ownsRuntimeExecution": false,
       "ownsArtifactBody": false,
       "ownsBillingTruth": false,
-      "cannotClaim": ["runtime execution", "artifact body authority", "billing truth", "full SaaS"]
+      "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "billing truth", "full SaaS", "payment/team/RBAC/HA"]
     },
     {
       "id": "account_based_user_product_layer",
@@ -85,6 +86,55 @@
     "medopl_capability_entry",
     "medopl_authorization_status_projection",
     "medopl_progress_refs_projection"
+  ],
+  "publicGrowthLayerContract": {
+    "owner": "one-person-lab-web",
+    "consumer": "anonymous_research_user",
+    "surface": "public_homepage",
+    "proof": [
+      "tests/contract/public-growth-layer-contract.test.mjs",
+      "tests/smoke/web-shell.test.mjs",
+      "tests/browser/public-growth-login-return.browser.test.mjs"
+    ],
+    "sections": [
+      { "id": "hero", "selector": "[data-public-hero]" },
+      { "id": "task_entries", "selector": "[data-public-task-section]" },
+      { "id": "outputs", "selector": "[data-public-output-section]" },
+      { "id": "audience", "selector": "[data-public-audience-section]" },
+      { "id": "trust_boundary", "selector": "[data-public-trust-section]" },
+      { "id": "start_path", "selector": "[data-public-start-path]" }
+    ],
+    "taskEntries": [
+      { "id": "research_direction", "marker": "@科研", "runtimePolicy": "ordinary_chat_fallback" },
+      { "id": "paper_question", "marker": "@论文", "runtimePolicy": "runtime_gate" },
+      { "id": "grant_plan", "marker": "@基金", "runtimePolicy": "runtime_gate" },
+      { "id": "review_map", "marker": "@综述", "runtimePolicy": "runtime_gate" },
+      { "id": "materials_refs", "marker": "@文件", "runtimePolicy": "runtime_gate" },
+      { "id": "presentation_foundry", "marker": "@PPT", "runtimePolicy": "runtime_gate" },
+      { "id": "book_foundry", "marker": "@书", "runtimePolicy": "runtime_gate" }
+    ],
+    "outputs": ["progress_refs", "deliverable_refs", "materials_refs", "blocker_next_step", "medopl_opl_deeplink"],
+    "audiences": ["individual_researcher", "masters_student", "phd_student", "principal_investigator", "research_group_or_organization"],
+    "startPath": {
+      "anonymousAction": "open_login_register_popover",
+      "returnAfterAuth": "return_to_selected_task_entry",
+      "autoRunAfterAuth": false
+    },
+    "trustBoundary": {
+      "webOwns": ["entry", "task_state", "sanitized_projection", "refs", "deeplink"],
+      "externalAuthority": [
+        "MedOPL runtime/storage/billing/resource control",
+        "OPL Framework/domain agent execution and artifact authority"
+      ],
+      "upstreamFailurePolicy": "fail_closed_no_fabricated_result"
+    },
+    "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "full SaaS", "payment/team/RBAC/HA"]
+  },
+  "userProductExpansionGaps": [
+    "research_group_workspace",
+    "organization_workspace",
+    "members",
+    "sharing"
   ],
   "accountBasedWebAppMainPath": {
     "mode": "account_based_web_edition_main_path_v1",
@@ -710,9 +760,9 @@
     "layers": [
       {
         "id": "growth_layer",
-        "status": "gap_next",
+        "status": "basically_done",
         "evidence": "contracts/web-product-profile.json#/productLayers/0",
-        "remainingGap": "public homepage/use cases/task catalog/example outputs/updates/login CTA are not yet product-depth complete"
+        "remainingGap": "production rollout evidence remains separate; public growth proof does not prove authenticated task success, runtime execution, artifact body authority, full SaaS, or payment/team/RBAC/HA"
       },
       {
         "id": "user_product_layer",
@@ -736,7 +786,9 @@
   },
   "claims": {
     "canClaim": [
-      "One Person Lab Web is the account-based Web edition of One Person Lab App.",
+      "One Person Lab Web is a One Person Lab knowledge delivery Web platform.",
+      "The public growth layer explains research, paper, grant, review, file, PPT, and book knowledge delivery entries to unauthenticated users and routes them to login/register with task return state.",
+      "The account-based user product layer is the basically done personal account-based Web edition of One Person Lab App.",
       "Researchers, graduate students, PhD students, principal investigators, and research teams can open Web, log in, bind an API Key or use admitted account capability, choose a task, and continue through result/gate, refs, blocker/next step, and MedOPL/OPL deeplink states.",
       "Web UI calls the same-origin Go control plane HTTP API.",
       "Users bind their own provider key while base_url remains fixed.",

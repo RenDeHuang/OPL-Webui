@@ -18,7 +18,7 @@
     "sentrux check ."
   ],
   "productLayerReadiness": {
-    "publicGrowthLayer": "gap_next",
+    "publicGrowthLayer": "basically_done",
     "accountBasedUserProductLayer": "basically_done",
     "minimalAdminOpsLayer": "gap_next",
     "productionRollout": "partial",

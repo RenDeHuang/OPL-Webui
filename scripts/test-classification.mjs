@@ -43,6 +43,13 @@ const NOT_ADMIN_OPS_EXPANSION_EVIDENCE = Object.freeze([
   'HA',
   'runtime sync',
 ]);
+const NOT_PUBLIC_GROWTH_EVIDENCE = Object.freeze([
+  'authenticated task success',
+  'runtime execution',
+  'artifact body authority',
+  'full SaaS',
+  'payment/team/RBAC/HA',
+]);
 
 function assertValidStringArray(value, field, file) {
   if (!Array.isArray(value) || value.length === 0) {
@@ -437,6 +444,21 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'contract'],
   }),
   testEntry({
+    file: 'tests/contract/public-growth-layer-contract.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'public-growth-layer',
+    lifecycleRole: 'current-owner',
+    testKind: 'contract',
+    proofLevel: 'static',
+    claimScope: 'repo',
+    contracts: ['contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-api.openapi.json'],
+    proves: ['public growth layer product/page-state/API/release contract is implemented as an unauthenticated education and start-path surface'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE],
+    riskTriggers: ['apps-web', 'docs-truth', 'page-state'],
+    verifySuites: ['current', 'contract'],
+  }),
+  testEntry({
     file: 'tests/smoke/foundation.test.mjs',
     runner: 'node',
     lane: 'smoke',
@@ -461,8 +483,8 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'static',
     claimScope: 'repo',
     contracts: ['apps/web/index.html', 'apps/web/styles.css', 'apps/web/src/onePersonLabWeb.mjs', 'contracts/web-gui-product-contract.json'],
-    proves: ['static Web shell exposes the AI-native research homepage, OPL green polish guard, artifact-first result stream contract, responsive inspector states, and hidden internal workspace concepts'],
-    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, 'interactive browser behavior'],
+    proves: ['static Web shell exposes the public growth layer, AI-native research homepage, OPL green polish guard, artifact-first result stream contract, responsive inspector states, and hidden internal workspace concepts'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE, 'interactive browser behavior'],
     riskTriggers: ['apps-web'],
     verifySuites: ['current', 'smoke'],
   }),
@@ -540,6 +562,22 @@ const TEST_ENTRIES = Object.freeze([
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, 'MedOPL runtime execution'],
     riskTriggers: ['runtime-gate', 'control-plane-go'],
     verifySuites: ['current', 'go'],
+  }),
+  testEntry({
+    file: 'tests/browser/public-growth-login-return.browser.test.mjs',
+    runner: 'node',
+    lane: 'browser',
+    ownerSurface: 'public-growth-layer',
+    lifecycleRole: 'integration',
+    cost: 'medium',
+    testKind: 'acceptance',
+    proofLevel: 'browser',
+    claimScope: 'ci',
+    contracts: ['tests/browser/public-growth-login-return-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-product-profile.json'],
+    proves: ['anonymous public CTA or task entry opens login/register and restores the selected task entry after authentication'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE],
+    riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'public-growth-layer'],
+    verifySuites: ['browser', 'full'],
   }),
   testEntry({
     file: 'tests/browser/research-main-path.browser.test.mjs',

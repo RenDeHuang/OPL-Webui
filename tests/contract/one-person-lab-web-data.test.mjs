@@ -20,7 +20,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.canonicalProductName, 'One Person Lab Web');
-  assert.equal(product.positioning, 'Account-based Web edition of One Person Lab App');
+  assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
+  assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
   assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
   assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
   assert.deepEqual(product.accountBasedWebAppMainPath.orderedSteps.map((step) => step.id), ['open_web', 'login_account', 'bind_api_key_or_use_account_capability', 'choose_research_task', 'view_result_or_medopl_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_medopl_deeplink']);

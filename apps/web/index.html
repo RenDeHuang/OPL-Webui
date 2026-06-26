@@ -82,15 +82,17 @@
           class="home-first-view"
           id="home"
           data-route-surface="home"
+          data-public-growth-layer
           data-first-view
           data-first-view-contract="side_nav_brand_composer_chips_right_inspector_rail"
           data-figma-pattern="ai_native_center_composer"
           aria-label="One Person Lab Web 首页"
         >
-          <div class="home-copy">
-            <p class="eyebrow">多租户 SaaS 版 One Person Lab</p>
+          <div class="home-copy" data-public-hero>
+            <p class="eyebrow">One Person Lab 的 Web 知识交付入口</p>
             <h1>One Person Lab Web</h1>
-            <p>面向科研工作人员、硕博、PI 与科研团队。输入研究问题，用 @科研、@论文、@基金、@综述、@文件、@PPT、@书 调用 OPL 能力。</p>
+            <p>面向个人、课题组/单位的科研、论文、基金、综述、文件、PPT、写书知识交付场景。打开 Web 后登录，选择任务入口，再接续 result、refs、progress、deliverables、blocker/next step 和 MedOPL/OPL deeplink。</p>
+            <button class="primary-button public-start-button" type="button" data-public-start-cta data-public-login-button data-login-return-task-intent="research_direction">开始使用</button>
           </div>
 
           <form class="prompt-console prompt-command-center research-command-band" data-chat-form data-figma-pattern="prompt_command_center" aria-label="主研究输入">
@@ -102,28 +104,57 @@
             </div>
           </form>
 
-          <div class="starter-chips skill-launcher research-task-grid" data-starter-chips data-research-launcher data-figma-pattern="starter_chips" aria-label="科研任务入口">
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="research_direction" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">
+          <div class="starter-chips skill-launcher research-task-grid" data-starter-chips data-research-launcher data-public-task-section data-figma-pattern="starter_chips" aria-label="科研任务入口">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="research_direction" data-capability-marker="@科研" data-capability-mode="ordinary_chat_fallback" data-prompt="@科研 帮我拆解研究方向、问题和下一步计划">
               <span>@科研</span><strong>开题/研究方向</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="paper_question" data-capability-marker="@论文" data-capability-mode="runtime_gate" data-prompt="@论文 生成研究选题、问题拆解和证据计划">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="paper_question" data-capability-marker="@论文" data-capability-mode="runtime_gate" data-prompt="@论文 生成研究选题、问题拆解和证据计划">
               <span>@论文</span><strong>论文问题</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="grant_plan" data-capability-marker="@基金" data-capability-mode="runtime_gate" data-prompt="@基金 帮我拆解标书结构、研究目标和执行路径">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="grant_plan" data-capability-marker="@基金" data-capability-mode="runtime_gate" data-prompt="@基金 帮我拆解标书结构、研究目标和执行路径">
               <span>@基金</span><strong>基金计划</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="review_map" data-capability-marker="@综述" data-capability-mode="runtime_gate" data-prompt="@综述 帮我整理综述结构、证据线索和引用计划">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="review_map" data-capability-marker="@综述" data-capability-mode="runtime_gate" data-prompt="@综述 帮我整理综述结构、证据线索和引用计划">
               <span>@综述</span><strong>综述地图</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="materials_refs" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="materials_refs" data-capability-marker="@文件" data-capability-mode="runtime_gate" data-prompt="@文件 整理材料引用和交付物 refs">
               <span>@文件</span><strong>材料线索</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="presentation_foundry" data-capability-marker="@PPT" data-capability-mode="runtime_gate" data-prompt="@PPT 规划研究演示结构、证据线和交付物 refs">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="presentation_foundry" data-capability-marker="@PPT" data-capability-mode="runtime_gate" data-prompt="@PPT 规划研究演示结构、证据线和交付物 refs">
               <span>@PPT</span><strong>演示/PPT</strong>
             </button>
-            <button type="button" data-starter-chip data-research-task data-research-task-intent="book_foundry" data-capability-marker="@书" data-capability-mode="runtime_gate" data-prompt="@书 规划书稿结构、章节路线和资料 refs">
+            <button type="button" data-starter-chip data-public-task-entry data-research-task data-research-task-intent="book_foundry" data-capability-marker="@书" data-capability-mode="runtime_gate" data-prompt="@书 规划书稿结构、章节路线和资料 refs">
               <span>@书</span><strong>写书/长稿</strong>
             </button>
+          </div>
+          <div class="public-proof-grid" aria-label="公开产品说明">
+            <section data-public-output-section>
+              <h2>产出与接续</h2>
+              <ul>
+                <li>progress refs</li>
+                <li>deliverable refs</li>
+                <li>materials refs</li>
+                <li>blocker/next step</li>
+                <li>MedOPL/OPL deeplink</li>
+              </ul>
+            </section>
+            <section data-public-audience-section>
+              <h2>适用人群</h2>
+              <ul>
+                <li>个人研究者</li>
+                <li>博士/硕士</li>
+                <li>PI</li>
+                <li>课题组/单位</li>
+              </ul>
+            </section>
+            <section data-public-trust-section>
+              <h2>边界</h2>
+              <p>Web 负责入口、任务状态、refs 和接续；专业执行和 artifact/storage truth 在 MedOPL/OPL。上游失败必须 fail-closed，不伪造结果。</p>
+            </section>
+            <section data-public-start-path>
+              <h2>开始路径</h2>
+              <p>未登录用户点击 CTA 或任务入口后进入登录/注册，登录后回到对应任务入口。</p>
+            </section>
           </div>
         </section>
 
