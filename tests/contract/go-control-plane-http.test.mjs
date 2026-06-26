@@ -34,6 +34,8 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'put'), ['200', '400', '401', '405', '500', '503']);
   assert.deepEqual(responseCodes(api, '/api/chat', 'post'), ['200', '400', '401', '404', '405', '409', '429', '502', '503', '504']);
+  assert.deepEqual(responseCodes(api, '/api/opl/runtime-gate', 'post'), ['200', '400', '401', '405', '424', '502', '504']);
+  assert.deepEqual(responseCodes(api, '/api/opl/runs', 'post'), ['200', '400', '401', '405', '424', '502', '504']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
@@ -77,6 +79,9 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
     'API_KEY_REQUIRED',
     'API_KEY_DECRYPT_FAILED',
     'RUNTIME_REQUIRED',
+    'RUNTIME_GATE_BLOCKED',
+    'MEDOPL_ENDPOINT_REQUIRED',
+    'MEDOPL_UPSTREAM_FAILED',
     'CHAT_QUOTA_EXCEEDED',
     'UPSTREAM_CHAT_FAILED',
   ]) {

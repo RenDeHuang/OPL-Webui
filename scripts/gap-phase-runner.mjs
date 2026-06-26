@@ -264,9 +264,9 @@ function evaluateRuntimeGap({ runtime }) {
   const admission = runtime?.executionAdmission;
   const conditions = admission?.conditions ?? [];
   const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
-  const emptyAllowlistAccepted = Array.isArray(admission?.currentAllowlist)
+  const bridgeBoundaryAccepted = Array.isArray(admission?.currentAllowlist)
     && admission.currentAllowlist.length === 0
-    && admission?.ownerReceipt?.acceptedClaim === 'runtime_fail_closed_empty_allowlist_boundary_accepted';
+    && admission?.ownerReceipt?.acceptedClaim === 'medopl_runtime_gate_run_bridge_local_refs_only_accepted';
   return [
     evalResult({
       id: 'runtime_fail_closed',
@@ -282,25 +282,25 @@ function evaluateRuntimeGap({ runtime }) {
       id: 'runtime_admission_contract',
       dimension: 'contract',
       status: Array.isArray(admission?.requiredBeforeAnyExecution)
-        && admission.requiredBeforeAnyExecution.includes('Go-side runtime execution contract')
-        && admission.requiredBeforeAnyExecution.includes('registered eval covering command allowlist')
+        && admission.requiredBeforeAnyExecution.includes('production MedOPL runtime execution evidence')
+        && admission.requiredBeforeAnyExecution.includes('registered bridge eval')
         ? 'pass'
         : 'fail',
-      proves: ['runtime execution admission prerequisites are explicit'],
+      proves: ['runtime bridge admission and production execution prerequisites are explicit'],
       doesNotProve: ['the prerequisites exist', 'Web may execute runtime commands'],
     }),
     evalResult({
       id: 'runtime_owner_receipt',
       dimension: 'owner',
-      status: emptyAllowlistAccepted ? 'pass' : 'blocked',
-      proves: ['runtime owner accepted the fail-closed empty-allowlist boundary when present'],
+      status: bridgeBoundaryAccepted ? 'pass' : 'blocked',
+      proves: ['runtime owner accepted the local MedOPL gate/run refs-only boundary when present'],
       doesNotProve: ['runtime execution readiness', 'non-empty command allowlist', 'artifact body authority'],
     }),
     evalResult({
       id: 'runtime_allowlist_eval',
       dimension: 'repo_local',
-      status: emptyAllowlistAccepted
-        && conditionStatus('registered_allowlist_eval') === 'pass'
+      status: bridgeBoundaryAccepted
+        && conditionStatus('registered_bridge_eval') === 'pass'
         && conditionStatus('command_allowlist') === 'present'
         ? 'pass'
         : 'blocked',

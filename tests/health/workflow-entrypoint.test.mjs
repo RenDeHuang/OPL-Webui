@@ -10,6 +10,7 @@ import pkg from '../../package.json' with { type: 'json' };
 test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['gate:review'], 'node scripts/workflow-gate.mjs');
   assert.equal(pkg.scripts['repo:bloat'], 'node scripts/repo-bloat-audit.mjs');
+  assert.equal(pkg.scripts['line:budget'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
   assert.equal(pkg.scripts.start, 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');

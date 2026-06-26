@@ -22,7 +22,7 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.pageStates.chatState, 'runtime_required');
   assert.equal(evidence.pageStates.researchResultSections, 3);
   assert.equal(evidence.pageStates.runtimeTaskMarker, '@基金');
-  assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
+  assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.blocked']);
   assert.ok(evidence.upstreamRequests >= 1);
   assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');
   assert.deepEqual(evidence.visualQuality.figmaSource, {

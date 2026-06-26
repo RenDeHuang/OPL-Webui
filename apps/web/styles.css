@@ -489,6 +489,23 @@ dd span, .form-hint, .form-message { color: #68707b; font-size: 12px; font-weigh
 .runtime-task-card h3 { font-size: 15px; margin: 0; }
 .runtime-task-card p { font-size: 13px; line-height: 1.45; margin: 0; }
 .runtime-task-meta { color: #4f5b6b; font-weight: 900; }
+.runtime-task-action {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 120px;
+  padding: 0 16px;
+  text-decoration: none;
+}
+.runtime-task-action:hover { background: var(--accent-strong); border-color: var(--accent-strong); box-shadow: 0 10px 24px rgba(47, 107, 79, 0.18); }
+.runtime-task-action:active { transform: translateY(1px); }
 
 .overlay-sheet, .inspector-sheet {
   box-shadow: 0 24px 70px rgba(17, 24, 39, 0.16);

@@ -5,6 +5,70 @@
   "mode": "gate_and_readonly_projection_v1",
   "webuiRuntimeExecution": "forbidden",
   "medoplDeepLink": "https://medopl.medopl.cn",
+  "medoplApiBridge": {
+    "mode": "go_control_plane_to_medopl_api_bridge_v1",
+    "owner": "one-person-lab-web-control-plane",
+    "consumer": "opl-webui-browser",
+    "upstreamOwner": "MedOPL",
+    "requiredEndpointEnv": "MEDOPL_API_BASE_URL",
+    "endpointNotConfiguredPolicy": "fail_closed_typed_blocker",
+    "routes": {
+      "runtimeGate": {
+        "webRoute": "POST /api/opl/runtime-gate",
+        "upstreamRoute": "POST /api/opl/runtime-gate",
+        "owner": "MedOPL",
+        "requestPolicy": "task_intent_workspace_runtime_user_context_only",
+        "readyRequiredBeforeRun": true
+      },
+      "runs": {
+        "webRoute": "POST /api/opl/runs",
+        "upstreamRoute": "POST /api/opl/runs",
+        "owner": "MedOPL",
+        "requestPolicy": "task_intent_workspace_runtime_refs_user_account_context_only",
+        "projectionPolicy": "refs_progress_deliverables_blocker_only"
+      },
+      "billingSummary": {
+        "webRoute": "GET /api/account/billing-summary",
+        "upstreamRoute": "GET /api/billing/summary",
+        "owner": "MedOPL",
+        "projectionPolicy": "readonly_summary_and_ledger_refs_only"
+      }
+    },
+    "typedBlockers": [
+      "api_key_required",
+      "package_required",
+      "compute_required",
+      "storage_required",
+      "workspace_runtime_binding_required",
+      "billing_blocked",
+      "release_required",
+      "audit_required",
+      "medopl_endpoint_required"
+    ],
+    "forbiddenResponseFields": [
+      "artifactBody",
+      "artifact_body",
+      "domainVerdict",
+      "rawProviderKey",
+      "apiKey",
+      "providerApiKey",
+      "bearerToken",
+      "launchToken",
+      "runtimeToken",
+      "kubeconfig",
+      "signedUrl",
+      "objectKey",
+      "storageKey",
+      "localPath"
+    ],
+    "cannotClaim": [
+      "MedOPL production runtime execution",
+      "billing source of truth",
+      "storage mutation",
+      "artifact body authority",
+      "domain truth"
+    ]
+  },
   "capabilityGoal": {
     "mode": "medopl_authorized_capability_entry_and_refs_projection",
     "userCapabilities": [
@@ -28,7 +92,7 @@
       "MedOPL",
       "OPL Framework"
     ],
-    "claimBoundary": "Web can expose authorized MedOPL capability entry and sanitized refs/status only; it cannot execute runtime commands, own storage truth, or return artifact bodies."
+    "claimBoundary": "Web can call MedOPL runtime gate/run bridge and expose authorized capability entry plus sanitized blockers, refs, progress, deliverables, status, and ledger refs only; it cannot execute runtime commands, own storage truth, mutate billing, or return artifact bodies."
   },
   "runtimeRequiredMarkers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
   "lightweightMarkers": ["@科研"],
@@ -106,47 +170,50 @@
   "executionAdmission": {
     "currentStatus": "not_admitted",
     "currentPhase": "execution_admission",
-    "nextPhase": "runtime_execution_contract_design",
+    "nextPhase": "production_medopl_runtime_evidence_closeout",
     "blockedBy": null,
     "ownerReceipt": {
       "required": true,
       "source": "human_owner_receipt",
       "status": "accepted",
-      "acceptedAt": "2026-06-24",
-      "acceptedClaim": "runtime_fail_closed_empty_allowlist_boundary_accepted",
-      "acceptedScope": "Web remains gate plus readonly projection only; MedOPL and OPL Framework remain execution authority."
+      "acceptedAt": "2026-06-26",
+      "acceptedClaim": "medopl_runtime_gate_run_bridge_local_refs_only_accepted",
+      "acceptedScope": "Web may bridge MedOPL runtime gate and run refs/progress/deliverables locally; MedOPL and OPL Framework remain execution and artifact authority."
     },
     "authority": {
       "execution": ["MedOPL", "OPL Framework"],
-      "web": ["gate", "readonly_projection"],
+      "billing": ["MedOPL"],
+      "storage": ["MedOPL"],
+      "artifactBody": ["MedOPL", "OPL Framework"],
+      "web": ["runtime_gate_bridge", "run_intent_submitter", "typed_blocker_projection", "refs_progress_deliverables_projection", "billing_ledger_refs_projection"],
       "webIsExecutionOwner": false
     },
     "currentAllowlist": [],
     "forbiddenCommands": ["install", "repair", "module_exec", "artifact_body", "runtime_mutation"],
     "nextStepOpeners": [
-      "human owner receipt names the real consumer and command class",
-      "Go-side runtime execution contract is added",
-      "registered eval covers command allowlist and authorization boundary"
+      "production MedOPL endpoint is configured",
+      "production runtime gate/run evidence is folded back",
+      "artifact/body authority contract stays external"
     ],
     "requiredBeforeAnyExecution": [
-      "Go-side runtime execution contract",
-      "registered eval covering command allowlist",
+      "production MedOPL runtime execution evidence",
+      "registered bridge eval",
       "human authorization boundary",
       "tenant-scoped audit events",
       "artifact/body authority contract"
     ],
     "conditions": [
       {
-        "id": "go_side_execution_contract",
-        "status": "missing",
+        "id": "go_side_medopl_bridge_contract",
+        "status": "present",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "contract"
+        "evidence": "contracts/web-runtime-bridge.json#/medoplApiBridge"
       },
       {
-        "id": "registered_allowlist_eval",
+        "id": "registered_bridge_eval",
         "status": "pass",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "empty_allowlist_fail_closed_eval"
+        "evidence": "tests/contract/medopl-runtime-bridge-contract.test.mjs"
       },
       {
         "id": "command_allowlist",
@@ -162,9 +229,15 @@
       },
       {
         "id": "tenant_scoped_audit_events",
-        "status": "missing",
+        "status": "partial",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "audit_contract"
+        "evidence": "runtime_gate_audit_only"
+      },
+      {
+        "id": "production_medopl_runtime_execution_evidence",
+        "status": "missing",
+        "owner": "release-evidence",
+        "evidence": "release_evidence"
       },
       {
         "id": "artifact_body_authority_contract",
@@ -174,18 +247,19 @@
       }
     ],
     "admittedWhen": [
-      "go_side_execution_contract=present",
-      "registered_allowlist_eval=pass",
+      "go_side_medopl_bridge_contract=present",
+      "registered_bridge_eval=pass",
       "command_allowlist=present",
       "human_authorization_boundary=accepted",
       "tenant_scoped_audit_events=present",
+      "production_medopl_runtime_execution_evidence=present",
       "artifact_body_authority_contract=present"
     ],
     "webRoutesMayMutateRuntime": false,
     "failClosedUntil": [
-      "contract_exists",
-      "eval_passes",
-      "allowlist_exists",
+      "MEDOPL_API_BASE_URL_configured",
+      "gate_ready",
+      "bridge_eval_passes",
       "authorization_boundary_exists"
     ]
   }

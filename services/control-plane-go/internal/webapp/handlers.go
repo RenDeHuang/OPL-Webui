@@ -42,6 +42,8 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/account/commercial-status", server.HandleCommercialStatus)
 	mux.HandleFunc("/api/medopl/runtime/status", server.HandleRuntimeStatus)
 	mux.HandleFunc("/api/medopl/materials-deliverables/projection", server.HandleMaterialsDeliverables)
+	mux.HandleFunc("/api/opl/runtime-gate", server.HandleRuntimeGate)
+	mux.HandleFunc("/api/opl/runs", server.HandleRuntimeRun)
 	mux.HandleFunc("/api/chat/conversations/", server.HandleConversation)
 	mux.HandleFunc("/api/chat/conversations", server.HandleConversations)
 	mux.HandleFunc("/api/chat", server.HandleChat)

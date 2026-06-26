@@ -36,7 +36,7 @@ function readJson(path) {
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
     'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
-    'test:contract', 'test:regression', 'gate:ai', 'gate:review', 'repo:bloat', 'check:diff',
+    'test:contract', 'test:regression', 'gate:ai', 'gate:review', 'repo:bloat', 'line:budget', 'check:diff',
   ]) {
     assert.ok(pkg.scripts[scriptName], `missing package script: ${scriptName}`);
   }
@@ -204,6 +204,9 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_fallback'), true);
   assert.equal(product.ownedSurfaces.includes('page_state'), true);
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_runtime_gate_bridge'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_runtime_run_refs_projection'), true);
+  assert.equal(product.ownedSurfaces.includes('medopl_billing_ledger_refs_projection'), true);
   assert.equal(product.ownedSurfaces.includes('medopl_capability_entry'), true);
   assert.equal(product.ownedSurfaces.includes('medopl_authorization_status_projection'), true);
   assert.equal(product.ownedSurfaces.includes('medopl_progress_refs_projection'), true);
@@ -215,7 +218,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(product.consumedAuthorities.includes('one-person-lab/contracts/opl-framework/domains.json'), true);
   assert.equal(product.capabilityGoal.mode, 'medopl_authorized_runtime_storage_capabilities_without_web_authority');
   assert.deepEqual(product.capabilityGoal.targetCapabilities, ['runtime', 'storage', 'progress_refs', 'deliverable_refs', 'materials_refs', 'presentation_refs', 'book_refs']);
-  assert.deepEqual(product.capabilityGoal.webOwnedExperience, ['entry', 'authorization_status', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'deeplink', 'fail_closed_gate']);
+  assert.deepEqual(product.capabilityGoal.webOwnedExperience, ['entry', 'authorization_status', 'runtime_gate_bridge', 'run_intent_submission', 'readonly_projection', 'progress_refs_projection', 'deliverable_refs_projection', 'billing_ledger_refs_projection', 'deeplink', 'fail_closed_gate']);
   assert.deepEqual(product.capabilityGoal.authorityOwners, { runtime: 'MedOPL / OPL Framework', storage: 'MedOPL / OPL Framework', artifactBody: 'MedOPL / OPL Framework' });
   assert.equal(product.capabilityGoal.webMayExecuteRuntime, false);
   assert.equal(product.capabilityGoal.webMayOwnStorageTruth, false);
@@ -523,7 +526,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Next Priorities/);
   assert.match(status, /current gap set is now machine-owned/);
   assert.match(status, /UI\/UX product depth now has source-level Figma MCP evidence pinned/);
-  assert.match(status, /Runtime execution boundary is now owner-accepted as fail-closed with an empty allowlist/);
+  assert.match(status, /Runtime bridge boundary now has a local Go-side MedOPL API bridge/);
   assert.match(status, /Operations maturity now has partial evidence boundaries/);
   assert.doesNotMatch(status, /Promote browser-level e2e into CI or release-gate evidence/);
 });
@@ -560,16 +563,25 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.lifecycle.temporaryArtifacts.includes('.runtime/browser-visual/*'), true);
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.productionEvidence.rawArtifactsInGit, false);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
-  assert.equal(runtime.executionAdmission.ownerReceipt.acceptedClaim, 'runtime_fail_closed_empty_allowlist_boundary_accepted');
+  assert.equal(runtime.medoplApiBridge.requiredEndpointEnv, 'MEDOPL_API_BASE_URL');
+  assert.equal(runtime.medoplApiBridge.endpointNotConfiguredPolicy, 'fail_closed_typed_blocker');
+  assert.equal(runtime.medoplApiBridge.routes.runtimeGate.webRoute, 'POST /api/opl/runtime-gate');
+  assert.equal(runtime.medoplApiBridge.routes.runs.webRoute, 'POST /api/opl/runs');
+  assert.equal(runtime.medoplApiBridge.routes.billingSummary.projectionPolicy, 'readonly_summary_and_ledger_refs_only');
+  assert.equal(runtime.medoplApiBridge.typedBlockers.includes('package_required'), true);
+  assert.equal(runtime.medoplApiBridge.typedBlockers.includes('storage_required'), true);
+  assert.equal(runtime.medoplApiBridge.cannotClaim.includes('MedOPL production runtime execution'), true);
+  assert.equal(runtime.executionAdmission.ownerReceipt.acceptedClaim, 'medopl_runtime_gate_run_bridge_local_refs_only_accepted');
   assert.deepEqual(runtime.executionAdmission.currentAllowlist, []);
-  assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('registered eval covering command allowlist'), true);
+  assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('production MedOPL runtime execution evidence'), true);
   assert.equal(runtime.executionAdmission.webRoutesMayMutateRuntime, false);
   assert.deepEqual(runtime.executionAdmission.conditions.map((condition) => [condition.id, condition.status, condition.evidence]), [
-    ['go_side_execution_contract', 'missing', 'contract'],
-    ['registered_allowlist_eval', 'pass', 'empty_allowlist_fail_closed_eval'],
+    ['go_side_medopl_bridge_contract', 'present', 'contracts/web-runtime-bridge.json#/medoplApiBridge'],
+    ['registered_bridge_eval', 'pass', 'tests/contract/medopl-runtime-bridge-contract.test.mjs'],
     ['command_allowlist', 'present', 'empty_allowlist'],
     ['human_authorization_boundary', 'accepted', 'owner_receipt'],
-    ['tenant_scoped_audit_events', 'missing', 'audit_contract'],
+    ['tenant_scoped_audit_events', 'partial', 'runtime_gate_audit_only'],
+    ['production_medopl_runtime_execution_evidence', 'missing', 'release_evidence'],
     ['artifact_body_authority_contract', 'missing', 'authority_contract'],
   ]);
 
@@ -670,8 +682,8 @@ test('MedOPL runtime and storage capabilities are product goals without Web auth
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('status'), true);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('deliverable_refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('private_state_path'), true);
-  assert.match(status, /runtime\/storage are product target capabilities when opened through MedOPL/);
-  assert.match(active, /runtime\/storage are target user capabilities through MedOPL authorization/);
+  assert.match(status, /runtime\/storage\/package\/billing\/resource release (are owned by MedOPL|remain MedOPL-owned capabilities)/);
+  assert.match(active, /runtime\/storage\/package\/billing\/resource release are MedOPL-owned capabilities/);
 });
 
 test('operations maturity and gap phase advancement require structured eval evidence', () => {

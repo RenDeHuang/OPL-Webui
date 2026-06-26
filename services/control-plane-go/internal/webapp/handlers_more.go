@@ -38,6 +38,10 @@ func (server Server) HandleBillingSummary(response http.ResponseWriter, request 
 	}
 	limit := chatMonthlyQuota()
 	quota := server.Store.ChatQuotaStatus(user.ID, limit)
+	if projection, ok := server.tryMedOPLBillingProjection(request, quota, events); ok {
+		writeJSON(response, http.StatusOK, projection)
+		return
+	}
 	writeJSON(response, http.StatusOK, map[string]any{
 		"ok": true, "owner": "MedOPL", "deepLink": MedOPLURL + "/billing",
 		"quota":                     quota,

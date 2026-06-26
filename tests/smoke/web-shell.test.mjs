@@ -177,8 +177,13 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
   assert.doesNotMatch(webSource, /leftRailState|data-left-rail|left_sidebar_expanded/);
   assert.match(webSource, /chatStateForResult/);
   assert.match(webSource, /chatStateForPrompt/);
+  assert.match(webSource, /checkRuntimeGate\(fetch, task\)/);
+  assert.match(webSource, /runRuntimeTask\(fetch, \{ \.\.\.task, gateRefs/);
+  assert.doesNotMatch(webSource, /if \(requiresRuntimeGate\(message\)\)[\s\S]{0,800}sendChatMessage\(fetch, message\)/);
   assert.doesNotMatch(webSource, /if \(requiresRuntimeGate\(message\)\) \{\n\s+document\.body\.dataset\.chatState = chatStateForResult/);
   assert.match(webSource, /\/api\/chat/);
+  assert.match(webSource, /\/api\/opl\/runtime-gate/);
+  assert.match(webSource, /\/api\/opl\/runs/);
   assert.match(webSource, /\/api\/settings\/model-provider/);
 });
 

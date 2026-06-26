@@ -90,12 +90,34 @@
     "ownedExperience": [
       "entry",
       "authorization_status",
+      "runtime_gate_bridge",
+      "run_intent_submission",
       "readonly_projection",
       "progress_refs_projection",
       "deliverable_refs_projection",
+      "billing_ledger_refs_projection",
       "deeplink",
       "fail_closed_gate"
     ],
+    "runtimeRequiredFlow": {
+      "triggerMarkers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
+      "gateRoute": "POST /api/opl/runtime-gate",
+      "runRoute": "POST /api/opl/runs",
+      "readyPolicy": "gate_ready_required_before_run",
+      "notReadyStates": [
+        "api_key_required",
+        "package_required",
+        "compute_required",
+        "storage_required",
+        "workspace_runtime_binding_required",
+        "billing_blocked",
+        "release_required",
+        "audit_required",
+        "medopl_endpoint_required"
+      ],
+      "readyProjection": ["refs", "progress_refs", "deliverable_refs", "deeplink"],
+      "forbiddenProjection": ["artifact_body", "domain_verdict", "billing_truth", "storage_mutation"]
+    },
     "forbiddenClaims": [
       "web_runtime_execution",
       "web_storage_truth",
@@ -123,6 +145,21 @@
       {
         "state": "quota_exceeded",
         "resultErrorCode": "CHAT_QUOTA_EXCEEDED",
+        "retryable": false
+      },
+      {
+        "state": "runtime_required",
+        "resultErrorCode": "RUNTIME_REQUIRED",
+        "retryable": false
+      },
+      {
+        "state": "runtime_required",
+        "resultErrorCode": "RUNTIME_GATE_BLOCKED",
+        "retryable": false
+      },
+      {
+        "state": "runtime_required",
+        "resultErrorCode": "MEDOPL_ENDPOINT_REQUIRED",
         "retryable": false
       },
       {

@@ -248,16 +248,17 @@
       "phases": [
         {
           "id": "execution_admission",
-          "objective": "Accept the current runtime execution boundary as fail-closed with an empty allowlist; Web remains gate plus readonly projection only.",
+          "objective": "Accept the local MedOPL runtime gate/run bridge as refs-only projection while production execution remains unclaimed.",
           "entryCriteria": [
             "runtime bridge contract exists",
             "Go control plane remains only backend business entry"
           ],
           "exitCriteria": [
-            "owner accepts fail-closed boundary",
+            "owner accepts local MedOPL gate/run bridge boundary",
             "current allowlist is empty",
             "Web runtime mutation remains forbidden",
-            "MedOPL and OPL Framework remain execution authority"
+            "MedOPL remains runtime/storage/package/billing/resource release authority",
+            "OPL Framework/domain agents remain execution semantics, quality verdict, and artifact authority"
           ],
           "evidenceSources": [
             "repo_local",
@@ -268,22 +269,22 @@
           ],
           "acceptance": [
             "executionAdmission currentStatus stays not_admitted",
-            "current allowlist is empty and Web may not install, repair, module exec, return artifact body, or mutate runtime",
-            "MedOPL and OPL Framework remain execution authority while Web remains gate plus readonly projection",
-            "future runtime execution still requires Go-side contract, registered eval, explicit command allowlist, human authorization, tenant audit, and artifact/body authority contract"
+            "current allowlist is empty and Web may not install, repair, module exec, return artifact body, own domain verdict, mutate runtime, mutate storage, or mutate billing",
+            "MedOPL and OPL Framework remain execution and artifact authority while Web remains gate/run refs-only projection",
+            "production runtime execution still requires production MedOPL runtime execution evidence, registered bridge eval, human authorization, tenant audit, and artifact/body authority contract"
           ],
           "nextStepOpeners": [
-            "Keep runtime execution disabled unless a future owner explicitly opens runtime_execution_contract_design",
-            "If future execution is requested, add Go-side contract, allowlist eval, and authorization boundary before any Web runtime mutation route",
+            "Configure production MEDOPL_API_BASE_URL before claiming production runtime bridge behavior",
+            "Fold back production gate/run evidence before claiming runtime execution",
             "Continue to list OPL runtime execution from Web and artifact body authority as cannot-claim"
           ],
           "ownerReceipt": {
             "required": true,
             "source": "human_owner_receipt",
             "status": "accepted",
-            "acceptedAt": "2026-06-24",
-            "acceptedClaim": "runtime_fail_closed_empty_allowlist_boundary_accepted",
-            "reason": "owner accepted the current fail-closed runtime boundary rather than admitting execution"
+            "acceptedAt": "2026-06-26",
+            "acceptedClaim": "medopl_runtime_gate_run_bridge_local_refs_only_accepted",
+            "reason": "owner accepted local MedOPL gate/run refs-only projection while production execution remains external"
           },
           "requiredEvals": [
             {

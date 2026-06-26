@@ -1,4 +1,5 @@
 import {
+  checkRuntimeGate,
   createInitialOnePersonLabViewModel,
   loadOnePersonLabWebState,
   loginAccount,
@@ -7,6 +8,8 @@ import {
   researchResultForChat,
   reliabilityStatusForResult,
   requiresRuntimeGate,
+  runRuntimeTask,
+  runtimeTaskCardForGate,
   runtimeTaskCardForPrompt,
   saveAPIKey,
   chatStateForResult,
@@ -73,7 +76,16 @@ function bindCapabilityButtons() {
         document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
       }
       document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
-      if (requiresRuntimeGate(button.dataset.prompt)) showRuntimeGate(button.dataset.prompt);
+      if (requiresRuntimeGate(button.dataset.prompt)) {
+        showRuntimeGate(button.dataset.prompt, {
+          ok: false,
+          gateState: {
+            ready: false,
+            blockers: [{ kind: 'runtime_required', title: '请发送后检查 MedOPL runtime gate', deepLink: 'https://medopl.medopl.cn' }],
+            nextAction: { id: 'check_runtime_gate', label: '检查 MedOPL gate', deepLink: 'https://medopl.medopl.cn' },
+          },
+        });
+      }
     });
   }
 }
@@ -115,6 +127,25 @@ function bindChatForm(getView) {
     setShellTurnState('running_turn');
     document.body.dataset.chatState = chatStateForResult(null, true);
     renderReliabilityStatus(reliabilityStatusForResult(null));
+    if (requiresRuntimeGate(message)) {
+      const task = runtimeTaskFromPrompt(message);
+      const gate = await checkRuntimeGate(fetch, task);
+      document.body.dataset.chatState = chatStateForResult(gate);
+      renderReliabilityStatus(reliabilityStatusForResult(gate));
+      if (!gate.ok || !gate.gateState?.ready) {
+        setShellTurnState('blocked_turn');
+        showRuntimeGate(message, gate);
+        appendRuntimeGateMessage(gate);
+        return;
+      }
+      const run = await runRuntimeTask(fetch, { ...task, gateRefs: gate.gateState?.refs || {} });
+      document.body.dataset.chatState = run.ok ? 'runtime_required' : chatStateForResult(run);
+      setShellTurnState(run.ok ? 'home_default' : 'blocked_turn');
+      renderReliabilityStatus(reliabilityStatusForResult(run.ok ? null : run));
+      showRuntimeGate(message, gate);
+      appendRuntimeRunProjection(run);
+      return;
+    }
     const result = await sendChatMessage(fetch, message);
     document.body.dataset.chatState = chatStateForResult(result);
     setShellTurnState(result.ok ? 'home_default' : 'blocked_turn');
@@ -515,11 +546,11 @@ function appendResearchResult(result) {
   log.append(card);
 }
 
-function showRuntimeGate(prompt = '') {
+function showRuntimeGate(prompt = '', gateResult = null) {
   const gate = document.querySelector('[data-runtime-gate]');
   if (!gate) return;
   gate.classList.add('is-visible');
-  const taskCard = runtimeTaskCardForPrompt(prompt);
+  const taskCard = gateResult ? runtimeTaskCardForGate(prompt, gateResult) : runtimeTaskCardForPrompt(prompt);
   if (!taskCard) return;
   renderRuntimeTaskCard(gate, taskCard);
 }
@@ -537,8 +568,61 @@ function renderRuntimeTaskCard(gate, taskCard) {
   const meta = document.createElement('p');
   meta.className = 'runtime-task-meta';
   meta.textContent = `required capability: ${taskCard.requiredCapability}; Web execution: ${taskCard.webuiRuntimeExecution}`;
+  const blockerList = document.createElement('ul');
+  blockerList.className = 'runtime-task-blockers';
+  for (const blocker of taskCard.blockers || []) {
+    const item = document.createElement('li');
+    item.textContent = `${blocker.kind}: ${blocker.title}`;
+    blockerList.append(item);
+  }
+  const action = document.createElement('a');
+  action.className = 'runtime-task-action';
+  action.href = taskCard.nextAction?.deepLink || taskCard.deepLink;
+  action.textContent = taskCard.nextAction?.label || '去 MedOPL';
   card.append(title, body, meta);
+  if ((taskCard.blockers || []).length > 0) card.append(blockerList);
+  card.append(action);
   gate.prepend(card);
+}
+
+function runtimeTaskFromPrompt(prompt = '') {
+  const marker = ['@论文', '@基金', '@综述', '@文件', '@PPT', '@书'].find((candidate) => prompt.includes(candidate)) || '';
+  const intentByMarker = {
+    '@论文': 'paper_question',
+    '@基金': 'grant_plan',
+    '@综述': 'review_map',
+    '@文件': 'materials_refs',
+    '@PPT': 'presentation_foundry',
+    '@书': 'book_foundry',
+  };
+  return {
+    taskIntent: intentByMarker[marker] || 'runtime_required_task',
+    marker,
+    prompt,
+  };
+}
+
+function appendRuntimeGateMessage(gate = {}) {
+  const blockers = gate.gateState?.blockers || [];
+  const summary = blockers.length > 0
+    ? blockers.map((blocker) => blocker.title || blocker.kind).join(' / ')
+    : gate.message || 'MedOPL runtime gate 尚未 ready。';
+  appendMessage('OPL', summary, 'assistant-message');
+}
+
+function appendRuntimeRunProjection(run = {}) {
+  if (!run.ok) {
+    appendMessage('OPL', run.blocker?.title || run.message || 'MedOPL runtime run blocked。', 'assistant-message');
+    return;
+  }
+  const parts = [
+    `Run: ${run.run?.runId || 'pending'}`,
+    `Status: ${run.status || 'unknown'}`,
+    `Artifact ref: ${run.artifactRef || 'pending'}`,
+    `Progress refs: ${(run.progress || []).map((item) => item.stage || item.state).filter(Boolean).join(', ') || 'pending'}`,
+    `Deliverables: ${(run.deliverables || []).map((item) => item.deliverableId || item.artifactRef).filter(Boolean).join(', ') || 'pending'}`,
+  ];
+  appendMessage('MedOPL', parts.join(' / '), 'assistant-message');
 }
 
 function setSettingsMessage(message) {

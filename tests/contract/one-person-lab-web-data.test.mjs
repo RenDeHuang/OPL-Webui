@@ -40,7 +40,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
   assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
   assert.equal(visionGap('medopl_readonly_evidence').disposition, 'production_readonly_projection_dogfood_confirmed_run_28142197152');
-  assert.equal(visionGap('runtime_execution_boundary').disposition, 'fail_closed_empty_allowlist_boundary_accepted');
+  assert.equal(visionGap('runtime_execution_boundary').disposition, 'local_medopl_runtime_gate_run_bridge_refs_only_production_execution_unclaimed');
   assert.deepEqual([visionGap('ha_and_resilience').acceptanceContract, visionGap('concurrency_and_load').acceptanceContract, visionGap('opl_auto_update_from_github').acceptanceContract], ['contracts/web-release-profile.json#/productionHAReadiness', 'contracts/web-product-profile.json#/concurrencyAndLoad', 'contracts/web-release-profile.json#/oplAutoUpdateReadiness']);
   assert.equal(visionGap('runtime_execution_boundary').launchBlocking, true);
   assert.equal(visionGap('commercial_saas_depth').launchBlocking, false);
@@ -89,8 +89,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(pageStates.chatStates.includes('runtime_required'), true);
   const reliability = pageStates.reliabilityModel;
   assert.deepEqual([reliability.owner, reliability.consumer, reliability.mode], ['one-person-lab-web', 'browser_reliability_status_surface', 'sanitized_view_model_only']);
-  const reliabilityStates = ['auth_required', 'api_key_required', 'quota_exceeded', 'upstream_failed', 'service_unavailable', 'network_unreachable'];
-  assert.deepEqual(reliability.statuses.map(({ state, resultErrorCode }) => [state, resultErrorCode]), [['auth_required', 'AUTH_REQUIRED'], ['api_key_required', 'API_KEY_REQUIRED'], ['quota_exceeded', 'CHAT_QUOTA_EXCEEDED'], ['upstream_failed', 'UPSTREAM_CHAT_FAILED'], ['service_unavailable', 'SERVICE_UNAVAILABLE'], ['network_unreachable', 'NETWORK_UNREACHABLE']]);
+  const reliabilityStates = ['auth_required', 'api_key_required', 'quota_exceeded', 'runtime_required', 'upstream_failed', 'service_unavailable', 'network_unreachable'];
+  assert.deepEqual(reliability.statuses.map(({ state, resultErrorCode }) => [state, resultErrorCode]), [['auth_required', 'AUTH_REQUIRED'], ['api_key_required', 'API_KEY_REQUIRED'], ['quota_exceeded', 'CHAT_QUOTA_EXCEEDED'], ['runtime_required', 'RUNTIME_REQUIRED'], ['runtime_required', 'RUNTIME_GATE_BLOCKED'], ['runtime_required', 'MEDOPL_ENDPOINT_REQUIRED'], ['upstream_failed', 'UPSTREAM_CHAT_FAILED'], ['service_unavailable', 'SERVICE_UNAVAILABLE'], ['network_unreachable', 'NETWORK_UNREACHABLE']]);
   assert.deepEqual(reliabilityStates.every((state) => pageStates.routes.find((route) => route.id === 'home').states.includes(state)), true);
   assert.deepEqual(reliability.allowedFields, ['state', 'title', 'action', 'retryable', 'details']);
   assert.deepEqual(['raw_upstream_body', 'raw_provider_error', 'api_key', 'rawApiKey', 'encryptedApiKey', 'private_state', 'private_state_path', 'database_url', 'artifact_body'].every((field) => reliability.forbiddenPayload.includes(field)), true);
@@ -185,18 +185,18 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   for (const field of ['requiresGoSideContract', 'requiresEval', 'requiresWhitelist', 'requiresHumanAuthorization']) assert.equal(runtime.authorizationBoundary[field], true);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
   assert.equal(runtime.executionAdmission.currentPhase, 'execution_admission');
-  assert.equal(runtime.executionAdmission.nextPhase, 'runtime_execution_contract_design');
+  assert.equal(runtime.executionAdmission.nextPhase, 'production_medopl_runtime_evidence_closeout');
   assert.equal(runtime.executionAdmission.blockedBy, null);
-  assert.deepEqual(runtime.executionAdmission.ownerReceipt, { required: true, source: 'human_owner_receipt', status: 'accepted', acceptedAt: '2026-06-24', acceptedClaim: 'runtime_fail_closed_empty_allowlist_boundary_accepted', acceptedScope: 'Web remains gate plus readonly projection only; MedOPL and OPL Framework remain execution authority.' });
+  assert.deepEqual(runtime.executionAdmission.ownerReceipt, { required: true, source: 'human_owner_receipt', status: 'accepted', acceptedAt: '2026-06-26', acceptedClaim: 'medopl_runtime_gate_run_bridge_local_refs_only_accepted', acceptedScope: 'Web may bridge MedOPL runtime gate and run refs/progress/deliverables locally; MedOPL and OPL Framework remain execution and artifact authority.' });
   assert.deepEqual(runtime.executionAdmission.currentAllowlist, []);
   assert.deepEqual(runtime.executionAdmission.forbiddenCommands, ['install', 'repair', 'module_exec', 'artifact_body', 'runtime_mutation']);
   assert.deepEqual(runtime.executionAdmission.nextStepOpeners, [
-    'human owner receipt names the real consumer and command class',
-    'Go-side runtime execution contract is added',
-    'registered eval covers command allowlist and authorization boundary',
+    'production MedOPL endpoint is configured',
+    'production runtime gate/run evidence is folded back',
+    'artifact/body authority contract stays external',
   ]);
-  assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, ['Go-side runtime execution contract', 'registered eval covering command allowlist', 'human authorization boundary', 'tenant-scoped audit events', 'artifact/body authority contract']);
-  assert.deepEqual(runtime.executionAdmission.failClosedUntil, ['contract_exists', 'eval_passes', 'allowlist_exists', 'authorization_boundary_exists']);
+  assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, ['production MedOPL runtime execution evidence', 'registered bridge eval', 'human authorization boundary', 'tenant-scoped audit events', 'artifact/body authority contract']);
+  assert.deepEqual(runtime.executionAdmission.failClosedUntil, ['MEDOPL_API_BASE_URL_configured', 'gate_ready', 'bridge_eval_passes', 'authorization_boundary_exists']);
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
   assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:ai', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);
@@ -278,7 +278,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.ciWorkflow, '.github/workflows/ci.yml');
   assert.equal(release.localBrowserE2EReadiness.requiredBeforeImageRelease, true);
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
-  assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.required']);
+  assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.blocked']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
   assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28142197152');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
@@ -570,7 +570,7 @@ test('web data module implements the page-state chat matrix', () => {
   for (const state of ['auth_required', 'api_key_required', 'service_unavailable', 'network_unreachable']) {
     assert.equal(chatStates.includes(state), true, `missing reliability contract state: ${state}`);
   }
-  assert.deepEqual(reliabilityStates, ['auth_required', 'api_key_required', 'quota_exceeded', 'upstream_failed', 'service_unavailable', 'network_unreachable']);
+  assert.deepEqual(reliabilityStates, ['auth_required', 'api_key_required', 'quota_exceeded', 'runtime_required', 'runtime_required', 'runtime_required', 'upstream_failed', 'service_unavailable', 'network_unreachable']);
   for (const state of ['research_entry_selected', 'paper_entry_selected', 'grant_entry_selected', 'materials_refs_pending', 'presentation_entry_selected', 'book_entry_selected']) {
     assert.equal(chatStates.includes(state), true, `missing research contract state: ${state}`);
   }

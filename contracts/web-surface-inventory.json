@@ -411,6 +411,14 @@
       "lifecycle": "durable"
     },
     {
+      "path": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+      "type": "test",
+      "ownerSurface": "runtime-gate",
+      "consumer": ["npm run verify:contract"],
+      "contract": ["contracts/web-runtime-bridge.json", "contracts/web-api.openapi.json", "services/control-plane-go/cmd/opl-webui-control-plane/main.go"],
+      "lifecycle": "durable"
+    },
+    {
       "path": "tests/contract/go-control-plane-server-helper.mjs",
       "type": "test",
       "ownerSurface": "control-plane-go",
@@ -432,6 +440,14 @@
       "ownerSurface": "apps-web",
       "consumer": ["npm run verify:contract"],
       "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json", "contracts/web-api.openapi.json", "contracts/web-runtime-bridge.json", "contracts/web-release-profile.json"],
+      "lifecycle": "durable"
+    },
+    {
+      "path": "tests/contract/web-runtime-state.test.mjs",
+      "type": "test",
+      "ownerSurface": "apps-web",
+      "consumer": ["npm run verify:contract"],
+      "contract": ["apps/web/src/onePersonLabWeb.mjs", "contracts/web-page-state-matrix.json", "contracts/web-runtime-bridge.json"],
       "lifecycle": "durable"
     },
     {

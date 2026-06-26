@@ -69,17 +69,17 @@ try {
   await waitForAuditKind(cdp, 'chat.completed');
 
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
-  await waitForAuditKindCount(cdp, 'runtime_gate.required', 1);
+  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 1);
   await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible")', 'paper runtime gate');
   await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@论文"', 'paper runtime task card');
 
   await submitPrompt(cdp, '@基金 帮我拆解标书结构');
-  await waitForAuditKindCount(cdp, 'runtime_gate.required', 2);
+  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 2);
   await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@基金"', 'grant runtime task card');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
-  if (!kinds.includes('runtime_gate.required')) {
-    throw new Error(`missing runtime_gate.required audit evidence: ${kinds.join(',')}`);
+  if (!kinds.includes('runtime_gate.blocked')) {
+    throw new Error(`missing runtime_gate.blocked audit evidence: ${kinds.join(',')}`);
   }
   if (!kinds.includes('chat.completed')) {
     throw new Error(`missing chat.completed audit evidence: ${kinds.join(',')}`);
@@ -94,7 +94,7 @@ try {
     runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
-  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.required'].includes(kind));
+  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked'].includes(kind));
   const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
 
   console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));

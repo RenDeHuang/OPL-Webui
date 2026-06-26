@@ -42,6 +42,9 @@
     "sanitized_audit_projection",
     "commercial_account_lifecycle_projection",
     "runtime_gate_projection",
+    "medopl_runtime_gate_bridge",
+    "medopl_runtime_run_refs_projection",
+    "medopl_billing_ledger_refs_projection",
     "medopl_capability_entry",
     "medopl_authorization_status_projection",
     "medopl_progress_refs_projection"
@@ -126,9 +129,12 @@
     "webOwnedExperience": [
       "entry",
       "authorization_status",
+      "runtime_gate_bridge",
+      "run_intent_submission",
       "readonly_projection",
       "progress_refs_projection",
       "deliverable_refs_projection",
+      "billing_ledger_refs_projection",
       "deeplink",
       "fail_closed_gate"
     ],
@@ -141,7 +147,7 @@
     "webMayExecuteRuntime": false,
     "webMayOwnStorageTruth": false,
     "webMayOwnArtifactBody": false,
-    "claimBoundary": "runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly projection, refs projection, deeplink, and fail-closed gate only."
+    "claimBoundary": "runtime/storage/package/billing/resource release are MedOPL-owned capabilities; Web owns entry, authorization status, runtime gate bridge, run intent submission, readonly refs/progress/deliverables projection, billing ledger refs projection, deeplink, and fail-closed blockers only."
   },
   "provider": {
     "id": "gflabtoken",
@@ -217,12 +223,13 @@
         "id": "runtime_execution_boundary",
         "ownerSurface": "runtime-gate",
         "acceptanceContract": "contracts/web-runtime-bridge.json",
-        "disposition": "fail_closed_empty_allowlist_boundary_accepted",
+        "disposition": "local_medopl_runtime_gate_run_bridge_refs_only_production_execution_unclaimed",
         "launchBlocking": true,
         "evidenceRequired": [
-          "go_side_execution_contract",
-          "registered_eval",
-          "command_allowlist",
+          "production_MEDOPL_API_BASE_URL",
+          "runtime_gate_ready_and_blocked_evidence",
+          "runtime_run_refs_progress_deliverables_evidence",
+          "artifact_body_authority_external_contract",
           "human_authorization_boundary"
         ]
       },
@@ -522,6 +529,136 @@
         "global rate limiting"
       ]
     }
+  },
+  "businessFlowGapMap": {
+    "generatedAt": "2026-06-26",
+    "source": "contracts/web-product-profile.json",
+    "items": [
+      {
+        "id": "login_register",
+        "status": "done",
+        "gapType": null,
+        "owner": "one-person-lab-web",
+        "consumer": "research_user",
+        "contract": "contracts/web-api.openapi.json#/paths/~1api~1auth~1register",
+        "testProof": "tests/contract/go-control-plane-http.test.mjs",
+        "cannotClaim": ["email verification", "password reset"]
+      },
+      {
+        "id": "api_key_binding",
+        "status": "done",
+        "gapType": null,
+        "owner": "one-person-lab-web",
+        "consumer": "research_user",
+        "contract": "contracts/web-api.openapi.json#/paths/~1api~1provider~1key",
+        "testProof": "tests/contract/go-control-plane-http.test.mjs",
+        "cannotClaim": ["user editable base_url", "raw API key returned to browser"]
+      },
+      {
+        "id": "ordinary_chat",
+        "status": "done",
+        "gapType": null,
+        "owner": "one-person-lab-web",
+        "consumer": "research_user",
+        "contract": "contracts/web-api.openapi.json#/paths/~1api~1chat",
+        "testProof": "tests/contract/one-person-lab-chat-upstream.test.mjs",
+        "cannotClaim": ["upstream provider availability", "domain artifact authority"]
+      },
+      {
+        "id": "runtime_task_entries",
+        "status": "done",
+        "gapType": null,
+        "owner": "one-person-lab-web",
+        "consumer": "research_user",
+        "contract": "contracts/web-runtime-bridge.json#/runtimeRequiredMarkers",
+        "testProof": "tests/contract/web-runtime-state.test.mjs",
+        "cannotClaim": ["Web-owned runtime execution semantics"]
+      },
+      {
+        "id": "runtime_gate",
+        "status": "partial",
+        "gapType": "evidence gap",
+        "owner": "MedOPL",
+        "webSurface": "one-person-lab-web-control-plane",
+        "consumer": "opl-webui-browser",
+        "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runtimeGate",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "cannotClaim": ["production MedOPL runtime execution", "gate ready production evidence"]
+      },
+      {
+        "id": "purchase_package",
+        "status": "blocked",
+        "gapType": "integration gap",
+        "owner": "MedOPL",
+        "consumer": "research_user",
+        "contract": "MedOPL public API contract",
+        "testProof": null,
+        "cannotClaim": ["package purchase from Web", "payment lifecycle"]
+      },
+      {
+        "id": "compute_resource",
+        "status": "blocked",
+        "gapType": "integration gap",
+        "owner": "MedOPL",
+        "consumer": "research_user",
+        "contract": "MedOPL public API contract",
+        "testProof": null,
+        "cannotClaim": ["compute resource lifecycle"]
+      },
+      {
+        "id": "storage_space",
+        "status": "blocked",
+        "gapType": "integration gap",
+        "owner": "MedOPL",
+        "consumer": "research_user",
+        "contract": "MedOPL public API contract",
+        "testProof": null,
+        "cannotClaim": ["storage allocation", "storage mutation", "storage truth"]
+      },
+      {
+        "id": "runtime_run",
+        "status": "partial",
+        "gapType": "evidence gap",
+        "owner": "MedOPL",
+        "webSurface": "one-person-lab-web-control-plane",
+        "consumer": "opl-webui-browser",
+        "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runs",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "cannotClaim": ["production runtime execution", "artifact body", "domain truth"]
+      },
+      {
+        "id": "progress_refs_deliverables",
+        "status": "partial",
+        "gapType": "evidence gap",
+        "owner": "MedOPL",
+        "webSurface": "one-person-lab-web",
+        "consumer": "research_user",
+        "contract": "contracts/web-runtime-bridge.json#/projectionPolicy",
+        "testProof": "tests/contract/web-runtime-state.test.mjs",
+        "cannotClaim": ["artifact body authority", "object storage mutation"]
+      },
+      {
+        "id": "billing_ledger_release",
+        "status": "partial",
+        "gapType": "integration gap",
+        "owner": "MedOPL",
+        "webSurface": "one-person-lab-web-control-plane",
+        "consumer": "research_user",
+        "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/billingSummary",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "cannotClaim": ["billing source of truth", "release execution", "stop billing", "storage destroy"]
+      },
+      {
+        "id": "artifact_authority_domain_truth",
+        "status": "blocked",
+        "gapType": "cannot-claim",
+        "owner": "OPL Framework / domain agents",
+        "consumer": "research_user",
+        "contract": "contracts/web-runtime-bridge.json#/projectionPolicy",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "cannotClaim": ["Web-owned domain verdict", "Web-owned artifact body"]
+      }
+    ]
   },
   "claims": {
     "canClaim": [

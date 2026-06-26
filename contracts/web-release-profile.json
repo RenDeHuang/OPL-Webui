@@ -434,7 +434,7 @@
       "production authenticated dogfood e2e requires Cloud Rollout evidence",
       "real upstream/API Key online dogfood",
       "production quota exhaustion online evidence",
-      "MedOPL production runtime bridge",
+      "MedOPL production runtime execution evidence",
       "real OPL execution or mutation"
     ]
   },
@@ -445,7 +445,7 @@
   "cannotClaim": [
     "complete production-ready SaaS",
     "real OPL runtime execution",
-    "MedOPL runtime bridge implementation",
+    "production MedOPL runtime execution/API evidence",
     "billing source of truth",
     "team invite lifecycle",
     "RBAC lifecycle",
@@ -491,7 +491,7 @@
       "chatState": "runtime_required",
       "auditKinds": [
         "chat.completed",
-        "runtime_gate.required"
+        "runtime_gate.blocked"
       ],
       "upstreamRequestsMin": 1
     },

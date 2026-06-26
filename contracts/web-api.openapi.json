@@ -162,6 +162,62 @@
         }
       }
     },
+    "/api/opl/runtime-gate": {
+      "post": {
+        "summary": "Check MedOPL runtime gate before runtime-required task entry.",
+        "responses": {
+          "200": {
+            "description": "MedOPL reports runtime gate ready."
+          },
+          "400": {
+            "description": "Invalid task intent input."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "424": {
+            "description": "MedOPL runtime gate is not ready or Web bridge is not configured."
+          },
+          "502": {
+            "description": "MedOPL runtime gate upstream failed."
+          },
+          "504": {
+            "description": "MedOPL runtime gate timed out."
+          }
+        }
+      }
+    },
+    "/api/opl/runs": {
+      "post": {
+        "summary": "Start a MedOPL runtime-required run with refs-only Web projection.",
+        "responses": {
+          "200": {
+            "description": "Run accepted or completed with refs/progress/deliverables projection."
+          },
+          "400": {
+            "description": "Invalid task intent input."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "424": {
+            "description": "Runtime gate blocks the run."
+          },
+          "502": {
+            "description": "MedOPL run upstream failed."
+          },
+          "504": {
+            "description": "MedOPL run timed out."
+          }
+        }
+      }
+    },
     "/api/chat/conversations": {
       "get": {
         "summary": "List current user's conversations.",
@@ -327,6 +383,9 @@
           "API_KEY_REQUIRED",
           "API_KEY_DECRYPT_FAILED",
           "RUNTIME_REQUIRED",
+          "RUNTIME_GATE_BLOCKED",
+          "MEDOPL_ENDPOINT_REQUIRED",
+          "MEDOPL_UPSTREAM_FAILED",
           "CHAT_QUOTA_EXCEEDED",
           "UPSTREAM_CHAT_FAILED"
         ]

@@ -94,6 +94,34 @@ export const RESEARCH_RESULT_SECTIONS = [
     fallback: '选择一个问题进入论文、基金或综述工作流。',
   },
 ];
+const CHAT_STATE_BY_ERROR_CODE = Object.freeze({
+  RUNTIME_REQUIRED: 'runtime_required',
+  RUNTIME_GATE_BLOCKED: 'runtime_required',
+  MEDOPL_ENDPOINT_REQUIRED: 'runtime_required',
+  CHAT_QUOTA_EXCEEDED: 'quota_exceeded',
+  UPSTREAM_CHAT_FAILED: 'upstream_failed',
+  AUTH_REQUIRED: 'auth_required',
+  API_KEY_REQUIRED: 'api_key_required',
+  SERVICE_UNAVAILABLE: 'service_unavailable',
+  NETWORK_UNREACHABLE: 'network_unreachable',
+});
+const RELIABILITY_ERROR_CODE_BY_CODE = Object.freeze({
+  AUTH_REQUIRED: 'AUTH_REQUIRED',
+  API_KEY_REQUIRED: 'API_KEY_REQUIRED',
+  CHAT_QUOTA_EXCEEDED: 'CHAT_QUOTA_EXCEEDED',
+  RUNTIME_REQUIRED: 'RUNTIME_REQUIRED',
+  RUNTIME_GATE_BLOCKED: 'RUNTIME_GATE_BLOCKED',
+  MEDOPL_ENDPOINT_REQUIRED: 'MEDOPL_ENDPOINT_REQUIRED',
+  UPSTREAM_CHAT_FAILED: 'UPSTREAM_CHAT_FAILED',
+  NETWORK_UNREACHABLE: 'NETWORK_UNREACHABLE',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+});
+const RELIABILITY_ERROR_CODE_BY_STATUS = new Map([
+  [401, 'AUTH_REQUIRED'],
+  [429, 'CHAT_QUOTA_EXCEEDED'],
+  [502, 'UPSTREAM_CHAT_FAILED'],
+  [504, 'UPSTREAM_CHAT_FAILED'],
+]);
 export const OPL_CAPABILITY_MANIFEST = {
   source: { syncMode: 'source_path_pinned_manifest', dynamicSync: false, commitPin: 'blocked_by_github_tls_timeout',
     appContract: 'github.com/gaofeng21cn/one-person-lab-app/contracts/app-product-profile.json',
@@ -144,6 +172,15 @@ export async function sendChatMessage(fetchRef, message, conversationId = '') {
   return writeJSON(fetchRef, '/api/chat', { message, conversationId });
 }
 
+export async function checkRuntimeGate(fetchRef, task) {
+  return writeJSON(fetchRef, '/api/opl/runtime-gate', runtimeTaskPayload(task));
+}
+
+export async function runRuntimeTask(fetchRef, task) {
+  const result = await writeJSON(fetchRef, '/api/opl/runs', runtimeTaskPayload(task));
+  return sanitizeRuntimeRunResult(result);
+}
+
 export function viewFromHash(hash) {
   const normalized = String(hash || '').replace(/^#/, '');
   if (!normalized) return 'home';
@@ -159,13 +196,8 @@ export function accountState(session, provider) {
 export function chatStateForResult(result, pending = false) {
   if (pending) return 'sending';
   if (!result) return 'idle';
-  if (result.errorCode === 'RUNTIME_REQUIRED') return 'runtime_required';
-  if (result.errorCode === 'CHAT_QUOTA_EXCEEDED') return 'quota_exceeded';
-  if (result.errorCode === 'UPSTREAM_CHAT_FAILED') return 'upstream_failed';
-  if (result.errorCode === 'AUTH_REQUIRED') return 'auth_required';
-  if (result.errorCode === 'API_KEY_REQUIRED') return 'api_key_required';
-  if (result.errorCode === 'SERVICE_UNAVAILABLE') return 'service_unavailable';
-  if (result.errorCode === 'NETWORK_UNREACHABLE') return 'network_unreachable';
+  const mappedState = CHAT_STATE_BY_ERROR_CODE[result.errorCode];
+  if (mappedState) return mappedState;
   if (result.ok === false) return 'upstream_failed';
   return 'idle';
 }
@@ -178,7 +210,7 @@ export function reliabilityStatusForResult(result) {
     auth_required: { title: '需要登录', action: '去登录', retryable: false },
     api_key_required: { title: '需要绑定 API Key', action: '绑定 API Key', retryable: false },
     quota_exceeded: { title: '额度已用完', action: '查看额度', retryable: false },
-    runtime_required: { title: '需要 MedOPL 授权', action: '去 MedOPL', retryable: false },
+    runtime_required: { title: runtimeStatusTitle(result), action: runtimeStatusAction(result), retryable: false },
     upstream_failed: { title: '上游暂时不可用', action: '稍后重试', retryable: true },
     service_unavailable: { title: '服务暂时不可用', action: '稍后重试', retryable: true },
     network_unreachable: { title: '网络暂时不可达', action: '稍后重试', retryable: true },
@@ -253,6 +285,20 @@ export function runtimeTaskCardForPrompt(prompt = '') {
     message: 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。',
     deepLink: MEDOPL_DEEP_LINK,
     webuiRuntimeExecution: 'forbidden',
+  };
+}
+
+export function runtimeTaskCardForGate(prompt = '', gate = {}) {
+  const base = runtimeTaskCardForPrompt(prompt);
+  if (!base) return null;
+  const gateState = gate.gateState || {};
+  const nextAction = normalizeNextAction(gateState.nextAction || {});
+  return {
+    ...base,
+    message: runtimeGateMessage(gateState),
+    deepLink: nextAction.deepLink || base.deepLink,
+    blockers: Array.isArray(gateState.blockers) ? gateState.blockers.map(normalizeRuntimeBlocker) : [],
+    nextAction,
   };
 }
 
@@ -349,6 +395,16 @@ function ctaForState(state) {
   return '发送';
 }
 
+function runtimeTaskPayload(task = {}) {
+  return {
+    taskIntent: String(task.taskIntent || '').trim(),
+    marker: String(task.marker || '').trim(),
+    prompt: String(task.prompt || '').trim(),
+    conversationId: String(task.conversationId || '').trim(),
+    gateRefs: task.gateRefs && typeof task.gateRefs === 'object' ? task.gateRefs : undefined,
+  };
+}
+
 async function writeJSON(fetchRef, url, body, method = 'POST') {
   try {
     const response = await fetchRef(url, {
@@ -404,20 +460,17 @@ function sanitizeReliabilityError(body = {}, status = 0) {
   if (errorCode === 'RUNTIME_REQUIRED') {
     sanitized.medoplDeepLink = safeMedoplDeepLink(body.medoplDeepLink);
   }
+  if (errorCode === 'RUNTIME_GATE_BLOCKED' || errorCode === 'MEDOPL_ENDPOINT_REQUIRED') {
+    sanitized.gateState = sanitizeGateState(body.gateState || {});
+  }
   return sanitized;
 }
 
 function normalizeReliabilityErrorCode(errorCode, status = 0) {
-  if (errorCode === 'AUTH_REQUIRED') return 'AUTH_REQUIRED';
-  if (errorCode === 'API_KEY_REQUIRED') return 'API_KEY_REQUIRED';
-  if (errorCode === 'CHAT_QUOTA_EXCEEDED') return 'CHAT_QUOTA_EXCEEDED';
-  if (errorCode === 'RUNTIME_REQUIRED') return 'RUNTIME_REQUIRED';
-  if (errorCode === 'UPSTREAM_CHAT_FAILED') return 'UPSTREAM_CHAT_FAILED';
-  if (errorCode === 'NETWORK_UNREACHABLE') return 'NETWORK_UNREACHABLE';
-  if (errorCode === 'SERVICE_UNAVAILABLE') return 'SERVICE_UNAVAILABLE';
-  if (status === 401) return 'AUTH_REQUIRED';
-  if (status === 429) return 'CHAT_QUOTA_EXCEEDED';
-  if (status === 502 || status === 504) return 'UPSTREAM_CHAT_FAILED';
+  const knownErrorCode = RELIABILITY_ERROR_CODE_BY_CODE[errorCode];
+  if (knownErrorCode) return knownErrorCode;
+  const statusErrorCode = RELIABILITY_ERROR_CODE_BY_STATUS.get(status);
+  if (statusErrorCode) return statusErrorCode;
   if (status >= 500) return 'SERVICE_UNAVAILABLE';
   return errorCode || 'SERVICE_UNAVAILABLE';
 }
@@ -428,6 +481,8 @@ function messageForReliabilityError(errorCode, message = '') {
     API_KEY_REQUIRED: '请先绑定 API Key 后继续。',
     CHAT_QUOTA_EXCEEDED: '当前额度已用完。',
     RUNTIME_REQUIRED: '该能力需要在 MedOPL 开通后继续。',
+    RUNTIME_GATE_BLOCKED: 'MedOPL runtime gate 尚未 ready。',
+    MEDOPL_ENDPOINT_REQUIRED: 'MedOPL bridge 未配置，无法执行 runtime-required 任务。',
     UPSTREAM_CHAT_FAILED: '上游暂时不可用，请稍后重试。',
     SERVICE_UNAVAILABLE: '服务暂时不可用，请稍后重试。',
     NETWORK_UNREACHABLE: '网络暂时不可达，请稍后重试。',
@@ -444,6 +499,86 @@ function safeDiagnosticsFrom(body = {}) {
 function safeMedoplDeepLink(value) {
   const text = String(value || '');
   return text.startsWith(MEDOPL_DEEP_LINK) ? text : MEDOPL_DEEP_LINK;
+}
+
+function runtimeStatusTitle(result = {}) {
+  const safeResult = result && typeof result === 'object' ? result : {};
+  const firstBlocker = safeResult.gateState?.blockers?.[0];
+  if (firstBlocker?.kind === 'medopl_endpoint_required') return '需要 MedOPL 配置';
+  if (firstBlocker?.kind) return '需要 MedOPL 开通';
+  return '需要 MedOPL 授权';
+}
+
+function runtimeStatusAction(result = {}) {
+  const safeResult = result && typeof result === 'object' ? result : {};
+  return safeResult.gateState?.nextAction?.label || '去 MedOPL';
+}
+
+function sanitizeRuntimeRunResult(result = {}) {
+  if (!result || typeof result !== 'object') return { ok: false, errorCode: 'SERVICE_UNAVAILABLE' };
+  const sanitized = {
+    ok: Boolean(result.ok),
+    owner: 'MedOPL',
+    status: String(result.status || ''),
+    run: sanitizeRuntimeMap(result.run, ['runId', 'runtimeBindingId', 'workspaceBindingId']),
+    artifactRef: String(result.artifactRef || ''),
+    artifacts: sanitizeRuntimeList(result.artifacts, ['artifactRef', 'kind', 'title', 'status']),
+    progress: sanitizeRuntimeList(result.progress, ['stage', 'state', 'title']),
+    deliverables: sanitizeRuntimeList(result.deliverables, ['deliverableId', 'artifactRef', 'status', 'title', 'kind', 'ref']),
+    webuiArtifactBody: 'forbidden',
+    webuiDomainTruth: 'forbidden',
+  };
+  if (result.ok === false) {
+    sanitized.errorCode = result.errorCode || 'RUNTIME_GATE_BLOCKED';
+    sanitized.blocker = normalizeRuntimeBlocker(result.blocker || {});
+  }
+  return sanitized;
+}
+
+function sanitizeGateState(gateState = {}) {
+  return {
+    ready: Boolean(gateState.ready),
+    blockers: Array.isArray(gateState.blockers) ? gateState.blockers.map(normalizeRuntimeBlocker) : [],
+    nextAction: normalizeNextAction(gateState.nextAction || {}),
+    refs: sanitizeRuntimeMap(gateState.refs, ['workspaceRef', 'runtimeRef', 'storageRef']),
+  };
+}
+
+function sanitizeRuntimeMap(source = {}, allowedFields = []) {
+  const result = {};
+  if (!source || typeof source !== 'object') return result;
+  for (const field of allowedFields) {
+    if (Object.hasOwn(source, field)) result[field] = source[field];
+  }
+  return result;
+}
+
+function sanitizeRuntimeList(value, allowedFields) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => sanitizeRuntimeMap(item, allowedFields));
+}
+
+function normalizeRuntimeBlocker(blocker = {}) {
+  return {
+    kind: String(blocker.kind || 'runtime_blocked'),
+    title: String(blocker.title || 'MedOPL runtime gate blocked'),
+    nextAction: String(blocker.nextAction || ''),
+    deepLink: safeMedoplDeepLink(blocker.deepLink),
+  };
+}
+
+function normalizeNextAction(action = {}) {
+  return {
+    id: String(action.id || 'open_medopl'),
+    label: String(action.label || '去 MedOPL'),
+    deepLink: safeMedoplDeepLink(action.deepLink),
+  };
+}
+
+function runtimeGateMessage(gateState = {}) {
+  const blockers = Array.isArray(gateState.blockers) ? gateState.blockers.map(normalizeRuntimeBlocker) : [];
+  if (blockers.length === 0) return 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。';
+  return blockers.map((blocker) => blocker.title).join(' / ');
 }
 
 function sanitizedDetails(value) {
