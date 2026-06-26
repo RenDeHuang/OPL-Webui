@@ -89,7 +89,8 @@ func (server Server) HandleRuntimeRun(response http.ResponseWriter, request *htt
 		return
 	}
 
-	body, upstreamStatus, err := server.postMedOPL(request.Context(), "/api/opl/runs", medoplRuntimePayload(runtimeContext.Task, runtimeContext.User))
+	runPath, runPayload := medoplRuntimeRunRequest(runtimeContext.Task, runtimeContext.User)
+	body, upstreamStatus, err := server.postMedOPL(request.Context(), runPath, runPayload)
 	if err != nil {
 		writeMedOPLFailure(response, err)
 		return
@@ -189,6 +190,10 @@ func medoplRuntimePayload(task runtimeTaskRequest, user User) map[string]any {
 		"invocationMode": "runtime_required",
 		"productOwner":   "one-person-lab-web",
 		"consumerRole":   "entry_and_chat_surface",
+		"tenantId":       user.TenantID,
+		"portalUserId":   user.ID,
+		"userId":         user.ID,
+		"workspaceId":    user.WorkspaceID,
 		"user": map[string]any{
 			"userId":   user.ID,
 			"email":    user.Email,
@@ -208,6 +213,20 @@ func medoplRuntimePayload(task runtimeTaskRequest, user User) map[string]any {
 		payload["gateRefs"] = task.GateRefs
 	}
 	return payload
+}
+
+func medoplRuntimeRunRequest(task runtimeTaskRequest, user User) (string, map[string]any) {
+	launchID := safeString(task.GateRefs["launchId"])
+	if launchID == "" {
+		return "/api/opl/runs", medoplRuntimePayload(task, user)
+	}
+	payload := map[string]any{
+		"message":   task.Prompt,
+		"fileRefs":  stringListValue(task.GateRefs["fileRefs"]),
+		"toolName":  task.TaskIntent,
+		"requestId": valueOrDefault(task.ConversationID, task.TaskIntent),
+	}
+	return "/api/opl/runs?launchId=" + url.QueryEscape(launchID), payload
 }
 
 func (server Server) postMedOPL(ctx context.Context, path string, payload map[string]any) (map[string]any, int, error) {
@@ -326,20 +345,22 @@ func localRuntimeBlocker(blocker medoplLocalBlocker) map[string]any {
 
 func runtimeGateProjection(body map[string]any) map[string]any {
 	consumer := mapValue(body, "consumerProjection")
-	ready := boolValue(consumer, "ready") || boolValue(body, "ok")
+	runtimeState := stringValue(body, "runtimeState")
+	storageState := stringValue(body, "storageState")
+	ready := boolValue(consumer, "ready") || (boolValue(consumer, "runEnabled") && runtimeState == "ready" && storageState == "ready")
 	gateState := map[string]any{
 		"ready":             ready,
 		"productOwner":      stringValue(body, "productOwner"),
 		"primaryConsumer":   stringValue(body, "primaryConsumer"),
 		"consumerRole":      stringValue(body, "consumerRole"),
-		"runtimeState":      stringValue(body, "runtimeState"),
-		"storageState":      stringValue(body, "storageState"),
+		"runtimeState":      runtimeState,
+		"storageState":      storageState,
 		"providerKeyStatus": stringValue(body, "providerKeyStatus"),
-		"billing":           sanitizedMap(mapValue(body, "billing"), "state", "deepLink"),
-		"release":           sanitizedMap(mapValue(body, "release"), "state", "deepLink"),
+		"billing":           sanitizedMap(mapValue(body, "billing"), "state", "freezeStatus", "deepLink"),
+		"release":           sanitizedMap(mapValue(body, "release"), "state", "canReleaseRuntime", "destroyStorage", "stopBilling", "deepLink"),
 		"refs":              sanitizedMap(mapValue(consumer, "refs"), "workspaceRef", "runtimeRef", "storageRef"),
-		"blockers":          blockersFromConsumer(consumer),
-		"nextAction":        nextActionFromConsumer(consumer),
+		"blockers":          blockersFromConsumer(consumer, body),
+		"nextAction":        nextActionFromConsumer(consumer, body),
 	}
 	projection := map[string]any{
 		"ok": true, "owner": "MedOPL", "gateState": gateState,
@@ -359,7 +380,7 @@ func runtimeRunProjection(body map[string]any) map[string]any {
 			"ok": true, "owner": "MedOPL",
 			"status":               safeString(body["status"]),
 			"statusUrl":            safeMedOPLLink(safeString(body["statusUrl"])),
-			"run":                  sanitizedMap(mapValue(body, "run"), "runId", "runtimeBindingId", "workspaceBindingId"),
+			"run":                  sanitizedMap(mapValue(body, "run"), "runId", "runRef", "status", "runtimeBindingId", "workspaceBindingId"),
 			"artifactRef":          safeString(body["artifactRef"]),
 			"artifacts":            sanitizedList(body["artifacts"], "artifactRef", "kind", "title", "status"),
 			"progress":             sanitizedList(body["progress"], "stage", "state", "title"),
@@ -402,27 +423,34 @@ func billingBridgeProjection(body map[string]any, quota ChatQuotaStatus, events 
 	}
 }
 
-func (server Server) tryMedOPLBillingProjection(request *http.Request, quota ChatQuotaStatus, events []AuditEvent) (map[string]any, bool) {
+func (server Server) tryMedOPLBillingProjection(request *http.Request, user User, quota ChatQuotaStatus, events []AuditEvent) (map[string]any, bool) {
 	if medoplAPIBaseURL() == "" {
 		return nil, false
 	}
-	body, _, err := server.getMedOPL(request.Context(), "/api/billing/summary")
+	body, _, err := server.getMedOPL(request.Context(), "/api/billing/summary?workspaceId="+url.QueryEscape(user.WorkspaceID))
 	if err != nil {
 		return nil, false
 	}
 	return billingBridgeProjection(body, quota, events), true
 }
 
-func blockersFromConsumer(consumer map[string]any) []map[string]any {
+func blockersFromConsumer(consumer map[string]any, body map[string]any) []map[string]any {
 	blockers := sanitizedList(consumer["blockers"], "kind", "title", "nextAction", "deepLink")
 	if len(blockers) == 0 {
-		return []map[string]any{}
+		blocker := blockerFromActionContract(body)
+		if len(blocker) == 0 {
+			return []map[string]any{}
+		}
+		return []map[string]any{blocker}
 	}
 	return blockers
 }
 
-func nextActionFromConsumer(consumer map[string]any) map[string]any {
+func nextActionFromConsumer(consumer map[string]any, body map[string]any) map[string]any {
 	action := sanitizedMap(mapValue(consumer, "nextAction"), "id", "label", "deepLink")
+	if len(action) == 0 {
+		action = nextActionFromActionContract(body)
+	}
 	if len(action) == 0 {
 		return map[string]any{"id": "open_medopl", "label": "去 MedOPL", "deepLink": MedOPLURL + "/runtime"}
 	}
@@ -430,6 +458,93 @@ func nextActionFromConsumer(consumer map[string]any) map[string]any {
 		action["deepLink"] = safeMedOPLLink(link)
 	}
 	return action
+}
+
+func blockerFromActionContract(body map[string]any) map[string]any {
+	action := primaryActionFromBody(body)
+	if len(action) == 0 {
+		return map[string]any{}
+	}
+	kind := blockerKindForReason(safeString(action["reason"]))
+	deepLink := safeMedOPLLink(safeString(action["medoplDeeplink"]))
+	return map[string]any{
+		"kind":       kind,
+		"title":      titleForBlockerKind(kind),
+		"nextAction": safeString(action["action"]),
+		"deepLink":   deepLink,
+	}
+}
+
+func nextActionFromActionContract(body map[string]any) map[string]any {
+	action := primaryActionFromBody(body)
+	if len(action) == 0 {
+		return map[string]any{}
+	}
+	id := safeString(action["action"])
+	return map[string]any{
+		"id":       valueOrDefault(id, "open_medopl"),
+		"label":    labelForAction(id),
+		"deepLink": safeMedOPLLink(safeString(action["medoplDeeplink"])),
+	}
+}
+
+func primaryActionFromBody(body map[string]any) map[string]any {
+	return mapValue(mapValue(body, "actionContract"), "primaryAction")
+}
+
+func blockerKindForReason(reason string) string {
+	switch reason {
+	case "provider_key_required":
+		return "provider_key_required"
+	case "account_required", "insufficient_balance":
+		return "package_required"
+	case "runtime_storage_not_opened", "runtime_storage_pending":
+		return "compute_required"
+	case "runtime_storage_released":
+		return "release_required"
+	case "runtime_storage_failed":
+		return "audit_required"
+	case "canary_admission_required":
+		return "audit_required"
+	default:
+		return "runtime_blocked"
+	}
+}
+
+func titleForBlockerKind(kind string) string {
+	switch kind {
+	case "provider_key_required":
+		return "需要在 MedOPL 绑定 provider key"
+	case "package_required":
+		return "需要购买套餐或充值"
+	case "compute_required":
+		return "需要开通 compute resource"
+	case "storage_required":
+		return "需要开通 storage space"
+	case "release_required":
+		return "需要处理 release 状态"
+	case "audit_required":
+		return "需要处理 audit 状态"
+	default:
+		return "MedOPL runtime gate blocked"
+	}
+}
+
+func labelForAction(action string) string {
+	switch action {
+	case "open_medopl_purchase":
+		return "去 MedOPL 购买"
+	case "select_plan":
+		return "选择套餐"
+	case "recharge_or_credit_required":
+		return "充值或开通额度"
+	case "open_runtime_storage":
+		return "开通 runtime/storage"
+	case "return_to_opl_task":
+		return "返回任务"
+	default:
+		return "去 MedOPL"
+	}
 }
 
 func runtimeBlocker(blocker map[string]any) map[string]any {
@@ -478,6 +593,21 @@ func sanitizedList(value any, fields ...string) []map[string]any {
 	for _, item := range items {
 		if mapped, ok := item.(map[string]any); ok {
 			result = append(result, sanitizedMap(mapped, fields...))
+		}
+	}
+	return result
+}
+
+func stringListValue(value any) []string {
+	items, ok := value.([]any)
+	if !ok {
+		return []string{}
+	}
+	result := []string{}
+	for _, item := range items {
+		text := safeString(item)
+		if text != "" {
+			result = append(result, text)
 		}
 	}
 	return result
@@ -539,6 +669,9 @@ func toString(value any) string {
 func safeMedOPLLink(value string) string {
 	if strings.HasPrefix(value, MedOPLURL) {
 		return value
+	}
+	if strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "//") {
+		return MedOPLURL + value
 	}
 	if value == "" {
 		return MedOPLURL

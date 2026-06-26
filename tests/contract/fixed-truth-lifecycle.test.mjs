@@ -581,6 +581,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
     ['command_allowlist', 'present', 'empty_allowlist'],
     ['human_authorization_boundary', 'accepted', 'owner_receipt'],
     ['tenant_scoped_audit_events', 'partial', 'runtime_gate_audit_only'],
+    ['real_local_medopl_process_evidence', 'present', 'contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence'],
     ['production_medopl_runtime_execution_evidence', 'missing', 'release_evidence'],
     ['artifact_body_authority_contract', 'missing', 'authority_contract'],
   ]);

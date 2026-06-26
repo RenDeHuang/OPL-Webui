@@ -134,6 +134,73 @@ test('runtime gate proxies MedOPL typed not-ready blockers without fake ready', 
   }
 });
 
+test('runtime gate treats real MedOPL blocked shape as not ready even when upstream ok is true', async () => {
+  const medopl = await startFakeMedOPL({
+    runtimeGate: {
+      ok: true,
+      productOwner: 'medopl',
+      primaryConsumer: 'opl-webui',
+      consumerRole: 'entry_and_chat_surface',
+      workspaceId: 'workspace_real_shape',
+      invocationMode: 'runtime_required',
+      providerKeyStatus: 'missing',
+      runtimeState: 'blocked',
+      storageState: 'blocked',
+      billing: { freezeStatus: 'pending', currency: 'CNY' },
+      release: { canReleaseRuntime: false, destroyStorage: 'requires_runtime_binding', stopBilling: 'not_started' },
+      consumerProjection: {
+        chatSurface: 'opl-webui',
+        runSurface: 'blocked_until_medopl_runtime_ready',
+        uploadEnabled: false,
+        runEnabled: false,
+        artifactEnabled: false,
+        releaseAction: 'not_started',
+        storageAction: 'requires_runtime_binding',
+      },
+      actionContract: {
+        primaryAction: {
+          action: 'open_medopl_purchase',
+          reason: 'provider_key_required',
+          medoplDeeplink: '/packages?workspaceId=workspace_real_shape&taskIntent=paper_question',
+          returnToOplDeeplink: '/opl?workspaceId=workspace_real_shape&taskIntent=paper_question',
+        },
+      },
+      nextAction: 'bind_provider_key',
+    },
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-real-shape-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-real-shape-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 424);
+    assert.equal(gate.body.ok, false);
+    assert.equal(gate.body.errorCode, 'RUNTIME_GATE_BLOCKED');
+    assert.equal(gate.body.gateState.ready, false);
+    assert.equal(gate.body.gateState.runtimeState, 'blocked');
+    assert.equal(gate.body.gateState.storageState, 'blocked');
+    assert.equal(gate.body.gateState.providerKeyStatus, 'missing');
+    assert.equal(gate.body.gateState.blockers[0].kind, 'provider_key_required');
+    assert.equal(gate.body.gateState.blockers[0].nextAction, 'open_medopl_purchase');
+    assert.match(gate.body.gateState.blockers[0].deepLink, /^https:\/\/medopl\.medopl\.cn\/packages\?/);
+    assert.equal(gate.body.gateState.nextAction.id, 'open_medopl_purchase');
+    assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/packages\?/);
+    assert.equal(medopl.requests[0].body.workspaceId.startsWith('workspace_'), true);
+    assert.equal(medopl.requests[0].body.tenantId.startsWith('tenant_'), true);
+    assert.equal(medopl.requests[0].body.userId.startsWith('user_'), true);
+    assert.equal(medopl.requests[0].body.invocationMode, 'runtime_required');
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
 test('runtime run bridge only returns refs progress deliverables and rejects artifact bodies', async () => {
   const medopl = await startFakeMedOPL({
     runtimeGate: {
@@ -201,6 +268,58 @@ test('runtime run bridge only returns refs progress deliverables and rejects art
     assert.equal(medopl.requests.at(-1).body.taskIntent, 'paper_question');
     assertNoSensitiveMaterial(run.body);
     assert.doesNotMatch(JSON.stringify(run.body), /"artifactBody"|"signedUrl"|"objectKey"|"domainVerdict"|must not be returned|object-store/i);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
+test('runtime run bridge forwards MedOPL launch and file refs without owning artifact body', async () => {
+  const medopl = await startFakeMedOPL({
+    runResult: {
+      ok: true,
+      status: 'succeeded',
+      statusUrl: '/api/opl/runs/run_public_456/status',
+      run: { runRef: 'run_public_456', status: 'succeeded' },
+      artifactRef: 'artifact_public_ref_456',
+      artifacts: [{
+        artifactRef: 'artifact_public_ref_456',
+        kind: 'outputs',
+        name: 'result.md',
+        relativePath: 'outputs/result.md',
+        contentType: 'text/markdown',
+      }],
+      artifactBody: 'must not be returned',
+    },
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'run-real-refs-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-run-real-refs-secret');
+    const run = await jsonFetch(`${baseUrl}/api/opl/runs`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: {
+        taskIntent: 'paper_question',
+        marker: '@论文',
+        prompt: '@论文 生成选题',
+        gateRefs: {
+          launchId: 'launch_public_456',
+          fileRefs: ['file_public_456'],
+        },
+      },
+    });
+
+    assert.equal(run.response.status, 200);
+    assert.equal(run.body.ok, true);
+    assert.equal(run.body.artifactRef, 'artifact_public_ref_456');
+    assert.equal(run.body.run.runRef, 'run_public_456');
+    assert.equal(medopl.requests.at(-1).path, '/api/opl/runs?launchId=launch_public_456');
+    assert.equal(medopl.requests.at(-1).body.message, '@论文 生成选题');
+    assert.deepEqual(medopl.requests.at(-1).body.fileRefs, ['file_public_456']);
+    assert.equal(medopl.requests.at(-1).body.toolName, 'paper_question');
+    assertNoSensitiveMaterial(run.body);
+    assert.doesNotMatch(JSON.stringify(run.body), /"artifactBody"|must not be returned/i);
   } finally {
     await stopGoServer(child);
     await medopl.close();
@@ -282,6 +401,7 @@ test('billing summary projection can consume MedOPL ledger refs without becoming
     assert.equal(billing.body.releaseStatus, 'pending_audit');
     assert.equal(billing.body.webuiBillingSourceOfTruth, 'forbidden');
     assert.equal(billing.body.webuiPaymentMutation, 'forbidden');
+    assert.equal(medopl.requests.at(-1).path.startsWith('/api/billing/summary?workspaceId=workspace_'), true);
     assertNoSensitiveMaterial(billing.body);
     assert.doesNotMatch(JSON.stringify(billing.body), /rawObjectStoreSecret|runtimeToken|must not leak/i);
   } finally {
@@ -293,6 +413,7 @@ test('billing summary projection can consume MedOPL ledger refs without becoming
 async function startFakeMedOPL(options = {}) {
   const requests = [];
   const server = http.createServer(async (request, response) => {
+    const parsedUrl = new URL(request.url, 'http://127.0.0.1');
     let raw = '';
     for await (const chunk of request) raw += chunk;
     requests.push({
@@ -301,19 +422,19 @@ async function startFakeMedOPL(options = {}) {
       body: raw ? JSON.parse(raw) : {},
     });
 
-    if (request.url === '/api/opl/runtime-gate' && request.method === 'POST') {
+    if (parsedUrl.pathname === '/api/opl/runtime-gate' && request.method === 'POST') {
       response.writeHead(options.gateStatus ?? (options.runtimeGate?.ok === false ? 424 : 200), { 'content-type': 'application/json' });
       response.end(JSON.stringify(options.runtimeGate ?? { ok: true, consumerProjection: { ready: true } }));
       return;
     }
 
-    if (request.url === '/api/opl/runs' && request.method === 'POST') {
+    if (parsedUrl.pathname === '/api/opl/runs' && request.method === 'POST') {
       response.writeHead(options.runStatus ?? (options.runResult?.ok === false ? 424 : 200), { 'content-type': 'application/json' });
       response.end(JSON.stringify(options.runResult ?? { ok: true, status: 'running', artifacts: [] }));
       return;
     }
 
-    if (request.url === '/api/billing/summary' && request.method === 'GET') {
+    if (parsedUrl.pathname === '/api/billing/summary' && request.method === 'GET') {
       response.writeHead(options.billingStatus ?? 200, { 'content-type': 'application/json' });
       response.end(JSON.stringify(options.billingSummary ?? { ok: true, source: 'medopl', runCount: 0, ledgerCount: 0, summary: {}, ledger: [] }));
       return;

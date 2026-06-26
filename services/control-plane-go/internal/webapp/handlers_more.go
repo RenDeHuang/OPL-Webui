@@ -38,7 +38,7 @@ func (server Server) HandleBillingSummary(response http.ResponseWriter, request 
 	}
 	limit := chatMonthlyQuota()
 	quota := server.Store.ChatQuotaStatus(user.ID, limit)
-	if projection, ok := server.tryMedOPLBillingProjection(request, quota, events); ok {
+	if projection, ok := server.tryMedOPLBillingProjection(request, user, quota, events); ok {
 		writeJSON(response, http.StatusOK, projection)
 		return
 	}

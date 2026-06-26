@@ -583,36 +583,40 @@
         "consumer": "opl-webui-browser",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runtimeGate",
         "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
-        "cannotClaim": ["production MedOPL runtime execution", "gate ready production evidence"]
+        "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "cannotClaim": ["production MedOPL runtime execution", "sandbox or production gate ready evidence"]
       },
       {
         "id": "purchase_package",
-        "status": "blocked",
-        "gapType": "integration gap",
+        "status": "partial",
+        "gapType": "evidence gap",
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": null,
-        "cannotClaim": ["package purchase from Web", "payment lifecycle"]
+        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "localEvidence": "MedOPL local credit/open-runtime action contract only",
+        "cannotClaim": ["package purchase from Web", "external payment settlement", "production package lifecycle"]
       },
       {
         "id": "compute_resource",
-        "status": "blocked",
-        "gapType": "integration gap",
+        "status": "partial",
+        "gapType": "evidence gap",
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": null,
-        "cannotClaim": ["compute resource lifecycle"]
+        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "localEvidence": "MedOPL local managed-environment open returns runtime/resource refs",
+        "cannotClaim": ["production compute resource lifecycle", "real cloud node pool provisioning"]
       },
       {
         "id": "storage_space",
-        "status": "blocked",
-        "gapType": "integration gap",
+        "status": "partial",
+        "gapType": "evidence gap",
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": null,
+        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "localEvidence": "MedOPL local storage binding/file ref supports WebUI run bridge",
         "cannotClaim": ["storage allocation", "storage mutation", "storage truth"]
       },
       {
@@ -624,6 +628,7 @@
         "consumer": "opl-webui-browser",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runs",
         "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
         "cannotClaim": ["production runtime execution", "artifact body", "domain truth"]
       },
       {
@@ -635,6 +640,7 @@
         "consumer": "research_user",
         "contract": "contracts/web-runtime-bridge.json#/projectionPolicy",
         "testProof": "tests/contract/web-runtime-state.test.mjs",
+        "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
         "cannotClaim": ["artifact body authority", "object storage mutation"]
       },
       {
@@ -646,6 +652,7 @@
         "consumer": "research_user",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/billingSummary",
         "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
         "cannotClaim": ["billing source of truth", "release execution", "stop billing", "storage destroy"]
       },
       {

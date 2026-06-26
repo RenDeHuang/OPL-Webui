@@ -69,6 +69,34 @@
       "domain truth"
     ]
   },
+  "realLocalMedOPLEvidence": {
+    "status": "present",
+    "evidenceLevel": "real_local_medopl_process",
+    "medoplSource": "/home/dev/projects/platform-v22/services/medopl-go-backend",
+    "webuiBridge": "services/control-plane-go/internal/webapp/medopl_bridge.go",
+    "verifiedFlow": [
+      "runtime_required_task_to_medopl_runtime_gate",
+      "typed_provider_or_package_blocker",
+      "medopl_credit_provider_key_open_runtime_storage",
+      "return_to_opl_task_next_action",
+      "webui_post_api_opl_runs_with_medopl_launch_and_file_refs",
+      "refs_only_artifact_projection",
+      "billing_ledger_refs_projection"
+    ],
+    "proof": [
+      "node --test tests/contract/medopl-runtime-bridge-contract.test.mjs",
+      "manual cross-repo local probe against real MedOPL Go backend on 2026-06-26"
+    ],
+    "doesNotProve": [
+      "production MedOPL endpoint",
+      "sandbox account lifecycle",
+      "external payment settlement",
+      "real cloud compute provisioning",
+      "production storage mutation",
+      "OPL Framework domain execution quality",
+      "artifact body authority"
+    ]
+  },
   "capabilityGoal": {
     "mode": "medopl_authorized_capability_entry_and_refs_projection",
     "userCapabilities": [
@@ -232,6 +260,12 @@
         "status": "partial",
         "owner": "one-person-lab-web-runtime",
         "evidence": "runtime_gate_audit_only"
+      },
+      {
+        "id": "real_local_medopl_process_evidence",
+        "status": "present",
+        "owner": "MedOPL",
+        "evidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence"
       },
       {
         "id": "production_medopl_runtime_execution_evidence",
