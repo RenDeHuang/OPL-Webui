@@ -77,6 +77,7 @@
     "verifiedFlow": [
       "runtime_required_task_to_medopl_runtime_gate",
       "typed_provider_or_package_blocker",
+      "credit_package_blocker_before_medopl_credit_owner_action",
       "medopl_credit_provider_key_open_runtime_storage",
       "return_to_opl_task_next_action",
       "webui_post_api_opl_runs_with_medopl_launch_and_file_refs",

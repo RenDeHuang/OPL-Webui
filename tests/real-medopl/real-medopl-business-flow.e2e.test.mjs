@@ -52,14 +52,6 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
       portalUserId: context.portalUserId,
       workspaceId: context.workspaceId,
     });
-    await medoplPost(medopl.baseUrl, '/api/v22/users/credit', {
-      tenantId: context.tenantId,
-      portalUserId: context.portalUserId,
-      workspaceId: context.workspaceId,
-      amount: 200,
-      currency: 'CNY',
-      idempotencyKey: `real-medopl-credit-${context.workspaceId}`,
-    });
     const binding = await medoplPost(medopl.baseUrl, '/api/v22/provider-key', {
       tenantId: context.tenantId,
       portalUserId: context.portalUserId,
@@ -69,6 +61,22 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
     });
     assert.equal(typeof binding.body.providerKeyRef, 'string');
     assertNoSensitiveMaterial(binding.body);
+
+    const creditBlockedGate = await webuiRuntimeGate(webui.baseUrl, session.cookieHeader, context);
+    assert.equal(creditBlockedGate.response.status, 424);
+    assert.equal(creditBlockedGate.body.gateState.blockers[0].kind, 'package_required');
+    assert.equal(creditBlockedGate.body.gateState.nextAction.id, 'recharge_or_credit_required');
+    assert.match(creditBlockedGate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/usage/);
+    assertNoSensitiveMaterial(creditBlockedGate.body);
+
+    await medoplPost(medopl.baseUrl, '/api/v22/users/credit', {
+      tenantId: context.tenantId,
+      portalUserId: context.portalUserId,
+      workspaceId: context.workspaceId,
+      amount: 200,
+      currency: 'CNY',
+      idempotencyKey: `real-medopl-credit-${context.workspaceId}`,
+    });
 
     const preOpenGate = await webuiRuntimeGate(webui.baseUrl, session.cookieHeader, context);
     assert.equal(preOpenGate.response.status, 424);
