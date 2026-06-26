@@ -17,6 +17,7 @@ export const VERIFY_SUITE_NAMES = Object.freeze([
   'browser',
   'deploy',
   'regression',
+  'real-medopl',
   'full',
 ]);
 
@@ -363,6 +364,27 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'contract'],
   }),
   testEntry({
+    file: 'tests/real-medopl/real-medopl-business-flow.e2e.test.mjs',
+    runner: 'node',
+    lane: 'real-medopl',
+    ownerSurface: 'runtime-gate',
+    lifecycleRole: 'integration',
+    cost: 'heavy',
+    testKind: 'acceptance',
+    proofLevel: 'http',
+    claimScope: 'local',
+    contracts: [
+      'contracts/web-runtime-bridge.json',
+      'contracts/web-api.openapi.json',
+      'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+      'services/control-plane-go/internal/webapp/handlers.go',
+    ],
+    proves: ['OPL-Webui bridges a runtime-required task through a real local MedOPL Go backend process for gate, owner lifecycle actions, run refs, billing ledger refs, and release/storage projection'],
+    doesNotProve: ['production-ready SaaS', 'fresh production rollout success', 'sandbox MedOPL account lifecycle', 'external payment settlement', 'real cloud compute provisioning', 'production storage mutation', 'OPL Framework domain truth', 'artifact body authority'],
+    riskTriggers: ['runtime-gate', 'control-plane-go', 'medopl-real-integration'],
+    verifySuites: ['real-medopl'],
+  }),
+  testEntry({
     file: 'tests/contract/opl-readonly-bridge.test.mjs',
     runner: 'node',
     lane: 'contract',
@@ -590,6 +612,7 @@ export const TEST_LANE_REGISTRY = Object.freeze({
   go: lane('go', 'Go control plane package tests.'),
   browser: lane('browser', 'Browser-level main-path runner and page-state checks.'),
   deploy: lane('deploy', 'Container, cloud rollout, CI, and production runbook checks.'),
+  'real-medopl': lane('real-medopl', 'Explicit real local MedOPL process E2E evidence; not part of current or full.'),
   regression: Object.freeze({
     description: 'Explicit regression reproductions.',
     tests: Object.freeze([]),
@@ -599,4 +622,5 @@ export const TEST_LANE_REGISTRY = Object.freeze({
 export const VERIFY_SUITES = Object.freeze({
   current: Object.freeze(['smoke', 'contract', 'health', 'go']),
   full: Object.freeze(['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']),
+  'real-medopl': Object.freeze(['real-medopl']),
 });

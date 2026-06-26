@@ -46,6 +46,8 @@ Use fixed truth, not per-change process packages:
 
 Test truth is lane-based, not case-count-based. `scripts/test-classification.mjs` owns test taxonomy, lane membership, cost, lifecycle role, risk triggers, and verify-suite metadata. `npm run verify` runs `current = smoke + contract + health + go`. Dynamic lane checks use changed files plus fresh verification evidence; `npm run lane:advisory -- <files...>` only explains the targeted lanes to run. Browser, deploy, regression, and full verification are explicit lanes, not hidden inside health checks.
 
+`npm run verify:real-medopl` is the explicit real local MedOPL evidence lane. It starts a real MedOPL Go backend from `/home/dev/projects/platform-v22/services/medopl-go-backend` by default, or `MEDOPL_GO_BACKEND_DIR` when provided, and proves WebUI gate/run/billing refs against that process. It is local evidence only and does not claim sandbox or production MedOPL business closure.
+
 Regression tests are temporary guards, not permanent inventory. The `regression` lane may be empty. Any `regression-guard` entry must carry retirement metadata, and when its condition is satisfied the same cleanup removes the test file, registry entry, and any needed no-resurrection tombstone.
 
 Small docs/test/source maintenance can use targeted tests plus the relevant verify suite and `npm run verify`. User-visible, API, runtime, billing, storage, deploy, OPL bridge, or release-claim changes require the targeted explicit lane, `npm run gate:review`, `npm run repo:bloat`, and `sentrux check .`.

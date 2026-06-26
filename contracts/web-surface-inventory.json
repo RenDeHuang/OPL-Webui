@@ -459,6 +459,14 @@
       "lifecycle": "durable"
     },
     {
+      "path": "tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
+      "type": "test",
+      "ownerSurface": "runtime-gate",
+      "consumer": ["npm run verify:real-medopl"],
+      "contract": ["contracts/web-runtime-bridge.json", "contracts/web-api.openapi.json"],
+      "lifecycle": "integration"
+    },
+    {
       "path": "tests/contract/web-cloud-deploy-shape.test.mjs",
       "type": "test",
       "ownerSurface": "deploy",

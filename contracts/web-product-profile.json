@@ -582,9 +582,9 @@
         "webSurface": "one-person-lab-web-control-plane",
         "consumer": "opl-webui-browser",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runtimeGate",
-        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs + tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
-        "cannotClaim": ["production MedOPL runtime execution", "sandbox or production gate ready evidence"]
+        "cannotClaim": ["production MedOPL runtime execution", "sandbox gate ready evidence", "production gate ready evidence"]
       },
       {
         "id": "purchase_package",
@@ -593,7 +593,7 @@
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "testProof": "tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "MedOPL local credit/open-runtime action contract only",
         "cannotClaim": ["package purchase from Web", "external payment settlement", "production package lifecycle"]
       },
@@ -604,7 +604,7 @@
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "testProof": "tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "MedOPL local managed-environment open returns runtime/resource refs",
         "cannotClaim": ["production compute resource lifecycle", "real cloud node pool provisioning"]
       },
@@ -615,7 +615,7 @@
         "owner": "MedOPL",
         "consumer": "research_user",
         "contract": "MedOPL public API contract",
-        "testProof": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
+        "testProof": "tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "MedOPL local storage binding/file ref supports WebUI run bridge",
         "cannotClaim": ["storage allocation", "storage mutation", "storage truth"]
       },
@@ -627,7 +627,7 @@
         "webSurface": "one-person-lab-web-control-plane",
         "consumer": "opl-webui-browser",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runs",
-        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs + tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
         "cannotClaim": ["production runtime execution", "artifact body", "domain truth"]
       },
@@ -651,9 +651,9 @@
         "webSurface": "one-person-lab-web-control-plane",
         "consumer": "research_user",
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/billingSummary",
-        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
+        "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs + tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
-        "cannotClaim": ["billing source of truth", "release execution", "stop billing", "storage destroy"]
+        "cannotClaim": ["billing source of truth", "Web-owned release execution", "Web-owned stop billing", "Web-owned storage destroy", "production release execution"]
       },
       {
         "id": "artifact_authority_domain_truth",
@@ -675,6 +675,7 @@
       "Users bind their own provider key while base_url remains fixed.",
       "Ordinary chat is available for low-risk explanation and organization, while the account-based task path remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
+      "The explicit real-medopl lane proves a real local MedOPL Go backend bridge for gate, owner actions, run refs, billing ledger refs, and release/storage readonly projection.",
       "Runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly refs projection, deeplink, and fail-closed gate.",
       "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only.",
       "single-node controlled launch readiness"
@@ -685,6 +686,8 @@
       "upstream provider availability",
       "desktop App packaging or updater owner",
       "billing source of truth",
+      "production MedOPL business flow E2E",
+      "sandbox MedOPL business flow E2E",
       "team invite lifecycle",
       "RBAC lifecycle",
       "pricing lifecycle",

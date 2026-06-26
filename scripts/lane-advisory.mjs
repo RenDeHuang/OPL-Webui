@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const TARGET_ORDER = Object.freeze(['smoke', 'contract', 'go', 'browser', 'deploy', 'health', 'full']);
+const TARGET_ORDER = Object.freeze(['smoke', 'contract', 'go', 'browser', 'deploy', 'real-medopl', 'health', 'full']);
 
 const RULES = Object.freeze([
   Object.freeze({
@@ -63,6 +63,11 @@ const RULES = Object.freeze([
     name: 'browser test',
     matches: (file) => file.startsWith('tests/browser/'),
     targets: Object.freeze(['browser']),
+  }),
+  Object.freeze({
+    name: 'real medopl e2e',
+    matches: (file) => file.startsWith('tests/real-medopl/'),
+    targets: Object.freeze(['real-medopl']),
   }),
   Object.freeze({
     name: 'smoke test',

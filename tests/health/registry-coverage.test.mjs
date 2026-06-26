@@ -16,11 +16,11 @@ const {
 } = testClassification;
 
 test('registry covers the current lane model', () => {
-  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']) {
+  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression', 'real-medopl']) {
     assert.ok(TEST_LANE_REGISTRY[lane], `missing ${lane} lane`);
   }
 
-  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy']) {
+  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'real-medopl']) {
     assert.ok(TEST_LANE_REGISTRY[lane].tests.length > 0, `${lane} lane has no tests`);
   }
 });
@@ -72,6 +72,7 @@ test('registry points only at existing test files', () => {
 test('verify suites separate daily current from explicit heavy lanes', () => {
   assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'contract', 'health', 'go']);
   assert.deepEqual(VERIFY_SUITES.full, ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']);
+  assert.deepEqual(VERIFY_SUITES['real-medopl'], ['real-medopl']);
 });
 
 test('registry publishes the supported taxonomy values', () => {
@@ -160,9 +161,11 @@ test('browser and deploy tests are first-class lanes, not health spillover', () 
   assert.ok(laneFiles.deploy.includes('tests/deploy/container-readiness.test.mjs'));
   assert.ok(laneFiles.deploy.includes('tests/contract/web-cloud-deploy-shape.test.mjs'));
   assert.ok(laneFiles.deploy.includes('tests/contract/cloud-rollout-helper.test.mjs'));
+  assert.ok(laneFiles['real-medopl'].includes('tests/real-medopl/real-medopl-business-flow.e2e.test.mjs'));
   assert.ok(laneFiles.go.includes('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
 
   assert.equal(laneFiles.health.some((file) => file.startsWith('tests/browser/')), false);
+  assert.equal(laneFiles.health.some((file) => file.startsWith('tests/real-medopl/')), false);
   assert.equal(laneFiles.health.includes('tests/deploy/container-readiness.test.mjs'), false);
 });
 

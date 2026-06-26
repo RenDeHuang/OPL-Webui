@@ -20,10 +20,12 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['verify:go'], 'node scripts/verify.mjs suite go');
   assert.equal(pkg.scripts['verify:browser'], 'node scripts/verify.mjs suite browser');
   assert.equal(pkg.scripts['verify:deploy'], 'node scripts/verify.mjs suite deploy');
+  assert.equal(pkg.scripts['verify:real-medopl'], 'node scripts/verify.mjs suite real-medopl');
   assert.equal(pkg.scripts['verify:full'], 'node scripts/verify.mjs full');
   assert.equal(pkg.scripts['test:go'], 'node scripts/verify.mjs suite go');
   assert.equal(pkg.scripts['test:browser'], 'node scripts/verify.mjs suite browser');
   assert.equal(pkg.scripts['test:deploy'], 'node scripts/verify.mjs suite deploy');
+  assert.equal(pkg.scripts['test:real-medopl'], 'node scripts/verify.mjs suite real-medopl');
   assert.equal(pkg.scripts['lane:advisory'], 'node scripts/lane-advisory.mjs');
   assert.equal(pkg.scripts['lane:check'], 'node scripts/lane-check.mjs');
   assert.equal(pkg.scripts['gate:ai'], 'node scripts/ai-development-gate.mjs');

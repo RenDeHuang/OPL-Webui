@@ -41,6 +41,10 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
     'scripts/release-evidence-sync.mjs',
     'contracts/web-release-profile.json',
   ]), ['contract', 'deploy', 'health']);
+
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'tests/real-medopl/real-medopl-business-flow.e2e.test.mjs',
+  ]), ['real-medopl']);
 });
 
 test('lane advisory CLI reports suggestions without failing the gate', () => {

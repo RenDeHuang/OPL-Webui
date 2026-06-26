@@ -81,12 +81,15 @@
       "return_to_opl_task_next_action",
       "webui_post_api_opl_runs_with_medopl_launch_and_file_refs",
       "refs_only_artifact_projection",
-      "billing_ledger_refs_projection"
+      "billing_ledger_refs_projection",
+      "release_and_storage_destroy_readonly_projection_after_medopl_owner_actions"
     ],
     "proof": [
       "node --test tests/contract/medopl-runtime-bridge-contract.test.mjs",
-      "manual cross-repo local probe against real MedOPL Go backend on 2026-06-26"
+      "npm run verify:real-medopl",
+      "node --test tests/real-medopl/real-medopl-business-flow.e2e.test.mjs"
     ],
+    "explicitLane": "real-medopl",
     "doesNotProve": [
       "production MedOPL endpoint",
       "sandbox account lifecycle",

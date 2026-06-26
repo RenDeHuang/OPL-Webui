@@ -410,6 +410,37 @@ test('billing summary projection can consume MedOPL ledger refs without becoming
   }
 });
 
+test('billing summary projection maps real MedOPL ledger id and type into refs-only fields', async () => {
+  const medopl = await startFakeMedOPL({
+    billingSummary: {
+      ok: true,
+      source: 'go-control-plane',
+      runCount: 1,
+      ledgerCount: 1,
+      summary: { runCount: 1 },
+      ledger: [
+        { id: 'ledger_real_ref_1', type: 'run_charge', amount: 1.25, currency: 'CNY', sourceEventId: 'audit_real_ref_1' },
+      ],
+    },
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'billing-real-ledger-shape-user@example.com');
+    const billing = await jsonFetch(`${baseUrl}/api/account/billing-summary`, {
+      headers: { cookie: session.cookieHeader },
+    });
+
+    assert.equal(billing.response.status, 200);
+    assert.equal(billing.body.ledgerRefs[0].ledgerEntryId, 'ledger_real_ref_1');
+    assert.equal(billing.body.ledgerRefs[0].entryType, 'run_charge');
+    assert.equal(billing.body.ledgerRefs[0].sourceEventId, 'audit_real_ref_1');
+    assertNoSensitiveMaterial(billing.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
 async function startFakeMedOPL(options = {}) {
   const requests = [];
   const server = http.createServer(async (request, response) => {

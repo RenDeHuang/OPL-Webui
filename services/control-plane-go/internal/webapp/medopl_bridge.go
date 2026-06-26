@@ -416,7 +416,7 @@ func billingBridgeProjection(body map[string]any, quota ChatQuotaStatus, events 
 		"runCount":                  intValue(body["runCount"]),
 		"ledgerCount":               intValue(body["ledgerCount"]),
 		"summary":                   sanitizedMap(summary, "runCount", "balanceState", "releaseStatus"),
-		"ledgerRefs":                sanitizedList(body["ledger"], "ledgerEntryId", "entryType", "amount", "currency", "sourceEventId"),
+		"ledgerRefs":                sanitizedLedgerRefs(body["ledger"]),
 		"releaseStatus":             safeString(summary["releaseStatus"]),
 		"webuiBillingSourceOfTruth": "forbidden",
 		"webuiPaymentMutation":      "forbidden",
@@ -594,6 +594,33 @@ func sanitizedList(value any, fields ...string) []map[string]any {
 		if mapped, ok := item.(map[string]any); ok {
 			result = append(result, sanitizedMap(mapped, fields...))
 		}
+	}
+	return result
+}
+
+func sanitizedLedgerRefs(value any) []map[string]any {
+	items, ok := value.([]any)
+	if !ok {
+		return []map[string]any{}
+	}
+	result := []map[string]any{}
+	for _, item := range items {
+		mapped, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		ledgerRef := sanitizedMap(mapped, "ledgerEntryId", "entryType", "amount", "currency", "sourceEventId")
+		if _, ok := ledgerRef["ledgerEntryId"]; !ok {
+			if id := safeString(mapped["id"]); id != "" {
+				ledgerRef["ledgerEntryId"] = id
+			}
+		}
+		if _, ok := ledgerRef["entryType"]; !ok {
+			if entryType := safeString(mapped["type"]); entryType != "" {
+				ledgerRef["entryType"] = entryType
+			}
+		}
+		result = append(result, ledgerRef)
 	}
 	return result
 }
