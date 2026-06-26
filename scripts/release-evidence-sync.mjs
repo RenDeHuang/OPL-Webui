@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -30,8 +31,8 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload, workfl
       name: job.name,
       status: job.status ?? 'completed',
       conclusion: job.conclusion ?? null,
-      url: job.html_url ?? null,
-      completedAt: job.completed_at ?? null,
+      url: job.html_url ?? job.url ?? null,
+      completedAt: job.completed_at ?? job.completedAt ?? null,
     })),
     canClaim: {
       productionDryRun: stageSucceeded(jobs, 'Production Dry Run'),
@@ -59,7 +60,8 @@ export function buildReleaseEvidenceSummary({ runId, commit, jobsPayload, workfl
 
 export function foldSummaryIntoReleaseProfile({ profile, summary }) {
   const withFailures = foldReleaseFailureIntoProfile({ profile, summary });
-  const withDogfood = foldAuthenticatedDogfoodIntoReleaseProfile({ profile: withFailures, summary });
+  const withLatestMain = foldLatestMainEvidenceIntoReleaseProfile({ profile: withFailures, summary });
+  const withDogfood = foldAuthenticatedDogfoodIntoReleaseProfile({ profile: withLatestMain, summary });
   const withAvailability = foldAvailabilityIntoReleaseProfile({ profile: withDogfood, summary });
   const withScheduledCanary = foldScheduledCanaryIntoReleaseProfile({ profile: withAvailability, summary });
   const withRollback = foldRollbackIntoReleaseProfile({ profile: withScheduledCanary, summary });
@@ -86,6 +88,64 @@ export function foldSummaryIntoReleaseProfile({ profile, summary }) {
         : `attempted_failed_run_${summary.runId}`,
       latestAttempt,
       cannotClaim: nextCannotClaim,
+    },
+  };
+}
+
+function foldLatestMainEvidenceIntoReleaseProfile({ profile, summary }) {
+  const requiredStagesPassed = summary.status === 'success'
+    && summary.canClaim.productionDryRun
+    && summary.canClaim.productionApply
+    && summary.canClaim.productionAvailabilityAfterApply
+    && summary.canClaim.productionAuthenticatedDogfood
+    && summary.canClaim.productionBrowserE2E;
+  if (!requiredStagesPassed) return profile;
+  const shortCommit = typeof summary.commit === 'string' && summary.commit.length >= 7
+    ? summary.commit.slice(0, 7)
+    : null;
+  const latest = {
+    state: `folded_success_run_${summary.runId}`,
+    runId: summary.runId,
+    runUrl: summary.runUrl,
+    commit: summary.commit,
+    image: summary.image ?? null,
+    workflow: summary.workflow || 'Cloud Rollout',
+    completedAt: summary.completedAt,
+    requiredStages: [
+      'Production Dry Run',
+      'Production Image Preflight',
+      'Production Apply',
+      'Production Availability Probe After Apply',
+      'Production Authenticated Dogfood E2E',
+      'Production Browser E2E',
+    ],
+    canClaim: [
+      'latest-main production evidence folded back',
+      'OPL-Webui controlled launch ready',
+      'three-layer knowledge delivery Web platform v1',
+    ],
+    cannotClaim: [
+      'production-ready SaaS',
+      'full SaaS',
+      'payment/team/RBAC/HA',
+      'runtime execution',
+      'artifact body/storage truth',
+    ],
+    rawLogPolicy: summary.rawLogPolicy,
+  };
+  return {
+    ...profile,
+    latestMainEvidence: latest,
+    controlledLaunchReadiness: {
+      ...(profile.controlledLaunchReadiness ?? {}),
+      state: shortCommit
+        ? `latest_main_${shortCommit}_supported_by_folded_production_evidence_run_${summary.runId}`
+        : `latest_main_supported_by_folded_production_evidence_run_${summary.runId}`,
+      latestMainEvidence: latest,
+    },
+    productLayerReadiness: {
+      ...(profile.productLayerReadiness ?? {}),
+      productionRollout: `folded_success_run_${summary.runId}`,
     },
   };
 }
@@ -573,7 +633,7 @@ function stageSucceeded(jobs, stageName) {
 
 function latestCompletedAt(jobs) {
   const completed = jobs
-    .map((job) => job.completed_at)
+    .map((job) => job.completed_at ?? job.completedAt)
     .filter((value) => typeof value === 'string' && value.length > 0)
     .sort();
   return completed.at(-1) ?? null;
@@ -642,23 +702,28 @@ function parseArgs(argv) {
     }
     throw new Error(`Unknown argument: ${token}`);
   }
-  if (!options.runId || !options.jobsJson || (!options.output && !options.updateReleaseProfile)) {
-    throw new Error('Usage: scripts/release-evidence-sync.mjs --run-id <id> --jobs-json <path> (--output <path> | --update-release-profile <path>) [--commit <sha>]');
+  if (!options.runId) {
+    throw new Error('Usage: scripts/release-evidence-sync.mjs --run-id <id> [--jobs-json <path>] [--output <path> | --update-release-profile <path>] [--commit <sha>]');
   }
+  if (!options.output && !options.updateReleaseProfile) options.updateReleaseProfile = 'contracts/web-release-profile.json';
   return options;
 }
 
 function runCli() {
   const options = parseArgs(process.argv.slice(2));
-  const jobsPayload = JSON.parse(readFileSync(options.jobsJson, 'utf8'));
+  const runPayload = options.jobsJson ? null : fetchGitHubRun(options.runId);
+  const jobsPayload = options.jobsJson
+    ? JSON.parse(readFileSync(options.jobsJson, 'utf8'))
+    : { jobs: runPayload.jobs };
   const summary = buildReleaseEvidenceSummary({
     runId: options.runId,
-    commit: options.commit,
+    commit: options.commit ?? runPayload?.headSha,
     jobsPayload,
-    workflow: options.workflow,
+    workflow: options.workflow ?? runPayload?.workflowName,
   });
-  summary.image = options.image ?? null;
-  summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true;
+  summary.image = options.image ?? runPayload?.sanitizedEvidence?.image ?? inferImageFromCommit(summary.commit);
+  summary.dogfoodReadonlyConfirmed = options.dogfoodReadonlyConfirmed === true
+    || runPayload?.sanitizedEvidence?.dogfoodReadonlyConfirmed === true;
   if (options.launchCloseoutJson) {
     summary.launchCloseout = JSON.parse(readFileSync(options.launchCloseoutJson, 'utf8'));
   }
@@ -671,8 +736,95 @@ function runCli() {
   if (options.updateReleaseProfile) {
     const profile = JSON.parse(readFileSync(options.updateReleaseProfile, 'utf8'));
     const nextProfile = foldSummaryIntoReleaseProfile({ profile, summary });
-    writeFileSync(options.updateReleaseProfile, `${JSON.stringify(nextProfile, null, 2)}\n`);
+    writeFileSync(options.updateReleaseProfile, `${formatJsonPreservingCompactTopLevel(nextProfile)}\n`);
   }
+}
+
+function fetchGitHubRun(runId) {
+  const output = execFileSync('gh', [
+    'run',
+    'view',
+    String(runId),
+    '--json',
+    'headSha,workflowName,jobs',
+  ], { encoding: 'utf8' });
+  const payload = JSON.parse(output);
+  return {
+    ...payload,
+    sanitizedEvidence: parseGitHubRunLogEvidence(fetchGitHubRunLog(runId)),
+  };
+}
+
+function fetchGitHubRunLog(runId) {
+  try {
+    return execFileSync('gh', [
+      'run',
+      'view',
+      String(runId),
+      '--log',
+    ], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+  } catch {
+    return '';
+  }
+}
+
+function parseGitHubRunLogEvidence(logText) {
+  const image = extractImageFromLog(logText);
+  const readonlySwitchConfirmed = /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY:\s*1/.test(logText);
+  const readonlySummaryConfirmed = /"medoplReadonly"\s*:\s*true/.test(logText)
+    && /"readonlyProjectionChecks"\s*:\s*\[[^\]]*"runtime_status"[^\]]*"materials_deliverables"[^\]]*"billing_summary"[^\]]*\]/s.test(logText);
+  return {
+    image,
+    dogfoodReadonlyConfirmed: readonlySwitchConfirmed && readonlySummaryConfirmed,
+  };
+}
+
+function extractImageFromLog(logText) {
+  const matches = [...logText.matchAll(/uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}/g)]
+    .map((match) => match[0]);
+  return matches.at(-1) ?? null;
+}
+
+function inferImageFromCommit(commit) {
+  if (typeof commit !== 'string' || commit.length < 7) return null;
+  return `uswccr.ccs.tencentyun.com/webopl/opl-webui:${commit.slice(0, 7)}`;
+}
+
+function formatJsonPreservingCompactTopLevel(value) {
+  const compactKeys = new Set(['latestMainEvidence', 'controlledLaunchReadiness']);
+  return formatJsonValue(value, 0, ({ key, value: nestedValue }) => compactKeys.has(key) ? JSON.stringify(nestedValue) : null);
+}
+
+function formatJsonValue(value, depth, compactOverride = () => null, key = null) {
+  const override = compactOverride({ key, value, depth });
+  if (override) return override;
+  if (shouldRenderCompact(value)) return JSON.stringify(value);
+  const indent = '  '.repeat(depth);
+  const childIndent = '  '.repeat(depth + 1);
+  if (Array.isArray(value)) {
+    const items = value.map((item, index) => {
+      const suffix = index === value.length - 1 ? '' : ',';
+      return `${childIndent}${formatJsonValue(item, depth + 1, compactOverride)}${suffix}`;
+    });
+    return `[\n${items.join('\n')}\n${indent}]`;
+  }
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value);
+    const lines = entries.map(([entryKey, entryValue], index) => {
+      const suffix = index === entries.length - 1 ? '' : ',';
+      return `${childIndent}${JSON.stringify(entryKey)}: ${formatJsonValue(entryValue, depth + 1, compactOverride, entryKey)}${suffix}`;
+    });
+    return `{\n${lines.join('\n')}\n${indent}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function shouldRenderCompact(value) {
+  if (Array.isArray(value)) {
+    if (value.every((item) => !item || typeof item !== 'object')) return true;
+    if (value.every((item) => item && typeof item === 'object' && !Array.isArray(item) && Object.values(item).every((nested) => !nested || typeof nested !== 'object'))) return true;
+  }
+  return false;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -477,6 +477,97 @@ test('release evidence sync folds latest rollout dogfood availability browser an
   assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production-ready SaaS'), true);
   assert.equal(profile.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(profile.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
+});
+
+test('release evidence sync supports run-id only closeout from GitHub metadata', () => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'opl-release-evidence-gh-'));
+  const binDir = join(fixtureRoot, 'bin');
+  mkdirSync(binDir);
+  const profilePath = join(fixtureRoot, 'web-release-profile.json');
+  const ghPath = join(binDir, 'gh');
+
+  writeFileSync(ghPath, `#!/usr/bin/env node
+if (process.argv.includes('--log')) {
+  process.stdout.write([
+    '[cloud-rollout] normalized image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d',
+    'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY: 1',
+    '{"medoplReadonly":true,"readonlyProjectionChecks":["runtime_status","materials_deliverables","billing_summary"]}'
+  ].join('\\n'));
+  process.exit(0);
+}
+const payload = {
+  headSha: '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57',
+  workflowName: 'Cloud Rollout',
+  jobs: [
+    { name: 'Production Dry Run', conclusion: 'success', url: 'https://example.test/dry', completedAt: '2026-06-26T14:45:04Z' },
+    { name: 'Production Image Preflight', conclusion: 'success', url: 'https://example.test/preflight', completedAt: '2026-06-26T14:45:12Z' },
+    { name: 'Production Apply', conclusion: 'success', url: 'https://example.test/apply', completedAt: '2026-06-26T14:47:09Z' },
+    { name: 'Production Availability Probe After Apply', conclusion: 'success', url: 'https://example.test/availability', completedAt: '2026-06-26T14:47:19Z' },
+    { name: 'Production Authenticated Dogfood E2E', conclusion: 'success', url: 'https://example.test/dogfood', completedAt: '2026-06-26T14:50:41Z' },
+    { name: 'Production Browser E2E', conclusion: 'success', url: 'https://example.test/browser', completedAt: '2026-06-26T14:51:39Z' }
+  ]
+};
+process.stdout.write(JSON.stringify(payload));
+`);
+  chmodSync(ghPath, 0o755);
+
+  writeFileSync(profilePath, `${JSON.stringify({
+    schemaVersion: 1,
+    latestMainEvidence: {
+      state: 'pending_latest_main_evidence',
+      cannotClaim: ['latest main production evidence'],
+    },
+    controlledLaunchReadiness: {
+      state: 'pending_latest_main_evidence',
+      cannotClaim: ['production-ready SaaS'],
+    },
+    productLayerReadiness: {
+      productionRollout: 'pending_latest_main_evidence',
+      cannotClaimFromAdminOpsV0: ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'],
+    },
+    productionDogfoodReadiness: {
+      state: 'historical_success_run_28142197152_real_chat_readonly_confirmed',
+      latestSuccessfulRun: { runId: 28142197152 },
+      cannotClaim: ['browser e2e', 'MedOPL runtime execution'],
+    },
+    productionAvailabilityReadiness: {
+      state: 'historical_success_run_28142197152_after_apply',
+      latestSuccessfulRun: { runId: 28142197152 },
+    },
+    productionObservabilityBaseline: {
+      state: 'historical_release_probe_run_28142197152_scheduled_canary_success_pending_long_term_ops',
+      latestSuccessfulRun: { runId: 28142197152 },
+    },
+    productionBrowserE2EReadiness: {
+      state: 'historical_success_run_28142197152',
+      cannotClaim: ['production-ready SaaS'],
+    },
+  }, null, 2)}\n`);
+
+  execFileSync(process.execPath, [
+    'scripts/release-evidence-sync.mjs',
+    '--run-id', '28245417027',
+    '--update-release-profile', profilePath,
+  ], {
+    cwd: process.cwd(),
+    env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
+    encoding: 'utf8',
+  });
+
+  const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+  const profileText = readFileSync(profilePath, 'utf8');
+  assert.equal(profile.latestMainEvidence.state, 'folded_success_run_28245417027');
+  assert.equal(profile.latestMainEvidence.runId, 28245417027);
+  assert.equal(profile.latestMainEvidence.commit, '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57');
+  assert.equal(profile.latestMainEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d');
+  assert.equal(profile.latestMainEvidence.completedAt, '2026-06-26T14:51:39Z');
+  assert.equal(profile.latestMainEvidence.canClaim.includes('latest-main production evidence folded back'), true);
+  assert.equal(profile.controlledLaunchReadiness.state, 'latest_main_3d1339d_supported_by_folded_production_evidence_run_28245417027');
+  assert.equal(profile.productLayerReadiness.productionRollout, 'folded_success_run_28245417027');
+  assert.equal(profile.productionDogfoodReadiness.state, 'executed_success_run_28245417027_real_chat_readonly_confirmed');
+  assert.equal(profile.productionAvailabilityReadiness.state, 'executed_success_run_28245417027_after_apply');
+  assert.equal(profile.productionBrowserE2EReadiness.state, 'executed_success_run_28245417027');
+  assert.match(profileText, /"cannotClaimFromAdminOpsV0": \["full SaaS","payment lifecycle","team\/RBAC lifecycle","HA","runtime sync"\]/);
 });
 
 test('release evidence sync folds scheduled canary first success separately from dashboard readiness', () => {
