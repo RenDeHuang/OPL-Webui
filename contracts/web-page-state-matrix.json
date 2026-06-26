@@ -103,7 +103,24 @@
       "triggerMarkers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
       "gateRoute": "POST /api/opl/runtime-gate",
       "runRoute": "POST /api/opl/runs",
-      "readyPolicy": "gate_ready_required_before_run",
+      "readyPolicy": "medopl_account_resource_state_ready_required_before_run",
+      "runtimeAdmission": {
+        "mode": "medopl_account_resource_state_driven",
+        "readyWhen": [
+          "package_or_plan_active",
+          "credit_or_billing_ok",
+          "compute_resource_open",
+          "storage_space_open",
+          "workspace_runtime_storage_binding_bound"
+        ],
+        "notProductPolicy": [
+          "selected_user",
+          "test_account",
+          "canary_account",
+          "hardcoded_account_allowlist",
+          "MEDOPL_API_BASE_URL"
+        ]
+      },
       "notReadyStates": [
         "api_key_required",
         "package_required",
@@ -113,6 +130,9 @@
         "billing_blocked",
         "release_required",
         "audit_required",
+        "medopl_endpoint_required"
+      ],
+      "operatorDeploymentBlockerStates": [
         "medopl_endpoint_required"
       ],
       "readyProjection": ["refs", "progress_refs", "deliverable_refs", "deeplink"],

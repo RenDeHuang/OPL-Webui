@@ -155,7 +155,7 @@ node scripts/cloud-rollout.mjs --dogfood-e2e
 - 默认不执行 readonly projection dogfood；只有显式设置 `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` 才会读取 `/api/medopl/runtime/status`、`/api/medopl/materials-deliverables/projection` 和 `/api/account/billing-summary`，并校验 owner 与 forbidden mutation flags。
 - 覆盖 register 或 login fallback、current session、API Key binding、raw API Key 不回显、fixed gateway、`@基金` MedOPL Runtime gate、audit events；`CHAT_QUOTA_EXCEEDED` 仍由本地 mock upstream contract 覆盖，不在 production 故意耗尽 quota。
 - GitHub step 必须先 `::add-mask::` dogfood API Key 和密码；脚本不打印 raw API Key、request body、password、完整 response body 或 `opl_session`，只打印步骤名、HTTP status、errorCode 和 audit kind 汇总。
-- 当前没有 delete user API，因此生产 dogfood 数据采用专用 test account / hidden personal tenant/workspace 隔离，不 claim 自动清理。
+- 当前没有 delete user API，因此生产 dogfood 数据采用专用 test account / hidden personal tenant/workspace 隔离，不 claim 自动清理；该账号只是一条 production evidence fixture，不是产品 runtime admission policy。
 - 该 harness 不执行 kubectl，不读取 kubeconfig，不直接连接真实 PostgreSQL，不连接 MedOPL production private API，不执行真实 OPL，不创建 runtime、storage、billing 或 node pool 生命周期。readonly projection dogfood 只通过 OPL-Webui Go control plane 的公开只读端点校验 sanitized projection。
 
 Production authenticated dogfood closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password 或 request payload：

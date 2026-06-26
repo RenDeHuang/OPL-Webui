@@ -19,7 +19,7 @@ Browser WebUI
 
 The web layer must not import backend code. The Go control plane is the only backend business entry. OPL private state, private runtime, install, repair, module exec, and mutation surfaces remain forbidden unless a future contract explicitly admits them.
 
-The architecture follows the One Person Lab owner split: this repo owns the Web product surface and projections, MedOPL owns runtime/storage/package/billing/resource release, and OPL Framework/domain agents own execution semantics, domain truth, quality verdict, and artifact authority. The Web bridge can submit task intent and refs context to MedOPL, but it does not absorb MedOPL or MAS/MAG/RCA truth.
+The architecture follows the One Person Lab owner split: this repo owns the Web product surface and projections, MedOPL owns runtime/storage/package/billing/resource release, and OPL Framework/domain agents own execution semantics, domain truth, quality verdict, and artifact authority. Runtime admission is driven by MedOPL account/resource state: package or plan, credit or billing, compute resource, storage space, and workspace/runtime/storage binding. The Web bridge can submit task intent and refs context to MedOPL, but it does not absorb MedOPL or MAS/MAG/RCA truth. `MEDOPL_API_BASE_URL` is operator deployment config for the Go control plane; selected/test/canary accounts can only be rollout/evidence fixtures, not product access policy.
 
 ## Ownership Split
 

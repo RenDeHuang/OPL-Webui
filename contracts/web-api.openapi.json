@@ -179,7 +179,7 @@
             "description": "Method not allowed."
           },
           "424": {
-            "description": "MedOPL runtime gate is not ready or Web bridge is not configured."
+            "description": "MedOPL account/resource runtime gate is not ready, or OPL-Webui operator MedOPL endpoint config is missing."
           },
           "502": {
             "description": "MedOPL runtime gate upstream failed."
@@ -207,7 +207,7 @@
             "description": "Method not allowed."
           },
           "424": {
-            "description": "Runtime gate blocks the run."
+            "description": "MedOPL account/resource runtime gate blocks the run."
           },
           "502": {
             "description": "MedOPL run upstream failed."

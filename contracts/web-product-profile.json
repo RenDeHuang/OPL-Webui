@@ -223,10 +223,10 @@
         "id": "runtime_execution_boundary",
         "ownerSurface": "runtime-gate",
         "acceptanceContract": "contracts/web-runtime-bridge.json",
-        "disposition": "local_medopl_runtime_gate_run_bridge_refs_only_production_execution_unclaimed",
+        "disposition": "medopl_account_resource_state_driven_local_gate_run_bridge_refs_only_production_execution_unclaimed",
         "launchBlocking": true,
         "evidenceRequired": [
-          "production_MEDOPL_API_BASE_URL",
+          "operator_MEDOPL_API_BASE_URL_configured_for_production_evidence",
           "runtime_gate_ready_and_blocked_evidence",
           "runtime_run_refs_progress_deliverables_evidence",
           "artifact_body_authority_external_contract",
@@ -584,7 +584,9 @@
         "contract": "contracts/web-runtime-bridge.json#/medoplApiBridge/routes/runtimeGate",
         "testProof": "tests/contract/medopl-runtime-bridge-contract.test.mjs + tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
         "localEvidence": "contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence",
-        "cannotClaim": ["production MedOPL runtime execution", "sandbox gate ready evidence", "production gate ready evidence"]
+        "runtimeAdmission": "MedOPL account/resource state driven: plan or package active, credit or billing OK, compute open, storage open, workspace/runtime/storage binding bound",
+        "operatorConfig": "MEDOPL_API_BASE_URL is backend deployment config, not user access policy",
+        "cannotClaim": ["production MedOPL runtime execution", "sandbox account/resource-state evidence", "production account/resource-state evidence"]
       },
       {
         "id": "purchase_package",

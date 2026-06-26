@@ -25,9 +25,13 @@ test('runtime gate fails closed with typed blocker when MedOPL endpoint is not c
     assert.equal(gate.response.status, 424);
     assert.equal(gate.body.ok, false);
     assert.equal(gate.body.errorCode, 'MEDOPL_ENDPOINT_REQUIRED');
+    assert.equal(gate.body.blockerClass, 'operator_deployment_config');
     assert.equal(gate.body.gateState.ready, false);
     assert.equal(gate.body.gateState.blockers[0].kind, 'medopl_endpoint_required');
+    assert.equal(gate.body.gateState.blockers[0].owner, 'one-person-lab-web-operator');
+    assert.equal(gate.body.gateState.nextAction.id, 'configure_medopl_endpoint');
     assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn/);
+    assert.doesNotMatch(JSON.stringify(gate.body), /not allowed|user_not_allowed|account_not_allowed|allowlist|selected|test account|canary account/i);
     assert.equal(gate.body.webuiRuntimeExecution, 'forbidden');
     const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
       headers: { cookie: session.cookieHeader },
@@ -39,8 +43,76 @@ test('runtime gate fails closed with typed blocker when MedOPL endpoint is not c
   }
 });
 
+test('runtime gate ready is driven by MedOPL account resource state and binding refs', async () => {
+  const medopl = await startMedOPLContractFixture({
+    runtimeGate: {
+      ok: true,
+      productOwner: 'medopl',
+      primaryConsumer: 'opl-webui',
+      consumerRole: 'entry_and_chat_surface',
+      workspaceBindingId: 'workspace_binding_public',
+      invocationMode: 'runtime_required',
+      providerKeyStatus: 'bound',
+      runtimeBindingId: 'runtime_binding_public',
+      runtimeState: 'ready',
+      storageBindingId: 'storage_binding_public',
+      storageState: 'ready',
+      accountResourceState: {
+        plan: 'active',
+        credit: 'available',
+        billing: 'ok',
+        compute: 'open',
+        storage: 'open',
+        workspaceRuntimeStorageBinding: 'bound',
+      },
+      billing: { state: 'ready', creditState: 'available' },
+      release: { state: 'ready', canReleaseRuntime: true },
+      consumerProjection: {
+        ready: true,
+        refs: { workspaceRef: 'workspace_ref_public', runtimeRef: 'runtime_ref_public', storageRef: 'storage_ref_public' },
+        nextAction: { id: 'return_to_opl_task', label: '返回任务', deepLink: 'https://medopl.medopl.cn/opl/return?taskIntent=paper_question' },
+      },
+      actionContract: {
+        primaryAction: {
+          action: 'return_to_opl_task',
+          reason: 'account_resource_state_ready',
+          medoplDeeplink: '/opl/return?taskIntent=paper_question',
+          returnToOplDeeplink: '/opl?taskIntent=paper_question',
+        },
+      },
+    },
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-account-state-ready-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-account-state-ready-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 200);
+    assert.equal(gate.body.ok, true);
+    assert.equal(gate.body.owner, 'MedOPL');
+    assert.equal(gate.body.gateState.ready, true);
+    assert.deepEqual(gate.body.gateState.refs, {
+      workspaceRef: 'workspace_ref_public',
+      runtimeRef: 'runtime_ref_public',
+      storageRef: 'storage_ref_public',
+    });
+    assert.equal(gate.body.gateState.nextAction.id, 'return_to_opl_task');
+    assert.equal(gate.body.webuiRuntimeExecution, 'forbidden');
+    assert.doesNotMatch(JSON.stringify(gate.body), /allowlist|selected user|test account|canary account|canaryAdmission/i);
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
 test('runtime gate returns API key blocker before contacting MedOPL', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runtimeGate: { ok: true, consumerProjection: { ready: true } },
   });
   const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
@@ -65,8 +137,98 @@ test('runtime gate returns API key blocker before contacting MedOPL', async () =
   }
 });
 
+test('runtime gate maps missing MedOPL plan to purchase action contract without fake ready', async () => {
+  const medopl = await startMedOPLContractFixture({
+    runtimeGate: blockedRuntimeGate({
+      reason: 'plan_required',
+      action: 'select_plan',
+      medoplDeeplink: '/packages',
+    }),
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-plan-missing-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-plan-missing-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 424);
+    assert.equal(gate.body.gateState.blockers[0].kind, 'package_required');
+    assert.equal(gate.body.gateState.blockers[0].nextAction, 'select_plan');
+    assert.equal(gate.body.gateState.nextAction.id, 'select_plan');
+    assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/packages/);
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
+test('runtime gate maps missing MedOPL credit to recharge action contract', async () => {
+  const medopl = await startMedOPLContractFixture({
+    runtimeGate: blockedRuntimeGate({
+      reason: 'credit_required',
+      action: 'recharge_or_credit_required',
+      medoplDeeplink: '/usage',
+    }),
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-credit-missing-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-credit-missing-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 424);
+    assert.equal(gate.body.gateState.blockers[0].kind, 'package_required');
+    assert.equal(gate.body.gateState.blockers[0].nextAction, 'recharge_or_credit_required');
+    assert.equal(gate.body.gateState.nextAction.id, 'recharge_or_credit_required');
+    assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/usage/);
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
+test('runtime gate maps missing MedOPL compute storage to open runtime storage action contract', async () => {
+  const medopl = await startMedOPLContractFixture({
+    runtimeGate: blockedRuntimeGate({
+      reason: 'runtime_storage_not_opened',
+      action: 'open_runtime_storage',
+      medoplDeeplink: '/runtime',
+    }),
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-compute-storage-missing-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-compute-storage-missing-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 424);
+    assert.equal(gate.body.gateState.blockers[0].kind, 'compute_required');
+    assert.equal(gate.body.gateState.blockers[0].nextAction, 'open_runtime_storage');
+    assert.equal(gate.body.gateState.nextAction.id, 'open_runtime_storage');
+    assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/runtime/);
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
 test('runtime gate proxies MedOPL typed not-ready blockers without fake ready', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runtimeGate: {
       ok: false,
       productOwner: 'medopl',
@@ -96,7 +258,6 @@ test('runtime gate proxies MedOPL typed not-ready blockers without fake ready', 
         ],
         nextAction: { id: 'purchase_package', label: '去 MedOPL 开通', deepLink: 'https://medopl.medopl.cn/packages' },
       },
-      canaryAdmission: { enabled: false, allowed: false, decision: 'disabled' },
       nextAction: 'purchase_package',
     },
   });
@@ -135,7 +296,7 @@ test('runtime gate proxies MedOPL typed not-ready blockers without fake ready', 
 });
 
 test('runtime gate treats real MedOPL blocked shape as not ready even when upstream ok is true', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runtimeGate: {
       ok: true,
       productOwner: 'medopl',
@@ -202,7 +363,7 @@ test('runtime gate treats real MedOPL blocked shape as not ready even when upstr
 });
 
 test('runtime run bridge only returns refs progress deliverables and rejects artifact bodies', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runtimeGate: {
       ok: true,
       productOwner: 'medopl',
@@ -225,7 +386,6 @@ test('runtime run bridge only returns refs progress deliverables and rejects art
         refs: { workspaceRef: 'workspace_ref_public', runtimeRef: 'runtime_ref_public', storageRef: 'storage_ref_public' },
         nextAction: { id: 'start_run', label: '开始运行', deepLink: 'https://medopl.medopl.cn/runs/new' },
       },
-      canaryAdmission: { enabled: true, allowed: true, decision: 'allow' },
       nextAction: 'start_run',
     },
     runResult: {
@@ -275,7 +435,7 @@ test('runtime run bridge only returns refs progress deliverables and rejects art
 });
 
 test('runtime run bridge forwards MedOPL launch and file refs without owning artifact body', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runResult: {
       ok: true,
       status: 'succeeded',
@@ -327,7 +487,7 @@ test('runtime run bridge forwards MedOPL launch and file refs without owning art
 });
 
 test('runtime run bridge returns typed blocker when MedOPL blocks the run', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     runtimeGate: {
       ok: true,
       consumerProjection: {
@@ -369,7 +529,7 @@ test('runtime run bridge returns typed blocker when MedOPL blocks the run', asyn
 });
 
 test('billing summary projection can consume MedOPL ledger refs without becoming billing truth', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     billingSummary: {
       ok: true,
       source: 'medopl',
@@ -411,7 +571,7 @@ test('billing summary projection can consume MedOPL ledger refs without becoming
 });
 
 test('billing summary projection maps real MedOPL ledger id and type into refs-only fields', async () => {
-  const medopl = await startFakeMedOPL({
+  const medopl = await startMedOPLContractFixture({
     billingSummary: {
       ok: true,
       source: 'go-control-plane',
@@ -441,7 +601,37 @@ test('billing summary projection maps real MedOPL ledger id and type into refs-o
   }
 });
 
-async function startFakeMedOPL(options = {}) {
+function blockedRuntimeGate({ reason, action, medoplDeeplink }) {
+  return {
+    ok: true,
+    productOwner: 'medopl',
+    primaryConsumer: 'opl-webui',
+    consumerRole: 'entry_and_chat_surface',
+    workspaceId: 'workspace_account_state_fixture',
+    invocationMode: 'runtime_required',
+    providerKeyStatus: 'bound',
+    runtimeState: 'blocked',
+    storageState: 'blocked',
+    billing: { state: 'blocked' },
+    release: { canReleaseRuntime: false },
+    consumerProjection: {
+      ready: false,
+      runEnabled: false,
+      uploadEnabled: false,
+      artifactEnabled: false,
+    },
+    actionContract: {
+      primaryAction: {
+        action,
+        reason,
+        medoplDeeplink,
+        returnToOplDeeplink: '/opl?taskIntent=paper_question',
+      },
+    },
+  };
+}
+
+async function startMedOPLContractFixture(options = {}) {
   const requests = [];
   const server = http.createServer(async (request, response) => {
     const parsedUrl = new URL(request.url, 'http://127.0.0.1');

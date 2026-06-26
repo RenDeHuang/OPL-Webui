@@ -40,39 +40,16 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
   assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
   assert.equal(visionGap('medopl_readonly_evidence').disposition, 'production_readonly_projection_dogfood_confirmed_run_28142197152');
-  assert.equal(visionGap('runtime_execution_boundary').disposition, 'local_medopl_runtime_gate_run_bridge_refs_only_production_execution_unclaimed');
+  assert.equal(visionGap('runtime_execution_boundary').disposition, 'medopl_account_resource_state_driven_local_gate_run_bridge_refs_only_production_execution_unclaimed');
   assert.deepEqual([visionGap('ha_and_resilience').acceptanceContract, visionGap('concurrency_and_load').acceptanceContract, visionGap('opl_auto_update_from_github').acceptanceContract], ['contracts/web-release-profile.json#/productionHAReadiness', 'contracts/web-product-profile.json#/concurrencyAndLoad', 'contracts/web-release-profile.json#/oplAutoUpdateReadiness']);
   assert.equal(visionGap('runtime_execution_boundary').launchBlocking, true);
   assert.equal(visionGap('commercial_saas_depth').launchBlocking, false);
-  assert.deepEqual([
-    product.provider.fixedBaseUrl,
-    product.provider.wireApi,
-    product.provider.defaultModel,
-    product.provider.serviceTier,
-    product.provider.reasoningEffort,
-    product.provider.upstreamTimeoutSeconds,
-    product.provider.upstreamTimeoutEnv,
-    product.provider.userEditableBaseUrl,
-  ], ['https://gflabtoken.cn/v1', 'responses', 'gpt-5.5', 'fast', 'xhigh', 60, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS', false]);
+  assert.deepEqual([product.provider.fixedBaseUrl, product.provider.wireApi, product.provider.defaultModel, product.provider.serviceTier, product.provider.reasoningEffort, product.provider.upstreamTimeoutSeconds, product.provider.upstreamTimeoutEnv, product.provider.userEditableBaseUrl], ['https://gflabtoken.cn/v1', 'responses', 'gpt-5.5', 'fast', 'xhigh', 60, 'OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS', false]);
   assert.equal(product.credential.rawKeyReturnedToBrowser, false);
-  assert.deepEqual([
-    product.commercialLifecycle.mode,
-    product.commercialLifecycle.currentPhase,
-    product.commercialLifecycle.nextPhase,
-    product.commercialLifecycle.blockedBy,
-  ], [
-    'authenticated_readonly_personal_status_projection',
-    'commercial_contract',
-    'commercial_consumer_contract',
-    'missing_real_buyer_or_operator_workflow',
-  ]);
+  assert.deepEqual([product.commercialLifecycle.mode, product.commercialLifecycle.currentPhase, product.commercialLifecycle.nextPhase, product.commercialLifecycle.blockedBy], ['authenticated_readonly_personal_status_projection', 'commercial_contract', 'commercial_consumer_contract', 'missing_real_buyer_or_operator_workflow']);
   assert.equal(product.commercialLifecycle.ownerReceipt.acceptedClaim, 'commercial_readonly_personal_projection_boundary_accepted');
   assert.equal(product.commercialLifecycle.billingPaymentSourceOfTruth, 'MedOPL');
-  assert.deepEqual(product.commercialLifecycle.nextStepOpeners, [
-    'real buyer or operator workflow is named',
-    'contract exists for invite, RBAC, pricing, subscription, or payment surface',
-    'registered tests preserve MedOPL billing authority',
-  ]);
+  assert.deepEqual(product.commercialLifecycle.nextStepOpeners, ['real buyer or operator workflow is named', 'contract exists for invite, RBAC, pricing, subscription, or payment surface', 'registered tests preserve MedOPL billing authority']);
   assertIncludesAll(product.publicUi.hiddenConcepts, ['workspace', 'runtime', 'nodePool', 'storage', 'billing'], 'hidden concept');
   assertIncludesAll(product.nonOwnedTruth, ['runtime_truth', 'node_pool_lifecycle', 'storage_truth', 'billing_source_of_truth', 'api_gateway_truth', 'opl_execution_truth'], 'non-owned truth');
   assert.deepEqual(product.concurrencyAndLoad.mode, 'staging_safe_10_user_baseline_no_production_load_claim');
@@ -105,27 +82,12 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual([surfaceAcceptance.account.openTrigger, surfaceAcceptance.account.closeTrigger, surfaceAcceptance.account.focusReturn, surfaceAcceptance.account.placement], ['bottom_avatar', ['explicit_close', 'escape', 'outside_click', 'route_change'], 'bottom_avatar', 'bottom_avatar_popover']);
   assert.deepEqual([surfaceAcceptance.model_selector.openTrigger, surfaceAcceptance.model_selector.closeTrigger, surfaceAcceptance.model_selector.forbiddenContent], ['composer_model_choice', ['selection', 'escape', 'outside_click'], ['gateway_url', 'base_url_editor']]);
   assert.deepEqual(surfaceAcceptance.inspector, { desktop: 'stable_right_work_panel', mobile: 'light_bottom_sheet', focusReturn: 'right_utility_rail' });
-  assert.deepEqual(pageStates.shellStates.sideNavigation.actions.map(({ id, label, kind, targetView, localOnly, consumer, forbiddenApis }) => [id, label, kind, targetView, localOnly, consumer, forbiddenApis.join('|')]), [
-    ['home', '新建对话', 'route', 'home', true, 'composer_focus', ''],
-    ['projects', 'Projects', 'route', 'projects', true, 'project_library', '/api/projects'],
-    ['skills', 'Skill', 'route', 'skills', true, 'skill_library', ''],
-    ['workflows', '工作流', 'route', 'workflows', true, 'workflow_library', ''],
-    ['search', '搜索', 'sheet', 'home', true, 'conversation_history_search', '/api/search'],
-    ['more', 'More', 'route', 'more', true, 'empty_overflow_menu', ''],
-  ]);
+  assert.deepEqual(pageStates.shellStates.sideNavigation.actions.map(({ id, label, kind, targetView, localOnly, consumer, forbiddenApis }) => [id, label, kind, targetView, localOnly, consumer, forbiddenApis.join('|')]), [['home', '新建对话', 'route', 'home', true, 'composer_focus', ''], ['projects', 'Projects', 'route', 'projects', true, 'project_library', '/api/projects'], ['skills', 'Skill', 'route', 'skills', true, 'skill_library', ''], ['workflows', '工作流', 'route', 'workflows', true, 'workflow_library', ''], ['search', '搜索', 'sheet', 'home', true, 'conversation_history_search', '/api/search'], ['more', 'More', 'route', 'more', true, 'empty_overflow_menu', '']]);
   assert.deepEqual(pageStates.shellStates.librarySurfaces, { skills: { scopes: ['my_skills', 'opl_skills'], actions: ['import_skill'] }, workflows: { scopes: ['my_workflows', 'opl_workflows'], actions: ['create_workflow', 'import_workflow'] }, projects: { scopes: ['my_projects'], actions: ['create_project'], forbiddenApis: ['/api/projects'] } });
   assertIncludesAll(pageStates.localReadinessScenario.steps.map((step) => step.id), ['anonymous_shell', 'register', 'login', 'api_key_binding', 'research_task_template_selected', 'choose_task', 'view_result_or_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_deeplink', 'paper_runtime_gate', 'grant_runtime_gate', 'sanitized_audit'], 'local readiness step');
   assert.equal(pageStates.localReadinessScenario.requiresProductionSecrets, false);
   assertIncludesAll(pageStates.localReadinessScenario.observableSelectors, ['[data-side-navigation]', '[data-first-view]', '[data-starter-chips]', '[data-chat-log]', '[data-runtime-gate]', '[data-more-overflow]', '[data-project-library]', '[data-search-sheet]', '[data-conversation-search]', '[data-conversation-history]', '[data-conversation-empty]', '[data-model-selector]', '[data-overlay-close]', '[data-research-launcher]', '[data-capability-marker]', '[data-capability-mode]', '[data-research-task]', '[data-research-result]', '[data-research-result-section]', '[data-runtime-task-card]', '[data-reliability-status]'], 'observable selector');
-  assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [
-    ['research_direction', '@科研', 'ordinary_chat_fallback'],
-    ['paper_question', '@论文', 'runtime_gate'],
-    ['grant_plan', '@基金', 'runtime_gate'],
-    ['review_map', '@综述', 'runtime_gate'],
-    ['materials_refs', '@文件', 'runtime_gate'],
-    ['presentation_foundry', '@PPT', 'runtime_gate'],
-    ['book_foundry', '@书', 'runtime_gate'],
-  ]);
+  assert.deepEqual(pageStates.researchTaskIntents.map((intent) => [intent.id, intent.marker, intent.runtimePolicy]), [['research_direction', '@科研', 'ordinary_chat_fallback'], ['paper_question', '@论文', 'runtime_gate'], ['grant_plan', '@基金', 'runtime_gate'], ['review_map', '@综述', 'runtime_gate'], ['materials_refs', '@文件', 'runtime_gate'], ['presentation_foundry', '@PPT', 'runtime_gate'], ['book_foundry', '@书', 'runtime_gate']]);
   assert.deepEqual(pageStates.structuredResultShape.sections, ['research_plan', 'evidence_refs', 'next_steps']);
   assert.deepEqual([pageStates.structuredResultShape.primarySurface, pageStates.structuredResultShape.rawAssistantTranscriptForStructuredResult, pageStates.structuredResultShape.maxRawAssistantMessagesPerStructuredResult], ['structured_research_artifact_card', 'forbidden', 0]);
   assert.equal(pageStates.structuredResultShape.owner, 'one-person-lab-web');
@@ -180,23 +142,35 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
     ['@书', 'book_foundry_workflow', 'runtime_gate'],
   ]);
   assert.equal(runtime.medoplDeepLink, 'https://medopl.medopl.cn');
+  assert.equal(runtime.runtimeAdmission.mode, 'medopl_account_resource_state_driven');
+  assert.deepEqual(runtime.runtimeAdmission.readyWhen, ['package_or_plan_active', 'credit_or_billing_ok', 'compute_resource_open', 'storage_space_open', 'workspace_runtime_storage_binding_bound']);
+  assert.deepEqual(runtime.runtimeAdmission.operatorDeploymentConfig, ['MEDOPL_API_BASE_URL']);
+  assertIncludesAll(runtime.runtimeAdmission.notProductPolicy, ['selected_user', 'test_account', 'canary_account', 'hardcoded_account_allowlist', 'MEDOPL_API_BASE_URL'], 'not product runtime admission policy');
+  assertIncludesAll(runtime.runtimeAdmission.webConsumes, ['runtime_gate', 'action_contract', 'workspace_runtime_storage_binding_refs', 'progress_refs', 'deliverable_refs', 'billing_ledger_release_readonly_projection', 'deeplink_next_action'], 'runtime admission consumed projection');
+  assert.equal(runtime.runtimeAdmission.localRealMedOPLProofRole, 'evidence_lane_not_product_truth');
+  assert.equal(runtime.medoplApiBridge.endpointConfigScope, 'operator_deployment_config');
+  assert.equal(runtime.medoplApiBridge.endpointNotConfiguredPolicy, 'operator_deployment_blocker_fail_closed');
+  assert.deepEqual(runtime.medoplApiBridge.operatorDeploymentBlockers, ['medopl_endpoint_required']);
+  assert.equal(pageStates.medoplCapabilityStates.runtimeRequiredFlow.readyPolicy, 'medopl_account_resource_state_ready_required_before_run');
+  assert.equal(pageStates.medoplCapabilityStates.runtimeRequiredFlow.runtimeAdmission.mode, 'medopl_account_resource_state_driven');
+  assert.deepEqual(pageStates.medoplCapabilityStates.runtimeRequiredFlow.operatorDeploymentBlockerStates, ['medopl_endpoint_required']);
+  assert.match(api.paths['/api/opl/runtime-gate'].post.responses['424'].description, /account\/resource runtime gate|operator MedOPL endpoint config/);
   assert.equal(runtime.projectionPolicy.allowedPayload.includes('refs'), true);
   assert.equal(runtime.projectionPolicy.forbiddenPayload.includes('artifact_body'), true);
-  for (const field of ['requiresGoSideContract', 'requiresEval', 'requiresWhitelist', 'requiresHumanAuthorization']) assert.equal(runtime.authorizationBoundary[field], true);
+  for (const field of ['requiresGoSideContract', 'requiresEval', 'requiresOperatorSafetyPolicy', 'requiresHumanAuthorization']) assert.equal(runtime.authorizationBoundary[field], true);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
   assert.equal(runtime.executionAdmission.currentPhase, 'execution_admission');
   assert.equal(runtime.executionAdmission.nextPhase, 'production_medopl_runtime_evidence_closeout');
   assert.equal(runtime.executionAdmission.blockedBy, null);
   assert.deepEqual(runtime.executionAdmission.ownerReceipt, { required: true, source: 'human_owner_receipt', status: 'accepted', acceptedAt: '2026-06-26', acceptedClaim: 'medopl_runtime_gate_run_bridge_local_refs_only_accepted', acceptedScope: 'Web may bridge MedOPL runtime gate and run refs/progress/deliverables locally; MedOPL and OPL Framework remain execution and artifact authority.' });
-  assert.deepEqual(runtime.executionAdmission.currentAllowlist, []);
+  assert.deepEqual(runtime.executionAdmission.webRuntimeCommandPolicy.allowedCommands, []);
+  assert.equal(runtime.executionAdmission.webRuntimeCommandPolicy.productAccessPolicy, false);
   assert.deepEqual(runtime.executionAdmission.forbiddenCommands, ['install', 'repair', 'module_exec', 'artifact_body', 'runtime_mutation']);
-  assert.deepEqual(runtime.executionAdmission.nextStepOpeners, [
-    'production MedOPL endpoint is configured',
-    'production runtime gate/run evidence is folded back',
-    'artifact/body authority contract stays external',
-  ]);
+  assert.deepEqual(runtime.executionAdmission.nextStepOpeners, ['operator MEDOPL_API_BASE_URL is configured for production evidence collection', 'production runtime gate/run evidence is folded back', 'artifact/body authority contract stays external']);
   assert.deepEqual(runtime.executionAdmission.requiredBeforeAnyExecution, ['production MedOPL runtime execution evidence', 'registered bridge eval', 'human authorization boundary', 'tenant-scoped audit events', 'artifact/body authority contract']);
-  assert.deepEqual(runtime.executionAdmission.failClosedUntil, ['MEDOPL_API_BASE_URL_configured', 'gate_ready', 'bridge_eval_passes', 'authorization_boundary_exists']);
+  assert.deepEqual(runtime.executionAdmission.failClosedUntil, ['operator_medopl_endpoint_configured', 'medopl_account_resource_gate_ready', 'bridge_eval_passes', 'authorization_boundary_exists']);
+  const productRuntimeTruth = JSON.stringify({ product, runtime, pageStates });
+  assert.doesNotMatch(productRuntimeTruth, /selected real user|selected user|test account|canary account|canaryAdmission|hardcoded account allowlist/i);
 
   assert.equal(release.productionHost, 'opl.medopl.cn');
   assert.deepEqual(release.requiredGates, ['npm run verify', 'npm run gate:ai', 'npm run gate:review', 'npm run repo:bloat', 'sentrux check .']);

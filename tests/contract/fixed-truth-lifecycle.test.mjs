@@ -564,21 +564,39 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   assert.equal(gui.visualQualityGate.productionUiQualityClaim.productionEvidence.rawArtifactsInGit, false);
   assert.equal(runtime.executionAdmission.currentStatus, 'not_admitted');
   assert.equal(runtime.medoplApiBridge.requiredEndpointEnv, 'MEDOPL_API_BASE_URL');
-  assert.equal(runtime.medoplApiBridge.endpointNotConfiguredPolicy, 'fail_closed_typed_blocker');
+  assert.equal(runtime.medoplApiBridge.endpointConfigScope, 'operator_deployment_config');
+  assert.equal(runtime.medoplApiBridge.endpointNotConfiguredPolicy, 'operator_deployment_blocker_fail_closed');
   assert.equal(runtime.medoplApiBridge.routes.runtimeGate.webRoute, 'POST /api/opl/runtime-gate');
   assert.equal(runtime.medoplApiBridge.routes.runs.webRoute, 'POST /api/opl/runs');
   assert.equal(runtime.medoplApiBridge.routes.billingSummary.projectionPolicy, 'readonly_summary_and_ledger_refs_only');
   assert.equal(runtime.medoplApiBridge.typedBlockers.includes('package_required'), true);
   assert.equal(runtime.medoplApiBridge.typedBlockers.includes('storage_required'), true);
   assert.equal(runtime.medoplApiBridge.cannotClaim.includes('MedOPL production runtime execution'), true);
+  assert.equal(runtime.runtimeAdmission.mode, 'medopl_account_resource_state_driven');
+  assert.deepEqual(runtime.runtimeAdmission.readyWhen, [
+    'package_or_plan_active',
+    'credit_or_billing_ok',
+    'compute_resource_open',
+    'storage_space_open',
+    'workspace_runtime_storage_binding_bound',
+  ]);
+  assert.deepEqual(runtime.runtimeAdmission.operatorDeploymentConfig, ['MEDOPL_API_BASE_URL']);
+  assert.deepEqual(runtime.runtimeAdmission.notProductPolicy, [
+    'selected_user',
+    'test_account',
+    'canary_account',
+    'hardcoded_account_allowlist',
+    'MEDOPL_API_BASE_URL',
+  ]);
   assert.equal(runtime.executionAdmission.ownerReceipt.acceptedClaim, 'medopl_runtime_gate_run_bridge_local_refs_only_accepted');
-  assert.deepEqual(runtime.executionAdmission.currentAllowlist, []);
+  assert.deepEqual(runtime.executionAdmission.webRuntimeCommandPolicy.allowedCommands, []);
+  assert.equal(runtime.executionAdmission.webRuntimeCommandPolicy.productAccessPolicy, false);
   assert.equal(runtime.executionAdmission.requiredBeforeAnyExecution.includes('production MedOPL runtime execution evidence'), true);
   assert.equal(runtime.executionAdmission.webRoutesMayMutateRuntime, false);
   assert.deepEqual(runtime.executionAdmission.conditions.map((condition) => [condition.id, condition.status, condition.evidence]), [
     ['go_side_medopl_bridge_contract', 'present', 'contracts/web-runtime-bridge.json#/medoplApiBridge'],
     ['registered_bridge_eval', 'pass', 'tests/contract/medopl-runtime-bridge-contract.test.mjs'],
-    ['command_allowlist', 'present', 'empty_allowlist'],
+    ['web_runtime_command_policy', 'present', 'empty_command_set_not_product_access_policy'],
     ['human_authorization_boundary', 'accepted', 'owner_receipt'],
     ['tenant_scoped_audit_events', 'partial', 'runtime_gate_audit_only'],
     ['real_local_medopl_process_evidence', 'present', 'contracts/web-runtime-bridge.json#/realLocalMedOPLEvidence'],

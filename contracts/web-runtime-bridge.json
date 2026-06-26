@@ -11,7 +11,8 @@
     "consumer": "opl-webui-browser",
     "upstreamOwner": "MedOPL",
     "requiredEndpointEnv": "MEDOPL_API_BASE_URL",
-    "endpointNotConfiguredPolicy": "fail_closed_typed_blocker",
+    "endpointConfigScope": "operator_deployment_config",
+    "endpointNotConfiguredPolicy": "operator_deployment_blocker_fail_closed",
     "routes": {
       "runtimeGate": {
         "webRoute": "POST /api/opl/runtime-gate",
@@ -43,6 +44,9 @@
       "billing_blocked",
       "release_required",
       "audit_required",
+      "medopl_endpoint_required"
+    ],
+    "operatorDeploymentBlockers": [
       "medopl_endpoint_required"
     ],
     "forbiddenResponseFields": [
@@ -95,12 +99,61 @@
     "explicitLane": "real-medopl",
     "doesNotProve": [
       "production MedOPL endpoint",
-      "sandbox account lifecycle",
+      "sandbox MedOPL account/resource-state evidence",
       "external payment settlement",
       "real cloud compute provisioning",
       "production storage mutation",
       "OPL Framework domain execution quality",
       "artifact body authority"
+    ]
+  },
+  "runtimeAdmission": {
+    "mode": "medopl_account_resource_state_driven",
+    "owner": "MedOPL",
+    "consumer": "opl-webui-runtime-required-task",
+    "readyWhen": [
+      "package_or_plan_active",
+      "credit_or_billing_ok",
+      "compute_resource_open",
+      "storage_space_open",
+      "workspace_runtime_storage_binding_bound"
+    ],
+    "notReadyActions": [
+      "select_plan",
+      "open_medopl_purchase",
+      "recharge_or_credit_required",
+      "open_runtime_storage",
+      "return_to_opl_task"
+    ],
+    "operatorDeploymentConfig": [
+      "MEDOPL_API_BASE_URL"
+    ],
+    "notProductPolicy": [
+      "selected_user",
+      "test_account",
+      "canary_account",
+      "hardcoded_account_allowlist",
+      "MEDOPL_API_BASE_URL"
+    ],
+    "webConsumes": [
+      "runtime_gate",
+      "action_contract",
+      "workspace_runtime_storage_binding_refs",
+      "progress_refs",
+      "deliverable_refs",
+      "billing_ledger_release_readonly_projection",
+      "deeplink_next_action"
+    ],
+    "webDoesNotOwn": [
+      "node_pool",
+      "storage_truth",
+      "billing_truth",
+      "artifact_body",
+      "domain_truth"
+    ],
+    "localRealMedOPLProofRole": "evidence_lane_not_product_truth",
+    "productionAndSandboxProofGaps": [
+      "evidence_gap_not_access_policy_gap"
     ]
   },
   "capabilityGoal": {
@@ -198,7 +251,7 @@
   "authorizationBoundary": {
     "requiresGoSideContract": true,
     "requiresEval": true,
-    "requiresWhitelist": true,
+    "requiresOperatorSafetyPolicy": true,
     "requiresHumanAuthorization": true
   },
   "executionAdmission": {
@@ -222,10 +275,14 @@
       "web": ["runtime_gate_bridge", "run_intent_submitter", "typed_blocker_projection", "refs_progress_deliverables_projection", "billing_ledger_refs_projection"],
       "webIsExecutionOwner": false
     },
-    "currentAllowlist": [],
+    "webRuntimeCommandPolicy": {
+      "allowedCommands": [],
+      "productAccessPolicy": false,
+      "purpose": "fail_closed_boundary_forbidden_web_runtime_mutation"
+    },
     "forbiddenCommands": ["install", "repair", "module_exec", "artifact_body", "runtime_mutation"],
     "nextStepOpeners": [
-      "production MedOPL endpoint is configured",
+      "operator MEDOPL_API_BASE_URL is configured for production evidence collection",
       "production runtime gate/run evidence is folded back",
       "artifact/body authority contract stays external"
     ],
@@ -250,10 +307,10 @@
         "evidence": "tests/contract/medopl-runtime-bridge-contract.test.mjs"
       },
       {
-        "id": "command_allowlist",
+        "id": "web_runtime_command_policy",
         "status": "present",
         "owner": "one-person-lab-web-runtime",
-        "evidence": "empty_allowlist"
+        "evidence": "empty_command_set_not_product_access_policy"
       },
       {
         "id": "human_authorization_boundary",
@@ -289,7 +346,7 @@
     "admittedWhen": [
       "go_side_medopl_bridge_contract=present",
       "registered_bridge_eval=pass",
-      "command_allowlist=present",
+      "web_runtime_command_policy=present",
       "human_authorization_boundary=accepted",
       "tenant_scoped_audit_events=present",
       "production_medopl_runtime_execution_evidence=present",
@@ -297,8 +354,8 @@
     ],
     "webRoutesMayMutateRuntime": false,
     "failClosedUntil": [
-      "MEDOPL_API_BASE_URL_configured",
-      "gate_ready",
+      "operator_medopl_endpoint_configured",
+      "medopl_account_resource_gate_ready",
       "bridge_eval_passes",
       "authorization_boundary_exists"
     ]

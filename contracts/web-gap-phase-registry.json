@@ -255,7 +255,7 @@
           ],
           "exitCriteria": [
             "owner accepts local MedOPL gate/run bridge boundary",
-            "current allowlist is empty",
+            "Web runtime command policy allows no runtime commands and is not a product access policy",
             "Web runtime mutation remains forbidden",
             "MedOPL remains runtime/storage/package/billing/resource release authority",
             "OPL Framework/domain agents remain execution semantics, quality verdict, and artifact authority"
@@ -269,12 +269,12 @@
           ],
           "acceptance": [
             "executionAdmission currentStatus stays not_admitted",
-            "current allowlist is empty and Web may not install, repair, module exec, return artifact body, own domain verdict, mutate runtime, mutate storage, or mutate billing",
+            "Web runtime command policy allows no runtime commands, is not product access policy, and Web may not install, repair, module exec, return artifact body, own domain verdict, mutate runtime, mutate storage, or mutate billing",
             "MedOPL and OPL Framework remain execution and artifact authority while Web remains gate/run refs-only projection",
             "production runtime execution still requires production MedOPL runtime execution evidence, registered bridge eval, human authorization, tenant audit, and artifact/body authority contract"
           ],
           "nextStepOpeners": [
-            "Configure production MEDOPL_API_BASE_URL before claiming production runtime bridge behavior",
+            "Configure operator MEDOPL_API_BASE_URL before collecting production runtime bridge evidence",
             "Fold back production gate/run evidence before claiming runtime execution",
             "Continue to list OPL runtime execution from Web and artifact body authority as cannot-claim"
           ],

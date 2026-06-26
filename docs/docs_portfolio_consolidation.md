@@ -49,7 +49,7 @@ This repo copies One Person Lab's development discipline, not its directory volu
 - `docs/policies/`: add only for durable AI, OPL action, security, privacy, or data-governance policy.
 - `docs/active/`: keep only the current baton for gap-driven worktree lanes and next-agent context.
 - `docs/history/tombstones/`: keep only no-resurrection records for retired surfaces.
-- `contracts/`: keep durable machine-readable API, DTO, allowlist, schema, page-state, product-boundary, runtime-gate, or release-profile surfaces.
+- `contracts/`: keep durable machine-readable API, DTO, operator/release safety policy, schema, page-state, product-boundary, runtime-gate, or release-profile surfaces.
 
 Docs explain contracts; they do not replace them. If prose and contract disagree, update the contract or mark the prose as stale and retire it in the same change.
 

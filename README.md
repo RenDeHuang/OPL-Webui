@@ -5,7 +5,7 @@
 - state: active_truth
 - machine boundary: human-readable navigation; contracts, source, tests, scripts, and API behavior are authoritative.
 
-One Person Lab Web is the account-based Web edition of One Person Lab App at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through a simple path: open Web, log in, bind an API Key or use account capability, choose `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`, then continue through result, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL deeplink states.
+One Person Lab Web is the account-based Web edition of One Person Lab App at `opl.medopl.cn`. It serves research staff, master's students, PhD students, principal investigators, and research teams through a simple path: open Web, log in, bind an API Key or use MedOPL account/resource-state capability, choose `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`, then continue through result, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL deeplink states.
 
 This repo owns the browser product surface, account/session experience, hidden multi-tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
 
@@ -46,7 +46,7 @@ Use fixed truth, not per-change process packages:
 
 Test truth is lane-based, not case-count-based. `scripts/test-classification.mjs` owns test taxonomy, lane membership, cost, lifecycle role, risk triggers, and verify-suite metadata. `npm run verify` runs `current = smoke + contract + health + go`. Dynamic lane checks use changed files plus fresh verification evidence; `npm run lane:advisory -- <files...>` only explains the targeted lanes to run. Browser, deploy, regression, and full verification are explicit lanes, not hidden inside health checks.
 
-`npm run verify:real-medopl` is the explicit real local MedOPL evidence lane. It starts a real MedOPL Go backend from `/home/dev/projects/platform-v22/services/medopl-go-backend` by default, or `MEDOPL_GO_BACKEND_DIR` when provided, and proves WebUI gate/run/billing refs against that process. It is local evidence only and does not claim sandbox or production MedOPL business closure.
+`npm run verify:real-medopl` is the explicit real local MedOPL evidence lane. It starts a real MedOPL Go backend from `/home/dev/projects/platform-v22/services/medopl-go-backend` by default, or `MEDOPL_GO_BACKEND_DIR` when provided, and proves WebUI gate/run/billing refs against that process. It is local evidence only and does not claim sandbox or production MedOPL business closure. `MEDOPL_API_BASE_URL` is Go backend operator deployment config; selected/test/canary accounts are evidence fixtures or rollout safety only, never product runtime admission policy.
 
 Regression tests are temporary guards, not permanent inventory. The `regression` lane may be empty. Any `regression-guard` entry must carry retirement metadata, and when its condition is satisfied the same cleanup removes the test file, registry entry, and any needed no-resurrection tombstone.
 

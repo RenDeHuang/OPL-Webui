@@ -313,14 +313,23 @@ func medoplAPIScheme(scheme string) bool {
 func writeMedOPLFailure(response http.ResponseWriter, err error) {
 	var failure medoplFailure
 	if errors.As(err, &failure) {
+		blockerClass := "medopl_upstream"
+		nextActionID := "open_medopl"
+		blockerOwner := "MedOPL"
+		if failure.Code == "MEDOPL_ENDPOINT_REQUIRED" {
+			blockerClass = "operator_deployment_config"
+			nextActionID = "configure_medopl_endpoint"
+			blockerOwner = "one-person-lab-web-operator"
+		}
 		writeJSON(response, failure.Status, map[string]any{
 			"ok": false, "errorCode": failure.Code, "message": "MedOPL bridge is unavailable",
+			"blockerClass": blockerClass,
 			"gateState": map[string]any{
 				"ready": false,
 				"blockers": []map[string]any{{
-					"kind": "medopl_endpoint_required", "title": "MedOPL 暂时不可用", "deepLink": MedOPLURL + "/runtime",
+					"kind": "medopl_endpoint_required", "title": "MedOPL 暂时不可用", "deepLink": MedOPLURL + "/runtime", "owner": blockerOwner,
 				}},
-				"nextAction": map[string]any{"id": "open_medopl", "label": "去 MedOPL", "deepLink": MedOPLURL + "/runtime"},
+				"nextAction": map[string]any{"id": nextActionID, "label": "去 MedOPL", "deepLink": MedOPLURL + "/runtime"},
 			},
 			"webuiRuntimeExecution": "forbidden",
 		})
@@ -332,15 +341,37 @@ func writeMedOPLFailure(response http.ResponseWriter, err error) {
 func localRuntimeBlocker(blocker medoplLocalBlocker) map[string]any {
 	return map[string]any{
 		"ok": false, "errorCode": blocker.ErrorCode, "message": blocker.Title, "owner": "MedOPL",
+		"blockerClass": localBlockerClass(blocker.Kind),
 		"gateState": map[string]any{
 			"ready": false,
 			"blockers": []map[string]any{{
-				"kind": blocker.Kind, "title": blocker.Title, "deepLink": safeMedOPLLink(blocker.DeepLink),
+				"kind": blocker.Kind, "title": blocker.Title, "deepLink": safeMedOPLLink(blocker.DeepLink), "owner": localBlockerOwner(blocker.Kind),
 			}},
-			"nextAction": map[string]any{"id": blocker.Kind, "label": "去 MedOPL", "deepLink": safeMedOPLLink(blocker.DeepLink)},
+			"nextAction": map[string]any{"id": localBlockerActionID(blocker.Kind), "label": "去 MedOPL", "deepLink": safeMedOPLLink(blocker.DeepLink)},
 		},
 		"webuiRuntimeExecution": "forbidden",
 	}
+}
+
+func localBlockerClass(kind string) string {
+	if kind == "medopl_endpoint_required" {
+		return "operator_deployment_config"
+	}
+	return "user_account_state"
+}
+
+func localBlockerOwner(kind string) string {
+	if kind == "medopl_endpoint_required" {
+		return "one-person-lab-web-operator"
+	}
+	return "MedOPL"
+}
+
+func localBlockerActionID(kind string) string {
+	if kind == "medopl_endpoint_required" {
+		return "configure_medopl_endpoint"
+	}
+	return kind
 }
 
 func runtimeGateProjection(body map[string]any) map[string]any {
@@ -496,15 +527,13 @@ func blockerKindForReason(reason string) string {
 	switch reason {
 	case "provider_key_required":
 		return "provider_key_required"
-	case "account_required", "insufficient_balance":
+	case "account_required", "plan_required", "package_required", "credit_required", "insufficient_balance":
 		return "package_required"
 	case "runtime_storage_not_opened", "runtime_storage_pending":
 		return "compute_required"
 	case "runtime_storage_released":
 		return "release_required"
 	case "runtime_storage_failed":
-		return "audit_required"
-	case "canary_admission_required":
 		return "audit_required"
 	default:
 		return "runtime_blocked"

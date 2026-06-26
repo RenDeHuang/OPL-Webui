@@ -12,7 +12,10 @@
 - Ordinary chat can call the fixed OpenAI-compatible upstream only after auth, API Key binding, and quota precheck.
 - Contract-defined runtime markers must not fake execution.
 - Runtime-required tasks must call the MedOPL runtime gate first, and a run may start only from a ready gate.
-- Missing MedOPL endpoint, package, compute, storage, workspace/runtime binding, billing, release, or audit readiness must be shown as typed blockers, not silent fallback success.
+- Runtime admission is MedOPL account/resource-state driven: package or plan, credit or billing, compute resource, storage space, and workspace/runtime/storage binding decide gate readiness.
+- Missing package, credit, compute, storage, workspace/runtime binding, billing, release, or audit readiness must be shown as MedOPL account/resource typed blockers, not silent fallback success.
+- Missing `MEDOPL_API_BASE_URL` is an OPL-Webui operator deployment blocker, not user access policy.
+- Selected users, test accounts, canary accounts, and hardcoded account allowlists must not decide product runtime admission.
 - Run results exposed by Web are refs/progress/deliverables/blockers only; artifact bodies, domain verdicts, storage object keys, signed URLs, and billing mutation results stay outside Web authority.
 - Workspace/runtime/node pool/storage/billing concepts stay hidden from the public WebUI unless a future contract admits a user-facing projection.
 

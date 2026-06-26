@@ -127,9 +127,9 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
-  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_allowlist_eval').status, 'pass');
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').status, 'pass');
   assert.equal(
-    byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_allowlist_eval').evidenceSource,
+    byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').evidenceSource,
     'conditions',
   );
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_readonly_projection').status, 'pass');

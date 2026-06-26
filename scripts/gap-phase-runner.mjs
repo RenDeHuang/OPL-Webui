@@ -264,8 +264,10 @@ function evaluateRuntimeGap({ runtime }) {
   const admission = runtime?.executionAdmission;
   const conditions = admission?.conditions ?? [];
   const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
-  const bridgeBoundaryAccepted = Array.isArray(admission?.currentAllowlist)
-    && admission.currentAllowlist.length === 0
+  const commandPolicy = admission?.webRuntimeCommandPolicy ?? {};
+  const bridgeBoundaryAccepted = Array.isArray(commandPolicy.allowedCommands)
+    && commandPolicy.allowedCommands.length === 0
+    && commandPolicy.productAccessPolicy === false
     && admission?.ownerReceipt?.acceptedClaim === 'medopl_runtime_gate_run_bridge_local_refs_only_accepted';
   return [
     evalResult({
@@ -294,19 +296,19 @@ function evaluateRuntimeGap({ runtime }) {
       dimension: 'owner',
       status: bridgeBoundaryAccepted ? 'pass' : 'blocked',
       proves: ['runtime owner accepted the local MedOPL gate/run refs-only boundary when present'],
-      doesNotProve: ['runtime execution readiness', 'non-empty command allowlist', 'artifact body authority'],
+      doesNotProve: ['runtime execution readiness', 'non-empty Web runtime command policy', 'artifact body authority'],
     }),
     evalResult({
-      id: 'runtime_allowlist_eval',
+      id: 'runtime_command_policy_eval',
       dimension: 'repo_local',
       status: bridgeBoundaryAccepted
         && conditionStatus('registered_bridge_eval') === 'pass'
-        && conditionStatus('command_allowlist') === 'present'
+        && conditionStatus('web_runtime_command_policy') === 'present'
         ? 'pass'
         : 'blocked',
       evidenceSource: 'conditions',
-      proves: ['empty command allowlist is the accepted fail-closed runtime boundary'],
-      doesNotProve: ['production runtime execution', 'domain-agent quality', 'non-empty command allowlist'],
+      proves: ['empty Web runtime command policy is the accepted fail-closed mutation boundary and not product access policy'],
+      doesNotProve: ['production runtime execution', 'domain-agent quality', 'non-empty Web runtime command policy'],
     }),
   ];
 }
