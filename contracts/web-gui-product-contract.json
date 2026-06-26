@@ -31,6 +31,86 @@
     "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "task_history_continuation_center_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
     "mustNotShow": ["dashboard_first_app_home", "explanatory_landing_inside_app_shell", "left_rail_primary_navigation", "workspace_sidebar_primary_shell", "raw_trace_console", "runtime_truth_panel", "billing_source_of_truth", "node_pool_console", "artifact_body_authority", "multi_column_sidebar_sprawl", "duplicated_files_progress_panels", "raw_upstream_transcript_for_structured_research_result", "floating_desktop_inspector_overlay", "heavy_mobile_inspector_sheet", "visible_fixed_base_url_in_user_shell", "model_gateway_url_pill", "settings_status_dump_in_more", "test_evidence_copy_in_inspector", "fake_input_progress_output_refs", "account_glyph_text_person"]
   },
+  "uiUxReferenceCandidate": {
+    "id": "figma_make_ui_ux_for_commercial_launch",
+    "state": "accepted_reference_candidate",
+    "role": "visual_direction_and_user_flow_reference_only",
+    "source": {
+      "kind": "figma_make_code_bundle",
+      "name": "UI UX for Commercial Launch",
+      "figmaUrl": "https://www.figma.com/design/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch",
+      "localZip": "C:\\Users\\Administrator\\Downloads\\UI_UX for Commercial Launch.zip",
+      "inspectedFiles": ["README.md", "src/app/App.tsx", "src/styles/theme.css", "package.json", "guidelines/Guidelines.md"],
+      "doNotVendorBundle": true
+    },
+    "appliesTo": ["public_growth_layer", "account_based_user_product_layer"],
+    "doesNotApplyTo": ["minimal_admin_ops_layer"],
+    "appliesToProductLayers": ["public_growth_layer", "account_based_user_product_layer"],
+    "notApplicableToProductLayers": ["minimal_admin_ops_layer"],
+    "references": {
+      "publicGrowthLayerUIReference": {
+        "layer": "public_growth_layer",
+        "purpose": "product_introduction_task_scenarios_output_showcase_start_path",
+        "acceptedSurfaces": ["product_introduction", "task_scenarios", "output_showcase", "audience_fit", "start_path"]
+      },
+      "accountBasedUserProductLayerUIReference": {
+        "layer": "account_based_user_product_layer",
+        "purpose": "authenticated_workbench_task_entry_task_history_refs_blocker_next_step_deeplink",
+        "acceptedSurfaces": ["authenticated_workbench", "task_entry", "task_history", "refs", "blocker_next_step", "medopl_opl_deeplink"]
+      }
+    },
+    "acceptedVisualDirection": {
+      "aesthetic": "warm_low_stimulus_research_workspace",
+      "primaryAccent": "#2f6b4f",
+      "surfaceTone": "warm_gray_research_notebook",
+      "layoutSignals": ["public_landing", "auth_card", "side_navigation", "center_composer", "right_or_bottom_inspector", "refs_only_result_artifact"],
+      "componentSignals": ["task_pills", "login_register_card", "account_popover", "readonly_projection_panel", "runtime_gate_panel", "inspector_tabs"]
+    },
+    "acceptedVisualPatterns": ["public_product_intro", "task_scenario_gallery", "output_refs_showcase", "start_path_card", "authenticated_research_workbench", "task_history_continuation_center", "refs_first_result_panel", "blocker_next_step_panel", "external_handoff_panel"],
+    "acceptedInteractionPatterns": ["start_path_after_auth_return", "task_entry_to_composer", "task_history_continue", "refs_inspection", "blocker_next_step_handoff", "medopl_opl_deeplink", "readonly_projection_expand"],
+    "acceptedUserProductSurfaces": ["public_landing", "public_product_intro", "public_task_scenarios", "public_output_showcase", "public_start_path", "login_register", "byok_binding", "authenticated_workbench", "task_entry_composer", "research_mode_pills", "ordinary_research_result", "refs_only_result", "progress_refs", "deliverable_refs", "task_history_continuation", "blocker_next_step", "runtime_gate_projection", "medopl_deeplink", "readonly_commercial_projection"],
+    "claimSemantics": {
+      "currentCannotClaimMeaning": "current_stage_evidence_boundary_not_permanent_product_vision_denial",
+      "futurePossibleCapabilityMeaning": "may_be_introduced_by_future_contract_evidence_owner_receipt_and_registered_tests",
+      "paymentRuntimeStorageLanguagePolicy": "terms_may_appear_only_as_medopl_owned_projection_or_future_placeholder_until_web_contract_and_evidence_exist"
+    },
+    "canonicalCopyGrammar": {
+      "Commercial Launch": ["Controlled Knowledge Delivery", "One Person Lab Web"],
+      "Pro/credit/recharge": ["account capability", "API key", "quota projection", "external capability handoff"],
+      "runtime completed": "MedOPL continuation ready / refs available",
+      "storage ready": "MedOPL storage status projection",
+      "artifact body": "deliverable refs",
+      "payment status": "readonly commercial projection"
+    },
+    "rewriteRequiredTerms": ["Commercial Launch", "Pro", "credit", "recharge", "runtime completed", "storage", "storage ready", "artifact body", "payment status", "workspace"],
+    "wordingRewriteRequirements": {
+      "mustRewriteTerms": ["Commercial Launch", "Pro", "credit", "recharge", "runtime completed", "storage", "storage ready", "artifact body", "payment status", "workspace"],
+      "rewriteTo": {
+        "Commercial Launch": "Controlled Knowledge Delivery / One Person Lab Web",
+        "Pro": "account capability / external capability handoff",
+        "credit": "API key / quota projection",
+        "recharge": "external capability handoff",
+        "runtime completed": "MedOPL continuation ready / refs available",
+        "storage": "materials or deliverable refs",
+        "storage ready": "MedOPL storage status projection",
+        "artifact body": "deliverable refs",
+        "payment status": "readonly commercial projection",
+        "workspace": "account context or MedOPL binding"
+      },
+      "rules": ["Do not present payment, pricing, subscription, invoice, or recharge as Web-owned actions.", "Do not present runtime execution as completed by Web; use refs/progress/deeplink language unless future runtime evidence exists.", "Do not expose workspace or storage as Web product primitives in the user shell.", "Readonly commercial lifecycle can be shown as a projection only, with MedOPL authority wording."]
+    },
+    "forbiddenVisibleClaims": ["web_owned_payment", "web_owned_runtime_execution", "web_owned_storage_truth", "artifact_body_authority", "full_saas", "admin_ops_operator_controls", "_ops_ui", "operator_controls", "production_ready_saas"],
+    "forbiddenFalseClaims": ["web_owned_payment", "web_owned_runtime_execution", "web_owned_storage_truth", "artifact_body_authority", "full_saas", "admin_ops_operator_controls", "_ops_ui", "operator_controls", "production_ready_saas"],
+    "futureCapabilityPlaceholders": ["payment_or_commercial_lifecycle_with_contract_and_evidence", "medopl_owned_runtime_execution_with_contract_and_evidence", "medopl_owned_storage_or_artifact_body_with_contract_and_evidence", "team_rbac_or_org_workspace_with_contract_and_evidence"],
+    "implementationPolicy": {
+      "directReplacement": "forbidden",
+      "largeDependencyImport": "forbidden",
+      "adminOpsImplementation": "forbidden",
+      "releaseEvidenceChange": "forbidden_in_this_slice",
+      "allowedNextSlice": "ui_ux_candidate_alignment_public_user_layers",
+      "requiresBeforeImplementation": ["wording_rewrite", "page_state_alignment", "registered_contract_or_browser_tests", "repo_bloat_check"]
+    }
+  },
   "objectGrammar": {
     "allowedPrimaryObjects": ["Task", "Session", "Message", "Skill", "InputFile", "OutputFile", "ProgressStage", "ApiKey", "Model", "Export"],
     "allowedSecondaryObjects": ["TaskHistoryProjection", "TaskRefs", "FileReference", "OutputVersion", "AuditProjection", "RuntimeGateProjection"],
