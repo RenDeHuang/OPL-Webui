@@ -40,6 +40,9 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/account/audit-events", server.HandleAuditEvents)
 	mux.HandleFunc("/api/account/billing-summary", server.HandleBillingSummary)
 	mux.HandleFunc("/api/account/commercial-status", server.HandleCommercialStatus)
+	mux.HandleFunc("/api/ops/registration-policy", server.HandleOpsRegistrationPolicy)
+	mux.HandleFunc("/api/ops/users/", server.HandleOpsUserStatus)
+	mux.HandleFunc("/api/ops/users", server.HandleOpsUsers)
 	mux.HandleFunc("/api/medopl/runtime/status", server.HandleRuntimeStatus)
 	mux.HandleFunc("/api/medopl/materials-deliverables/projection", server.HandleMaterialsDeliverables)
 	mux.HandleFunc("/api/opl/runtime-gate", server.HandleRuntimeGate)
@@ -59,6 +62,10 @@ func (server Server) HandleRegister(response http.ResponseWriter, request *http.
 		Password string `json:"password"`
 	}
 	if !decodeStrict(response, request, &payload) {
+		return
+	}
+	if server.Store.RegistrationMode() != RegistrationModeOpen {
+		writeError(response, http.StatusLocked, "REGISTRATION_CLOSED", "registration is closed by operator policy")
 		return
 	}
 	hash, err := hashPassword(payload.Password)
@@ -94,6 +101,10 @@ func (server Server) HandleLogin(response http.ResponseWriter, request *http.Req
 	user, ok := server.Store.FindUserByEmail(payload.Email)
 	if !ok || !verifyPassword(user.PasswordHash, payload.Password) {
 		writeError(response, http.StatusUnauthorized, "INVALID_CREDENTIALS", "email or password is invalid")
+		return
+	}
+	if user.Status == UserStatusDisabled {
+		writeError(response, http.StatusLocked, "USER_DISABLED", "user is disabled")
 		return
 	}
 	server.recordAudit(user.ID, "account.login", map[string]string{"authMode": AuthMode})

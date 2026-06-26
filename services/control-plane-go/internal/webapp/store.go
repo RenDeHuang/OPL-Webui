@@ -15,12 +15,23 @@ var (
 	ErrNotFound       = errors.New("not found")
 )
 
+const (
+	RegistrationModeOpen       = "open"
+	RegistrationModeInviteOnly = "invite_only"
+	RegistrationModeAllowlist  = "allowlist"
+	RegistrationModeDisabled   = "disabled"
+
+	UserStatusActive   = "active"
+	UserStatusDisabled = "disabled"
+)
+
 type User struct {
 	ID           string
 	Email        string
 	PasswordHash string
 	TenantID     string
 	WorkspaceID  string
+	Status       string
 	CreatedAt    time.Time
 }
 
@@ -59,6 +70,13 @@ type AuditEvent struct {
 	CreatedAt time.Time         `json:"createdAt"`
 }
 
+type OperatorAuditEvent struct {
+	ID        string
+	EventKind string
+	Metadata  map[string]string
+	CreatedAt time.Time
+}
+
 type ChatQuotaStatus struct {
 	Limit     int `json:"limit"`
 	Used      int `json:"used"`
@@ -69,6 +87,10 @@ type Store interface {
 	CreateUser(email string, passwordHash string) (User, error)
 	FindUserByEmail(email string) (User, bool)
 	FindUserByID(userID string) (User, bool)
+	ListUsers() []User
+	SetUserStatus(userID string, status string) (User, error)
+	RegistrationMode() string
+	SetRegistrationMode(mode string) error
 	SaveAPIKeyBinding(APIKeyBinding) error
 	GetAPIKeyBinding(userID string) (APIKeyBinding, bool)
 	CreateConversation(userID string, title string) (Conversation, error)
@@ -76,31 +98,36 @@ type Store interface {
 	GetConversation(userID string, conversationID string) (Conversation, []ChatMessage, bool)
 	AddMessage(ChatMessage) error
 	RecordAuditEvent(AuditEvent) error
+	RecordOperatorAuditEvent(OperatorAuditEvent) error
 	ListAuditEvents(userID string) []AuditEvent
 	ConsumeChatQuota(userID string, limit int) (ChatQuotaStatus, bool)
 	ChatQuotaStatus(userID string, limit int) ChatQuotaStatus
 }
 
 type MemoryStore struct {
-	mu            sync.RWMutex
-	users         map[string]User
-	emailToUserID map[string]string
-	apiKeys       map[string]APIKeyBinding
-	conversations map[string]Conversation
-	messages      map[string][]ChatMessage
-	auditEvents   []AuditEvent
-	chatUsage     map[string]int
+	mu                  sync.RWMutex
+	users               map[string]User
+	emailToUserID       map[string]string
+	apiKeys             map[string]APIKeyBinding
+	conversations       map[string]Conversation
+	messages            map[string][]ChatMessage
+	auditEvents         []AuditEvent
+	operatorAuditEvents []OperatorAuditEvent
+	chatUsage           map[string]int
+	registrationMode    string
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		users:         map[string]User{},
-		emailToUserID: map[string]string{},
-		apiKeys:       map[string]APIKeyBinding{},
-		conversations: map[string]Conversation{},
-		messages:      map[string][]ChatMessage{},
-		auditEvents:   []AuditEvent{},
-		chatUsage:     map[string]int{},
+		users:               map[string]User{},
+		emailToUserID:       map[string]string{},
+		apiKeys:             map[string]APIKeyBinding{},
+		conversations:       map[string]Conversation{},
+		messages:            map[string][]ChatMessage{},
+		auditEvents:         []AuditEvent{},
+		operatorAuditEvents: []OperatorAuditEvent{},
+		chatUsage:           map[string]int{},
+		registrationMode:    RegistrationModeOpen,
 	}
 }
 
@@ -133,6 +160,53 @@ func (store *MemoryStore) FindUserByID(userID string) (User, bool) {
 	defer store.mu.RUnlock()
 	user, ok := store.users[userID]
 	return user, ok
+}
+
+func (store *MemoryStore) ListUsers() []User {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	users := []User{}
+	for _, user := range store.users {
+		users = append(users, user)
+	}
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].CreatedAt.Before(users[j].CreatedAt)
+	})
+	return users
+}
+
+func (store *MemoryStore) SetUserStatus(userID string, status string) (User, error) {
+	if !validUserStatus(status) {
+		return User{}, ErrNotFound
+	}
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	user, ok := store.users[userID]
+	if !ok {
+		return User{}, ErrNotFound
+	}
+	user.Status = status
+	store.users[userID] = user
+	return user, nil
+}
+
+func (store *MemoryStore) RegistrationMode() string {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	if !validRegistrationMode(store.registrationMode) {
+		return RegistrationModeOpen
+	}
+	return store.registrationMode
+}
+
+func (store *MemoryStore) SetRegistrationMode(mode string) error {
+	if !validRegistrationMode(mode) {
+		return ErrNotFound
+	}
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	store.registrationMode = mode
+	return nil
 }
 
 func (store *MemoryStore) SaveAPIKeyBinding(binding APIKeyBinding) error {
@@ -215,7 +289,26 @@ func newUser(email string, passwordHash string) User {
 		PasswordHash: passwordHash,
 		TenantID:     "tenant_" + randomHex(8),
 		WorkspaceID:  "workspace_" + randomHex(8),
+		Status:       UserStatusActive,
 		CreatedAt:    time.Now().UTC(),
+	}
+}
+
+func validRegistrationMode(mode string) bool {
+	switch mode {
+	case RegistrationModeOpen, RegistrationModeInviteOnly, RegistrationModeAllowlist, RegistrationModeDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+func validUserStatus(status string) bool {
+	switch status {
+	case UserStatusActive, UserStatusDisabled:
+		return true
+	default:
+		return false
 	}
 }
 

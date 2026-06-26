@@ -13,20 +13,165 @@
     "primary": "account_based_user_product_layer",
     "publicGrowthLayer": {
       "status": "basically_done",
-      "surfaces": ["public_homepage", "use_cases", "task_skill_catalog", "example_outputs", "updates", "login_cta"],
+      "surfaces": [
+        "public_homepage",
+        "use_cases",
+        "task_skill_catalog",
+        "example_outputs",
+        "updates",
+        "login_cta"
+      ],
       "usesExistingAuthRoutesOnly": true,
-      "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "full SaaS", "payment/team/RBAC/HA"]
+      "cannotClaim": [
+        "authenticated task success",
+        "runtime execution",
+        "artifact body authority",
+        "full SaaS",
+        "payment/team/RBAC/HA"
+      ]
     },
     "minimalAdminOpsLayer": {
-      "status": "gap_next",
-      "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
-      "userStatusAllowed": ["active", "disabled"],
-      "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "view_dogfood_account", "view_release_evidence", "disable_user", "enable_user"],
+      "status": "active_slice_registration_policy_user_status_v0",
+      "registrationModeAllowed": [
+        "open",
+        "invite_only",
+        "allowlist",
+        "disabled"
+      ],
+      "userStatusAllowed": [
+        "active",
+        "disabled"
+      ],
+      "operatorOnlyCapabilities": [
+        "view_sanitized_user_status",
+        "view_quota",
+        "view_audit",
+        "disable_user",
+        "enable_user"
+      ],
       "allAdminOperationsAudited": true,
-      "forbiddenCapabilities": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"]
+      "authBoundary": "operator_token_required",
+      "forbiddenCapabilities": [
+        "payment",
+        "pricing",
+        "subscription",
+        "invoice",
+        "refund",
+        "team_rbac",
+        "support_impersonation"
+      ]
     }
   },
   "paths": {
+    "/api/ops/registration-policy": {
+      "get": {
+        "summary": "Read operator-only registration policy.",
+        "responses": {
+          "200": {
+            "description": "Current registration policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOpsRegistrationPolicy"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Operator token required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      },
+      "put": {
+        "summary": "Update operator-only registration policy.",
+        "responses": {
+          "200": {
+            "description": "Updated registration policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOpsRegistrationPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid registration mode."
+          },
+          "401": {
+            "description": "Operator token required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
+    "/api/ops/users": {
+      "get": {
+        "summary": "List sanitized users for operator-only controls.",
+        "responses": {
+          "200": {
+            "description": "Sanitized user summaries.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOpsUserList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Operator token required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
+    "/api/ops/users/{userId}/status": {
+      "post": {
+        "summary": "Enable or disable a user through operator-only controls.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated sanitized user summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOpsUserSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user status."
+          },
+          "401": {
+            "description": "Operator token required."
+          },
+          "404": {
+            "description": "User not found."
+          },
+          "405": {
+            "description": "Method not allowed."
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "summary": "Register a public Web account.",
@@ -37,11 +182,14 @@
           "400": {
             "description": "Invalid JSON or credential input."
           },
+          "405": {
+            "description": "Method not allowed."
+          },
           "409": {
             "description": "Email is already registered."
           },
-          "405": {
-            "description": "Method not allowed."
+          "423": {
+            "description": "Registration is closed by operator policy."
           },
           "500": {
             "description": "Account could not be created."
@@ -67,6 +215,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           },
           "503": {
             "description": "Session secret is missing."
@@ -99,6 +250,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -115,6 +269,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       },
@@ -132,6 +289,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           },
           "500": {
             "description": "Provider key could not be saved."
@@ -164,6 +324,9 @@
           "409": {
             "description": "Runtime required for OPL capability."
           },
+          "423": {
+            "description": "User is disabled by operator policy."
+          },
           "429": {
             "description": "Quota exceeded before upstream call."
           },
@@ -195,6 +358,9 @@
           "405": {
             "description": "Method not allowed."
           },
+          "423": {
+            "description": "User is disabled by operator policy."
+          },
           "424": {
             "description": "MedOPL account/resource runtime gate is not ready, or OPL-Webui operator MedOPL endpoint config is missing."
           },
@@ -223,6 +389,9 @@
           "405": {
             "description": "Method not allowed."
           },
+          "423": {
+            "description": "User is disabled by operator policy."
+          },
           "424": {
             "description": "MedOPL account/resource runtime gate blocks the run."
           },
@@ -247,6 +416,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -279,6 +451,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -295,6 +470,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -311,6 +489,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -334,6 +515,9 @@
           },
           "405": {
             "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
           }
         }
       }
@@ -391,6 +575,12 @@
           "ACCOUNT_CREATE_FAILED",
           "INVALID_CREDENTIALS",
           "SESSION_SECRET_REQUIRED",
+          "REGISTRATION_CLOSED",
+          "USER_DISABLED",
+          "OPERATOR_AUTH_REQUIRED",
+          "INVALID_REGISTRATION_MODE",
+          "INVALID_USER_STATUS",
+          "USER_NOT_FOUND",
           "API_KEY_SECRET_REQUIRED",
           "INVALID_API_KEY",
           "API_KEY_SAVE_FAILED",
@@ -407,9 +597,159 @@
           "UPSTREAM_CHAT_FAILED"
         ]
       },
+      "AdminOpsRegistrationPolicy": {
+        "type": "object",
+        "required": [
+          "ok",
+          "owner",
+          "registrationMode",
+          "doesNotProve"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "owner": {
+            "const": "OnePersonLabWeb"
+          },
+          "registrationMode": {
+            "enum": [
+              "open",
+              "invite_only",
+              "allowlist",
+              "disabled"
+            ]
+          },
+          "doesNotProve": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "full SaaS",
+                "payment lifecycle",
+                "team/RBAC lifecycle",
+                "HA",
+                "runtime sync"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminOpsUserSummary": {
+        "type": "object",
+        "required": [
+          "userId",
+          "email",
+          "tenantId",
+          "workspaceId",
+          "userStatus",
+          "createdAt",
+          "quota",
+          "auditSummary"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "userStatus": {
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "quota": {
+            "type": "object",
+            "required": [
+              "limit",
+              "used",
+              "remaining"
+            ],
+            "properties": {
+              "limit": {
+                "type": "integer"
+              },
+              "used": {
+                "type": "integer"
+              },
+              "remaining": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
+          },
+          "auditSummary": {
+            "type": "object",
+            "required": [
+              "eventCount",
+              "latestEventKind"
+            ],
+            "properties": {
+              "eventCount": {
+                "type": "integer"
+              },
+              "latestEventKind": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdminOpsUserList": {
+        "type": "object",
+        "required": [
+          "ok",
+          "owner",
+          "users",
+          "doesNotProve"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "owner": {
+            "const": "OnePersonLabWeb"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminOpsUserSummary"
+            }
+          },
+          "doesNotProve": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "full SaaS",
+                "payment lifecycle",
+                "team/RBAC lifecycle",
+                "HA",
+                "runtime sync"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "SanitizedAuditEvent": {
         "type": "object",
-        "required": ["type", "createdAt"],
+        "required": [
+          "type",
+          "createdAt"
+        ],
         "properties": {
           "type": {
             "type": "string"
@@ -440,32 +780,79 @@
           "webuiBillingSourceOfTruth"
         ],
         "properties": {
-          "ok": { "type": "boolean" },
-          "owner": { "const": "OnePersonLabWeb" },
-          "productId": { "const": "one-person-lab-web" },
-          "accountType": { "enum": ["personal"] },
-          "lifecycleState": { "enum": ["active"] },
-          "tenantId": { "type": "string" },
-          "tenantRole": { "enum": ["owner"] },
+          "ok": {
+            "type": "boolean"
+          },
+          "owner": {
+            "const": "OnePersonLabWeb"
+          },
+          "productId": {
+            "const": "one-person-lab-web"
+          },
+          "accountType": {
+            "enum": [
+              "personal"
+            ]
+          },
+          "lifecycleState": {
+            "enum": [
+              "active"
+            ]
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "tenantRole": {
+            "enum": [
+              "owner"
+            ]
+          },
           "teamReadiness": {
             "type": "object",
-            "required": ["state", "owner", "consumer", "allowedNextActions"],
+            "required": [
+              "state",
+              "owner",
+              "consumer",
+              "allowedNextActions"
+            ],
             "properties": {
-              "state": { "enum": ["single_user_owner"] },
-              "owner": { "const": "OnePersonLabWeb" },
-              "consumer": { "const": "settings_lifecycle_summary" },
+              "state": {
+                "enum": [
+                  "single_user_owner"
+                ]
+              },
+              "owner": {
+                "const": "OnePersonLabWeb"
+              },
+              "consumer": {
+                "const": "settings_lifecycle_summary"
+              },
               "allowedNextActions": {
                 "type": "array",
-                "items": { "enum": ["view_medopl_billing"] }
+                "items": {
+                  "enum": [
+                    "view_medopl_billing"
+                  ]
+                }
               }
             },
             "additionalProperties": false
           },
-          "webuiTeamMutation": { "const": "forbidden" },
-          "webuiInviteMutation": { "const": "forbidden" },
-          "webuiRBACMutation": { "const": "forbidden" },
-          "webuiPaymentMutation": { "const": "forbidden" },
-          "webuiBillingSourceOfTruth": { "const": "forbidden" }
+          "webuiTeamMutation": {
+            "const": "forbidden"
+          },
+          "webuiInviteMutation": {
+            "const": "forbidden"
+          },
+          "webuiRBACMutation": {
+            "const": "forbidden"
+          },
+          "webuiPaymentMutation": {
+            "const": "forbidden"
+          },
+          "webuiBillingSourceOfTruth": {
+            "const": "forbidden"
+          }
         },
         "additionalProperties": false
       }

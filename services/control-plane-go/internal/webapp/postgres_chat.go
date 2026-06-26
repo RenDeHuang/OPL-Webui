@@ -100,6 +100,24 @@ values ($1, $2, $3, $4::jsonb, $5)
 	return err
 }
 
+func (store PostgresStore) RecordOperatorAuditEvent(event OperatorAuditEvent) error {
+	if event.ID == "" {
+		event.ID = "opsaudit_" + randomHex(8)
+	}
+	if event.CreatedAt.IsZero() {
+		event.CreatedAt = time.Now().UTC()
+	}
+	metadata, err := json.Marshal(sanitizeMetadata(event.Metadata))
+	if err != nil {
+		return err
+	}
+	_, err = store.db.ExecContext(context.Background(), `
+insert into webapp_operator_audit_events (id, event_kind, metadata, created_at)
+values ($1, $2, $3::jsonb, $4)
+`, event.ID, event.EventKind, string(metadata), event.CreatedAt)
+	return err
+}
+
 func (store PostgresStore) ListAuditEvents(userID string) []AuditEvent {
 	rows, err := store.db.QueryContext(context.Background(), `
 select id, user_id, event_kind, metadata, created_at

@@ -4,14 +4,24 @@
   "productLayers": [
     { "id": "public_growth_layer", "status": "current_public_surface", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
     { "id": "account_based_user_product_layer", "status": "current_primary", "surfaceOwner": "account_based_web_app", "defaultAudience": "authenticated_research_user" },
-    { "id": "minimal_admin_ops_layer", "status": "gap_next", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
+    { "id": "minimal_admin_ops_layer", "status": "active_slice", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
   ],
   "minimalAdminOpsLayer": {
     "registrationMode": { "default": "open", "allowed": ["open", "invite_only", "allowlist", "disabled"] },
     "userStatus": { "allowed": ["active", "disabled"] },
-    "firstPhaseRouteOptions": ["operator_only_api_or_cli", "/_ops"],
+    "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
+    "firstPhaseRouteOptions": ["operator_only_api", "/_ops"],
+    "operatorAuth": "operator_token_required",
+    "apiRoutes": [
+      "GET /api/ops/registration-policy",
+      "PUT /api/ops/registration-policy",
+      "GET /api/ops/users",
+      "POST /api/ops/users/{userId}/status"
+    ],
+    "disabledUserDenials": ["login", "session_current", "chat", "api_key_binding", "user_product_path"],
     "requiresAuditForAdminMutation": true,
-    "forbiddenSurfaces": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"]
+    "forbiddenSurfaces": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"],
+    "doesNotProve": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "HA", "runtime sync", "runtime execution"]
   },
   "publicGrowthLayer": {
     "owner": "one-person-lab-web",

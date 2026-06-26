@@ -20,6 +20,20 @@ func (store *MemoryStore) RecordAuditEvent(event AuditEvent) error {
 	return nil
 }
 
+func (store *MemoryStore) RecordOperatorAuditEvent(event OperatorAuditEvent) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	if event.ID == "" {
+		event.ID = "opsaudit_" + randomHex(8)
+	}
+	if event.CreatedAt.IsZero() {
+		event.CreatedAt = time.Now().UTC()
+	}
+	event.Metadata = sanitizeMetadata(event.Metadata)
+	store.operatorAuditEvents = append(store.operatorAuditEvents, event)
+	return nil
+}
+
 func (store *MemoryStore) ListAuditEvents(userID string) []AuditEvent {
 	store.mu.RLock()
 	defer store.mu.RUnlock()

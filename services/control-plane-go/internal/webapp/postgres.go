@@ -19,6 +19,7 @@ create table if not exists users (
 );
 alter table users add column if not exists email text;
 alter table users add column if not exists password_hash text;
+alter table users add column if not exists user_status text not null default 'active';
 alter table users add column if not exists created_at timestamptz not null default now();
 create unique index if not exists users_email_unique on users (lower(email)) where email is not null;
 create table if not exists tenants (
@@ -75,12 +76,23 @@ create table if not exists webapp_audit_events (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+create table if not exists webapp_operator_audit_events (
+  id text primary key,
+  event_kind text not null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
 create table if not exists webapp_chat_usage (
   user_id text not null references users(id),
   period text not null,
   used_count bigint not null default 0,
   updated_at timestamptz not null default now(),
   primary key (user_id, period)
+);
+create table if not exists webapp_ops_state (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
 );`
 
 type PostgresStore struct {
@@ -151,9 +163,9 @@ func (store PostgresStore) CreateUser(email string, passwordHash string) (User, 
 		}
 	}()
 	if _, err := tx.ExecContext(context.Background(), `
-insert into users (id, display_name, email, password_hash, created_at)
-values ($1, $2, $3, $4, $5)
-`, user.ID, user.Email, user.Email, user.PasswordHash, user.CreatedAt); err != nil {
+insert into users (id, display_name, email, password_hash, user_status, created_at)
+values ($1, $2, $3, $4, $5, $6)
+`, user.ID, user.Email, user.Email, user.PasswordHash, user.Status, user.CreatedAt); err != nil {
 		return User{}, mapDuplicate(err)
 	}
 	statements := []struct {
@@ -188,14 +200,86 @@ func (store PostgresStore) FindUserByID(userID string) (User, bool) {
 func (store PostgresStore) findUser(where string, value string) (User, bool) {
 	user := User{}
 	err := store.db.QueryRowContext(context.Background(), `
-select u.id, u.email, u.password_hash, tm.tenant_id, wm.workspace_id, u.created_at
+select u.id, u.email, u.password_hash, tm.tenant_id, wm.workspace_id, u.user_status, u.created_at
 from users u
 join tenant_memberships tm on tm.user_id = u.id
 join workspace_memberships wm on wm.user_id = u.id and wm.tenant_id = tm.tenant_id
 `+where+`
 limit 1
-`, value).Scan(&user.ID, &user.Email, &user.PasswordHash, &user.TenantID, &user.WorkspaceID, &user.CreatedAt)
+`, value).Scan(&user.ID, &user.Email, &user.PasswordHash, &user.TenantID, &user.WorkspaceID, &user.Status, &user.CreatedAt)
+	if err == nil && user.Status == "" {
+		user.Status = UserStatusActive
+	}
 	return user, err == nil
+}
+
+func (store PostgresStore) ListUsers() []User {
+	rows, err := store.db.QueryContext(context.Background(), `
+select u.id, u.email, u.password_hash, tm.tenant_id, wm.workspace_id, u.user_status, u.created_at
+from users u
+join tenant_memberships tm on tm.user_id = u.id
+join workspace_memberships wm on wm.user_id = u.id and wm.tenant_id = tm.tenant_id
+order by u.created_at asc
+`)
+	if err != nil {
+		return []User{}
+	}
+	defer rows.Close()
+	users := []User{}
+	for rows.Next() {
+		user := User{}
+		if err := rows.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.TenantID, &user.WorkspaceID, &user.Status, &user.CreatedAt); err != nil {
+			return []User{}
+		}
+		if user.Status == "" {
+			user.Status = UserStatusActive
+		}
+		users = append(users, user)
+	}
+	return users
+}
+
+func (store PostgresStore) SetUserStatus(userID string, status string) (User, error) {
+	if !validUserStatus(status) {
+		return User{}, ErrNotFound
+	}
+	result, err := store.db.ExecContext(context.Background(), `
+update users set user_status = $1 where id = $2
+`, status, userID)
+	if err != nil {
+		return User{}, err
+	}
+	if affected, _ := result.RowsAffected(); affected == 0 {
+		return User{}, ErrNotFound
+	}
+	user, ok := store.FindUserByID(userID)
+	if !ok {
+		return User{}, ErrNotFound
+	}
+	return user, nil
+}
+
+func (store PostgresStore) RegistrationMode() string {
+	mode := ""
+	err := store.db.QueryRowContext(context.Background(), `
+select value from webapp_ops_state where key = 'registration_mode'
+`).Scan(&mode)
+	if err != nil || !validRegistrationMode(mode) {
+		return RegistrationModeOpen
+	}
+	return mode
+}
+
+func (store PostgresStore) SetRegistrationMode(mode string) error {
+	if !validRegistrationMode(mode) {
+		return ErrNotFound
+	}
+	_, err := store.db.ExecContext(context.Background(), `
+insert into webapp_ops_state (key, value)
+values ('registration_mode', $1)
+on conflict (key) do update set value = excluded.value, updated_at = now()
+`, mode)
+	return err
 }
 
 func (store PostgresStore) SaveAPIKeyBinding(binding APIKeyBinding) error {

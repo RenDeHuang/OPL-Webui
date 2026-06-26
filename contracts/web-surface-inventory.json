@@ -427,6 +427,14 @@
       "lifecycle": "durable"
     },
     {
+      "path": "tests/contract/admin-ops-v0-contract.test.mjs",
+      "type": "test",
+      "ownerSurface": "minimal-admin-ops-layer",
+      "consumer": ["npm run verify:contract"],
+      "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-api.openapi.json"],
+      "lifecycle": "durable"
+    },
+    {
       "path": "tests/contract/go-control-plane-http.test.mjs",
       "type": "test",
       "ownerSurface": "control-plane-go",

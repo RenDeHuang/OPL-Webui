@@ -89,9 +89,9 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /Public Growth Layer closeout/);
+  assert.match(status, /three-layer product portfolio plus active slice development/);
   assert.match(status, /docs\/active\/README\.md/);
-  assert.match(status, /Product work moves one gap at a time/);
+  assert.match(status, /Product work moves one slice at a time/);
   assert.match(status, /current = smoke \+ contract \+ health \+ go/);
   assert.match(status, /scripts\/lane-advisory\.mjs/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
@@ -889,7 +889,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.deepEqual(product.productLayers.map((layer) => [layer.id, layer.status]), [
     ['public_growth_layer', 'basically_done'],
     ['account_based_user_product_layer', 'basically_done'],
-    ['minimal_admin_ops_layer', 'gap_next'],
+    ['minimal_admin_ops_layer', 'active_slice'],
   ]);
   const byLayer = Object.fromEntries(product.productLayers.map((layer) => [layer.id, layer]));
   assert.deepEqual(byLayer.public_growth_layer.audience, ['anonymous_user']);
@@ -906,35 +906,39 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assertIncludesAll(byLayer.account_based_user_product_layer.forbiddenClaims, ['full_saas', 'payment', 'team_rbac', 'runtime_execution'], 'user layer forbidden claim');
   assert.deepEqual(byLayer.minimal_admin_ops_layer.registrationModeAllowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(byLayer.minimal_admin_ops_layer.userStatusAllowed, ['active', 'disabled']);
-  assert.deepEqual(byLayer.minimal_admin_ops_layer.firstPhaseSurfaces, ['operator_only_api_or_cli', 'same_domain_hidden_ops_route']);
-  assertIncludesAll(byLayer.minimal_admin_ops_layer.operatorOnlyCapabilities, ['view_sanitized_user_status', 'view_quota', 'view_audit', 'view_dogfood_account', 'view_release_evidence', 'disable_user', 'enable_user'], 'ops capability');
+  assert.equal(byLayer.minimal_admin_ops_layer.activeSlice, 'admin_ops_registration_policy_and_user_status_v0');
+  assert.deepEqual(byLayer.minimal_admin_ops_layer.firstPhaseSurfaces, ['operator_only_api', 'same_domain_hidden_ops_route']);
+  assertIncludesAll(byLayer.minimal_admin_ops_layer.operatorOnlyCapabilities, ['view_sanitized_user_status', 'view_quota', 'view_audit', 'disable_user', 'enable_user'], 'ops capability');
+  assert.equal(byLayer.minimal_admin_ops_layer.authBoundary, 'operator_token_required');
   assert.equal(byLayer.minimal_admin_ops_layer.allAdminOperationsAudited, true);
   assertIncludesAll(byLayer.minimal_admin_ops_layer.forbiddenCapabilities, ['payment', 'pricing', 'subscription', 'invoice', 'refund', 'team_rbac', 'support_impersonation'], 'ops forbidden capability');
 
   assert.deepEqual(product.gapMap.layers.map((layer) => [layer.id, layer.status]), [
     ['growth_layer', 'basically_done'],
     ['user_product_layer', 'basically_done'],
-    ['admin_ops_layer', 'gap_next'],
+    ['admin_ops_layer', 'active_slice'],
     ['production_rollout', 'partial'],
   ]);
   assert.deepEqual(pageState.productLayers.map((layer) => [layer.id, layer.status]), [
     ['public_growth_layer', 'current_public_surface'],
     ['account_based_user_product_layer', 'current_primary'],
-    ['minimal_admin_ops_layer', 'gap_next'],
+    ['minimal_admin_ops_layer', 'active_slice'],
   ]);
   assert.equal(pageState.minimalAdminOpsLayer.registrationMode.default, 'open');
   assert.deepEqual(pageState.minimalAdminOpsLayer.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(pageState.minimalAdminOpsLayer.userStatus.allowed, ['active', 'disabled']);
   assert.equal(pageState.minimalAdminOpsLayer.firstPhaseRouteOptions.includes('/_ops'), true);
+  assert.equal(pageState.minimalAdminOpsLayer.operatorAuth, 'operator_token_required');
   assert.equal(pageState.minimalAdminOpsLayer.requiresAuditForAdminMutation, true);
 
   assert.equal(api['x-product-layers'].primary, 'account_based_user_product_layer');
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'active_slice_registration_policy_user_status_v0');
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.registrationModeAllowed.includes('allowlist'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.forbiddenCapabilities.includes('payment'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.allAdminOperationsAudited, true);
   assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'basically_done');
   assert.equal(release.productLayerReadiness.publicGrowthLayer, 'basically_done');
-  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'gap_next');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'active_slice_registration_policy_user_status_v0');
   assertIncludesAll(release.productLayerReadiness.cannotClaimFromAdminOpsV0, ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'], 'admin ops cannot claim');
   assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
   assert.doesNotMatch(status, /sub2api/i);
@@ -942,7 +946,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.match(status, /Public Growth Layer/);
   assert.match(status, /Account-based User Product Layer/);
   assert.match(status, /Minimal Admin\/Ops Layer/);
-  assert.match(active, /minimal admin\/ops layer is a next-stage gap/i);
+  assert.match(active, /minimal admin\/ops layer active slice is registration policy and user status v0/i);
   assert.match(registry, /Admin\/Ops v0 does not prove full SaaS/);
 });
 

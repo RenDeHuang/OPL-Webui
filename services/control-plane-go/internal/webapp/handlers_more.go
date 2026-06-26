@@ -190,6 +190,10 @@ func (server Server) currentUser(response http.ResponseWriter, request *http.Req
 		writeError(response, http.StatusUnauthorized, "AUTH_REQUIRED", "session cookie is invalid")
 		return User{}, false
 	}
+	if user.Status == UserStatusDisabled {
+		writeError(response, http.StatusLocked, "USER_DISABLED", "user is disabled")
+		return User{}, false
+	}
 	return user, true
 }
 

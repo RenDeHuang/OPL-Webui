@@ -20,7 +20,7 @@
   "productLayerReadiness": {
     "publicGrowthLayer": "basically_done",
     "accountBasedUserProductLayer": "basically_done",
-    "minimalAdminOpsLayer": "gap_next",
+    "minimalAdminOpsLayer": "active_slice_registration_policy_user_status_v0",
     "productionRollout": "partial",
     "cannotClaimFromAdminOpsV0": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "HA", "runtime sync"],
     "evidenceBoundary": "Admin/Ops v0 can only prove minimum account admission/operator controls when implemented; it cannot prove commercial SaaS, payment, team/RBAC, HA, or runtime sync."

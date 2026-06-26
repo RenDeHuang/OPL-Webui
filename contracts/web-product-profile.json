@@ -55,13 +55,15 @@
     },
     {
       "id": "minimal_admin_ops_layer",
-      "status": "gap_next",
+      "status": "active_slice",
       "scope": "minimum account admission and operator controls only",
+      "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
       "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
       "userStatusAllowed": ["active", "disabled"],
-      "firstPhaseSurfaces": ["operator_only_api_or_cli", "same_domain_hidden_ops_route"],
-      "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "view_dogfood_account", "view_release_evidence", "disable_user", "enable_user"],
+      "firstPhaseSurfaces": ["operator_only_api", "same_domain_hidden_ops_route"],
+      "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "disable_user", "enable_user"],
       "allAdminOperationsAudited": true,
+      "authBoundary": "operator_token_required",
       "forbiddenCapabilities": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"],
       "cannotClaim": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "HA", "runtime sync"]
     }
@@ -136,6 +138,49 @@
     "members",
     "sharing"
   ],
+  "minimalAdminOpsLayerContract": {
+    "ownerSurface": "operator_only_controls",
+    "consumer": "operator",
+    "claim": "Admin/Ops v0 controls registration policy and user active/disabled admission with sanitized operator reads and audited mutations.",
+    "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
+    "contract": "contracts/web-api.openapi.json#/paths/~1api~1ops",
+    "uiSurface": {
+      "mode": "operator_only_api_first",
+      "hiddenRoute": "/_ops",
+      "hiddenRouteStatus": "reserved_for_same_domain_operator_entry"
+    },
+    "apiDataPath": [
+      "GET /api/ops/registration-policy",
+      "PUT /api/ops/registration-policy",
+      "GET /api/ops/users",
+      "POST /api/ops/users/{userId}/status"
+    ],
+    "registrationMode": {
+      "allowed": ["open", "invite_only", "allowlist", "disabled"],
+      "default": "open",
+      "failClosedModes": ["invite_only", "allowlist", "disabled"]
+    },
+    "userStatus": {
+      "allowed": ["active", "disabled"],
+      "disabledDenies": ["login", "session_current", "chat", "api_key_binding", "user_product_path"]
+    },
+    "operatorAuth": {
+      "mode": "operator_token_required",
+      "env": "OPL_ADMIN_OPERATOR_TOKEN",
+      "missingTokenPolicy": "fail_closed"
+    },
+    "sanitization": {
+      "forbiddenFields": ["rawApiKey", "encryptedApiKey", "passwordHash", "sessionCookie", "secret", "token"],
+      "adminReadReturns": ["userId", "email", "tenantId", "workspaceId", "userStatus", "createdAt", "quota", "auditSummary"]
+    },
+    "audit": {
+      "requiredFor": ["registration_policy_changed", "user_disabled", "user_enabled"],
+      "eventKinds": ["ops.registration_policy_changed", "ops.user_disabled", "ops.user_enabled"],
+      "metadataPolicy": "sanitized_no_secret_no_session_cookie"
+    },
+    "tests": ["tests/contract/admin-ops-v0-contract.test.mjs"],
+    "doesNotProve": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "support impersonation", "HA", "runtime sync", "runtime execution"]
+  },
   "accountBasedWebAppMainPath": {
     "mode": "account_based_web_edition_main_path_v1",
     "owner": "one-person-lab-web",
@@ -772,9 +817,9 @@
       },
       {
         "id": "admin_ops_layer",
-        "status": "gap_next",
-        "evidence": "contracts/web-product-profile.json#/productLayers/2",
-        "remainingGap": "registrationMode/userStatus/operator-only audited controls are contracted but not implemented as a new surface"
+        "status": "active_slice",
+        "evidence": "contracts/web-product-profile.json#/minimalAdminOpsLayerContract",
+        "remainingGap": "dogfood/release evidence summaries and richer hidden /_ops UI remain future slices"
       },
       {
         "id": "production_rollout",

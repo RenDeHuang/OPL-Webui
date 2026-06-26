@@ -27,20 +27,24 @@ function responseCodes(api, path, method) {
 test('OpenAPI contract covers implemented status and error-code surfaces', () => {
   const api = readApiContract();
 
-  assert.deepEqual(responseCodes(api, '/api/auth/register', 'post'), ['201', '400', '405', '409', '500', '503']);
-  assert.deepEqual(responseCodes(api, '/api/auth/login', 'post'), ['200', '400', '401', '405', '503']);
+  assert.deepEqual(responseCodes(api, '/api/auth/register', 'post'), ['201', '400', '405', '409', '423', '500', '503']);
+  assert.deepEqual(responseCodes(api, '/api/auth/login', 'post'), ['200', '400', '401', '405', '423', '503']);
   assert.deepEqual(responseCodes(api, '/api/auth/logout', 'post'), ['204', '405']);
-  assert.deepEqual(responseCodes(api, '/api/session/current', 'get'), ['200', '401', '405']);
-  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'get'), ['200', '401', '405']);
-  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'put'), ['200', '400', '401', '405', '500', '503']);
-  assert.deepEqual(responseCodes(api, '/api/chat', 'post'), ['200', '400', '401', '404', '405', '409', '429', '502', '503', '504']);
-  assert.deepEqual(responseCodes(api, '/api/opl/runtime-gate', 'post'), ['200', '400', '401', '405', '424', '502', '504']);
-  assert.deepEqual(responseCodes(api, '/api/opl/runs', 'post'), ['200', '400', '401', '405', '424', '502', '504']);
-  assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405']);
-  assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405']);
-  assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405']);
-  assert.deepEqual(responseCodes(api, '/api/account/billing-summary', 'get'), ['200', '401', '405']);
-  assert.deepEqual(responseCodes(api, '/api/account/commercial-status', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/session/current', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/settings/model-provider', 'put'), ['200', '400', '401', '405', '423', '500', '503']);
+  assert.deepEqual(responseCodes(api, '/api/chat', 'post'), ['200', '400', '401', '404', '405', '409', '423', '429', '502', '503', '504']);
+  assert.deepEqual(responseCodes(api, '/api/opl/runtime-gate', 'post'), ['200', '400', '401', '405', '423', '424', '502', '504']);
+  assert.deepEqual(responseCodes(api, '/api/opl/runs', 'post'), ['200', '400', '401', '405', '423', '424', '502', '504']);
+  assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/account/billing-summary', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/account/commercial-status', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/ops/registration-policy', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/ops/registration-policy', 'put'), ['200', '400', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/ops/users', 'get'), ['200', '401', '405']);
+  assert.deepEqual(responseCodes(api, '/api/ops/users/{userId}/status', 'post'), ['200', '400', '401', '404', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/runtime/status', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/medopl/materials-deliverables/projection', 'get'), ['200', '405']);
   assert.deepEqual(responseCodes(api, '/api/opl/snapshot', 'get'), ['200', '405']);
@@ -70,6 +74,12 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
     'ACCOUNT_CREATE_FAILED',
     'INVALID_CREDENTIALS',
     'SESSION_SECRET_REQUIRED',
+    'REGISTRATION_CLOSED',
+    'USER_DISABLED',
+    'OPERATOR_AUTH_REQUIRED',
+    'INVALID_REGISTRATION_MODE',
+    'INVALID_USER_STATUS',
+    'USER_NOT_FOUND',
     'API_KEY_SECRET_REQUIRED',
     'INVALID_API_KEY',
     'API_KEY_SAVE_FAILED',
