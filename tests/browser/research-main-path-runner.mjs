@@ -76,6 +76,10 @@ try {
   await submitPrompt(cdp, '@基金 帮我拆解标书结构');
   await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 2);
   await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@基金"', 'grant runtime task card');
+  await activate(cdp, '[data-shell-action="projects"]');
+  await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 2', () => describePageState(cdp, 'task history center missing recent tasks'));
+  await assertPage(cdp, 'document.querySelector("[data-task-history-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'task history continue deeplink');
+  await activate(cdp, '[data-shell-action="home"]');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
   if (!kinds.includes('runtime_gate.blocked')) {
@@ -92,6 +96,9 @@ try {
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
     researchResultSections: document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length,
     runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
+    taskHistoryCount: document.querySelectorAll('[data-task-history-item]').length,
+    taskHistoryStatus: document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus,
+    taskHistoryContinueHref: document.querySelector('[data-task-history-continue]')?.href,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked'].includes(kind));
@@ -108,14 +115,7 @@ try {
 }
 
 function resolveRunConfig(runMode) {
-  if (runMode === 'local') {
-    return {
-      baseUrl: '',
-      email: `browser-${Date.now()}@example.test`,
-      password: 'browser-e2e-password',
-      apiKey: 'sk-browser-e2e-secret',
-    };
-  }
+  if (runMode === 'local') return { baseUrl: '', email: `browser-${Date.now()}@example.test`, password: 'browser-e2e-password', apiKey: 'sk-browser-e2e-secret' };
   const config = {
     baseUrl: normalizeBaseUrl(process.env.OPL_BASE_URL || 'https://opl.medopl.cn'),
     email: process.env.OPL_DOGFOOD_EMAIL || '',

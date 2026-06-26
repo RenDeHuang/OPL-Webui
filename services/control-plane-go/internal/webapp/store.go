@@ -62,6 +62,48 @@ type ChatMessage struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
+type TaskRef struct {
+	Ref    string `json:"ref"`
+	Label  string `json:"label,omitempty"`
+	Status string `json:"status,omitempty"`
+	Kind   string `json:"kind,omitempty"`
+	Source string `json:"source,omitempty"`
+}
+
+type TaskNextAction struct {
+	ID       string `json:"id"`
+	Label    string `json:"label"`
+	DeepLink string `json:"deepLink"`
+}
+
+type TaskBlocker struct {
+	Kind       string `json:"kind"`
+	Title      string `json:"title"`
+	NextAction string `json:"nextAction,omitempty"`
+	DeepLink   string `json:"deepLink"`
+}
+
+type TaskHistoryItem struct {
+	ID                 string           `json:"taskId"`
+	UserID             string           `json:"-"`
+	ConversationID     string           `json:"conversationId,omitempty"`
+	TaskType           string           `json:"taskType"`
+	TaskIntent         string           `json:"taskIntent"`
+	Marker             string           `json:"marker"`
+	Status             string           `json:"status"`
+	ProgressRefs       []TaskRef        `json:"progressRefs"`
+	DeliverableRefs    []TaskRef        `json:"deliverableRefs"`
+	MaterialRefs       []TaskRef        `json:"materialRefs"`
+	Blocker            *TaskBlocker     `json:"blocker,omitempty"`
+	NextStep           string           `json:"nextStep"`
+	AllowedNextActions []TaskNextAction `json:"allowedNextActions"`
+	DeepLink           string           `json:"deeplink"`
+	CreatedAt          time.Time        `json:"createdAt"`
+	UpdatedAt          time.Time        `json:"updatedAt"`
+	WebuiArtifactBody  string           `json:"webuiArtifactBody"`
+	WebuiStorageTruth  string           `json:"webuiStorageTruth"`
+}
+
 type AuditEvent struct {
 	ID        string            `json:"eventId"`
 	UserID    string            `json:"-"`
@@ -97,6 +139,9 @@ type Store interface {
 	ListConversations(userID string) []Conversation
 	GetConversation(userID string, conversationID string) (Conversation, []ChatMessage, bool)
 	AddMessage(ChatMessage) error
+	UpsertTaskHistory(TaskHistoryItem) (TaskHistoryItem, error)
+	ListTaskHistory(userID string) []TaskHistoryItem
+	GetTaskHistory(userID string, taskID string) (TaskHistoryItem, bool)
 	RecordAuditEvent(AuditEvent) error
 	RecordOperatorAuditEvent(OperatorAuditEvent) error
 	ListAuditEvents(userID string) []AuditEvent
@@ -111,6 +156,7 @@ type MemoryStore struct {
 	apiKeys             map[string]APIKeyBinding
 	conversations       map[string]Conversation
 	messages            map[string][]ChatMessage
+	taskHistory         map[string]TaskHistoryItem
 	auditEvents         []AuditEvent
 	operatorAuditEvents []OperatorAuditEvent
 	chatUsage           map[string]int
@@ -124,6 +170,7 @@ func NewMemoryStore() *MemoryStore {
 		apiKeys:             map[string]APIKeyBinding{},
 		conversations:       map[string]Conversation{},
 		messages:            map[string][]ChatMessage{},
+		taskHistory:         map[string]TaskHistoryItem{},
 		auditEvents:         []AuditEvent{},
 		operatorAuditEvents: []OperatorAuditEvent{},
 		chatUsage:           map[string]int{},
@@ -279,6 +326,50 @@ func (store *MemoryStore) AddMessage(message ChatMessage) error {
 		store.conversations[message.ConversationID] = conversation
 	}
 	return nil
+}
+
+func (store *MemoryStore) UpsertTaskHistory(item TaskHistoryItem) (TaskHistoryItem, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	now := time.Now().UTC()
+	if item.ID == "" {
+		item.ID = "task_" + randomHex(8)
+	}
+	if existing, ok := store.taskHistory[item.ID]; ok {
+		item.CreatedAt = existing.CreatedAt
+	} else if item.CreatedAt.IsZero() {
+		item.CreatedAt = now
+	}
+	item.UpdatedAt = now
+	item.WebuiArtifactBody = "forbidden"
+	item.WebuiStorageTruth = "forbidden"
+	store.taskHistory[item.ID] = item
+	return item, nil
+}
+
+func (store *MemoryStore) ListTaskHistory(userID string) []TaskHistoryItem {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	items := []TaskHistoryItem{}
+	for _, item := range store.taskHistory {
+		if item.UserID == userID {
+			items = append(items, item)
+		}
+	}
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].UpdatedAt.After(items[j].UpdatedAt)
+	})
+	return items
+}
+
+func (store *MemoryStore) GetTaskHistory(userID string, taskID string) (TaskHistoryItem, bool) {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	item, ok := store.taskHistory[taskID]
+	if !ok || item.UserID != userID {
+		return TaskHistoryItem{}, false
+	}
+	return item, true
 }
 
 func newUser(email string, passwordHash string) User {

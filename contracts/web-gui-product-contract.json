@@ -28,15 +28,15 @@
     "appShell": "side_nav_command_home",
     "gensparkInfluence": "homepage_structure_reference",
     "codexInfluence": "contract_first_surface_builder",
-    "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "project_session_history_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
+    "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "task_history_continuation_center_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
     "mustNotShow": ["dashboard_first_app_home", "explanatory_landing_inside_app_shell", "left_rail_primary_navigation", "workspace_sidebar_primary_shell", "raw_trace_console", "runtime_truth_panel", "billing_source_of_truth", "node_pool_console", "artifact_body_authority", "multi_column_sidebar_sprawl", "duplicated_files_progress_panels", "raw_upstream_transcript_for_structured_research_result", "floating_desktop_inspector_overlay", "heavy_mobile_inspector_sheet", "visible_fixed_base_url_in_user_shell", "model_gateway_url_pill", "settings_status_dump_in_more", "test_evidence_copy_in_inspector", "fake_input_progress_output_refs", "account_glyph_text_person"]
   },
   "objectGrammar": {
-    "allowedPrimaryObjects": ["Project", "Session", "Message", "Skill", "InputFile", "OutputFile", "ProgressStage", "ApiKey", "Model", "Export"],
-    "allowedSecondaryObjects": ["ProjectFileRefs", "FileReference", "OutputVersion", "AuditProjection", "RuntimeGateProjection"],
+    "allowedPrimaryObjects": ["Task", "Session", "Message", "Skill", "InputFile", "OutputFile", "ProgressStage", "ApiKey", "Model", "Export"],
+    "allowedSecondaryObjects": ["TaskHistoryProjection", "TaskRefs", "FileReference", "OutputVersion", "AuditProjection", "RuntimeGateProjection"],
     "forbiddenPrimaryObjects": ["RuntimeTruth", "BillingSourceOfTruth", "NodePool", "RawTrace", "CloudConsole", "DomainVerdict", "ArtifactBodyAuthority"],
-    "fileHierarchy": ["project", "session", "input_output_refs"],
-    "ownershipRules": ["User owns projects.", "Project owns sessions.", "Session owns messages, input files, output files, and progress stages.", "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."]
+    "fileHierarchy": ["task", "session", "input_output_refs"],
+    "ownershipRules": ["User owns task intents and continuation state.", "Task history stores refs, status, and metadata only.", "Session owns messages, input refs, output refs, and progress stages.", "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."]
   },
   "taskFlow": {
     "primaryFlow": ["home", "compose_prompt_or_pick_starter_chip", "login_or_register_if_needed", "api_key_modal_if_needed", "attach_input_files_optional", "run_chat_or_runtime_gate", "inspect_progress_files_output", "export_or_continue"],
@@ -47,10 +47,10 @@
     "publicShell": ["side_navigation", "first_view", "secondary_surfaces", "overlay_layer"],
     "appShell": ["side_navigation", "home_command_canvas", "secondary_surfaces", "right_inspector_layer", "modal_layer"],
     "sideNavigation": ["home", "projects", "skills", "workflows", "search", "more"],
-    "sideNavigationLabels": ["新建对话", "Projects", "Skill", "工作流", "搜索", "More"],
+    "sideNavigationLabels": ["新建对话", "任务历史", "Skill", "工作流", "搜索", "More"],
     "sideNavigationTaskOwnership": {
       "home": "compose_or_start_research_task",
-      "projects": "browse_project_session_refs_and_create_project",
+      "projects": "browse_task_history_refs_and_continue",
       "skills": "browse_or_import_skill_entries",
       "workflows": "browse_create_or_import_agentic_research_workflows",
       "search": "open_conversation_history_search",
@@ -69,7 +69,7 @@
         "action": "route_projects_page",
         "targetView": "projects",
         "ownerSurface": "browser_shell",
-        "consumer": "project_library"
+        "consumer": "task_history_deliverable_continuation_center"
       },
       "skills": {
         "action": "route_skills_page",
@@ -100,7 +100,7 @@
       "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
-      "projects": ["project_library"],
+      "projects": ["task_history_deliverable_continuation_center"],
       "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
@@ -113,9 +113,10 @@
         "actions": ["create_workflow", "import_workflow"]
       },
       "projects": {
-        "scopes": ["my_projects"],
-        "actions": ["create_project"],
-        "forbiddenApis": ["/api/projects"]
+        "scopes": ["my_task_history"],
+        "actions": ["continue_task"],
+        "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"],
+        "projection": "refs_status_metadata_only"
       }
     },
     "inspector": ["files", "progress", "output"],
@@ -261,7 +262,7 @@
       "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_inspector_bottom_sheet", "account_popover_for_auth_and_api_key"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
-    "layoutRules": ["Home must use a centered AI-native composer-first composition.", "Side navigation hosts New Chat, Projects, Skill, 工作流, Search, and More; each primary item owns exactly one task class.", "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.", "Projects is a route-scoped project library with a local create-project action; it must not call /api/projects until a backend contract exists.", "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.", "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.", "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.", "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.", "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.", "The first viewport must not show summary strips, settings forms, chat history, or card grids.", "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.", "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."]
+    "layoutRules": ["Home must use a centered AI-native composer-first composition.", "Side navigation hosts New Chat, 任务历史, Skill, 工作流, Search, and More; each primary item owns exactly one task class.", "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.", "任务历史 is a route-scoped refs-only continuation center backed by /api/tasks; it must not store artifact bodies or storage truth.", "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.", "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.", "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.", "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.", "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.", "The first viewport must not show summary strips, settings forms, chat history, or card grids.", "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.", "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."]
   },
   "visualIdentity": {
     "subject": "ai_native_research_composer",
@@ -559,11 +560,12 @@
       "actions": ["create_workflow", "import_workflow"]
     },
     {
-      "id": "ProjectLibrary",
-      "role": "project_refs_secondary_route",
+      "id": "TaskHistoryCenter",
+      "role": "task_history_refs_secondary_route",
       "defaultState": "secondary_route",
-      "actions": ["create_project"],
-      "forbiddenApis": ["/api/projects"]
+      "actions": ["continue_task"],
+      "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"],
+      "projection": "refs_status_metadata_only"
     }
   ],
   "componentTokens": {

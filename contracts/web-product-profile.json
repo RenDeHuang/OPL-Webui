@@ -210,6 +210,61 @@
       "artifact body authority"
     ]
   },
+  "taskHistoryContinuationCenter": {
+    "slice": "task_history_deliverable_continuation_center_v0",
+    "ownerSurface": "account_based_user_product_layer",
+    "consumer": "authenticated_research_user",
+    "claim": "Authenticated users can return to a refs-only task history center that shows task type, status, updated time, progress refs, deliverable refs, materials refs, blocker/next step, allowed next actions, and MedOPL/OPL continuation links.",
+    "uiSurface": {
+      "route": "#projects",
+      "entryLabel": "最近任务 / 历史任务",
+      "emptyStateTaskFamilies": ["科研", "论文", "基金", "综述", "文件", "PPT", "写书"]
+    },
+    "apiDataPath": [
+      "GET /api/tasks",
+      "GET /api/tasks/{taskId}"
+    ],
+    "storagePolicy": {
+      "mode": "refs_status_metadata_only",
+      "postgresPathRequired": true,
+      "tenantUserIsolationRequired": true,
+      "disabledUserDenied": true
+    },
+    "projectionFields": [
+      "taskId",
+      "taskType",
+      "status",
+      "updatedAt",
+      "progressRefs",
+      "deliverableRefs",
+      "materialRefs",
+      "blocker",
+      "nextStep",
+      "allowedNextActions",
+      "deeplink"
+    ],
+    "forbiddenFields": [
+      "artifactBody",
+      "artifact_body",
+      "body",
+      "content",
+      "storageObjectKey",
+      "signedUrl",
+      "domainVerdict"
+    ],
+    "tests": [
+      "tests/contract/task-history-continuation-contract.test.mjs",
+      "tests/browser/research-main-path.browser.test.mjs"
+    ],
+    "doesNotProve": [
+      "runtime execution",
+      "artifact body authority",
+      "storage truth",
+      "payment lifecycle",
+      "team/RBAC lifecycle",
+      "production rollout"
+    ]
+  },
   "webBusinessCapabilityV1": {
     "claim": "account_based_one_person_lab_web_app_business_capability_v1",
     "mainPathContract": "contracts/web-product-profile.json#/accountBasedWebAppMainPath",

@@ -501,6 +501,47 @@ dd span, .form-hint, .form-message { color: #68707b; font-size: 12px; font-weigh
 .form-actions button { flex: 1; }
 .more-overflow { min-height: 220px; }
 .more-overflow p { max-width: 520px; }
+.task-history-center { display: grid; gap: 12px; }
+.task-history-list { display: grid; gap: 10px; }
+.task-history-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+.task-history-card h3 { font-size: 16px; margin: 0; overflow-wrap: anywhere; }
+.task-history-meta, .task-history-blocker { font-size: 13px; margin: 0; overflow-wrap: anywhere; }
+.task-history-refs { display: grid; gap: 6px; margin: 0; }
+.task-history-refs div {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: minmax(112px, 0.4fr) minmax(0, 1fr);
+}
+.task-history-refs dt {
+  color: #7a8492;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.task-history-refs dd { font-size: 13px; line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+.task-history-continue {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: center;
+  justify-self: start;
+  min-height: 40px;
+  min-width: 104px;
+  padding: 8px 14px;
+}
+.task-history-continue:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
 
 .runtime-gate {
   align-items: center;

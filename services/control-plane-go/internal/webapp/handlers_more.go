@@ -90,12 +90,70 @@ func (server Server) HandleConversations(response http.ResponseWriter, request *
 	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversations": server.Store.ListConversations(user.ID)})
 }
 
+func (server Server) HandleTaskHistory(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	writeJSON(response, http.StatusOK, taskHistoryListResponse(server.Store.ListTaskHistory(user.ID)))
+}
+
+func (server Server) HandleTaskHistoryDetail(response http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+		return
+	}
+	user, ok := server.currentUser(response, request)
+	if !ok {
+		return
+	}
+	taskID := strings.TrimPrefix(request.URL.Path, "/api/tasks/")
+	if taskID == "" || strings.Contains(taskID, "/") {
+		writeError(response, http.StatusBadRequest, "INVALID_TASK_ID", "taskId is required")
+		return
+	}
+	item, ok := server.Store.GetTaskHistory(user.ID, taskID)
+	if !ok {
+		writeError(response, http.StatusNotFound, "TASK_NOT_FOUND", "task was not found")
+		return
+	}
+	writeJSON(response, http.StatusOK, taskHistoryDetailResponse(item))
+}
+
 func (server Server) HandleRuntimeStatus(response http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodGet {
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 		return
 	}
 	writeJSON(response, http.StatusOK, runtimeStatusProjection())
+}
+
+func taskHistoryListResponse(tasks []TaskHistoryItem) map[string]any {
+	return map[string]any{
+		"ok": true, "owner": "OnePersonLabWeb", "projection": "refs_status_metadata_only",
+		"tasks":             tasks,
+		"webuiArtifactBody": "forbidden",
+		"webuiStorageTruth": "forbidden",
+		"doesNotProve":      taskHistoryDoesNotProve(),
+	}
+}
+
+func taskHistoryDetailResponse(task TaskHistoryItem) map[string]any {
+	return map[string]any{
+		"ok": true, "owner": "OnePersonLabWeb", "projection": "refs_status_metadata_only",
+		"task":              task,
+		"webuiArtifactBody": "forbidden",
+		"webuiStorageTruth": "forbidden",
+		"doesNotProve":      taskHistoryDoesNotProve(),
+	}
+}
+
+func taskHistoryDoesNotProve() []string {
+	return []string{"runtime execution", "artifact body authority", "storage truth", "payment lifecycle", "team/RBAC lifecycle", "production rollout"}
 }
 
 func (server Server) HandleMaterialsDeliverables(response http.ResponseWriter, request *http.Request) {

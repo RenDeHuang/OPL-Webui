@@ -69,6 +69,25 @@ create table if not exists chat_messages (
   content text not null,
   created_at timestamptz not null default now()
 );
+create table if not exists webapp_task_history (
+  id text primary key,
+  user_id text not null references users(id),
+  conversation_id text,
+  task_type text not null,
+  task_intent text not null,
+  marker text not null,
+  status text not null,
+  progress_refs jsonb not null default '[]'::jsonb,
+  deliverable_refs jsonb not null default '[]'::jsonb,
+  material_refs jsonb not null default '[]'::jsonb,
+  blocker jsonb,
+  next_step text not null default '',
+  allowed_next_actions jsonb not null default '[]'::jsonb,
+  deeplink text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists webapp_task_history_user_updated_idx on webapp_task_history (user_id, updated_at desc);
 create table if not exists webapp_audit_events (
   id text primary key,
   user_id text not null references users(id),

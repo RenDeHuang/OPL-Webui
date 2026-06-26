@@ -458,6 +458,74 @@
         }
       }
     },
+    "/api/tasks": {
+      "get": {
+        "summary": "List current user's refs-only task history projection.",
+        "responses": {
+          "200": {
+            "description": "Refs-only task history list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHistoryList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
+          }
+        }
+      }
+    },
+    "/api/tasks/{taskId}": {
+      "get": {
+        "summary": "Read one current-user refs-only task history projection.",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refs-only task history detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHistoryDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid task id."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "404": {
+            "description": "Task not found for current user."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
+          }
+        }
+      }
+    },
     "/api/account/audit-events": {
       "get": {
         "summary": "List current user's sanitized audit events.",
@@ -587,6 +655,8 @@
           "INVALID_CHAT_MESSAGE",
           "INVALID_CONVERSATION_ID",
           "CONVERSATION_NOT_FOUND",
+          "INVALID_TASK_ID",
+          "TASK_NOT_FOUND",
           "API_KEY_REQUIRED",
           "API_KEY_DECRYPT_FAILED",
           "RUNTIME_REQUIRED",
@@ -597,6 +667,12 @@
           "UPSTREAM_CHAT_FAILED"
         ]
       },
+      "TaskRef": { "type": "object", "required": ["ref"], "properties": { "ref": { "type": "string" }, "label": { "type": "string" }, "status": { "type": "string" }, "kind": { "type": "string" }, "source": { "type": "string" } }, "additionalProperties": false },
+      "TaskNextAction": { "type": "object", "required": ["id", "label", "deepLink"], "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "deepLink": { "type": "string" } }, "additionalProperties": false },
+      "TaskBlocker": { "type": "object", "required": ["kind", "title", "deepLink"], "properties": { "kind": { "type": "string" }, "title": { "type": "string" }, "nextAction": { "type": "string" }, "deepLink": { "type": "string" } }, "additionalProperties": false },
+      "TaskHistoryItem": { "type": "object", "required": ["taskId", "taskType", "taskIntent", "marker", "status", "updatedAt", "progressRefs", "deliverableRefs", "materialRefs", "nextStep", "allowedNextActions", "deeplink", "webuiArtifactBody", "webuiStorageTruth"], "properties": { "taskId": { "type": "string" }, "taskType": { "type": "string" }, "taskIntent": { "type": "string" }, "marker": { "type": "string" }, "conversationId": { "type": "string" }, "status": { "type": "string" }, "createdAt": { "type": "string" }, "updatedAt": { "type": "string" }, "progressRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "deliverableRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "materialRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "blocker": { "$ref": "#/components/schemas/TaskBlocker" }, "nextStep": { "type": "string" }, "allowedNextActions": { "type": "array", "items": { "$ref": "#/components/schemas/TaskNextAction" } }, "deeplink": { "type": "string" }, "webuiArtifactBody": { "const": "forbidden" }, "webuiStorageTruth": { "const": "forbidden" } }, "additionalProperties": false },
+      "TaskHistoryList": { "type": "object", "required": ["ok", "owner", "projection", "tasks", "webuiArtifactBody", "webuiStorageTruth", "doesNotProve"], "properties": { "ok": { "type": "boolean" }, "owner": { "const": "OnePersonLabWeb" }, "projection": { "const": "refs_status_metadata_only" }, "tasks": { "type": "array", "items": { "$ref": "#/components/schemas/TaskHistoryItem" } }, "webuiArtifactBody": { "const": "forbidden" }, "webuiStorageTruth": { "const": "forbidden" }, "doesNotProve": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": false },
+      "TaskHistoryDetail": { "type": "object", "required": ["ok", "owner", "projection", "task", "webuiArtifactBody", "webuiStorageTruth", "doesNotProve"], "properties": { "ok": { "type": "boolean" }, "owner": { "const": "OnePersonLabWeb" }, "projection": { "const": "refs_status_metadata_only" }, "task": { "$ref": "#/components/schemas/TaskHistoryItem" }, "webuiArtifactBody": { "const": "forbidden" }, "webuiStorageTruth": { "const": "forbidden" }, "doesNotProve": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": false },
       "AdminOpsRegistrationPolicy": {
         "type": "object",
         "required": [

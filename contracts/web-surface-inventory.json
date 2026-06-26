@@ -7,640 +7,87 @@
   "machineBoundary": "repo bloat audit and surface inventory health gate input; ordinary implementation files are intentionally excluded",
   "scope": "long_lived_surfaces_only",
   "excludesOrdinaryImplementationFiles": true,
-  "surfaceTypes": ["manifest", "script", "contract", "test", "doc", "workflow", "deploy", "source"],
-  "lifecycleValues": ["durable", "integration", "temporary", "tombstone"],
+  "surfaceTypes": ["manifest","script","contract","test","doc","workflow","deploy","source"],
+  "lifecycleValues": ["durable","integration","temporary","tombstone"],
   "surfaces": [
-    {
-      "path": "package.json",
-      "type": "manifest",
-      "ownerSurface": "workflow",
-      "consumer": ["developer", "CI", "npm scripts"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "README.md",
-      "type": "doc",
-      "ownerSurface": "fixed-truth-lifecycle",
-      "consumer": ["developer", "AI agent"],
-      "machineBoundary": "human-readable product entry; contracts and tests are authoritative",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "AGENTS.md",
-      "type": "doc",
-      "ownerSurface": "repo-governance",
-      "consumer": ["AI agent", "developer"],
-      "contract": ["contracts/web-development-profile.json", "scripts/test-classification.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "TASTE.md",
-      "type": "doc",
-      "ownerSurface": "repo-governance",
-      "consumer": ["AI agent", "developer"],
-      "contract": ["contracts/web-development-profile.json", "scripts/test-classification.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/project.md",
-      "type": "doc",
-      "ownerSurface": "fixed-truth-lifecycle",
-      "consumer": ["developer", "AI agent"],
-      "machineBoundary": "human-readable project truth; contracts and source own machine behavior",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/status.md",
-      "type": "doc",
-      "ownerSurface": "status",
-      "consumer": ["developer", "AI agent", "release closeout"],
-      "contract": ["contracts/web-release-profile.json", "contracts/web-development-profile.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/decisions.md",
-      "type": "doc",
-      "ownerSurface": "repo-governance",
-      "consumer": ["developer", "AI agent"],
-      "machineBoundary": "human-readable decision log; current machine policy lives in contracts and scripts",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/architecture.md",
-      "type": "doc",
-      "ownerSurface": "architecture",
-      "consumer": ["developer", "AI agent"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-runtime-bridge.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/invariants.md",
-      "type": "doc",
-      "ownerSurface": "repo-governance",
-      "consumer": ["developer", "AI agent", "retirement guard"],
-      "contract": ["tests/health/stale-retirement-guard.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/docs_portfolio_consolidation.md",
-      "type": "doc",
-      "ownerSurface": "docs-portfolio",
-      "consumer": ["developer", "AI agent"],
-      "machineBoundary": "human-readable docs lifecycle map; inventory and bloat audit enforce surface ownership",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/active/README.md",
-      "type": "doc",
-      "ownerSurface": "active-baton",
-      "consumer": ["AI agent", "release closeout"],
-      "contract": ["contracts/web-release-profile.json", "contracts/web-development-profile.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/history/process/closeouts.md",
-      "type": "doc",
-      "ownerSurface": "history",
-      "consumer": ["developer", "release evidence audit"],
-      "machineBoundary": "historical provenance only; not active truth",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "docs/history/tombstones/README.md",
-      "type": "doc",
-      "ownerSurface": "retired-surface",
-      "consumer": ["AI agent", "stale retirement guard"],
-      "contract": ["tests/health/stale-retirement-guard.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-api.openapi.json",
-      "type": "contract",
-      "ownerSurface": "public-api",
-      "consumer": ["Go control plane", "contract tests", "docs/status.md"],
-      "machineBoundary": "HTTP API contract for Web control plane",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-development-profile.json",
-      "type": "contract",
-      "ownerSurface": "workflow",
-      "consumer": ["AI development gate", "AGENTS.md", "TASTE.md"],
-      "machineBoundary": "AI development order, bloat policy, completion boundary, and trigger policy",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-gui-product-contract.json",
-      "type": "contract",
-      "ownerSurface": "gui-product",
-      "consumer": ["Figma design flow", "Web shell", "contract tests", "browser e2e"],
-      "machineBoundary": "GUI product grammar, object grammar, visual grammar, component grammar, and UI acceptance layers",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-gap-phase-registry.json",
-      "type": "contract",
-      "ownerSurface": "workflow",
-      "consumer": ["gap phase runner", "health gate", "AI agent"],
-      "machineBoundary": "lightweight gap phase queues, eval requirements, typed blockers, cannot-claim boundaries, and runtime artifact cleanup policy",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-page-state-matrix.json",
-      "type": "contract",
-      "ownerSurface": "page-state",
-      "consumer": ["Web shell", "browser e2e", "contract tests"],
-      "machineBoundary": "page-state and interaction contract",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-product-profile.json",
-      "type": "contract",
-      "ownerSurface": "product-boundary",
-      "consumer": ["docs/status.md", "contract tests", "Web shell"],
-      "machineBoundary": "product identity, owned surfaces, and non-owned authorities",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-release-profile.json",
-      "type": "contract",
-      "ownerSurface": "release-evidence",
-      "consumer": ["cloud rollout", "release evidence sync", "docs/status.md"],
-      "machineBoundary": "release readiness and can/cannot claim evidence",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-runtime-bridge.json",
-      "type": "contract",
-      "ownerSurface": "runtime-gate",
-      "consumer": ["Go runtime gate", "OPL readonly bridge", "contract tests"],
-      "machineBoundary": "runtime gate and refs-only projection boundary",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-shell-adapter.json",
-      "type": "contract",
-      "ownerSurface": "web-shell",
-      "consumer": ["Web shell", "Figma code mapping", "contract tests", "smoke tests"],
-      "machineBoundary": "active shell carrier, shell ownership boundary, Figma-code mapping, and shell validation commands",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "contracts/web-surface-inventory.json",
-      "type": "contract",
-      "ownerSurface": "repo-hygiene",
-      "consumer": ["repo bloat audit", "surface inventory health test", "AI agent"],
-      "machineBoundary": "long-lived surface ownership inventory; not a mirror of ordinary implementation files",
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/ai-development-gate.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run gate:ai", "npm run gate:review"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/ai-development-gate.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/cloud-rollout.mjs",
-      "type": "script",
-      "ownerSurface": "deploy",
-      "consumer": [".github/workflows/cloud-rollout.yml", "deploy operator"],
-      "contract": ["contracts/web-release-profile.json", "tests/contract/cloud-rollout-helper.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "scripts/lane-advisory.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run lane:advisory", "developer", "review gate"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/lane-advisory.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/lane-check.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run lane:check", "npm run gate:review"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/lane-check.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/gap-phase-runner.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run gap:phase", "health gate", "AI agent"],
-      "contract": ["contracts/web-gap-phase-registry.json", "tests/health/gap-phase-system.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/release-evidence-sync.mjs",
-      "type": "script",
-      "ownerSurface": "release-evidence",
-      "consumer": ["npm run release:evidence", "release operator", "AI development gate"],
-      "contract": ["contracts/web-release-profile.json", "tests/health/ai-development-gate.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/repo-bloat-audit.mjs",
-      "type": "script",
-      "ownerSurface": "repo-hygiene",
-      "consumer": ["npm run repo:bloat", "npm run gate:review"],
-      "contract": ["contracts/web-surface-inventory.json", "tests/health/repo-bloat.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/test-classification.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["scripts/verify.mjs", "registry coverage test", "lane check"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/registry-coverage.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/verify.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify", "CI", "review gate"],
-      "contract": ["scripts/test-classification.mjs", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "scripts/workflow-gate.mjs",
-      "type": "script",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run gate:review", "developer"],
-      "contract": ["contracts/web-development-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": ".github/workflows/ci.yml",
-      "type": "workflow",
-      "ownerSurface": "workflow",
-      "consumer": ["GitHub Actions", "Release Image workflow"],
-      "contract": ["contracts/web-release-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": ".github/workflows/cloud-rollout.yml",
-      "type": "workflow",
-      "ownerSurface": "deploy",
-      "consumer": ["GitHub Actions", "production release operator"],
-      "contract": ["contracts/web-release-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": ".github/workflows/production-canary.yml",
-      "type": "workflow",
-      "ownerSurface": "production-observability",
-      "consumer": ["GitHub Actions", "production operations review"],
-      "contract": ["contracts/web-release-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": ".github/workflows/release-image.yml",
-      "type": "workflow",
-      "ownerSurface": "deploy",
-      "consumer": ["GitHub Actions", "Cloud Rollout workflow"],
-      "contract": ["contracts/web-release-profile.json", "tests/health/workflow-entrypoint.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "Dockerfile",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["container build", "tests/deploy/container-readiness.test.mjs"],
-      "contract": ["contracts/web-release-profile.json", "tests/deploy/container-readiness.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "Dockerfile.cloud",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["cloud image build", "tests/deploy/container-readiness.test.mjs"],
-      "contract": ["contracts/web-release-profile.json", "tests/deploy/container-readiness.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": ".dockerignore",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["container build", "tests/deploy/container-readiness.test.mjs"],
-      "contract": ["tests/deploy/container-readiness.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": ".dockerignore.cloud",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["cloud image build", "tests/deploy/container-readiness.test.mjs"],
-      "contract": ["tests/deploy/container-readiness.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "deploy/web-cloud/RUNBOOK.md",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["production release operator", "fixed truth contract test"],
-      "contract": ["contracts/web-release-profile.json", "tests/contract/web-cloud-deploy-shape.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "deploy/web-cloud/opl-webui.k8s.json",
-      "type": "deploy",
-      "ownerSurface": "deploy",
-      "consumer": ["production release operator", "cloud rollout helper"],
-      "contract": ["contracts/web-release-profile.json", "tests/contract/web-cloud-deploy-shape.test.mjs"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "apps/web/src/onePersonLabWeb.mjs",
-      "type": "source",
-      "ownerSurface": "apps-web",
-      "consumer": ["browser shell", "contract tests"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "services/control-plane-go/cmd/opl-webui-control-plane/main.go",
-      "type": "source",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["npm run start", "Go package tests", "contract HTTP tests"],
-      "contract": ["contracts/web-api.openapi.json", "contracts/web-release-profile.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/browser/public-growth-login-return-runner.mjs",
-      "type": "test",
-      "ownerSurface": "public-growth-layer",
-      "consumer": ["tests/browser/public-growth-login-return.browser.test.mjs"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-product-profile.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/browser/public-growth-login-return.browser.test.mjs",
-      "type": "test",
-      "ownerSurface": "public-growth-layer",
-      "consumer": ["npm run verify:browser", "CI"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-product-profile.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/browser/research-main-path-runner.mjs",
-      "type": "test",
-      "ownerSurface": "browser-e2e",
-      "consumer": ["tests/browser/research-main-path.browser.test.mjs", "Cloud Rollout production browser e2e"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-gui-product-contract.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/browser/research-main-path.browser.test.mjs",
-      "type": "test",
-      "ownerSurface": "browser-e2e",
-      "consumer": ["npm run verify:browser", "CI"],
-      "contract": ["contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-gui-product-contract.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/contract/cloud-rollout-helper.test.mjs",
-      "type": "test",
-      "ownerSurface": "deploy",
-      "consumer": ["npm run verify:deploy"],
-      "contract": ["scripts/cloud-rollout.mjs", "contracts/web-release-profile.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/contract/fixed-truth-lifecycle.test.mjs",
-      "type": "test",
-      "ownerSurface": "fixed-truth-lifecycle",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-development-profile.json", "contracts/web-release-profile.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/public-growth-layer-contract.test.mjs",
-      "type": "test",
-      "ownerSurface": "public-growth-layer",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-api.openapi.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/admin-ops-v0-contract.test.mjs",
-      "type": "test",
-      "ownerSurface": "minimal-admin-ops-layer",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json", "contracts/web-release-profile.json", "contracts/web-api.openapi.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/go-control-plane-http.test.mjs",
-      "type": "test",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-api.openapi.json", "services/control-plane-go/cmd/opl-webui-control-plane/main.go"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/medopl-runtime-bridge-contract.test.mjs",
-      "type": "test",
-      "ownerSurface": "runtime-gate",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-runtime-bridge.json", "contracts/web-api.openapi.json", "services/control-plane-go/cmd/opl-webui-control-plane/main.go"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/go-control-plane-server-helper.mjs",
-      "type": "test",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["Go-backed HTTP contract tests"],
-      "contract": ["tests/contract/go-control-plane-http.test.mjs", "tests/contract/one-person-lab-chat-upstream.test.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/one-person-lab-chat-upstream.test.mjs",
-      "type": "test",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-api.openapi.json", "services/control-plane-go/internal/webapp/handlers.go"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/one-person-lab-web-data.test.mjs",
-      "type": "test",
-      "ownerSurface": "apps-web",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-page-state-matrix.json", "contracts/web-api.openapi.json", "contracts/web-runtime-bridge.json", "contracts/web-release-profile.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/web-runtime-state.test.mjs",
-      "type": "test",
-      "ownerSurface": "apps-web",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["apps/web/src/onePersonLabWeb.mjs", "contracts/web-page-state-matrix.json", "contracts/web-runtime-bridge.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/contract/opl-readonly-bridge.test.mjs",
-      "type": "test",
-      "ownerSurface": "opl-bridge",
-      "consumer": ["npm run verify:contract"],
-      "contract": ["contracts/web-runtime-bridge.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/real-medopl/real-medopl-business-flow.e2e.test.mjs",
-      "type": "test",
-      "ownerSurface": "runtime-gate",
-      "consumer": ["npm run verify:real-medopl"],
-      "contract": ["contracts/web-runtime-bridge.json", "contracts/web-api.openapi.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/contract/web-cloud-deploy-shape.test.mjs",
-      "type": "test",
-      "ownerSurface": "deploy",
-      "consumer": ["npm run verify:deploy"],
-      "contract": ["contracts/web-release-profile.json", "deploy/web-cloud/opl-webui.k8s.json"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/deploy/container-readiness.test.mjs",
-      "type": "test",
-      "ownerSurface": "deploy",
-      "consumer": ["npm run verify:deploy"],
-      "contract": ["Dockerfile", "Dockerfile.cloud"],
-      "lifecycle": "integration"
-    },
-    {
-      "path": "tests/health/ai-development-gate.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["contracts/web-development-profile.json", "scripts/ai-development-gate.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/governance-hardening.test.mjs",
-      "type": "test",
-      "ownerSurface": "repo-governance",
-      "consumer": ["npm run verify:health"],
-      "contract": ["AGENTS.md", "TASTE.md", "docs/status.md"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/gap-phase-system.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["contracts/web-gap-phase-registry.json", "scripts/gap-phase-runner.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/lane-advisory.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["scripts/lane-advisory.mjs", "scripts/workflow-gate.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/lane-check.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["scripts/lane-check.mjs", "scripts/workflow-gate.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/registry-coverage.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["scripts/test-classification.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/repo-bloat.test.mjs",
-      "type": "test",
-      "ownerSurface": "repo-hygiene",
-      "consumer": ["npm run verify:health"],
-      "contract": ["scripts/repo-bloat-audit.mjs", "contracts/web-surface-inventory.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/stale-retirement-guard.test.mjs",
-      "type": "test",
-      "ownerSurface": "repo-governance",
-      "consumer": ["npm run verify:health"],
-      "contract": ["docs/invariants.md", "docs/history/tombstones/README.md"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/surface-inventory.test.mjs",
-      "type": "test",
-      "ownerSurface": "repo-hygiene",
-      "consumer": ["npm run verify:health"],
-      "contract": ["contracts/web-surface-inventory.json", "scripts/repo-bloat-audit.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/health/workflow-entrypoint.test.mjs",
-      "type": "test",
-      "ownerSurface": "workflow",
-      "consumer": ["npm run verify:health"],
-      "contract": ["package.json", ".github/workflows/ci.yml", ".github/workflows/cloud-rollout.yml", ".github/workflows/release-image.yml"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/smoke/foundation.test.mjs",
-      "type": "test",
-      "ownerSurface": "foundation",
-      "consumer": ["npm run verify:smoke"],
-      "contract": ["package.json", "scripts/test-classification.mjs"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "tests/smoke/web-shell.test.mjs",
-      "type": "test",
-      "ownerSurface": "apps-web",
-      "consumer": ["npm run verify:smoke"],
-      "contract": ["apps/web/index.html", "apps/web/styles.css", "apps/web/src/onePersonLabWeb.mjs", "contracts/web-gui-product-contract.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "services/control-plane-go/cmd/opl-webui-control-plane/main_test.go",
-      "type": "test",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["npm run verify:go"],
-      "contract": ["services/control-plane-go/cmd/opl-webui-control-plane/main.go"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "services/control-plane-go/internal/oplbridge/snapshot_test.go",
-      "type": "test",
-      "ownerSurface": "opl-bridge",
-      "consumer": ["npm run verify:go"],
-      "contract": ["contracts/web-runtime-bridge.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "services/control-plane-go/internal/runtimegate/gate_test.go",
-      "type": "test",
-      "ownerSurface": "production-runtime",
-      "consumer": ["npm run verify:go"],
-      "contract": ["contracts/web-runtime-bridge.json"],
-      "lifecycle": "durable"
-    },
-    {
-      "path": "services/control-plane-go/internal/webapp/chat_test.go",
-      "type": "test",
-      "ownerSurface": "control-plane-go",
-      "consumer": ["npm run verify:go"],
-      "contract": ["contracts/web-product-profile.json", "contracts/web-api.openapi.json"],
-      "lifecycle": "durable"
-    }
+    {"path":"package.json","type":"manifest","ownerSurface":"workflow","consumer":["developer","CI","npm scripts"],"contract":["contracts/web-development-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"durable"},
+    {"path":"README.md","type":"doc","ownerSurface":"fixed-truth-lifecycle","consumer":["developer","AI agent"],"machineBoundary":"human-readable product entry; contracts and tests are authoritative","lifecycle":"durable"},
+    {"path":"AGENTS.md","type":"doc","ownerSurface":"repo-governance","consumer":["AI agent","developer"],"contract":["contracts/web-development-profile.json","scripts/test-classification.mjs"],"lifecycle":"durable"},
+    {"path":"TASTE.md","type":"doc","ownerSurface":"repo-governance","consumer":["AI agent","developer"],"contract":["contracts/web-development-profile.json","scripts/test-classification.mjs"],"lifecycle":"durable"},
+    {"path":"docs/project.md","type":"doc","ownerSurface":"fixed-truth-lifecycle","consumer":["developer","AI agent"],"machineBoundary":"human-readable project truth; contracts and source own machine behavior","lifecycle":"durable"},
+    {"path":"docs/status.md","type":"doc","ownerSurface":"status","consumer":["developer","AI agent","release closeout"],"contract":["contracts/web-release-profile.json","contracts/web-development-profile.json"],"lifecycle":"durable"},
+    {"path":"docs/decisions.md","type":"doc","ownerSurface":"repo-governance","consumer":["developer","AI agent"],"machineBoundary":"human-readable decision log; current machine policy lives in contracts and scripts","lifecycle":"durable"},
+    {"path":"docs/architecture.md","type":"doc","ownerSurface":"architecture","consumer":["developer","AI agent"],"contract":["contracts/web-product-profile.json","contracts/web-runtime-bridge.json"],"lifecycle":"durable"},
+    {"path":"docs/invariants.md","type":"doc","ownerSurface":"repo-governance","consumer":["developer","AI agent","retirement guard"],"contract":["tests/health/stale-retirement-guard.test.mjs"],"lifecycle":"durable"},
+    {"path":"docs/docs_portfolio_consolidation.md","type":"doc","ownerSurface":"docs-portfolio","consumer":["developer","AI agent"],"machineBoundary":"human-readable docs lifecycle map; inventory and bloat audit enforce surface ownership","lifecycle":"durable"},
+    {"path":"docs/active/README.md","type":"doc","ownerSurface":"active-baton","consumer":["AI agent","release closeout"],"contract":["contracts/web-release-profile.json","contracts/web-development-profile.json"],"lifecycle":"durable"},
+    {"path":"docs/history/process/closeouts.md","type":"doc","ownerSurface":"history","consumer":["developer","release evidence audit"],"machineBoundary":"historical provenance only; not active truth","lifecycle":"durable"},
+    {"path":"docs/history/tombstones/README.md","type":"doc","ownerSurface":"retired-surface","consumer":["AI agent","stale retirement guard"],"contract":["tests/health/stale-retirement-guard.test.mjs"],"lifecycle":"durable"},
+    {"path":"contracts/web-api.openapi.json","type":"contract","ownerSurface":"public-api","consumer":["Go control plane","contract tests","docs/status.md"],"machineBoundary":"HTTP API contract for Web control plane","lifecycle":"durable"},
+    {"path":"contracts/web-development-profile.json","type":"contract","ownerSurface":"workflow","consumer":["AI development gate","AGENTS.md","TASTE.md"],"machineBoundary":"AI development order, bloat policy, completion boundary, and trigger policy","lifecycle":"durable"},
+    {"path":"contracts/web-gui-product-contract.json","type":"contract","ownerSurface":"gui-product","consumer":["Figma design flow","Web shell","contract tests","browser e2e"],"machineBoundary":"GUI product grammar, object grammar, visual grammar, component grammar, and UI acceptance layers","lifecycle":"durable"},
+    {"path":"contracts/web-gap-phase-registry.json","type":"contract","ownerSurface":"workflow","consumer":["gap phase runner","health gate","AI agent"],"machineBoundary":"lightweight gap phase queues, eval requirements, typed blockers, cannot-claim boundaries, and runtime artifact cleanup policy","lifecycle":"durable"},
+    {"path":"contracts/web-page-state-matrix.json","type":"contract","ownerSurface":"page-state","consumer":["Web shell","browser e2e","contract tests"],"machineBoundary":"page-state and interaction contract","lifecycle":"durable"},
+    {"path":"contracts/web-product-profile.json","type":"contract","ownerSurface":"product-boundary","consumer":["docs/status.md","contract tests","Web shell"],"machineBoundary":"product identity, owned surfaces, and non-owned authorities","lifecycle":"durable"},
+    {"path":"contracts/web-release-profile.json","type":"contract","ownerSurface":"release-evidence","consumer":["cloud rollout","release evidence sync","docs/status.md"],"machineBoundary":"release readiness and can/cannot claim evidence","lifecycle":"durable"},
+    {"path":"contracts/web-runtime-bridge.json","type":"contract","ownerSurface":"runtime-gate","consumer":["Go runtime gate","OPL readonly bridge","contract tests"],"machineBoundary":"runtime gate and refs-only projection boundary","lifecycle":"durable"},
+    {"path":"contracts/web-shell-adapter.json","type":"contract","ownerSurface":"web-shell","consumer":["Web shell","Figma code mapping","contract tests","smoke tests"],"machineBoundary":"active shell carrier, shell ownership boundary, Figma-code mapping, and shell validation commands","lifecycle":"durable"},
+    {"path":"contracts/web-surface-inventory.json","type":"contract","ownerSurface":"repo-hygiene","consumer":["repo bloat audit","surface inventory health test","AI agent"],"machineBoundary":"long-lived surface ownership inventory; not a mirror of ordinary implementation files","lifecycle":"durable"},
+    {"path":"scripts/ai-development-gate.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run gate:ai","npm run gate:review"],"contract":["contracts/web-development-profile.json","tests/health/ai-development-gate.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/cloud-rollout.mjs","type":"script","ownerSurface":"deploy","consumer":[".github/workflows/cloud-rollout.yml","deploy operator"],"contract":["contracts/web-release-profile.json","tests/contract/cloud-rollout-helper.test.mjs"],"lifecycle":"integration"},
+    {"path":"scripts/lane-advisory.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run lane:advisory","developer","review gate"],"contract":["contracts/web-development-profile.json","tests/health/lane-advisory.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/lane-check.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run lane:check","npm run gate:review"],"contract":["contracts/web-development-profile.json","tests/health/lane-check.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/gap-phase-runner.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run gap:phase","health gate","AI agent"],"contract":["contracts/web-gap-phase-registry.json","tests/health/gap-phase-system.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/release-evidence-sync.mjs","type":"script","ownerSurface":"release-evidence","consumer":["npm run release:evidence","release operator","AI development gate"],"contract":["contracts/web-release-profile.json","tests/health/ai-development-gate.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/repo-bloat-audit.mjs","type":"script","ownerSurface":"repo-hygiene","consumer":["npm run repo:bloat","npm run gate:review"],"contract":["contracts/web-surface-inventory.json","tests/health/repo-bloat.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/test-classification.mjs","type":"script","ownerSurface":"workflow","consumer":["scripts/verify.mjs","registry coverage test","lane check"],"contract":["contracts/web-development-profile.json","tests/health/registry-coverage.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/verify.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run verify","CI","review gate"],"contract":["scripts/test-classification.mjs","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"durable"},
+    {"path":"scripts/workflow-gate.mjs","type":"script","ownerSurface":"workflow","consumer":["npm run gate:review","developer"],"contract":["contracts/web-development-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"durable"},
+    {"path":".github/workflows/ci.yml","type":"workflow","ownerSurface":"workflow","consumer":["GitHub Actions","Release Image workflow"],"contract":["contracts/web-release-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"integration"},
+    {"path":".github/workflows/cloud-rollout.yml","type":"workflow","ownerSurface":"deploy","consumer":["GitHub Actions","production release operator"],"contract":["contracts/web-release-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"integration"},
+    {"path":".github/workflows/production-canary.yml","type":"workflow","ownerSurface":"production-observability","consumer":["GitHub Actions","production operations review"],"contract":["contracts/web-release-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"integration"},
+    {"path":".github/workflows/release-image.yml","type":"workflow","ownerSurface":"deploy","consumer":["GitHub Actions","Cloud Rollout workflow"],"contract":["contracts/web-release-profile.json","tests/health/workflow-entrypoint.test.mjs"],"lifecycle":"integration"},
+    {"path":"Dockerfile","type":"deploy","ownerSurface":"deploy","consumer":["container build","tests/deploy/container-readiness.test.mjs"],"contract":["contracts/web-release-profile.json","tests/deploy/container-readiness.test.mjs"],"lifecycle":"integration"},
+    {"path":"Dockerfile.cloud","type":"deploy","ownerSurface":"deploy","consumer":["cloud image build","tests/deploy/container-readiness.test.mjs"],"contract":["contracts/web-release-profile.json","tests/deploy/container-readiness.test.mjs"],"lifecycle":"integration"},
+    {"path":".dockerignore","type":"deploy","ownerSurface":"deploy","consumer":["container build","tests/deploy/container-readiness.test.mjs"],"contract":["tests/deploy/container-readiness.test.mjs"],"lifecycle":"integration"},
+    {"path":"deploy/web-cloud/RUNBOOK.md","type":"deploy","ownerSurface":"deploy","consumer":["production release operator","fixed truth contract test"],"contract":["contracts/web-release-profile.json","tests/contract/web-cloud-deploy-shape.test.mjs"],"lifecycle":"integration"},
+    {"path":"deploy/web-cloud/opl-webui.k8s.json","type":"deploy","ownerSurface":"deploy","consumer":["production release operator","cloud rollout helper"],"contract":["contracts/web-release-profile.json","tests/contract/web-cloud-deploy-shape.test.mjs"],"lifecycle":"integration"},
+    {"path":"apps/web/src/onePersonLabWeb.mjs","type":"source","ownerSurface":"apps-web","consumer":["browser shell","contract tests"],"contract":["contracts/web-product-profile.json","contracts/web-page-state-matrix.json"],"lifecycle":"durable"},
+    {"path":"services/control-plane-go/cmd/opl-webui-control-plane/main.go","type":"source","ownerSurface":"control-plane-go","consumer":["npm run start","Go package tests","contract HTTP tests"],"contract":["contracts/web-api.openapi.json","contracts/web-release-profile.json"],"lifecycle":"durable"},
+    {"path":"tests/browser/public-growth-login-return-runner.mjs","type":"test","ownerSurface":"public-growth-layer","consumer":["tests/browser/public-growth-login-return.browser.test.mjs"],"contract":["contracts/web-page-state-matrix.json","contracts/web-product-profile.json"],"lifecycle":"integration"},
+    {"path":"tests/browser/public-growth-login-return.browser.test.mjs","type":"test","ownerSurface":"public-growth-layer","consumer":["npm run verify:browser","CI"],"contract":["contracts/web-page-state-matrix.json","contracts/web-product-profile.json"],"lifecycle":"integration"},
+    {"path":"tests/browser/research-main-path-runner.mjs","type":"test","ownerSurface":"browser-e2e","consumer":["tests/browser/research-main-path.browser.test.mjs","Cloud Rollout production browser e2e"],"contract":["contracts/web-page-state-matrix.json","contracts/web-release-profile.json","contracts/web-gui-product-contract.json"],"lifecycle":"integration"},
+    {"path":"tests/browser/research-main-path.browser.test.mjs","type":"test","ownerSurface":"browser-e2e","consumer":["npm run verify:browser","CI"],"contract":["contracts/web-page-state-matrix.json","contracts/web-release-profile.json","contracts/web-gui-product-contract.json"],"lifecycle":"integration"},
+    {"path":"tests/contract/cloud-rollout-helper.test.mjs","type":"test","ownerSurface":"deploy","consumer":["npm run verify:deploy"],"contract":["scripts/cloud-rollout.mjs","contracts/web-release-profile.json"],"lifecycle":"integration"},
+    {"path":"tests/contract/fixed-truth-lifecycle.test.mjs","type":"test","ownerSurface":"fixed-truth-lifecycle","consumer":["npm run verify:contract"],"contract":["contracts/web-development-profile.json","contracts/web-release-profile.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/public-growth-layer-contract.test.mjs","type":"test","ownerSurface":"public-growth-layer","consumer":["npm run verify:contract"],"contract":["contracts/web-product-profile.json","contracts/web-page-state-matrix.json","contracts/web-release-profile.json","contracts/web-api.openapi.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/admin-ops-v0-contract.test.mjs","type":"test","ownerSurface":"minimal-admin-ops-layer","consumer":["npm run verify:contract"],"contract":["contracts/web-product-profile.json","contracts/web-page-state-matrix.json","contracts/web-release-profile.json","contracts/web-api.openapi.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/task-history-continuation-contract.test.mjs","type":"test","ownerSurface":"account-based-user-product-layer","consumer":["npm run verify:contract"],"contract":["contracts/web-product-profile.json","contracts/web-page-state-matrix.json","contracts/web-api.openapi.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/go-control-plane-http.test.mjs","type":"test","ownerSurface":"control-plane-go","consumer":["npm run verify:contract"],"contract":["contracts/web-api.openapi.json","services/control-plane-go/cmd/opl-webui-control-plane/main.go"],"lifecycle":"durable"},
+    {"path":"tests/contract/medopl-runtime-bridge-contract.test.mjs","type":"test","ownerSurface":"runtime-gate","consumer":["npm run verify:contract"],"contract":["contracts/web-runtime-bridge.json","contracts/web-api.openapi.json","services/control-plane-go/cmd/opl-webui-control-plane/main.go"],"lifecycle":"durable"},
+    {"path":"tests/contract/go-control-plane-server-helper.mjs","type":"test","ownerSurface":"control-plane-go","consumer":["Go-backed HTTP contract tests"],"contract":["tests/contract/go-control-plane-http.test.mjs","tests/contract/one-person-lab-chat-upstream.test.mjs"],"lifecycle":"durable"},
+    {"path":"tests/contract/one-person-lab-chat-upstream.test.mjs","type":"test","ownerSurface":"control-plane-go","consumer":["npm run verify:contract"],"contract":["contracts/web-api.openapi.json","services/control-plane-go/internal/webapp/handlers.go"],"lifecycle":"durable"},
+    {"path":"tests/contract/one-person-lab-web-data.test.mjs","type":"test","ownerSurface":"apps-web","consumer":["npm run verify:contract"],"contract":["contracts/web-product-profile.json","contracts/web-page-state-matrix.json","contracts/web-api.openapi.json","contracts/web-runtime-bridge.json","contracts/web-release-profile.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/web-runtime-state.test.mjs","type":"test","ownerSurface":"apps-web","consumer":["npm run verify:contract"],"contract":["apps/web/src/onePersonLabWeb.mjs","contracts/web-page-state-matrix.json","contracts/web-runtime-bridge.json"],"lifecycle":"durable"},
+    {"path":"tests/contract/opl-readonly-bridge.test.mjs","type":"test","ownerSurface":"opl-bridge","consumer":["npm run verify:contract"],"contract":["contracts/web-runtime-bridge.json"],"lifecycle":"durable"},
+    {"path":"tests/real-medopl/real-medopl-business-flow.e2e.test.mjs","type":"test","ownerSurface":"runtime-gate","consumer":["npm run verify:real-medopl"],"contract":["contracts/web-runtime-bridge.json","contracts/web-api.openapi.json"],"lifecycle":"integration"},
+    {"path":"tests/contract/web-cloud-deploy-shape.test.mjs","type":"test","ownerSurface":"deploy","consumer":["npm run verify:deploy"],"contract":["contracts/web-release-profile.json","deploy/web-cloud/opl-webui.k8s.json"],"lifecycle":"integration"},
+    {"path":"tests/deploy/container-readiness.test.mjs","type":"test","ownerSurface":"deploy","consumer":["npm run verify:deploy"],"contract":["Dockerfile","Dockerfile.cloud"],"lifecycle":"integration"},
+    {"path":"tests/health/ai-development-gate.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["contracts/web-development-profile.json","scripts/ai-development-gate.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/governance-hardening.test.mjs","type":"test","ownerSurface":"repo-governance","consumer":["npm run verify:health"],"contract":["AGENTS.md","TASTE.md","docs/status.md"],"lifecycle":"durable"},
+    {"path":"tests/health/gap-phase-system.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["contracts/web-gap-phase-registry.json","scripts/gap-phase-runner.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/lane-advisory.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["scripts/lane-advisory.mjs","scripts/workflow-gate.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/lane-check.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["scripts/lane-check.mjs","scripts/workflow-gate.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/registry-coverage.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["scripts/test-classification.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/repo-bloat.test.mjs","type":"test","ownerSurface":"repo-hygiene","consumer":["npm run verify:health"],"contract":["scripts/repo-bloat-audit.mjs","contracts/web-surface-inventory.json"],"lifecycle":"durable"},
+    {"path":"tests/health/stale-retirement-guard.test.mjs","type":"test","ownerSurface":"repo-governance","consumer":["npm run verify:health"],"contract":["docs/invariants.md","docs/history/tombstones/README.md"],"lifecycle":"durable"},
+    {"path":"tests/health/surface-inventory.test.mjs","type":"test","ownerSurface":"repo-hygiene","consumer":["npm run verify:health"],"contract":["contracts/web-surface-inventory.json","scripts/repo-bloat-audit.mjs"],"lifecycle":"durable"},
+    {"path":"tests/health/workflow-entrypoint.test.mjs","type":"test","ownerSurface":"workflow","consumer":["npm run verify:health"],"contract":["package.json",".github/workflows/ci.yml",".github/workflows/cloud-rollout.yml",".github/workflows/release-image.yml"],"lifecycle":"durable"},
+    {"path":"tests/smoke/foundation.test.mjs","type":"test","ownerSurface":"foundation","consumer":["npm run verify:smoke"],"contract":["package.json","scripts/test-classification.mjs"],"lifecycle":"durable"},
+    {"path":"tests/smoke/web-shell.test.mjs","type":"test","ownerSurface":"apps-web","consumer":["npm run verify:smoke"],"contract":["apps/web/index.html","apps/web/styles.css","apps/web/src/onePersonLabWeb.mjs","contracts/web-gui-product-contract.json"],"lifecycle":"durable"},
+    {"path":"services/control-plane-go/cmd/opl-webui-control-plane/main_test.go","type":"test","ownerSurface":"control-plane-go","consumer":["npm run verify:go"],"contract":["services/control-plane-go/cmd/opl-webui-control-plane/main.go"],"lifecycle":"durable"},
+    {"path":"services/control-plane-go/internal/oplbridge/snapshot_test.go","type":"test","ownerSurface":"opl-bridge","consumer":["npm run verify:go"],"contract":["contracts/web-runtime-bridge.json"],"lifecycle":"durable"},
+    {"path":"services/control-plane-go/internal/runtimegate/gate_test.go","type":"test","ownerSurface":"production-runtime","consumer":["npm run verify:go"],"contract":["contracts/web-runtime-bridge.json"],"lifecycle":"durable"},
+    {"path":"services/control-plane-go/internal/webapp/chat_test.go","type":"test","ownerSurface":"control-plane-go","consumer":["npm run verify:go"],"contract":["contracts/web-product-profile.json","contracts/web-api.openapi.json"],"lifecycle":"durable"}
   ]
 }

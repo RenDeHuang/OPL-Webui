@@ -26,7 +26,7 @@
         </a>
         <nav class="side-navigation" data-side-navigation aria-label="主导航">
           <a href="#home" data-nav-item="home" data-shell-action="home" aria-current="page">新建对话</a>
-          <a href="#projects" data-nav-item="projects" data-shell-action="projects">Projects</a>
+          <a href="#projects" data-nav-item="projects" data-shell-action="projects">任务历史</a>
           <a href="#skills" data-nav-item="skills" data-shell-action="skills">Skill</a>
           <a href="#workflows" data-nav-item="workflows" data-shell-action="workflows">工作流</a>
           <a href="#home" data-nav-item="search" data-shell-action="search" data-search-trigger>搜索</a>
@@ -260,22 +260,18 @@
           </div>
         </section>
 
-        <section class="project-section" id="projects" data-route-surface="projects" data-project-library aria-labelledby="projects-title">
+        <section class="project-section" id="projects" data-route-surface="projects" data-task-history-route aria-labelledby="projects-title">
           <div class="section-heading split-heading">
             <div>
-              <p class="panel-kicker">Projects</p>
-              <h2 id="projects-title">Projects</h2>
-              <p>项目只管理本地会话引用；后端项目合同就绪前不发起项目 API。</p>
+              <p class="panel-kicker">Task history</p>
+              <h2 id="projects-title">最近任务 / 历史任务</h2>
+              <p>返回查看任务状态、progress refs、deliverable refs、materials refs、blocker/next step，并从 MedOPL/OPL deeplink 接续。</p>
             </div>
-            <button class="primary-button" type="button" data-create-project>新增 Project</button>
+            <button class="primary-button" type="button" data-shell-action="home">新建任务</button>
           </div>
-          <div class="foundry-grid">
-            <button type="button" class="foundry-card" data-prompt="@科研 汇总当前项目研究问题">
-              <span>01</span><strong>当前项目</strong><small>汇总当前研究问题和下一步。</small>
-            </button>
-            <button type="button" class="foundry-card" data-prompt="@文件 整理项目材料引用">
-              <span>02</span><strong>材料引用</strong><small>整理项目材料、引用和 refs。</small>
-            </button>
+          <div class="task-history-center" data-task-history-center data-projection-policy="refs_status_metadata_only">
+            <div class="task-history-list" data-task-history-list></div>
+            <p class="empty-state" data-task-history-empty>暂无历史任务。请从科研/论文/基金/综述/文件/PPT/写书入口开始。</p>
           </div>
         </section>
 

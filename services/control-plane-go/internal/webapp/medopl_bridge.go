@@ -61,7 +61,9 @@ func (server Server) HandleRuntimeGate(response http.ResponseWriter, request *ht
 	}
 	if blocker, blocked := server.runtimeTaskBlocker(runtimeContext.User.ID); blocked {
 		server.recordRuntimeAudit(runtimeContext.User.ID, "runtime_gate.blocked", runtimeContext.Task, blocker.Kind)
-		writeJSON(response, http.StatusFailedDependency, localRuntimeBlocker(blocker))
+		projection := localRuntimeBlocker(blocker)
+		server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)
+		writeJSON(response, http.StatusFailedDependency, projection)
 		return
 	}
 
@@ -76,6 +78,7 @@ func (server Server) HandleRuntimeGate(response http.ResponseWriter, request *ht
 		status = http.StatusFailedDependency
 	}
 	server.recordRuntimeAudit(runtimeContext.User.ID, auditKindForGateProjection(projection), runtimeContext.Task, "")
+	server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)
 	writeJSON(response, status, projection)
 }
 
@@ -85,7 +88,9 @@ func (server Server) HandleRuntimeRun(response http.ResponseWriter, request *htt
 		return
 	}
 	if blocker, blocked := server.runtimeTaskBlocker(runtimeContext.User.ID); blocked {
-		writeJSON(response, http.StatusFailedDependency, localRuntimeBlocker(blocker))
+		projection := localRuntimeBlocker(blocker)
+		server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)
+		writeJSON(response, http.StatusFailedDependency, projection)
 		return
 	}
 
@@ -101,6 +106,7 @@ func (server Server) HandleRuntimeRun(response http.ResponseWriter, request *htt
 		status = http.StatusFailedDependency
 	}
 	server.recordRuntimeAudit(runtimeContext.User.ID, auditKindForRunProjection(projection), runtimeContext.Task, "")
+	server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)
 	writeJSON(response, status, projection)
 }
 
@@ -614,17 +620,28 @@ func medoplLinkField(field string) bool {
 }
 
 func sanitizedList(value any, fields ...string) []map[string]any {
-	items, ok := value.([]any)
-	if !ok {
-		return []map[string]any{}
-	}
 	result := []map[string]any{}
-	for _, item := range items {
+	for _, item := range mapItems(value) {
 		if mapped, ok := item.(map[string]any); ok {
 			result = append(result, sanitizedMap(mapped, fields...))
 		}
 	}
 	return result
+}
+
+func mapItems(value any) []any {
+	switch typed := value.(type) {
+	case []any:
+		return typed
+	case []map[string]any:
+		items := make([]any, 0, len(typed))
+		for _, item := range typed {
+			items = append(items, item)
+		}
+		return items
+	default:
+		return []any{}
+	}
 }
 
 func sanitizedLedgerRefs(value any) []map[string]any {
@@ -756,4 +773,131 @@ func auditKindForRunProjection(projection map[string]any) string {
 		return "runtime_run.projected"
 	}
 	return "runtime_run.blocked"
+}
+
+func (server Server) recordTaskProjection(user User, task runtimeTaskRequest, projection map[string]any) {
+	item := taskHistoryFromProjection(user, task, projection)
+	if item.TaskIntent == "" {
+		return
+	}
+	_, _ = server.Store.UpsertTaskHistory(item)
+}
+
+func taskHistoryFromProjection(user User, task runtimeTaskRequest, projection map[string]any) TaskHistoryItem {
+	status := valueOrDefault(safeString(projection["status"]), taskHistoryStatus(projection))
+	nextAction := taskHistoryNextAction(projection)
+	item := TaskHistoryItem{
+		ID:                 taskHistoryID(user.ID, task),
+		UserID:             user.ID,
+		ConversationID:     task.ConversationID,
+		TaskType:           task.TaskIntent,
+		TaskIntent:         task.TaskIntent,
+		Marker:             task.Marker,
+		Status:             status,
+		ProgressRefs:       progressRefsFromProjection(projection),
+		DeliverableRefs:    deliverableRefsFromProjection(projection),
+		MaterialRefs:       materialRefsFromTask(task),
+		NextStep:           nextAction.ID,
+		AllowedNextActions: []TaskNextAction{nextAction},
+		DeepLink:           nextAction.DeepLink,
+		WebuiArtifactBody:  "forbidden",
+		WebuiStorageTruth:  "forbidden",
+	}
+	if blocker := blockerFromProjection(projection); blocker != nil {
+		item.Blocker = blocker
+		item.NextStep = valueOrDefault(blocker.NextAction, item.NextStep)
+	}
+	return item
+}
+
+func taskHistoryID(userID string, task runtimeTaskRequest) string {
+	seed := valueOrDefault(task.ConversationID, task.TaskIntent+"_"+task.Marker+"_"+task.Prompt)
+	return "task_" + safeID(userID+"_"+seed)
+}
+
+func taskHistoryStatus(projection map[string]any) string {
+	if projection["ok"] == true {
+		return "running"
+	}
+	return "blocked"
+}
+
+func taskHistoryNextAction(projection map[string]any) TaskNextAction {
+	if action := actionFromRunProjection(projection); action.ID != "" {
+		return action
+	}
+	if action := actionFromGateProjection(projection); action.ID != "" {
+		return action
+	}
+	return TaskNextAction{ID: "continue_in_medopl", Label: "继续", DeepLink: MedOPLURL}
+}
+
+func actionFromRunProjection(projection map[string]any) TaskNextAction {
+	if projection["ok"] != true {
+		return TaskNextAction{}
+	}
+	link := safeMedOPLLink(safeString(projection["statusUrl"]))
+	return TaskNextAction{ID: "continue_in_medopl", Label: "继续", DeepLink: link}
+}
+
+func actionFromGateProjection(projection map[string]any) TaskNextAction {
+	gateState := mapValue(projection, "gateState")
+	action := mapValue(gateState, "nextAction")
+	id := safeString(action["id"])
+	if id == "" {
+		return TaskNextAction{}
+	}
+	return TaskNextAction{ID: id, Label: valueOrDefault(safeString(action["label"]), labelForAction(id)), DeepLink: safeMedOPLLink(safeString(action["deepLink"]))}
+}
+
+func progressRefsFromProjection(projection map[string]any) []TaskRef {
+	refs := []TaskRef{}
+	for _, item := range sanitizedList(projection["progress"], "stage", "state", "title") {
+		ref := valueOrDefault(safeString(item["stage"]), safeString(item["state"]))
+		if ref != "" {
+			refs = append(refs, TaskRef{Ref: ref, Label: safeString(item["title"]), Status: safeString(item["state"]), Kind: "progress", Source: "MedOPL"})
+		}
+	}
+	return refs
+}
+
+func deliverableRefsFromProjection(projection map[string]any) []TaskRef {
+	refs := []TaskRef{}
+	for _, item := range sanitizedList(projection["deliverables"], "deliverableId", "artifactRef", "status", "title", "kind", "ref") {
+		ref := valueOrDefault(safeString(item["deliverableId"]), valueOrDefault(safeString(item["ref"]), safeString(item["artifactRef"])))
+		if ref != "" {
+			refs = append(refs, TaskRef{Ref: ref, Label: safeString(item["title"]), Status: safeString(item["status"]), Kind: valueOrDefault(safeString(item["kind"]), "deliverable"), Source: "MedOPL"})
+		}
+	}
+	return refs
+}
+
+func materialRefsFromTask(task runtimeTaskRequest) []TaskRef {
+	refs := []TaskRef{}
+	for _, ref := range stringListValue(task.GateRefs["fileRefs"]) {
+		refs = append(refs, TaskRef{Ref: safeString(ref), Kind: "material", Source: "MedOPL"})
+	}
+	return refs
+}
+
+func blockerFromProjection(projection map[string]any) *TaskBlocker {
+	if blocker := runtimeBlocker(mapValue(projection, "blocker")); safeString(blocker["kind"]) != "runtime_blocked" || len(mapValue(projection, "blocker")) > 0 {
+		return &TaskBlocker{Kind: safeString(blocker["kind"]), Title: safeString(blocker["title"]), NextAction: safeString(blocker["nextAction"]), DeepLink: safeMedOPLLink(safeString(blocker["deepLink"]))}
+	}
+	gateState := mapValue(projection, "gateState")
+	blockers := sanitizedList(gateState["blockers"], "kind", "title", "nextAction", "deepLink")
+	if len(blockers) == 0 {
+		return nil
+	}
+	first := blockers[0]
+	return &TaskBlocker{Kind: safeString(first["kind"]), Title: safeString(first["title"]), NextAction: safeString(mapValue(gateState, "nextAction")["id"]), DeepLink: safeMedOPLLink(safeString(first["deepLink"]))}
+}
+
+func safeID(value string) string {
+	replacer := strings.NewReplacer("@", "", " ", "_", "/", "_", "\\", "_", ":", "_", "?", "_", "&", "_", "=", "_")
+	text := replacer.Replace(strings.ToLower(safeString(value)))
+	if len(text) > 96 {
+		text = text[:96]
+	}
+	return text
 }

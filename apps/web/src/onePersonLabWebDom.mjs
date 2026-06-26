@@ -161,6 +161,7 @@ function bindChatForm(getView) {
         setShellTurnState('blocked_turn');
         showRuntimeGate(message, gate);
         appendRuntimeGateMessage(gate);
+        await refreshTaskHistoryProjection();
         return;
       }
       const run = await runRuntimeTask(fetch, { ...task, gateRefs: gate.gateState?.refs || {} });
@@ -169,6 +170,7 @@ function bindChatForm(getView) {
       renderReliabilityStatus(reliabilityStatusForResult(run.ok ? null : run));
       showRuntimeGate(message, gate);
       appendRuntimeRunProjection(run);
+      await refreshTaskHistoryProjection();
       return;
     }
     const result = await sendChatMessage(fetch, message);
@@ -555,7 +557,13 @@ function renderView(view) {
   setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
   renderReliabilityStatus(view.reliabilityStatus);
   renderConversationHistory(view.conversations);
+  renderTaskHistory(view.taskHistory);
   document.querySelector('[data-account-hint]').textContent = view.session.ok ? '账号状态' : '登录 / 注册';
+}
+
+async function refreshTaskHistoryProjection() {
+  const view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  renderTaskHistory(view.taskHistory);
 }
 
 function setTextAll(selector, text) {
@@ -706,6 +714,56 @@ function renderConversationHistory(conversations = []) {
   }
   empty.hidden = conversations.length > 0;
   filterConversationEntries(document.querySelector('[data-conversation-search]')?.value || '');
+}
+
+function renderTaskHistory(taskHistory = {}) {
+  const list = document.querySelector('[data-task-history-list]');
+  const empty = document.querySelector('[data-task-history-empty]');
+  if (!list || !empty) return;
+  const tasks = Array.isArray(taskHistory.tasks) ? taskHistory.tasks : [];
+  list.textContent = '';
+  for (const task of tasks) {
+    list.append(taskHistoryCard(task));
+  }
+  empty.hidden = tasks.length > 0;
+}
+
+function taskHistoryCard(task) {
+  const card = document.createElement('article');
+  card.className = 'task-history-card';
+  card.dataset.taskHistoryItem = task.taskId || '';
+  card.dataset.taskHistoryStatus = task.status || '';
+  const title = document.createElement('h3');
+  title.textContent = `${task.marker || ''} ${task.taskType || '任务'}`.trim();
+  const meta = document.createElement('p');
+  meta.className = 'task-history-meta';
+  meta.textContent = `${task.status || 'unknown'} · ${formatConversationDate(task.updatedAt)}`;
+  const refs = document.createElement('dl');
+  refs.className = 'task-history-refs';
+  appendTaskRefs(refs, 'Progress refs', task.progressRefs);
+  appendTaskRefs(refs, 'Deliverable refs', task.deliverableRefs);
+  appendTaskRefs(refs, 'Materials refs', task.materialRefs);
+  const blocker = document.createElement('p');
+  blocker.className = 'task-history-blocker';
+  blocker.textContent = task.blocker?.kind ? `${task.blocker.kind}: ${task.blocker.title}` : `Next step: ${task.nextStep || 'continue_in_medopl'}`;
+  const action = document.createElement('a');
+  action.className = 'task-history-continue';
+  action.dataset.taskHistoryContinue = task.taskId || '';
+  const nextAction = task.allowedNextActions?.[0] || {};
+  action.href = nextAction.deepLink || task.deeplink || 'https://medopl.medopl.cn';
+  action.textContent = nextAction.label || '继续';
+  card.append(title, meta, refs, blocker, action);
+  return card;
+}
+
+function appendTaskRefs(list, label, refs = []) {
+  const row = document.createElement('div');
+  const term = document.createElement('dt');
+  term.textContent = label;
+  const value = document.createElement('dd');
+  value.textContent = refs.length > 0 ? refs.map((ref) => ref.label || ref.ref).join(', ') : '暂无 refs';
+  row.append(term, value);
+  list.append(row);
 }
 
 function formatConversationDate(value) {

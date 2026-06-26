@@ -143,12 +143,13 @@ export async function loadOnePersonLabWebState(fetchRef = fetch, options = {}) {
   const session = shouldProbeSession ? await readJSON(fetchRef, '/api/session/current') : { ok: false };
   const provider = session.ok ? await readJSON(fetchRef, '/api/settings/model-provider') : providerFallback();
   const conversations = session.ok ? await readJSON(fetchRef, '/api/chat/conversations') : { conversations: [] };
+  const taskHistory = session.ok ? await readJSON(fetchRef, '/api/tasks') : taskHistoryFallback();
   const commercialStatus = session.ok ? await readJSON(fetchRef, '/api/account/commercial-status') : commercialStatusFallback();
   const billingSummary = session.ok ? await readJSON(fetchRef, '/api/account/billing-summary') : billingSummaryFallback();
   const runtimeStatus = await readJSON(fetchRef, '/api/medopl/runtime/status');
   const materialsDeliverables = await readJSON(fetchRef, '/api/medopl/materials-deliverables/projection');
   const oplSnapshot = shouldLoadSnapshot ? await readJSON(fetchRef, '/api/opl/snapshot') : { ok: false };
-  return createOnePersonLabViewModel({ session, provider, conversations, commercialStatus, billingSummary, runtimeStatus, materialsDeliverables, oplSnapshot });
+  return createOnePersonLabViewModel({ session, provider, conversations, taskHistory, commercialStatus, billingSummary, runtimeStatus, materialsDeliverables, oplSnapshot });
 }
 
 export async function registerAccount(fetchRef, email, password) {
@@ -313,7 +314,7 @@ export function createOnePersonLabViewModel(state) {
     shell: { sideNavigation: true, accountDock: true, promptCommandCenter: true },
     navItems: [
       { id: 'home', label: '新建对话', href: '#home' },
-      { id: 'projects', label: 'Projects', href: '#projects' },
+      { id: 'projects', label: '任务历史', href: '#projects' },
       { id: 'skills', label: 'Skill', href: '#skills' },
       { id: 'workflows', label: '工作流', href: '#workflows' },
       { id: 'search', label: '搜索', href: '#home' },
@@ -335,6 +336,7 @@ export function createOnePersonLabViewModel(state) {
       baseUrlVisible: false,
     },
     conversations: state.conversations?.conversations ?? [],
+    taskHistory: taskHistoryFallback(state.taskHistory),
     commercialStatus: commercialStatusFallback(state.commercialStatus),
     billingSummary: billingSummaryFallback(state.billingSummary),
     accountLifecycle: accountLifecycleSummary(
@@ -381,6 +383,7 @@ export function createInitialOnePersonLabViewModel() {
     session: { ok: false },
     provider: providerFallback(),
     conversations: { conversations: [] },
+    taskHistory: taskHistoryFallback(),
     commercialStatus: commercialStatusFallback(),
     billingSummary: billingSummaryFallback(),
     runtimeStatus: runtimeStatusFallback(),
@@ -658,4 +661,55 @@ function materialsDeliverablesFallback(projection = {}) {
     webuiStorageMutation: 'forbidden',
     webuiArtifactBody: 'forbidden',
   };
+}
+
+function taskHistoryFallback(history = {}) {
+  return {
+    ok: Boolean(history.ok),
+    owner: history.owner || 'OnePersonLabWeb',
+    projection: history.projection || 'refs_status_metadata_only',
+    tasks: Array.isArray(history.tasks) ? history.tasks.map(sanitizeTaskHistoryItem) : [],
+    webuiArtifactBody: 'forbidden',
+    webuiStorageTruth: 'forbidden',
+    doesNotProve: Array.isArray(history.doesNotProve) ? history.doesNotProve : [
+      'runtime execution',
+      'artifact body authority',
+      'storage truth',
+      'payment lifecycle',
+      'team/RBAC lifecycle',
+      'production rollout',
+    ],
+  };
+}
+
+function sanitizeTaskHistoryItem(task = {}) {
+  return {
+    taskId: String(task.taskId || ''),
+    taskType: String(task.taskType || task.taskIntent || ''),
+    taskIntent: String(task.taskIntent || task.taskType || ''),
+    marker: String(task.marker || ''),
+    conversationId: String(task.conversationId || ''),
+    status: String(task.status || 'blocked'),
+    updatedAt: String(task.updatedAt || ''),
+    progressRefs: sanitizeTaskRefs(task.progressRefs),
+    deliverableRefs: sanitizeTaskRefs(task.deliverableRefs),
+    materialRefs: sanitizeTaskRefs(task.materialRefs),
+    blocker: task.blocker && typeof task.blocker === 'object' ? normalizeRuntimeBlocker(task.blocker) : null,
+    nextStep: String(task.nextStep || ''),
+    allowedNextActions: Array.isArray(task.allowedNextActions) ? task.allowedNextActions.map(normalizeNextAction) : [],
+    deeplink: safeMedoplDeepLink(task.deeplink),
+    webuiArtifactBody: 'forbidden',
+    webuiStorageTruth: 'forbidden',
+  };
+}
+
+function sanitizeTaskRefs(refs) {
+  if (!Array.isArray(refs)) return [];
+  return refs.map((ref) => ({
+    ref: String(ref.ref || ''),
+    label: String(ref.label || ''),
+    status: String(ref.status || ''),
+    kind: String(ref.kind || ''),
+    source: String(ref.source || ''),
+  })).filter((ref) => ref.ref);
 }

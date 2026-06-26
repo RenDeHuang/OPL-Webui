@@ -82,6 +82,122 @@ update chat_conversations set updated_at = now() where id = $2 and user_id = $3;
 	return err
 }
 
+func (store PostgresStore) UpsertTaskHistory(item TaskHistoryItem) (TaskHistoryItem, error) {
+	if item.ID == "" {
+		item.ID = "task_" + randomHex(8)
+	}
+	item.WebuiArtifactBody = "forbidden"
+	item.WebuiStorageTruth = "forbidden"
+	progressRefs, err := json.Marshal(item.ProgressRefs)
+	if err != nil {
+		return TaskHistoryItem{}, err
+	}
+	deliverableRefs, err := json.Marshal(item.DeliverableRefs)
+	if err != nil {
+		return TaskHistoryItem{}, err
+	}
+	materialRefs, err := json.Marshal(item.MaterialRefs)
+	if err != nil {
+		return TaskHistoryItem{}, err
+	}
+	blocker, err := json.Marshal(item.Blocker)
+	if err != nil {
+		return TaskHistoryItem{}, err
+	}
+	allowedNextActions, err := json.Marshal(item.AllowedNextActions)
+	if err != nil {
+		return TaskHistoryItem{}, err
+	}
+	err = store.db.QueryRowContext(context.Background(), `
+insert into webapp_task_history (
+  id, user_id, conversation_id, task_type, task_intent, marker, status,
+  progress_refs, deliverable_refs, material_refs, blocker, next_step, allowed_next_actions, deeplink
+) values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12, $13::jsonb, $14)
+on conflict (id) do update set
+  conversation_id = excluded.conversation_id,
+  task_type = excluded.task_type,
+  task_intent = excluded.task_intent,
+  marker = excluded.marker,
+  status = excluded.status,
+  progress_refs = excluded.progress_refs,
+  deliverable_refs = excluded.deliverable_refs,
+  material_refs = excluded.material_refs,
+  blocker = excluded.blocker,
+  next_step = excluded.next_step,
+  allowed_next_actions = excluded.allowed_next_actions,
+  deeplink = excluded.deeplink,
+  updated_at = now()
+returning created_at, updated_at
+`, item.ID, item.UserID, item.ConversationID, item.TaskType, item.TaskIntent, item.Marker, item.Status,
+		string(progressRefs), string(deliverableRefs), string(materialRefs), string(blocker), item.NextStep, string(allowedNextActions), item.DeepLink).
+		Scan(&item.CreatedAt, &item.UpdatedAt)
+	return item, err
+}
+
+func (store PostgresStore) ListTaskHistory(userID string) []TaskHistoryItem {
+	rows, err := store.db.QueryContext(context.Background(), `
+select id, user_id, conversation_id, task_type, task_intent, marker, status,
+  progress_refs, deliverable_refs, material_refs, coalesce(blocker, 'null'::jsonb), next_step, allowed_next_actions, deeplink, created_at, updated_at
+from webapp_task_history
+where user_id = $1
+order by updated_at desc
+`, userID)
+	if err != nil {
+		return []TaskHistoryItem{}
+	}
+	defer rows.Close()
+	return scanTaskHistoryRows(rows)
+}
+
+func (store PostgresStore) GetTaskHistory(userID string, taskID string) (TaskHistoryItem, bool) {
+	rows, err := store.db.QueryContext(context.Background(), `
+select id, user_id, conversation_id, task_type, task_intent, marker, status,
+  progress_refs, deliverable_refs, material_refs, coalesce(blocker, 'null'::jsonb), next_step, allowed_next_actions, deeplink, created_at, updated_at
+from webapp_task_history
+where user_id = $1 and id = $2
+`, userID, taskID)
+	if err != nil {
+		return TaskHistoryItem{}, false
+	}
+	defer rows.Close()
+	items := scanTaskHistoryRows(rows)
+	if len(items) != 1 {
+		return TaskHistoryItem{}, false
+	}
+	return items[0], true
+}
+
+func scanTaskHistoryRows(rows *sql.Rows) []TaskHistoryItem {
+	items := []TaskHistoryItem{}
+	for rows.Next() {
+		item := TaskHistoryItem{WebuiArtifactBody: "forbidden", WebuiStorageTruth: "forbidden"}
+		progressRefs := ""
+		deliverableRefs := ""
+		materialRefs := ""
+		blocker := ""
+		allowedNextActions := ""
+		if err := rows.Scan(
+			&item.ID, &item.UserID, &item.ConversationID, &item.TaskType, &item.TaskIntent, &item.Marker, &item.Status,
+			&progressRefs, &deliverableRefs, &materialRefs, &blocker, &item.NextStep, &allowedNextActions, &item.DeepLink,
+			&item.CreatedAt, &item.UpdatedAt,
+		); err != nil {
+			return []TaskHistoryItem{}
+		}
+		_ = json.Unmarshal([]byte(progressRefs), &item.ProgressRefs)
+		_ = json.Unmarshal([]byte(deliverableRefs), &item.DeliverableRefs)
+		_ = json.Unmarshal([]byte(materialRefs), &item.MaterialRefs)
+		_ = json.Unmarshal([]byte(allowedNextActions), &item.AllowedNextActions)
+		if blocker != "" && blocker != "null" {
+			parsed := TaskBlocker{}
+			if err := json.Unmarshal([]byte(blocker), &parsed); err == nil {
+				item.Blocker = &parsed
+			}
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
 func (store PostgresStore) RecordAuditEvent(event AuditEvent) error {
 	if event.ID == "" {
 		event.ID = "audit_" + randomHex(8)

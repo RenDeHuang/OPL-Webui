@@ -26,10 +26,10 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-shell-state="home_default"/);
   assert.match(html, /data-side-navigation/);
   assert.match(html, /data-nav-item="home"[^>]*data-shell-action="home"[^>]*>新建对话/);
-  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>Projects/);
+  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>任务历史/);
   assert.match(html, /data-nav-item="skills"[^>]*data-shell-action="skills"[^>]*>Skill/);
   assert.match(html, /data-nav-item="workflows"[^>]*data-shell-action="workflows"[^>]*>工作流/);
-  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>Projects/);
+  assert.match(html, /data-nav-item="projects"[^>]*data-shell-action="projects"[^>]*>任务历史/);
   assert.match(html, /data-nav-item="search"[^>]*data-shell-action="search"[^>]*>搜索/);
   assert.match(html, /data-nav-item="more"[^>]*data-shell-action="more"[^>]*>More/);
   assert.match(html, /data-search-trigger/);
@@ -65,7 +65,11 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.doesNotMatch(html, /sidebar-shell|left-rail-toggle|data-left-rail|conversation-list|data-local-sidebar|workspace-sidebar|workbench-summary-strip|clean_workbench_v1/);
   assert.doesNotMatch(html, /<nav[^>]*data-side-navigation[\s\S]*?(科研能力|论文|基金|账号|Settings|API Key|文件|进度|输出)[\s\S]*?<\/nav>/);
   assert.doesNotMatch(html, /data-projects-sheet/);
-  assert.match(html, /data-project-library/);
+  assert.match(html, /data-task-history-route/);
+  assert.match(html, /data-task-history-center/);
+  assert.match(html, /data-task-history-list/);
+  assert.match(html, /data-task-history-empty/);
+  assert.match(html, /refs_status_metadata_only/);
   assert.match(html, /data-search-sheet/);
   assert.match(html, /data-overlay-close="search"/);
   assert.match(html, /data-conversation-search/);
@@ -112,7 +116,9 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /导入工作流/);
   assert.match(html, /我的工作流/);
   assert.match(html, /OPL 工作流/);
-  assert.match(html, /新增 Project/);
+  assert.match(html, /最近任务 \/ 历史任务/);
+  assert.match(html, /暂无历史任务/);
+  assert.match(html, /新建任务/);
   assert.match(html, /data-more-overflow/);
   assert.match(html, /暂时没有更多入口/);
   assert.match(html, /OPL/);

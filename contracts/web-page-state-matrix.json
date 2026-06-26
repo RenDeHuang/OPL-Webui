@@ -67,8 +67,8 @@
     {
       "id": "projects",
       "hash": "#projects",
-      "surface": "project_session_refs",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound"]
+      "surface": "task_history_deliverable_continuation_center",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "task_history_empty", "task_history_list", "task_history_blocked", "task_history_continue"]
     },
     {
       "id": "more",
@@ -102,6 +102,53 @@
       "artifact body authority",
       "payment lifecycle",
       "team/RBAC lifecycle"
+    ]
+  },
+  "taskHistoryContinuationCenter": {
+    "slice": "task_history_deliverable_continuation_center_v0",
+    "route": "projects",
+    "surface": "task_history_deliverable_continuation_center",
+    "owner": "account_based_user_product_layer",
+    "consumer": "authenticated_research_user",
+    "entrySelectors": [
+      "[data-nav-item=\"projects\"]",
+      "[data-task-history-center]"
+    ],
+    "requiredStates": [
+      "task_history_empty",
+      "task_history_list",
+      "task_history_detail",
+      "task_history_blocked",
+      "task_history_continue"
+    ],
+    "requiredFields": [
+      "taskType",
+      "status",
+      "updatedAt",
+      "progressRefs",
+      "deliverableRefs",
+      "materialRefs",
+      "blocker",
+      "nextStep",
+      "allowedNextActions",
+      "deeplink"
+    ],
+    "emptyState": "从科研/论文/基金/综述/文件/PPT/写书入口开始",
+    "forbiddenProjection": [
+      "artifact_body",
+      "artifactBody",
+      "storage_truth",
+      "domain_verdict",
+      "payment_truth"
+    ],
+    "disabledUserPolicy": "deny_with_USER_DISABLED",
+    "doesNotProve": [
+      "runtime execution",
+      "artifact body authority",
+      "storage truth",
+      "payment lifecycle",
+      "team/RBAC lifecycle",
+      "production rollout"
     ]
   },
   "chatStates": [
@@ -260,7 +307,7 @@
       "public_landing",
       "auth_login_register",
       "home_default",
-      "project_library",
+      "task_history_deliverable_continuation_center",
       "search_sheet_open",
       "inspector_files",
       "inspector_progress",
@@ -329,12 +376,12 @@
         },
         {
           "id": "projects",
-          "label": "Projects",
+          "label": "任务历史",
           "kind": "route",
           "targetView": "projects",
           "localOnly": true,
-          "consumer": "project_library",
-          "forbiddenApis": ["/api/projects"]
+          "consumer": "task_history_deliverable_continuation_center",
+          "forbiddenApis": []
         },
         {
           "id": "skills",
@@ -378,13 +425,13 @@
       "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
-      "projects": ["project_library"],
+      "projects": ["task_history_deliverable_continuation_center"],
       "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
       "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
       "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
-      "projects": { "scopes": ["my_projects"], "actions": ["create_project"], "forbiddenApis": ["/api/projects"] }
+      "projects": { "scopes": ["my_task_history"], "actions": ["continue_task"], "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"], "projection": "refs_status_metadata_only" }
     },
     "inspector": {
       "defaultState": "hidden",
@@ -550,7 +597,7 @@
       "[data-login-button]",
       "[data-provider-form]",
       "[data-more-overflow]",
-      "[data-project-library]",
+      "[data-task-history-center]",
       "[data-search-sheet]",
       "[data-conversation-search]",
       "[data-conversation-history]",
@@ -559,6 +606,8 @@
       "[data-overlay-close]",
       "[data-runtime-gate]",
       "[data-research-launcher]",
+      "[data-task-history-list]",
+      "[data-task-history-empty]",
       "[data-research-task]",
       "[data-capability-marker]",
       "[data-capability-mode]",

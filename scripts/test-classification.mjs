@@ -50,6 +50,14 @@ const NOT_PUBLIC_GROWTH_EVIDENCE = Object.freeze([
   'full SaaS',
   'payment/team/RBAC/HA',
 ]);
+const NOT_TASK_HISTORY_EVIDENCE = Object.freeze([
+  'runtime execution',
+  'artifact body authority',
+  'storage truth',
+  'payment lifecycle',
+  'team/RBAC lifecycle',
+  'production rollout',
+]);
 
 function assertValidStringArray(value, field, file) {
   if (!Array.isArray(value) || value.length === 0) {
@@ -361,6 +369,27 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'contract'],
   }),
   testEntry({
+    file: 'tests/contract/task-history-continuation-contract.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'account-based-user-product-layer',
+    lifecycleRole: 'current-owner',
+    testKind: 'contract',
+    proofLevel: 'http',
+    claimScope: 'local',
+    contracts: [
+      'contracts/web-product-profile.json',
+      'contracts/web-page-state-matrix.json',
+      'contracts/web-api.openapi.json',
+      'services/control-plane-go/internal/webapp/handlers.go',
+      'services/control-plane-go/internal/webapp/store.go',
+    ],
+    proves: ['authenticated users can read isolated refs-only task history/detail projections with blockers, next actions, progress refs, deliverable refs, materials refs, and disabled-user denial'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_TASK_HISTORY_EVIDENCE],
+    riskTriggers: ['public-api', 'control-plane-go', 'apps-web', 'page-state', 'contract'],
+    verifySuites: ['current', 'contract'],
+  }),
+  testEntry({
     file: 'tests/contract/one-person-lab-chat-upstream.test.mjs',
     runner: 'node',
     lane: 'contract',
@@ -611,9 +640,9 @@ const TEST_ENTRIES = Object.freeze([
     testKind: 'acceptance',
     proofLevel: 'browser',
     claimScope: 'ci',
-    contracts: ['tests/browser/research-main-path-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-gui-product-contract.json'],
-    proves: ['CI/local Chromium account-based Web App business main path works with user-like login, API key binding, task choice, result/gate, refs/deeplink continuity, sanitized evidence, artifact-first research results, stable desktop inspector, lightweight mobile sheet, responsive visual QA, and repo-local keyboard path, modal focus trap, and contrast closeout checks'],
-    doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality'],
+    contracts: ['tests/browser/research-main-path-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-gui-product-contract.json', 'contracts/web-product-profile.json'],
+    proves: ['CI/local Chromium account-based Web App business main path works with user-like login, API key binding, task choice, result/gate, refs/deeplink continuity, task history continuation center, sanitized evidence, artifact-first research results, stable desktop inspector, lightweight mobile sheet, responsive visual QA, and repo-local keyboard path, modal focus trap, and contrast closeout checks'],
+    doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution', 'artifact body authority', 'storage truth', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality'],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux'],
     verifySuites: ['browser', 'full'],
   }),
