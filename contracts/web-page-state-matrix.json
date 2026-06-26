@@ -2,14 +2,18 @@
   "schemaVersion": 1,
   "productId": "one-person-lab-web",
   "productLayers": [
-    { "id": "public_growth_layer", "status": "current_public_surface", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
-    { "id": "account_based_user_product_layer", "status": "current_primary", "surfaceOwner": "account_based_web_app", "defaultAudience": "authenticated_research_user" },
-    { "id": "minimal_admin_ops_layer", "status": "active_slice", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
+    { "id": "public_growth_layer", "status": "done_v1", "surfaceOwner": "public_growth_pages", "defaultAudience": "anonymous_user" },
+    { "id": "account_based_user_product_layer", "status": "done_v1_repo_browser", "surfaceOwner": "account_based_web_app", "defaultAudience": "authenticated_research_user" },
+    { "id": "minimal_admin_ops_layer", "status": "partial", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
   ],
   "minimalAdminOpsLayer": {
     "registrationMode": { "default": "open", "allowed": ["open", "invite_only", "allowlist", "disabled"] },
     "userStatus": { "allowed": ["active", "disabled"] },
-    "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
+    "completedSlices": ["registration_policy_user_status_v0"],
+    "nextGaps": {
+      "dogfoodReleaseEvidenceSummary": "not_started",
+      "hiddenOpsUi": "optional_reserved"
+    },
     "firstPhaseRouteOptions": ["operator_only_api", "/_ops"],
     "operatorAuth": "operator_token_required",
     "apiRoutes": [

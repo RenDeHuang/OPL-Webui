@@ -32,7 +32,7 @@
   "productLayers": [
     {
       "id": "public_growth_layer",
-      "status": "basically_done",
+      "status": "done_v1",
       "audience": ["anonymous_user"],
       "goal": "Help unauthenticated users understand the product, task entry points, use cases, expected outputs, and how to start.",
       "referenceShape": "YouMind-style public product education surface",
@@ -45,19 +45,23 @@
     },
     {
       "id": "account_based_user_product_layer",
-      "status": "basically_done",
+      "status": "done_v1_repo_browser",
       "primary": true,
       "contract": "contracts/web-product-profile.json#/accountBasedWebAppMainPath",
-      "claimStatus": "repo_current_basic_completion",
+      "claimStatus": "done_v1_repo_browser",
       "userPath": ["open_web", "login_account", "bind_api_key_or_use_account_capability", "choose_research_task", "view_result_or_medopl_gate", "view_progress_refs", "view_deliverable_refs", "view_blocker_next_step", "continue_via_medopl_deeplink"],
       "owned": ["account_session", "task_entry", "page_state", "sanitized_projection", "refs", "deeplink"],
       "forbiddenClaims": ["full_saas", "payment", "team_rbac", "runtime_execution"]
     },
     {
       "id": "minimal_admin_ops_layer",
-      "status": "active_slice",
+      "status": "partial",
       "scope": "minimum account admission and operator controls only",
-      "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
+      "completedSlices": ["registration_policy_user_status_v0"],
+      "nextGaps": {
+        "dogfoodReleaseEvidenceSummary": "not_started",
+        "hiddenOpsUi": "optional_reserved"
+      },
       "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
       "userStatusAllowed": ["active", "disabled"],
       "firstPhaseSurfaces": ["operator_only_api", "same_domain_hidden_ops_route"],
@@ -142,12 +146,17 @@
     "ownerSurface": "operator_only_controls",
     "consumer": "operator",
     "claim": "Admin/Ops v0 controls registration policy and user active/disabled admission with sanitized operator reads and audited mutations.",
-    "activeSlice": "admin_ops_registration_policy_and_user_status_v0",
+    "status": "partial",
+    "completedSlices": ["registration_policy_user_status_v0"],
+    "nextGaps": {
+      "dogfoodReleaseEvidenceSummary": "not_started",
+      "hiddenOpsUi": "optional_reserved"
+    },
     "contract": "contracts/web-api.openapi.json#/paths/~1api~1ops",
     "uiSurface": {
       "mode": "operator_only_api_first",
       "hiddenRoute": "/_ops",
-      "hiddenRouteStatus": "reserved_for_same_domain_operator_entry"
+      "hiddenRouteStatus": "optional_reserved_not_implemented"
     },
     "apiDataPath": [
       "GET /api/ops/registration-policy",
@@ -212,6 +221,7 @@
   },
   "taskHistoryContinuationCenter": {
     "slice": "task_history_deliverable_continuation_center_v0",
+    "status": "done_v0",
     "ownerSurface": "account_based_user_product_layer",
     "consumer": "authenticated_research_user",
     "claim": "Authenticated users can return to a refs-only task history center that shows task type, status, updated time, progress refs, deliverable refs, materials refs, blocker/next step, allowed next actions, and MedOPL/OPL continuation links.",
@@ -860,27 +870,27 @@
     "layers": [
       {
         "id": "growth_layer",
-        "status": "basically_done",
+        "status": "done_v1",
         "evidence": "contracts/web-product-profile.json#/productLayers/0",
         "remainingGap": "production rollout evidence remains separate; public growth proof does not prove authenticated task success, runtime execution, artifact body authority, full SaaS, or payment/team/RBAC/HA"
       },
       {
         "id": "user_product_layer",
-        "status": "basically_done",
+        "status": "done_v1_repo_browser",
         "evidence": "contracts/web-product-profile.json#/accountBasedWebAppMainPath + tests/contract/one-person-lab-web-data.test.mjs",
         "remainingGap": "production/sandbox MedOPL account-resource-state evidence remains external"
       },
       {
         "id": "admin_ops_layer",
-        "status": "active_slice",
+        "status": "partial",
         "evidence": "contracts/web-product-profile.json#/minimalAdminOpsLayerContract",
-        "remainingGap": "dogfood/release evidence summaries and richer hidden /_ops UI remain future slices"
+        "remainingGap": "dogfood/release evidence summary is not_started; hidden /_ops UI is optional_reserved"
       },
       {
         "id": "production_rollout",
-        "status": "partial",
+        "status": "pending_latest_main_evidence",
         "evidence": "contracts/web-release-profile.json",
-        "remainingGap": "release evidence exists, but it must not claim full SaaS, payment, team/RBAC, HA, or runtime sync"
+        "remainingGap": "historical release evidence exists, but latest main production evidence is pending and must not be inferred from run 28142197152"
       }
     ]
   },
@@ -888,7 +898,7 @@
     "canClaim": [
       "One Person Lab Web is a One Person Lab knowledge delivery Web platform.",
       "The public growth layer explains research, paper, grant, review, file, PPT, and book knowledge delivery entries to unauthenticated users and routes them to login/register with task return state.",
-      "The account-based user product layer is the basically done personal account-based Web edition of One Person Lab App.",
+      "The account-based user product layer is done v1 at repo/browser evidence level for the personal account-based Web edition of One Person Lab App.",
       "Researchers, graduate students, PhD students, principal investigators, and research teams can open Web, log in, bind an API Key or use admitted account capability, choose a task, and continue through result/gate, refs, blocker/next step, and MedOPL/OPL deeplink states.",
       "Web UI calls the same-origin Go control plane HTTP API.",
       "Users bind their own provider key while base_url remains fixed.",

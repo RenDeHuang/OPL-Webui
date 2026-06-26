@@ -22,6 +22,11 @@
     "blocked",
     "not_started"
   ],
+  "gapStateValues": [
+    "active",
+    "closed",
+    "paused"
+  ],
   "evidenceSources": [
     "repo_local",
     "browser",
@@ -68,7 +73,7 @@
     {
       "id": "ui_ux_product_depth",
       "ownerSurface": "apps-web",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "production_ui_quality_claim",
       "currentStatus": "done",
       "cannotClaim": [
@@ -169,7 +174,7 @@
     {
       "id": "medopl_readonly_evidence",
       "ownerSurface": "release-evidence",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "production_readonly_foldback",
       "currentStatus": "done",
       "cannotClaim": [
@@ -236,7 +241,7 @@
     {
       "id": "runtime_execution_boundary",
       "ownerSurface": "runtime-gate",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "execution_admission",
       "currentStatus": "done",
       "launchBlocking": true,
@@ -567,7 +572,7 @@
     {
       "id": "concurrency_and_load",
       "ownerSurface": "control-plane-go",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "production_concurrency_load_evidence",
       "currentStatus": "done",
       "cannotClaim": [
@@ -637,7 +642,7 @@
     {
       "id": "opl_auto_update_from_github",
       "ownerSurface": "deploy",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "runtime_sync_admission",
       "currentStatus": "done",
       "cannotClaim": [

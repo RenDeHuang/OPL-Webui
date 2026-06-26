@@ -181,7 +181,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assertIncludesAll(release.localNoSecretReadiness.coverage, ['open_web', 'login', 'api_key_binding', 'choose_task', 'view_result_or_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_deeplink'], 'local readiness business path coverage');
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/contract/one-person-lab-chat-upstream.test.mjs'), true);
   assert.equal(release.localNoSecretReadiness.evidenceCommands.includes('node --test tests/smoke/web-shell.test.mjs'), true);
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28142197152_real_chat_readonly_confirmed');
+  assert.equal(release.latestMainEvidence.state, 'pending_latest_main_evidence');
+  assert.equal(release.latestMainEvidence.historicalRunId, 28142197152);
+  assert.equal(release.latestMainEvidence.historicalEvidenceDoesNotApplyToLaterMain, true);
+  assert.equal(release.productionDogfoodReadiness.state, 'historical_success_run_28142197152_real_chat_readonly_confirmed');
+  assert.equal(release.productionDogfoodReadiness.evidenceScope, 'historical');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28142197152');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '0728dc448d4b8105494e6e6b652ad8a43e1e19db');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:0728dc4');
@@ -208,11 +212,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.confirmedBy.runId, 28142197152);
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.confirmedBy.rawLogPolicy.storesRawLogs, false);
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.claimWhenConfirmed, 'production MedOPL readonly projection dogfood');
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_28142197152_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.state, 'historical_success_run_28142197152_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.evidenceScope, 'historical');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runUrl, 'https://github.com/RenDeHuang/OPL-Webui/actions/runs/28142197152');
   assertIncludesAll(release.productionAvailabilityReadiness.latestSuccessfulRun.coverage, ['HTTPS /readyz'], 'availability coverage');
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
-  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28142197152_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.state, 'historical_release_probe_run_28142197152_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.evidenceScope, 'historical');
   assert.equal(release.productionObservabilityBaseline.currentPhase, 'ops_evidence_contracts');
   assert.equal(release.productionObservabilityBaseline.nextPhase, 'ops_contract_detail');
   assert.equal(release.productionObservabilityBaseline.blockedBy, null);
@@ -255,7 +261,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.localBrowserE2EReadiness.latestSuccessfulRun.command, 'npm run verify:browser');
   assert.deepEqual(release.localBrowserE2EReadiness.latestSuccessfulRun.auditKinds.sort(), ['chat.completed', 'runtime_gate.blocked']);
   assert.equal(release.productionBrowserE2EReadiness.mode, 'secret_gated_chromium_research_main_path');
-  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28142197152');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'historical_success_run_28142197152');
+  assert.equal(release.productionBrowserE2EReadiness.evidenceScope, 'historical');
   assert.equal(release.productionBrowserE2EReadiness.defaultEnabled, false);
   assert.equal(release.productionBrowserE2EReadiness.browserAutomation, true);
   assert.equal(release.productionBrowserE2EReadiness.entrypoint, 'node tests/browser/research-main-path-runner.mjs --production');

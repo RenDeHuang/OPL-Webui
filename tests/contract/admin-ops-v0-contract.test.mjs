@@ -18,8 +18,14 @@ test('Admin/Ops v0 contract fixes registration policy and user status boundaries
   const release = readJson('contracts/web-release-profile.json');
   const api = readJson('contracts/web-api.openapi.json');
 
-  assert.equal(product.productLayers.find((layer) => layer.id === 'minimal_admin_ops_layer').status, 'active_slice');
-  assert.equal(product.minimalAdminOpsLayerContract.activeSlice, 'admin_ops_registration_policy_and_user_status_v0');
+  const adminLayer = product.productLayers.find((layer) => layer.id === 'minimal_admin_ops_layer');
+  assert.equal(adminLayer.status, 'partial');
+  assert.equal(adminLayer.completedSlices.includes('registration_policy_user_status_v0'), true);
+  assert.equal(adminLayer.activeSlice, undefined);
+  assert.equal(product.minimalAdminOpsLayerContract.status, 'partial');
+  assert.equal(product.minimalAdminOpsLayerContract.completedSlices.includes('registration_policy_user_status_v0'), true);
+  assert.equal(product.minimalAdminOpsLayerContract.nextGaps.dogfoodReleaseEvidenceSummary, 'not_started');
+  assert.equal(product.minimalAdminOpsLayerContract.uiSurface.hiddenRouteStatus, 'optional_reserved_not_implemented');
   assert.deepEqual(product.minimalAdminOpsLayerContract.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(product.minimalAdminOpsLayerContract.userStatus.disabledDenies, ['login', 'session_current', 'chat', 'api_key_binding', 'user_product_path']);
   assert.equal(product.minimalAdminOpsLayerContract.operatorAuth.mode, 'operator_token_required');
@@ -41,8 +47,10 @@ test('Admin/Ops v0 contract fixes registration policy and user status boundaries
     'GET /api/ops/users',
     'POST /api/ops/users/{userId}/status',
   ]);
-  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'active_slice_registration_policy_user_status_v0');
-  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'active_slice_registration_policy_user_status_v0');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'partial');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayerCompletedSlice, 'registration_policy_user_status_v0');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayerNextGap, 'dogfood_release_evidence_summary_not_started');
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'partial');
   for (const path of ['/api/ops/registration-policy', '/api/ops/users', '/api/ops/users/{userId}/status']) {
     assert.ok(api.paths[path], `missing ${path}`);
   }

@@ -33,6 +33,7 @@ test('gap phase registry defines phase queues without creating durable process l
   assert.match(registry.machineBoundary, /\.runtime phase run artifacts are temporary/);
   assert.deepEqual(registry.evalDimensionPolicy.dimensions, ['contract', 'repo_local', 'browser', 'production', 'owner', 'cleanup']);
   assert.deepEqual(registry.evalDimensionPolicy.statusValues, ['pass', 'blocked', 'fail']);
+  assert.deepEqual(registry.gapStateValues, ['active', 'closed', 'paused']);
   assert.equal(registry.evalDimensionPolicy.advanceRule, 'currentStatus=done and all evalResults pass');
   assert.equal(registry.evalDimensionPolicy.externalEvidenceCannotBeInferredFromRepoLocal, true);
   assert.deepEqual(registry.evalDimensionPolicy.externalEvidenceDimensions, ['production', 'owner']);
@@ -57,7 +58,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
   for (const gap of registry.gaps) {
     assert.equal(typeof gap.ownerSurface, 'string', `${gap.id} must declare ownerSurface`);
     assert.ok(gap.ownerSurface.length > 0, `${gap.id} ownerSurface must be non-empty`);
-    assert.ok(['active', 'paused'].includes(gap.state), `${gap.id} must declare supported state`);
+    assert.ok(registry.gapStateValues.includes(gap.state), `${gap.id} must declare supported state`);
     assert.ok(gap.phases.length > 0, `${gap.id} must declare phases`);
     assert.ok(gap.phases.some((phase) => phase.id === gap.currentPhaseId), `${gap.id} current phase must exist`);
     assert.ok(Array.isArray(gap.cannotClaim) && gap.cannotClaim.length > 0, `${gap.id} must declare cannotClaim`);

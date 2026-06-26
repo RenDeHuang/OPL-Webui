@@ -12,7 +12,7 @@
   "x-product-layers": {
     "primary": "account_based_user_product_layer",
     "publicGrowthLayer": {
-      "status": "basically_done",
+      "status": "done_v1",
       "surfaces": [
         "public_homepage",
         "use_cases",
@@ -31,7 +31,14 @@
       ]
     },
     "minimalAdminOpsLayer": {
-      "status": "active_slice_registration_policy_user_status_v0",
+      "status": "partial",
+      "completedSlices": [
+        "registration_policy_user_status_v0"
+      ],
+      "nextGaps": {
+        "dogfoodReleaseEvidenceSummary": "not_started",
+        "hiddenOpsUi": "optional_reserved"
+      },
       "registrationModeAllowed": [
         "open",
         "invite_only",

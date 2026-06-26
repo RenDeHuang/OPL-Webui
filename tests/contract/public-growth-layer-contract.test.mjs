@@ -20,11 +20,11 @@ test('public growth layer contract is implemented without expanding into full Sa
 
   assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
   assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
-  assert.equal(product.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'basically_done');
-  assert.equal(product.gapMap.layers.find((layer) => layer.id === 'growth_layer')?.status, 'basically_done');
-  assert.equal(pageState.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'current_public_surface');
-  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'basically_done');
-  assert.equal(api['x-product-layers'].publicGrowthLayer.status, 'basically_done');
+  assert.equal(product.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'done_v1');
+  assert.equal(product.gapMap.layers.find((layer) => layer.id === 'growth_layer')?.status, 'done_v1');
+  assert.equal(pageState.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'done_v1');
+  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'done_v1');
+  assert.equal(api['x-product-layers'].publicGrowthLayer.status, 'done_v1');
 
   const growth = product.publicGrowthLayerContract;
   assert.equal(growth.owner, 'one-person-lab-web');

@@ -89,7 +89,7 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
-  assert.match(status, /three-layer product portfolio plus active slice development/);
+  assert.match(status, /three-layer product modules plus explicit gap slices/);
   assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work moves one slice at a time/);
   assert.match(status, /current = smoke \+ contract \+ health \+ go/);
@@ -157,12 +157,18 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.equal(release.currentStage, 'one-person-lab-web-contract-truth');
   assert.equal(release.historicalEvidenceRefs.includes('docs/history/process/closeouts.md'), true);
   assert.equal(release.historicalEvidenceRefs.includes('changes/archive/closeouts.md'), false);
+  assert.equal(release.latestMainEvidence.state, 'pending_latest_main_evidence');
+  assert.equal(release.latestMainEvidence.historicalRunId, 28142197152);
+  assert.equal(release.latestMainEvidence.historicalRunScope, 'historical_only');
+  assert.equal(release.latestMainEvidence.historicalEvidenceDoesNotApplyToLaterMain, true);
   assert.match(status, /contracts\/web-product-profile\.json/);
   assert.match(status, /contracts\/web-api\.openapi\.json/);
   assert.match(status, /contracts\/web-release-profile\.json/);
   assert.match(status, /contracts\/web-development-profile\.json/);
+  assert.match(status, /latest main production evidence is pending/i);
   assert.doesNotMatch(status, /one-person-lab-web-truth-reset/);
   assert.doesNotMatch(status, /repo-slimming-and-stale-name-retirement/);
+  assert.doesNotMatch(status, /Latest `main` production evidence is folded back to GitHub Actions run `28142197152`/);
 });
 
 test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalone SaaS backend', () => {
@@ -312,7 +318,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28142197152_real_chat_readonly_confirmed');
+  assert.equal(release.productionDogfoodReadiness.state, 'historical_success_run_28142197152_real_chat_readonly_confirmed');
+  assert.equal(release.productionDogfoodReadiness.evidenceScope, 'historical');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 28142197152);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '0728dc448d4b8105494e6e6b652ad8a43e1e19db');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:0728dc4');
@@ -351,7 +358,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionAvailabilityReadiness.mode, 'no_secret_public_http_probe');
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_28142197152_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.state, 'historical_success_run_28142197152_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.evidenceScope, 'historical');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 28142197152);
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, '0728dc448d4b8105494e6e6b652ad8a43e1e19db');
   assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:0728dc4');
@@ -377,7 +385,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production authenticated dogfood'), true);
   assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production-ready SaaS'), true);
   assert.equal(release.productionObservabilityBaseline.mode, 'no_secret_public_http_observability_baseline_v1');
-  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28142197152_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.state, 'historical_release_probe_run_28142197152_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.evidenceScope, 'historical');
   assert.equal(release.productionObservabilityBaseline.owner, 'one-person-lab-web-release');
   assert.equal(release.productionObservabilityBaseline.consumer, 'cloud_rollout_closeout');
   assert.equal(release.productionObservabilityBaseline.nextReadiness.owner, 'operations_owner');
@@ -468,7 +477,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('grant_runtime_gate'), true);
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('sanitized_audit'), true);
   assert.equal(release.localBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
-  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28142197152');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'historical_success_run_28142197152');
+  assert.equal(release.productionBrowserE2EReadiness.evidenceScope, 'historical');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 28142197152);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
@@ -506,17 +516,17 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
   assert.match(status, /One Person Lab knowledge delivery Web platform/);
-  assert.match(status, /Account-based User Product Layer is the current basically done personal account product/);
+  assert.match(status, /Account-based User Product Layer is done v1 at repo\/browser evidence level/);
   assert.match(JSON.stringify(product.claims.canClaim), /account-based task path remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
-  assert.match(status, /Production authenticated dogfood HTTP evidence executed successfully/);
+  assert.match(status, /Historical production authenticated dogfood HTTP evidence executed successfully/);
   assert.match(status, /production real ordinary chat completion/);
   assert.match(status, /run `27877811961` failed only at `Production Browser E2E`/);
   assert.match(status, /`response_header_timeout` from `gflabtoken\.cn` on model `gpt-5\.5`/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.match(status, /Browser e2e is now a CI release gate/);
-  assert.match(status, /Production availability probe executed successfully/);
-  assert.match(status, /Production observability baseline v1 is now folded back to run `28142197152`/);
+  assert.match(status, /Historical production availability probe executed successfully/);
+  assert.match(status, /Historical production observability baseline v1 is folded back to run `28142197152`/);
   assert.match(status, /A no-secret scheduled availability canary first succeeded in GitHub Actions run `27874732529`/);
   assert.match(status, /Operations maturity now has partial evidence boundaries/);
   assert.match(status, /Production HA is paused for the current single-node launch/);
@@ -526,6 +536,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /P2 SLA\/HA operations contracts are present/);
   assert.match(status, /external production evidence remains pending/);
   assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
+  assert.match(status, /latest main production evidence is pending/i);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
@@ -611,8 +622,8 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
     ['artifact_body_authority_contract', 'missing', 'authority_contract'],
   ]);
 
-  assert.match(status, /production deploy is release evidence only and must not substitute for product\/eval work/);
-  assert.match(active, /production deploy is not the default next action unless the user explicitly asks for release evidence/);
+  assert.match(status, /Production deploy is release evidence only and must not substitute for product\/eval work/);
+  assert.match(active, /production rollout needs fresh latest-main foldback/);
   assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
   assert.match(decisions, /Product gaps use acceptance contracts before deploy evidence/);
   assert.match(decisions, /UI work starts from Figma MCP source context/);
@@ -763,7 +774,7 @@ test('operations maturity and gap phase advancement require structured eval evid
     'production_rollback_record=present',
   ]);
   assert.match(status, /a phase may advance only when `currentStatus=done` and all eval results pass/);
-  assert.match(active, /Repo-local tests cannot infer production evidence or owner receipt/);
+  assert.match(active, /run `28142197152`.*is historical only/);
   assert.match(status, /Alert route owner receipt is accepted for owner `huangrende` with P0 5 minutes, P1 30 minutes, and P2 business-hours response, but channel evidence remains pending/);
   assert.match(active, /rollback drill run id, DB restore drill, dashboard URL, and concrete alert channel remain pending external evidence/);
 });
@@ -779,6 +790,7 @@ test('controlled launch readiness separates hard launch gates from upstream qual
   assert.equal(release.controlledLaunchReadiness.claim, 'controlled_launch_readiness');
   assert.equal(release.controlledLaunchReadiness.owner, 'one-person-lab-web-release');
   assert.equal(release.controlledLaunchReadiness.consumer, 'release_operator');
+  assert.equal(release.controlledLaunchReadiness.state, 'pending_latest_main_evidence');
   assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.contract, 'contracts/web-product-profile.json#/webBusinessCapabilityV1');
   assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.hardGateForControlledLaunch, true);
   assert.deepEqual(release.controlledLaunchReadiness.hardGates, [
@@ -808,6 +820,8 @@ test('controlled launch readiness separates hard launch gates from upstream qual
   assert.equal(pageState.structuredResultShape.serviceUnavailableFallback, 'sanitized_fail_closed_no_structured_result_fabrication');
   assert.match(status, /Controlled launch readiness is a separate release claim/);
   assert.match(active, /controlled launch readiness is separate from real upstream structured research success/);
+  assert.match(active, /latest main production evidence is pending/i);
+  assert.doesNotMatch(active, /Latest `main` production evidence is folded back to run `28142197152`/);
 });
 
 test('owner decisions keep commercial and HA boundaries explicit without false completion claims', () => {
@@ -887,9 +901,9 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   const active = readFileSync('docs/active/README.md', 'utf8');
 
   assert.deepEqual(product.productLayers.map((layer) => [layer.id, layer.status]), [
-    ['public_growth_layer', 'basically_done'],
-    ['account_based_user_product_layer', 'basically_done'],
-    ['minimal_admin_ops_layer', 'active_slice'],
+    ['public_growth_layer', 'done_v1'],
+    ['account_based_user_product_layer', 'done_v1_repo_browser'],
+    ['minimal_admin_ops_layer', 'partial'],
   ]);
   const byLayer = Object.fromEntries(product.productLayers.map((layer) => [layer.id, layer]));
   assert.deepEqual(byLayer.public_growth_layer.audience, ['anonymous_user']);
@@ -901,12 +915,15 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.equal(byLayer.public_growth_layer.ownsBillingTruth, false);
   assert.equal(byLayer.account_based_user_product_layer.contract, 'contracts/web-product-profile.json#/accountBasedWebAppMainPath');
   assert.equal(byLayer.account_based_user_product_layer.primary, true);
-  assert.equal(byLayer.account_based_user_product_layer.claimStatus, 'repo_current_basic_completion');
+  assert.equal(byLayer.account_based_user_product_layer.claimStatus, 'done_v1_repo_browser');
   assertIncludesAll(byLayer.account_based_user_product_layer.owned, ['account_session', 'task_entry', 'page_state', 'sanitized_projection', 'refs', 'deeplink'], 'user layer owned surface');
   assertIncludesAll(byLayer.account_based_user_product_layer.forbiddenClaims, ['full_saas', 'payment', 'team_rbac', 'runtime_execution'], 'user layer forbidden claim');
   assert.deepEqual(byLayer.minimal_admin_ops_layer.registrationModeAllowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(byLayer.minimal_admin_ops_layer.userStatusAllowed, ['active', 'disabled']);
-  assert.equal(byLayer.minimal_admin_ops_layer.activeSlice, 'admin_ops_registration_policy_and_user_status_v0');
+  assert.equal(byLayer.minimal_admin_ops_layer.activeSlice, undefined);
+  assert.equal(byLayer.minimal_admin_ops_layer.completedSlices.includes('registration_policy_user_status_v0'), true);
+  assert.equal(byLayer.minimal_admin_ops_layer.nextGaps.dogfoodReleaseEvidenceSummary, 'not_started');
+  assert.equal(byLayer.minimal_admin_ops_layer.nextGaps.hiddenOpsUi, 'optional_reserved');
   assert.deepEqual(byLayer.minimal_admin_ops_layer.firstPhaseSurfaces, ['operator_only_api', 'same_domain_hidden_ops_route']);
   assertIncludesAll(byLayer.minimal_admin_ops_layer.operatorOnlyCapabilities, ['view_sanitized_user_status', 'view_quota', 'view_audit', 'disable_user', 'enable_user'], 'ops capability');
   assert.equal(byLayer.minimal_admin_ops_layer.authBoundary, 'operator_token_required');
@@ -914,31 +931,37 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assertIncludesAll(byLayer.minimal_admin_ops_layer.forbiddenCapabilities, ['payment', 'pricing', 'subscription', 'invoice', 'refund', 'team_rbac', 'support_impersonation'], 'ops forbidden capability');
 
   assert.deepEqual(product.gapMap.layers.map((layer) => [layer.id, layer.status]), [
-    ['growth_layer', 'basically_done'],
-    ['user_product_layer', 'basically_done'],
-    ['admin_ops_layer', 'active_slice'],
-    ['production_rollout', 'partial'],
+    ['growth_layer', 'done_v1'],
+    ['user_product_layer', 'done_v1_repo_browser'],
+    ['admin_ops_layer', 'partial'],
+    ['production_rollout', 'pending_latest_main_evidence'],
   ]);
   assert.deepEqual(pageState.productLayers.map((layer) => [layer.id, layer.status]), [
-    ['public_growth_layer', 'current_public_surface'],
-    ['account_based_user_product_layer', 'current_primary'],
-    ['minimal_admin_ops_layer', 'active_slice'],
+    ['public_growth_layer', 'done_v1'],
+    ['account_based_user_product_layer', 'done_v1_repo_browser'],
+    ['minimal_admin_ops_layer', 'partial'],
   ]);
   assert.equal(pageState.minimalAdminOpsLayer.registrationMode.default, 'open');
   assert.deepEqual(pageState.minimalAdminOpsLayer.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(pageState.minimalAdminOpsLayer.userStatus.allowed, ['active', 'disabled']);
+  assert.equal(pageState.minimalAdminOpsLayer.completedSlices.includes('registration_policy_user_status_v0'), true);
+  assert.equal(pageState.minimalAdminOpsLayer.nextGaps.dogfoodReleaseEvidenceSummary, 'not_started');
   assert.equal(pageState.minimalAdminOpsLayer.firstPhaseRouteOptions.includes('/_ops'), true);
   assert.equal(pageState.minimalAdminOpsLayer.operatorAuth, 'operator_token_required');
   assert.equal(pageState.minimalAdminOpsLayer.requiresAuditForAdminMutation, true);
 
   assert.equal(api['x-product-layers'].primary, 'account_based_user_product_layer');
-  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'active_slice_registration_policy_user_status_v0');
+  assert.equal(api['x-product-layers'].publicGrowthLayer.status, 'done_v1');
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'partial');
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.registrationModeAllowed.includes('allowlist'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.forbiddenCapabilities.includes('payment'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.allAdminOperationsAudited, true);
-  assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'basically_done');
-  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'basically_done');
-  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'active_slice_registration_policy_user_status_v0');
+  assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'done_v1_repo_browser');
+  assert.equal(release.productLayerReadiness.publicGrowthLayer, 'done_v1');
+  assert.equal(release.productLayerReadiness.taskHistoryContinuationCenter, 'done_v0');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'partial');
+  assert.equal(release.productLayerReadiness.minimalAdminOpsLayerNextGap, 'dogfood_release_evidence_summary_not_started');
+  assert.equal(release.productLayerReadiness.productionRollout, 'pending_latest_main_evidence');
   assertIncludesAll(release.productLayerReadiness.cannotClaimFromAdminOpsV0, ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'], 'admin ops cannot claim');
   assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
   assert.doesNotMatch(status, /sub2api/i);
@@ -946,7 +969,8 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.match(status, /Public Growth Layer/);
   assert.match(status, /Account-based User Product Layer/);
   assert.match(status, /Minimal Admin\/Ops Layer/);
-  assert.match(active, /minimal admin\/ops layer active slice is registration policy and user status v0/i);
+  assert.match(active, /Minimal Admin\/Ops Layer is partial/i);
+  assert.match(active, /registration policy and user status v0 is done/i);
   assert.match(registry, /Admin\/Ops v0 does not prove full SaaS/);
 });
 
