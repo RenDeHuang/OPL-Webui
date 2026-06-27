@@ -206,3 +206,15 @@ test('production browser e2e reports latest upstream failure before verbose audi
   assert.match(runner, /slice\(-12\)/);
   assert.match(runner, /upstreamStatus/);
 });
+
+test('production browser e2e retries only audited transient upstream failures', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /const productionResearchAttemptLimit = 2/);
+  assert.match(runner, /retryableProductionUpstreamFailure/);
+  assert.match(runner, /chat\.upstream_failed/);
+  assert.match(runner, /network.*connect_error.*dns_error.*request_timeout.*response_header_timeout/s);
+  assert.match(runner, /waitForAuditKind\(cdp, 'chat\.completed'\)/);
+  assert.match(runner, /structured research result sections missing/);
+  assert.doesNotMatch(runner, /service_unavailable[\s\S]{0,80}ok: true/);
+});
