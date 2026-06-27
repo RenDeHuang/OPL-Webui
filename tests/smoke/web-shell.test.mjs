@@ -2,25 +2,36 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
+function visibleTextFromHTML(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 test('one-person-lab-web shell exposes AI-native research homepage product surface', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
+  const visibleText = visibleTextFromHTML(html);
 
   assert.match(html, /One Person Lab Web/);
-  assert.match(html, /One Person Lab 的 Web 知识交付入口/);
-  assert.match(html, /面向个人、课题组\/单位/);
-  assert.match(html, /figma-make-webui-alignment/);
+  assert.match(html, /Controlled Knowledge Delivery/);
+  assert.match(html, /为研究者而建的 AI 工作台/);
+  assert.match(html, /从科研任务场景开始/);
+  assert.match(html, /figma-parity-ui-replacement/);
   assert.match(html, /data-figma-source="E8nYfNFc2D9P01FYZ8UwBW"/);
-  assert.match(html, /data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more"/);
-  assert.match(html, /data-figma-pattern="ai_native_center_composer"/);
-  assert.match(html, /data-figma-pattern="starter_chips"/);
+  assert.match(html, /data-replacement-target="figma_make_ui_ux_for_commercial_launch"/);
+  assert.match(html, /data-figma-pattern="public_landing_auth_workbench_sidebar_composer_inspector"/);
+  assert.match(html, /data-figma-pattern="centered_composer_research_mode_pills"/);
+  assert.match(html, /data-figma-pattern="research_mode_pills"/);
   assert.match(html, /data-figma-pattern="account_popover_status"/);
-  assert.match(html, /data-figma-pattern="prompt_command_center"/);
-  assert.match(html, /data-figma-pattern="research_skill_launcher"/);
-  assert.match(html, /data-figma-pattern="agentic_workflow_cards"/);
-  assert.match(html, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
-  assert.match(html, /data-figma-pattern="running_blocked_turn_state"/);
+  assert.match(html, /data-figma-pattern="workbench_result_refs_inspector"/);
+  assert.match(html, /data-figma-pattern="task_history_continuation_tree"/);
+  assert.match(html, /data-figma-pattern="blocked_runtime_gate"/);
+  assert.match(html, /data-figma-pattern="inspector_tabs_files_progress_output"/);
   assert.match(html, /data-visual-quality-gate="ui_ux_v1_production_accepted_current_head"/);
-  assert.match(html, /data-ui-variant="ai_native_research_home_v1"/);
+  assert.match(html, /data-ui-variant="figma_parity_replacement_v0"/);
   assert.match(html, /data-visual-density="low_stimulus_command_home"/);
   assert.match(html, /data-view="home"/);
   assert.match(html, /data-shell-state="home_default"/);
@@ -35,6 +46,11 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-search-trigger/);
   assert.match(html, /data-first-view/);
   assert.match(html, /data-public-growth-layer/);
+  assert.match(html, /data-public-landing-surface/);
+  assert.match(html, /data-auth-surface/);
+  assert.match(html, /data-workbench-surface/);
+  assert.match(html, /data-results-surface/);
+  assert.match(html, /data-task-history-surface/);
   assert.match(html, /data-public-hero/);
   assert.match(html, /data-public-task-section/);
   assert.match(html, /data-public-output-section/);
@@ -56,12 +72,15 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /不伪造结果/);
   assert.match(html, /专业执行和 artifact\/storage truth 在 MedOPL\/OPL/);
   assert.match(html, /data-first-view-contract="side_nav_brand_composer_chips_right_inspector_rail"/);
-  assert.match(html, /research-command-band/);
+  assert.match(html, /composer-card/);
   assert.match(html, /data-starter-chips/);
   assert.equal((html.match(/data-starter-chip(?=[\s>])/g) ?? []).length, 7);
-  assert.match(html, /输入研究问题，调用 OPL/);
+  assert.match(html, /随心输入/);
+  assert.match(html, /deliverable refs/);
+  assert.doesNotMatch(visibleText, /Public Growth Layer|Account-based User Product Layer|Minimal Admin\/Ops Layer|operator controls|Web execution: forbidden/);
   assert.doesNotMatch(html, /hero-shell/);
-  assert.match(html, /app-shell/);
+  assert.match(html, /figma-parity-shell/);
+  assert.doesNotMatch(html, /app-shell|home-first-view|prompt-console|public-proof-grid|foundry-section|workflow-section|project-section|turn-state-strip|chat-panel|right-inspector-rail/);
   assert.doesNotMatch(html, /sidebar-shell|left-rail-toggle|data-left-rail|conversation-list|data-local-sidebar|workspace-sidebar|workbench-summary-strip|clean_workbench_v1/);
   assert.doesNotMatch(html, /<nav[^>]*data-side-navigation[\s\S]*?(科研能力|论文|基金|账号|Settings|API Key|文件|进度|输出)[\s\S]*?<\/nav>/);
   assert.doesNotMatch(html, /data-projects-sheet/);
@@ -80,10 +99,10 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /account-popover/);
   assert.match(html, /data-account-popover-close/);
   assert.doesNotMatch(html, /<\/dl>\s*<\/dl>/);
-  assert.match(html, /prompt-command-center/);
-  assert.match(html, /skill-launcher/);
+  assert.match(html, /prompt-composer/);
+  assert.match(html, /mode-grid/);
   assert.match(html, /data-inspector-sheet/);
-  assert.match(html, /data-right-inspector-rail/);
+  assert.match(html, /data-inspector-open="files"/);
   assert.match(html, /data-inspector-resize-handle/);
   assert.match(html, /data-inspector-state="hidden"/);
   assert.match(html, /data-inspector-tab="files"/);
@@ -106,9 +125,8 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-capability-marker/);
   assert.match(html, /data-capability-mode/);
   assert.match(html, /MedOPL/);
-  assert.match(html, /prompt-console/);
-  assert.match(html, /@科研、@论文、@基金、@PPT、@书/);
-  assert.match(html, /输入研究问题或选择一个 starter chip/);
+  assert.match(html, /@科研、@论文、@基金、@综述、@文件、@PPT、@书/);
+  assert.match(html, /选择一个任务入口或直接输入问题/);
   assert.match(html, /导入 Skill/);
   assert.match(html, /我的 Skill/);
   assert.match(html, /OPL Skill/);
@@ -137,7 +155,7 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.doesNotMatch(html, /Model gateway: https:\/\/gflabtoken\.cn\/v1/);
   assert.doesNotMatch(html, /https:\/\/gflabtoken\.cn\/v1/);
   assert.match(html, /普通聊天/);
-  assert.doesNotMatch(html, />[^<]*(fallback|artifact body|runtime truth)[^<]*</i);
+  assert.doesNotMatch(visibleText, /\b(fallback|artifact body|runtime truth)\b/i);
   assert.match(html, /普通问答/);
   assert.match(html, /开题\/研究方向/);
   assert.match(html, /论文问题/);
@@ -172,17 +190,17 @@ test('one-person-lab-web shell exposes AI-native research homepage product surfa
   assert.match(html, /data-reliability-details/);
   assert.match(html, /data-running-turn/);
   assert.match(html, /data-blocked-turn/);
-  assert.match(html, /class="home-first-view[\s\S]*data-route-surface="home"/);
-  assert.match(html, /class="turn-state-strip"[\s\S]*data-route-surface="home"/);
-  assert.match(html, /class="chat-panel"[\s\S]*data-route-surface="home"/);
-  assert.match(html, /class="more-overflow"[\s\S]*data-route-surface="more"/);
-  assert.match(html, /class="capability-section foundry-section"[\s\S]*data-route-surface="skills"/);
-  assert.match(html, /class="workflow-section"[\s\S]*data-route-surface="workflows"/);
-  assert.match(html, /class="project-section"[\s\S]*data-route-surface="projects"/);
-  assert.match(html, /class="runtime-gate"[\s\S]*data-route-surface="home more"/);
+  assert.match(html, /class="landing-panel[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="workbench-panel[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="result-panel[\s\S]*data-route-surface="home"/);
+  assert.match(html, /class="more-panel[\s\S]*data-route-surface="more"/);
+  assert.match(html, /class="library-panel skill-panel"[\s\S]*data-route-surface="skills"/);
+  assert.match(html, /class="library-panel workflow-panel"[\s\S]*data-route-surface="workflows"/);
+  assert.match(html, /class="history-panel"[\s\S]*data-route-surface="projects"/);
+  assert.match(html, /class="runtime-gate"[\s\S]*data-route-surface="home"/);
   assert.match(html, /src\/onePersonLabWeb\.mjs/);
   assert.doesNotMatch(html, /styles\/v3\.css/);
-  assert.doesNotMatch(html, /\/api\/search|\/api\/projects|MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM|#(?:capabilities|chat|settings|medopl)(?=["'\s<>]|$)/);
+  assert.doesNotMatch(html, /\/api\/search|\/api\/projects|MedOPL Runtime|node pool|托管运行环境|轻量项目工作区|Workspace memory|demoData|demo:\/\/|Drive|云盘|无限计算资源|创始人计划|定价|支付|充值|Pro 套餐|积分余额|\/api\/mvp\/task|fake storage|fake billing|fake runtime execution|设计与代码|内容创作|仪表盘与 CRM|#(?:capabilities|chat|settings|medopl)(?=["'\s<>]|$)/);
 });
 
 test('one-person-lab-web shell keeps internal workspace concepts hidden', () => {
@@ -193,7 +211,7 @@ test('one-person-lab-web shell keeps internal workspace concepts hidden', () => 
     'apps/web/src/onePersonLabWebDom.mjs',
   ].map((path) => readFileSync(path, 'utf8')).join('\n');
 
-  assert.doesNotMatch(html, /workspace|runtime tab|MedOPL Runtime|node pool|托管运行环境|Drive|云盘|无限计算资源|创始人计划|fake storage|fake billing|fake runtime execution|left rail/i);
+  assert.doesNotMatch(html, /workspace|runtime tab|MedOPL Runtime|node pool|托管运行环境|Drive|云盘|无限计算资源|创始人计划|Pro 套餐|积分余额|fake storage|fake billing|fake runtime execution|left rail/i);
   assert.doesNotMatch(webSource, /\/api\/mvp\/task|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.ok((webSource.match(/loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/g) ?? []).length >= 3);
   assert.match(webSource, /dataset\.chatState/);
@@ -229,24 +247,27 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
 
   assert.match(css, /--inspector-min:\s*320px/);
   assert.match(css, /--inspector-max:\s*520px/);
-  assert.match(css, /--accent:\s*#2f6b4f/);
+  assert.match(css, /--primary:\s*#2f6b4f/);
   assert.match(css, /--focus-ring:\s*rgba\(47,\s*107,\s*79,\s*0\.28\)/);
   assert.doesNotMatch(css, /#2563eb|#6366f1|#8b5cf6/);
   assert.match(css, /data-visual-density="low_stimulus_command_home"/);
-  assert.match(css, /data-figma-pattern="inspector_sheet_tabs_files_progress_output"/);
+  assert.match(css, /figma-parity-shell/);
+  assert.match(css, /landing-panel/);
+  assert.match(css, /workbench-panel/);
+  assert.match(css, /result-panel/);
+  assert.match(css, /history-panel/);
+  assert.match(css, /data-figma-pattern="inspector_tabs_files_progress_output"/);
   assert.match(css, /body\[data-view="home"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="home"\]\)/);
   assert.match(css, /body\[data-view="skills"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="skills"\]\)/);
   assert.match(css, /body\[data-view="workflows"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="workflows"\]\)/);
   assert.match(css, /body\[data-view="projects"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="projects"\]\)/);
   assert.match(css, /body\[data-view="more"\]\s+\[data-route-surface\]:not\(\[data-route-surface~="more"\]\)/);
   assert.match(css, /\.side-navigation/);
-  assert.match(css, /\.right-inspector-rail/);
-  assert.match(css, /body\[data-inspector-state="files"\]\s+\.main-stage/);
-  assert.match(css, /body\[data-inspector-state="progress"\]\s+\.main-stage/);
-  assert.match(css, /body\[data-inspector-state="output"\]\s+\.main-stage/);
-  assert.match(css, /body\[data-inspector-state(?!="hidden")[\s\S]*\.right-inspector-rail/);
-  assert.match(css, /\.home-first-view/);
-  assert.match(css, /\.starter-chips/);
+  assert.match(css, /\.inspector-trigger-stack/);
+  assert.match(css, /body\[data-inspector-state="files"\]\s+\.figma-parity-shell/);
+  assert.match(css, /body\[data-inspector-state="progress"\]\s+\.figma-parity-shell/);
+  assert.match(css, /body\[data-inspector-state="output"\]\s+\.figma-parity-shell/);
+  assert.match(css, /\.mode-grid/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*no-preference\)/);
   assert.match(css, /:active/);
@@ -256,7 +277,7 @@ test('shell css carries responsive low-stimulus homepage constraints', () => {
   assert.match(css, /\.inspector-sheet\[data-responsive-placement="bottom_sheet"\]/);
   assert.match(css, /max-height:\s*64vh/);
   assert.doesNotMatch(css, /max-height:\s*78vh/);
-  assert.doesNotMatch(css, /left-rail|sidebar-shell|conversation-list|quiet_dense_workbench|clean_workbench_v1/);
+  assert.doesNotMatch(css, /home-first-view|prompt-console|public-proof-grid|foundry-section|workflow-section|project-section|right-inspector-rail|left-rail|sidebar-shell|conversation-list|quiet_dense_workbench|clean_workbench_v1/);
   assert.match(css, /@media \(max-width:\s*1040px\)/);
   assert.match(css, /@media \(max-width:\s*760px\)/);
 });

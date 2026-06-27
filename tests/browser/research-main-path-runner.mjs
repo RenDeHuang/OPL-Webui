@@ -563,7 +563,7 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     await keyPress(cdp, { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
     await setViewport(cdp, viewport);
     await waitFor(cdp, 'document.readyState === "complete"');
-    await activate(cdp, '[data-inspector-open="files"]');
+    await activate(cdp, '[data-inspector-open="files"]'); await keyPress(cdp, { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 }); await waitFor(cdp, 'document.body.dataset.inspectorState === "files" && document.querySelector("[data-inspector-sheet]")?.hidden === false', () => describePageState(cdp, `inspector did not open for ${viewport.id}`));
     const path = join('.runtime', 'browser-visual', `research-main-path-${runMode}-${viewport.id}-${stamp}.png`);
     await captureScreenshot(cdp, path);
     const layout = await readVisualLayout(cdp);

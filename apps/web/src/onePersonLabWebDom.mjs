@@ -194,6 +194,11 @@ function bindShellControls() {
 
   for (const button of document.querySelectorAll('[data-inspector-open]')) {
     button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'files', button));
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openInspector(button.dataset.inspectorOpen || 'files', button);
+    });
   }
 
   for (const tab of document.querySelectorAll('[data-inspector-tab]')) {
@@ -545,9 +550,12 @@ function applyPendingPublicTask(intent) {
 function renderView(view) {
   document.body.dataset.authState = view.accountState;
   document.body.dataset.chatState = document.body.dataset.chatState || chatStateForResult(null);
-  document.querySelector('[data-chat-submit]').textContent = view.primaryCTA;
-  document.querySelector('[data-model-selector]').textContent = view.modelSelector.label;
-  document.querySelector('[data-session-label]').textContent = view.session.ok ? view.session.email : '未登录';
+  const submit = document.querySelector('[data-chat-submit]');
+  if (submit) submit.textContent = view.primaryCTA;
+  const modelSelector = document.querySelector('[data-model-selector]');
+  if (modelSelector) modelSelector.textContent = view.modelSelector.label;
+  const sessionLabel = document.querySelector('[data-session-label]');
+  if (sessionLabel) sessionLabel.textContent = view.session.ok ? view.session.email : '未登录';
   setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
   const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
   setTextAll('[data-provider-status]', providerStatus);
@@ -558,7 +566,8 @@ function renderView(view) {
   renderReliabilityStatus(view.reliabilityStatus);
   renderConversationHistory(view.conversations);
   renderTaskHistory(view.taskHistory);
-  document.querySelector('[data-account-hint]').textContent = view.session.ok ? '账号状态' : '登录 / 注册';
+  const accountHint = document.querySelector('[data-account-hint]');
+  if (accountHint) accountHint.textContent = view.session.ok ? '账号状态' : '登录 / 注册';
 }
 
 async function refreshTaskHistoryProjection() {
@@ -626,7 +635,7 @@ function renderRuntimeTaskCard(gate, taskCard) {
   body.textContent = taskCard.message;
   const meta = document.createElement('p');
   meta.className = 'runtime-task-meta';
-  meta.textContent = `required capability: ${taskCard.requiredCapability}; Web execution: ${taskCard.webuiRuntimeExecution}`;
+  meta.textContent = `需要能力：${taskCard.requiredCapability}; Web 仅提供接续入口`;
   const blockerList = document.createElement('ul');
   blockerList.className = 'runtime-task-blockers';
   for (const blocker of taskCard.blockers || []) {
