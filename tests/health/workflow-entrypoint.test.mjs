@@ -489,14 +489,14 @@ test('release evidence sync supports run-id only closeout from GitHub metadata',
   writeFileSync(ghPath, `#!/usr/bin/env node
 if (process.argv.includes('--log')) {
   process.stdout.write([
-    '[cloud-rollout] normalized image: uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d',
+    '[cloud-rollout] normalized image: uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052',
     'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY: 1',
     '{"medoplReadonly":true,"readonlyProjectionChecks":["runtime_status","materials_deliverables","billing_summary"]}'
   ].join('\\n'));
   process.exit(0);
 }
 const payload = {
-  headSha: '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57',
+  headSha: 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721',
   workflowName: 'Cloud Rollout',
   jobs: [
     { name: 'Production Dry Run', conclusion: 'success', url: 'https://example.test/dry', completedAt: '2026-06-26T14:45:04Z' },
@@ -546,7 +546,7 @@ process.stdout.write(JSON.stringify(payload));
 
   execFileSync(process.execPath, [
     'scripts/release-evidence-sync.mjs',
-    '--run-id', '28245417027',
+    '--run-id', '28282021822',
     '--update-release-profile', profilePath,
   ], {
     cwd: process.cwd(),
@@ -556,17 +556,17 @@ process.stdout.write(JSON.stringify(payload));
 
   const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
   const profileText = readFileSync(profilePath, 'utf8');
-  assert.equal(profile.latestMainEvidence.state, 'folded_success_run_28245417027');
-  assert.equal(profile.latestMainEvidence.runId, 28245417027);
-  assert.equal(profile.latestMainEvidence.commit, '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57');
-  assert.equal(profile.latestMainEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d');
+  assert.equal(profile.latestMainEvidence.state, 'folded_success_run_28282021822');
+  assert.equal(profile.latestMainEvidence.runId, 28282021822);
+  assert.equal(profile.latestMainEvidence.commit, 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721');
+  assert.equal(profile.latestMainEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052');
   assert.equal(profile.latestMainEvidence.completedAt, '2026-06-26T14:51:39Z');
   assert.equal(profile.latestMainEvidence.canClaim.includes('latest-main production evidence folded back'), true);
-  assert.equal(profile.controlledLaunchReadiness.state, 'latest_main_3d1339d_supported_by_folded_production_evidence_run_28245417027');
-  assert.equal(profile.productLayerReadiness.productionRollout, 'folded_success_run_28245417027');
-  assert.equal(profile.productionDogfoodReadiness.state, 'executed_success_run_28245417027_real_chat_readonly_confirmed');
-  assert.equal(profile.productionAvailabilityReadiness.state, 'executed_success_run_28245417027_after_apply');
-  assert.equal(profile.productionBrowserE2EReadiness.state, 'executed_success_run_28245417027');
+  assert.equal(profile.controlledLaunchReadiness.state, 'latest_main_d9f5052_supported_by_folded_production_evidence_run_28282021822');
+  assert.equal(profile.productLayerReadiness.productionRollout, 'folded_success_run_28282021822');
+  assert.equal(profile.productionDogfoodReadiness.state, 'executed_success_run_28282021822_real_chat_readonly_confirmed');
+  assert.equal(profile.productionAvailabilityReadiness.state, 'executed_success_run_28282021822_after_apply');
+  assert.equal(profile.productionBrowserE2EReadiness.state, 'executed_success_run_28282021822');
   assert.match(profileText, /"cannotClaimFromAdminOpsV0": \["full SaaS","payment lifecycle","team\/RBAC lifecycle","HA","runtime sync"\]/);
 });
 

@@ -77,8 +77,12 @@ test('Figma parity UI replacement target is scoped to public and user product UI
 
   assert.equal(gui.uiUxReferenceCandidate, undefined);
   assert.equal(target.id, 'figma_make_ui_ux_for_commercial_launch');
-  assert.equal(target.state, 'accepted_replacement_target');
+  assert.equal(target.state, 'deployed_replacement_candidate');
   assert.equal(target.role, 'figma_parity_ui_replacement_target');
+  assert.equal(target.productionEvidence.state, 'folded_success_run_28282021822');
+  assert.equal(target.productionEvidence.runId, 28282021822);
+  assert.equal(target.productionEvidence.commit, 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721');
+  assert.equal(target.productionEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052');
   assert.deepEqual(target.appliesTo, ['public_growth_layer', 'account_based_user_product_layer']);
   assertIncludesAll(target.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'replacement exclusion');
   assert.deepEqual(target.appliesToProductLayers, ['public_growth_layer', 'account_based_user_product_layer']);
@@ -107,12 +111,13 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assert.equal(target.replacementPolicy.mockTruthPolicy, 'forbidden');
   assertIncludesAll(target.replacementPolicy.eachSliceMustDeclare, ['target_surface', 'old_surface_retirement', 'new_implementation', 'contract_page_state_mapping', 'browser_visual_test', 'repo_bloat_check'], 'replacement slice requirement');
   assert.equal(target.implementationPolicy.adminOpsImplementation, 'forbidden');
-  assert.equal(target.implementationPolicy.releaseEvidenceChange, 'forbidden_in_this_slice');
+  assert.equal(target.implementationPolicy.releaseEvidenceChange, 'folded_after_successful_controlled_launch_run_28282021822');
 
   assert.equal(pageState.uiReplacementTarget.id, 'figma_make_ui_ux_for_commercial_launch');
-  assert.equal(pageState.uiReplacementTarget.state, 'planned_not_implemented');
-  assert.equal(pageState.uiReplacementTarget.productionUiReplaced, false);
-  assert.equal(pageState.uiReplacementTarget.releaseEvidenceImpact, 'none_until_future_rollout_evidence');
+  assert.equal(pageState.uiReplacementTarget.state, 'deployed_replacement_candidate');
+  assert.equal(pageState.uiReplacementTarget.productionUiReplaced, true);
+  assert.equal(pageState.uiReplacementTarget.releaseEvidenceImpact, 'folded_success_run_28282021822');
+  assert.equal(pageState.uiReplacementTarget.productionEvidence.runId, 28282021822);
   assert.deepEqual(pageState.uiReplacementTarget.appliesToRoutes, ['home', 'projects', 'skills', 'workflows']);
   assertIncludesAll(pageState.uiReplacementTarget.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'page-state replacement exclusion');
 });

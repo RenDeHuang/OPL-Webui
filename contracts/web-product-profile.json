@@ -888,9 +888,9 @@
       },
       {
         "id": "production_rollout",
-        "status": "pending_latest_main_evidence",
+        "status": "folded_success_run_28282021822",
         "evidence": "contracts/web-release-profile.json",
-        "remainingGap": "historical release evidence exists, but latest main production evidence is pending and must not be inferred from run 28142197152"
+        "remainingGap": "latest main production evidence is folded back for controlled launch only; future main commits require fresh foldback and historical run 28142197152 must not be inferred as current evidence"
       }
     ]
   },

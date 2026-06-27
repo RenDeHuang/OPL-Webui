@@ -51,11 +51,16 @@
   },
   "uiReplacementTarget": {
     "id": "figma_make_ui_ux_for_commercial_launch",
-    "slice": "figma_parity_replacement_contract_slice_v0",
-    "state": "planned_not_implemented",
+    "slice": "figma_parity_ui_replacement",
+    "state": "deployed_replacement_candidate",
     "targetContract": "contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget",
-    "productionUiReplaced": false,
-    "releaseEvidenceImpact": "none_until_future_rollout_evidence",
+    "productionUiReplaced": true,
+    "releaseEvidenceImpact": "folded_success_run_28282021822",
+    "productionEvidence": {
+      "commit": "d9f50522e1f116a6f8d9827c33bc0b08a4e1f721",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052",
+      "runId": 28282021822
+    },
     "appliesToRoutes": ["home", "projects", "skills", "workflows"],
     "doesNotApplyTo": ["minimal_admin_ops_layer", "/_ops", "operator_controls"],
     "stateTruth": "go_control_plane_and_contracts_only",

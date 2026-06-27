@@ -119,8 +119,8 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   ]) {
     assert.match(active, new RegExp(required));
   }
-  assert.match(active, /28245417027/);
-  assert.match(active, /3d1339d168267da9b37dc24ab3b7fc0b4d32aa57/);
+  assert.match(active, /28282021822/);
+  assert.match(active, /d9f50522e1f116a6f8d9827c33bc0b08a4e1f721/);
   assert.match(active, /28142197152.*historical-only/);
   assert.match(active, /Production Availability Probe After Apply/);
   assert.match(active, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
@@ -158,16 +158,16 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.equal(release.currentStage, 'one-person-lab-web-contract-truth');
   assert.equal(release.historicalEvidenceRefs.includes('docs/history/process/closeouts.md'), true);
   assert.equal(release.historicalEvidenceRefs.includes('changes/archive/closeouts.md'), false);
-  assert.equal(release.latestMainEvidence.state, 'folded_success_run_28245417027');
-  assert.equal(release.latestMainEvidence.runId, 28245417027);
-  assert.equal(release.latestMainEvidence.commit, '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57');
-  assert.equal(release.latestMainEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d');
+  assert.equal(release.latestMainEvidence.state, 'folded_success_run_28282021822');
+  assert.equal(release.latestMainEvidence.runId, 28282021822);
+  assert.equal(release.latestMainEvidence.commit, 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721');
+  assert.equal(release.latestMainEvidence.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052');
   assert.equal(release.latestMainEvidence.canClaim.includes('OPL-Webui controlled launch ready'), true);
   assert.match(status, /contracts\/web-product-profile\.json/);
   assert.match(status, /contracts\/web-api\.openapi\.json/);
   assert.match(status, /contracts\/web-release-profile\.json/);
   assert.match(status, /contracts\/web-development-profile\.json/);
-  assert.match(status, /Latest main production evidence is folded back from GitHub Actions run `28245417027`/);
+  assert.match(status, /Latest main production evidence is folded back from GitHub Actions run `28282021822`/);
   assert.doesNotMatch(status, /one-person-lab-web-truth-reset/);
   assert.doesNotMatch(status, /repo-slimming-and-stale-name-retirement/);
   assert.doesNotMatch(status, /Latest `main` production evidence is folded back to GitHub Actions run `28142197152`/);
@@ -320,11 +320,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/readyz ok=true missing=[]'), true);
   assert.equal(release.rolloutPipeline.canarySmoke.semanticJsonChecks.includes('/metricsz ok=true missingDependencyCount=0'), true);
   assert.equal(release.productionDogfoodReadiness.mode, 'secret_gated_http_authenticated_e2e');
-  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28245417027_real_chat_readonly_confirmed');
+  assert.equal(release.productionDogfoodReadiness.state, 'executed_success_run_28282021822_real_chat_readonly_confirmed');
   assert.equal(release.productionDogfoodReadiness.evidenceScope, 'historical');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 28245417027);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57');
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.runId, 28282021822);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.commit, 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721');
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052');
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, true);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, true);
@@ -360,11 +360,11 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('MedOPL runtime execution'), true);
   assert.equal(release.productionDogfoodReadiness.cannotClaim.includes('production real ordinary chat completion'), false);
   assert.equal(release.productionAvailabilityReadiness.mode, 'no_secret_public_http_probe');
-  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_28245417027_after_apply');
+  assert.equal(release.productionAvailabilityReadiness.state, 'executed_success_run_28282021822_after_apply');
   assert.equal(release.productionAvailabilityReadiness.evidenceScope, 'historical');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 28245417027);
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, '3d1339d168267da9b37dc24ab3b7fc0b4d32aa57');
-  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:3d1339d');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.runId, 28282021822);
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.commit, 'd9f50522e1f116a6f8d9827c33bc0b08a4e1f721');
+  assert.equal(release.productionAvailabilityReadiness.latestSuccessfulRun.image, 'uswccr.ccs.tencentyun.com/webopl/opl-webui:d9f5052');
   assert.deepEqual(release.productionAvailabilityReadiness.latestSuccessfulRun.statusSummary, [
     'Production Dry Run success',
     'Production Apply success',
@@ -387,7 +387,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production authenticated dogfood'), true);
   assert.equal(release.productionAvailabilityReadiness.cannotClaim.includes('production-ready SaaS'), true);
   assert.equal(release.productionObservabilityBaseline.mode, 'no_secret_public_http_observability_baseline_v1');
-  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28245417027_scheduled_canary_success_pending_long_term_ops');
+  assert.equal(release.productionObservabilityBaseline.state, 'release_probe_executed_run_28282021822_scheduled_canary_success_pending_long_term_ops');
   assert.equal(release.productionObservabilityBaseline.evidenceScope, 'historical');
   assert.equal(release.productionObservabilityBaseline.owner, 'one-person-lab-web-release');
   assert.equal(release.productionObservabilityBaseline.consumer, 'cloud_rollout_closeout');
@@ -423,7 +423,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     { id: 'error_budget', owner: 'operations_owner', state: 'contract_required' },
     { id: 'rollback_record', owner: 'release_operator', state: 'contract_present' },
   ]);
-  assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runId, 28245417027);
+  assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.runId, 28282021822);
   assert.equal(release.productionObservabilityBaseline.latestSuccessfulRun.coverage.includes('/metricsz summary fields'), true);
   for (const cannotClaim of ['long-term canary monitoring', 'dashboard', 'alerting', 'error budget enforcement', 'multi-node HA']) {
     assert.equal(release.productionObservabilityBaseline.cannotClaim.includes(cannotClaim), true, `observability baseline must not claim ${cannotClaim}`);
@@ -479,16 +479,16 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('grant_runtime_gate'), true);
   assert.equal(release.localBrowserE2EReadiness.coverage.includes('sanitized_audit'), true);
   assert.equal(release.localBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), true);
-  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28245417027');
+  assert.equal(release.productionBrowserE2EReadiness.state, 'executed_success_run_28282021822');
   assert.equal(release.productionBrowserE2EReadiness.evidenceScope, 'historical');
-  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 28245417027);
+  assert.equal(release.productionBrowserE2EReadiness.latestAttempt.runId, 28282021822);
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.status, 'success');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);
   assert.match(runbook, /OPL_SESSION_SECRET/);
   assert.match(runbook, /Production authenticated dogfood closeout/);
-  assert.match(runbook, /28245417027/);
-  assert.match(runbook, /3d1339d/);
+  assert.match(runbook, /28282021822/);
+  assert.match(runbook, /d9f5052/);
   assert.match(runbook, /production browser e2e passed/);
   assert.match(runbook, /real chat: true/);
   assert.match(runbook, /readonly projection: confirmed/);
@@ -528,7 +528,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
   assert.match(status, /Browser e2e is now a CI release gate/);
   assert.match(status, /Latest-main production availability probe executed successfully/);
-  assert.match(status, /Production observability baseline v1 is folded back to latest-main run `28245417027`/);
+  assert.match(status, /Production observability baseline v1 is folded back to latest-main run `28282021822`/);
   assert.match(status, /A no-secret scheduled availability canary first succeeded in GitHub Actions run `27874732529`/);
   assert.match(status, /Operations maturity now has partial evidence boundaries/);
   assert.match(status, /Production HA is paused for the current single-node launch/);
@@ -538,7 +538,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /P2 SLA\/HA operations contracts are present/);
   assert.match(status, /external production evidence still pending after this RC closeout/);
   assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
-  assert.match(status, /Latest main production evidence is folded back from GitHub Actions run `28245417027`/);
+  assert.match(status, /Latest main production evidence is folded back from GitHub Actions run `28282021822`/);
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
   assert.doesNotMatch(status, /本阶段没有执行真实 Chromium-driven browser automation/);
@@ -625,7 +625,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   ]);
 
   assert.match(status, /Production deploy is release evidence only and must not substitute for product\/eval work/);
-  assert.match(active, /Production rollout latest-main evidence is folded back for commit `3d1339d` through Cloud Rollout run `28245417027`/);
+  assert.match(active, /Production rollout latest-main evidence is folded back for commit `d9f5052` through Cloud Rollout run `28282021822`/);
   assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
   assert.match(decisions, /Product gaps use acceptance contracts before deploy evidence/);
   assert.match(decisions, /UI work starts from Figma MCP source context/);
@@ -792,7 +792,7 @@ test('controlled launch readiness separates hard launch gates from upstream qual
   assert.equal(release.controlledLaunchReadiness.claim, 'controlled_launch_readiness');
   assert.equal(release.controlledLaunchReadiness.owner, 'one-person-lab-web-release');
   assert.equal(release.controlledLaunchReadiness.consumer, 'release_operator');
-  assert.equal(release.controlledLaunchReadiness.state, 'latest_main_3d1339d_supported_by_folded_production_evidence_run_28245417027');
+  assert.equal(release.controlledLaunchReadiness.state, 'latest_main_d9f5052_supported_by_folded_production_evidence_run_28282021822');
   assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.contract, 'contracts/web-product-profile.json#/webBusinessCapabilityV1');
   assert.equal(release.controlledLaunchReadiness.businessCapabilityV1.hardGateForControlledLaunch, true);
   assert.deepEqual(release.controlledLaunchReadiness.hardGates, [
@@ -822,7 +822,7 @@ test('controlled launch readiness separates hard launch gates from upstream qual
   assert.equal(pageState.structuredResultShape.serviceUnavailableFallback, 'sanitized_fail_closed_no_structured_result_fabrication');
   assert.match(status, /Controlled launch readiness is a separate release claim/);
   assert.match(active, /controlled launch readiness is separate from real upstream structured research success/);
-  assert.match(active, /Latest main production evidence is folded back from run `28245417027`/);
+  assert.match(active, /Latest main production evidence is folded back from run `28282021822`/);
   assert.doesNotMatch(active, /Latest `main` production evidence is folded back to run `28142197152`/);
 });
 
@@ -936,7 +936,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
     ['growth_layer', 'done_v1'],
     ['user_product_layer', 'done_v1_repo_browser'],
     ['admin_ops_layer', 'partial'],
-    ['production_rollout', 'pending_latest_main_evidence'],
+    ['production_rollout', 'folded_success_run_28282021822'],
   ]);
   assert.deepEqual(pageState.productLayers.map((layer) => [layer.id, layer.status]), [
     ['public_growth_layer', 'done_v1'],
@@ -963,7 +963,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.equal(release.productLayerReadiness.taskHistoryContinuationCenter, 'done_v0');
   assert.equal(release.productLayerReadiness.minimalAdminOpsLayer, 'partial');
   assert.equal(release.productLayerReadiness.minimalAdminOpsLayerNextGap, 'dogfood_release_evidence_summary_not_started');
-  assert.equal(release.productLayerReadiness.productionRollout, 'folded_success_run_28245417027');
+  assert.equal(release.productLayerReadiness.productionRollout, 'folded_success_run_28282021822');
   assertIncludesAll(release.productLayerReadiness.cannotClaimFromAdminOpsV0, ['full SaaS', 'payment lifecycle', 'team/RBAC lifecycle', 'HA', 'runtime sync'], 'admin ops cannot claim');
   assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
   assert.doesNotMatch(status, /sub2api/i);
