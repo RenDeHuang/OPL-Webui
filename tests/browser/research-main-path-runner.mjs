@@ -42,8 +42,10 @@ try {
 
   await openAccountPopover(cdp);
   await waitFor(cdp, 'Boolean(document.querySelector("#api-key") && document.querySelector("#api-key").offsetParent !== null)');
+  const apiKeySaveCount = await auditKindCount(cdp, 'api_key.saved');
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
+  await waitForAuditKindCount(cdp, 'api_key.saved', apiKeySaveCount + 1);
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
   await openChatRoute(cdp);
 
@@ -552,12 +554,10 @@ async function waitForAuditKind(cdp, eventKind) {
 }
 
 async function waitForAuditKindCount(cdp, eventKind, count) {
-  await waitUntil(async () => {
-    const audit = await readAuditEvents(cdp);
-    const actual = (audit.events ?? []).filter((event) => event.eventKind === eventKind).length;
-    return actual >= count;
-  }, 60000);
+  await waitUntil(async () => await auditKindCount(cdp, eventKind) >= count, 60000);
 }
+
+async function auditKindCount(cdp, eventKind) { const audit = await readAuditEvents(cdp); return (audit.events ?? []).filter((event) => event.eventKind === eventKind).length; }
 
 async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
