@@ -348,22 +348,7 @@ function foldAuthenticatedDogfoodIntoReleaseProfile({ profile, summary }) {
   const dogfood = profile.productionDogfoodReadiness ?? {};
   const latest = dogfood.latestSuccessfulRun ?? {};
   const readonlyConfirmed = summary.dogfoodReadonlyConfirmed === true;
-  const coverage = uniqueStrings([
-    ...(latest.coverage ?? []),
-    'register_or_login',
-    'current_session',
-    'api_key_binding',
-    'fixed_gateway',
-    'raw_api_key_not_returned',
-    ...(summary.canClaim.productionBrowserE2E ? ['ordinary_chat_real_completion', 'chat_completed_audit'] : []),
-    'runtime_gate_audit',
-    'sanitized_audit',
-    ...(readonlyConfirmed ? [
-      'medopl_readonly_runtime_status',
-      'medopl_readonly_materials_deliverables',
-      'medopl_readonly_billing_summary',
-    ] : []),
-  ]);
+  const coverage = buildDogfoodRunCoverage({ summary, readonlyConfirmed });
   return {
     ...profile,
     productionDogfoodReadiness: {
@@ -641,6 +626,20 @@ function latestCompletedAt(jobs) {
 
 function uniqueStrings(values) {
   return [...new Set(values.filter((value) => typeof value === 'string' && value.length > 0))];
+}
+
+function buildDogfoodRunCoverage({ summary, readonlyConfirmed }) {
+  return uniqueStrings([
+    'register_or_login',
+    'current_session',
+    'api_key_binding',
+    'fixed_gateway',
+    'raw_api_key_not_returned',
+    ...(summary.canClaim.productionBrowserE2E ? ['ordinary_chat_real_completion', 'chat_completed_audit'] : []),
+    'runtime_gate_audit',
+    'sanitized_audit',
+    ...(readonlyConfirmed ? ['medopl_readonly_runtime_status', 'medopl_readonly_materials_deliverables', 'medopl_readonly_billing_summary'] : []),
+  ]);
 }
 
 function parseArgs(argv) {

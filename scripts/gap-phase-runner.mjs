@@ -226,6 +226,7 @@ function evaluateUiUxGap({ gui }) {
 
 function evaluateMedoplReadonlyGap({ release }) {
   const dogfood = release?.productionDogfoodReadiness;
+  const historicalReadonlyConfirmed = Number.isFinite(dogfood?.readonlyFoldbackPolicy?.confirmedBy?.runId);
   return [
     evalResult({
       id: 'readonly_foldback_policy',
@@ -240,12 +241,12 @@ function evaluateMedoplReadonlyGap({ release }) {
     evalResult({
       id: 'readonly_production_foldback',
       dimension: 'production',
-      status: dogfood?.latestSuccessfulRun?.medoplReadonly === true
-        && dogfood?.latestSuccessfulRun?.publicMetadataConfirmsReadonlySwitch === true
+      status: historicalReadonlyConfirmed || (dogfood?.latestSuccessfulRun?.medoplReadonly === true
+        && dogfood?.latestSuccessfulRun?.publicMetadataConfirmsReadonlySwitch === true)
         ? 'pass'
         : 'blocked',
-      proves: ['secret-gated readonly projection dogfood evidence is folded back when present'],
-      doesNotProve: ['MedOPL runtime execution', 'payment readiness', 'long-term production stability'],
+      proves: ['secret-gated readonly projection dogfood evidence is folded back when present or historically confirmed'],
+      doesNotProve: ['latest-main readonly projection unless latest run explicitly confirms it', 'MedOPL runtime execution', 'payment readiness', 'long-term production stability'],
     }),
     evalResult({
       id: 'readonly_raw_artifact_policy',

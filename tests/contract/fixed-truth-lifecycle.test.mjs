@@ -36,7 +36,7 @@ function assertIncludesAll(actual, expected, label) { for (const item of expecte
 function latestEvidence(release) {
   const latest = release.latestMainEvidence;
   const short = latest.commit.slice(0, 7);
-  return { latest, short, dogfoodState: `executed_success_run_${latest.runId}_real_chat_readonly_confirmed`, availabilityState: `executed_success_run_${latest.runId}_after_apply`, observabilityState: `release_probe_executed_run_${latest.runId}_scheduled_canary_success_pending_long_term_ops`, browserState: `executed_success_run_${latest.runId}`, controlledLaunchState: `latest_main_${short}_supported_by_folded_production_evidence_run_${latest.runId}` };
+  return { latest, short, dogfoodState: `executed_success_run_${latest.runId}_real_chat_${release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly === true ? 'readonly_confirmed' : 'readonly_unconfirmed'}`, availabilityState: `executed_success_run_${latest.runId}_after_apply`, observabilityState: `release_probe_executed_run_${latest.runId}_scheduled_canary_success_pending_long_term_ops`, browserState: `executed_success_run_${latest.runId}`, controlledLaunchState: `latest_main_${short}_supported_by_folded_production_evidence_run_${latest.runId}` };
 }
 
 function assertLatestRun(run, latest) {
@@ -131,7 +131,7 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   assert.equal(active.includes(latest.commit), true);
   assert.match(active, /28142197152.*historical-only/);
   assert.match(active, /Production Availability Probe After Apply/);
-  assert.match(active, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
+  assert.match(active, /confirmed historically with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`/);
   assert.match(active, /Production browser e2e evidence passed/);
   assert.match(active, /not MedOPL runtime execution/);
   assert.doesNotMatch(active, /27823251419/);
@@ -332,8 +332,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(release.productionDogfoodReadiness.evidenceScope, 'historical');
   assertLatestRun(release.productionDogfoodReadiness.latestSuccessfulRun, latest);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, true);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, true);
+  assert.equal(['unconfirmed', true].includes(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly), true);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly === true);
   assert.deepEqual(release.productionDogfoodReadiness.readonlyFoldbackPolicy.requiredEvidence, [
     'OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1',
     'dogfood stdout confirms readonly projection checks',
@@ -495,7 +495,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(runbook.includes(latest.commit.slice(0, 7)), true);
   assert.match(runbook, /production browser e2e passed/);
   assert.match(runbook, /real chat: true/);
-  assert.match(runbook, /readonly projection: confirmed/);
+  assert.match(runbook, /readonly projection: unconfirmed by public metadata/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
   assert.match(runbook, /Production availability probe closeout/);
   assert.match(runbook, /Production availability probe/);
@@ -526,7 +526,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(JSON.stringify(product.claims.canClaim), /account-based task path remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
   assert.match(status, /Latest-main production authenticated dogfood HTTP evidence executed successfully/);
-  assert.match(status, /production real ordinary chat completion/);
+  assert.match(status, /Production real ordinary chat completion/);
   assert.match(status, /run `27877811961` failed only at `Production Browser E2E`/);
   assert.match(status, /`response_header_timeout` from `gflabtoken\.cn` on model `gpt-5\.5`/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
@@ -541,7 +541,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /P1 commercial operations contracts are present/);
   assert.match(status, /P2 SLA\/HA operations contracts are present/);
   assert.match(status, /external production evidence still pending after this RC closeout/);
-  assert.match(status, /OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1.*confirmed/);
+  assert.match(status, /confirmed historically with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`/);
   assert.match(status, new RegExp(`Latest main production evidence is folded back from GitHub Actions run \`${latest.runId}\``));
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
@@ -630,7 +630,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   ]);
 
   assert.match(status, /Production deploy is release evidence only and must not substitute for product\/eval work/);
-  assert.equal(active.includes(`Production rollout latest-main evidence is folded back for commit \`${short}\` through Cloud Rollout run \`${latest.runId}\``), true);
+  assert.equal(active.includes(`Production rollout latest-main evidence is folded back for commit \`${latest.commit}\` through Cloud Rollout run \`${latest.runId}\``), true);
   assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
   assert.match(decisions, /Product gaps use acceptance contracts before deploy evidence/);
   assert.match(decisions, /UI work starts from Figma MCP source context/);

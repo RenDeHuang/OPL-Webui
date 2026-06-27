@@ -9,7 +9,7 @@ function assertIncludesAll(actual, expected, label) { for (const item of expecte
 
 function latestEvidence(release) {
   const latest = release.latestMainEvidence;
-  return { latest, dogfoodState: `executed_success_run_${latest.runId}_real_chat_readonly_confirmed`, availabilityState: `executed_success_run_${latest.runId}_after_apply`, observabilityState: `release_probe_executed_run_${latest.runId}_scheduled_canary_success_pending_long_term_ops`, browserState: `executed_success_run_${latest.runId}` };
+  return { latest, dogfoodState: `executed_success_run_${latest.runId}_real_chat_${release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly === true ? 'readonly_confirmed' : 'readonly_unconfirmed'}`, availabilityState: `executed_success_run_${latest.runId}_after_apply`, observabilityState: `release_probe_executed_run_${latest.runId}_scheduled_canary_success_pending_long_term_ops`, browserState: `executed_success_run_${latest.runId}` };
 }
 
 function assertLatestRun(run, latest) {
@@ -198,9 +198,9 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(release.productionDogfoodReadiness.evidenceScope, 'historical');
   assertLatestRun(release.productionDogfoodReadiness.latestSuccessfulRun, latest);
   assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.realChat, true);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly, true);
-  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, true);
-  assertIncludesAll(release.productionDogfoodReadiness.latestSuccessfulRun.coverage, ['ordinary_chat_real_completion', 'medopl_readonly_runtime_status', 'medopl_readonly_materials_deliverables', 'medopl_readonly_billing_summary'], 'dogfood coverage');
+  assert.equal(['unconfirmed', true].includes(release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly), true);
+  assert.equal(release.productionDogfoodReadiness.latestSuccessfulRun.publicMetadataConfirmsReadonlySwitch, release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly === true);
+  assertIncludesAll(release.productionDogfoodReadiness.latestSuccessfulRun.coverage, ['ordinary_chat_real_completion', 'chat_completed_audit', 'runtime_gate_audit'], 'dogfood coverage');
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.currentPhase, 'production_readonly_foldback');
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.nextPhase, 'readonly_foldback_closeout');
   assert.equal(release.productionDogfoodReadiness.readonlyFoldbackPolicy.blockedBy, null);

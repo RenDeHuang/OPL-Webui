@@ -103,7 +103,7 @@ cannot claim: multi-node HA, production browser e2e, production authenticated do
 
 Observability baseline v1 使用同一 probe 的压缩摘要，不新增 dashboard 或 alerting surface。`/metricsz` 必须包含 `observabilitySchemaVersion=1`、`releaseProbeContract=production_observability_baseline_v1`、`publicProbeEndpoints=["/healthz","/readyz","/metricsz","/"]`；helper 输出每个 endpoint 的 `samples`、`successes`、`failures`、`maxDurationMs`，并继续不保存 raw response body、cookie 或 secret。
 
-Latest folded evidence is Cloud Rollout run `28291895320`, commit `743dc0dedcff948e186c3b7746432f276d31cdfc`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:743dc0d`, after production apply, availability probe, authenticated dogfood, and production browser e2e. Historical run `28142197152` remains provenance only. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. scheduled canary first success: 27874732529.
+Latest folded evidence is Cloud Rollout run `28293182990`, commit `f0f96ee312046da76923b1a11a0669c4b11354b4`, image `uswccr.ccs.tencentyun.com/webopl/opl-webui:f0f96ee`, after production apply, availability probe, authenticated dogfood, and production browser e2e. Historical run `28142197152` remains provenance only. A no-secret scheduled canary entrypoint exists at `.github/workflows/production-canary.yml`; it runs `node scripts/cloud-rollout.mjs --availability-probe` against the public host and does not read kubeconfig, dogfood secrets, database secrets, MedOPL token, or image credentials. scheduled canary first success: 27874732529.
 
 ```text
 P0 launch operations contracts present: rollback_path, alerting_boundary, db_backup_restore_strategy, security_ops_baseline, incident_runbook_owner, cost_quota_guard
@@ -175,15 +175,15 @@ cannot claim: browser e2e, MedOPL runtime execution, billing/payment/storage/nod
 Latest compressed evidence:
 
 ```text
-run id: 28291895320
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28291895320
-commit: 743dc0dedcff948e186c3b7746432f276d31cdfc
+run id: 28293182990
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28293182990
+commit: f0f96ee312046da76923b1a11a0669c4b11354b4
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:743dc0d
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:f0f96ee
 real chat: true (confirmed by production browser e2e in the same run)
-readonly projection: confirmed; OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 sanitized evidence folded back without raw logs
+readonly projection: unconfirmed by public metadata for this run; historical OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 evidence remains historical only until sanitized latest evidence is folded back
 stages: Production Dry Run success, Production Image Preflight success, Production Apply success, Production Availability Probe After Apply success, Production Authenticated Dogfood E2E success, Production Browser E2E success
-steps: register_or_login,current_session,api_key_binding,ordinary_chat,runtime_gate,audit_events,runtime_status,materials_deliverables,billing_summary
+steps: register_or_login,current_session,api_key_binding,ordinary_chat,runtime_gate,audit_events
 HTTP status summary: GitHub job success; raw response bodies are not stored in git
 audit kinds: chat.completed,runtime_gate.required validated by production browser e2e; raw audit payload is not stored in git
 result: production authenticated dogfood e2e passed
@@ -193,9 +193,9 @@ cannot claim: MedOPL runtime execution, billing/storage/node pool mutation, quot
 Production availability probe closeout:
 
 ```text
-run id: 28291895320
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28291895320
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:743dc0d
+run id: 28293182990
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28293182990
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:f0f96ee
 stage: Production Availability Probe After Apply success
 coverage: HTTPS /healthz, HTTPS /readyz, HTTPS /metricsz, HTTPS /
 cannot claim: multi-node HA, production browser e2e, production-ready SaaS, MedOPL runtime execution
@@ -207,16 +207,16 @@ Production browser e2e harness:
 - 该 lane 使用真实 Chromium/CDP 打开 `https://opl.medopl.cn`，通过生产 dogfood 账号执行登录、API Key 绑定、普通科研 chat、`@论文`/`@基金` runtime gate 和 audit evidence 检查。
 - 该 lane 需要 `OPL_DOGFOOD_EMAIL`、`OPL_DOGFOOD_PASSWORD`、`OPL_DOGFOOD_API_KEY`，并在 job 中 mask password/API key。
 - 该 lane 不执行 kubectl，不读取 kubeconfig，不读取数据库 secret，不连接 MedOPL private API，不执行 OPL runtime mutation。
-- 本 harness 已在 GitHub Actions run `28291895320` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
+- 本 harness 已在 GitHub Actions run `28293182990` 成功执行；后续只有新的成功 run 才能替换 latest compressed evidence。
 
 Production browser e2e closeout 只记录压缩证据，不记录 raw body、cookie、API Key、password、email 或 request payload：
 
 ```text
-run id: 28291895320
-run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28291895320
-job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28291895320/job/83825275601
+run id: 28293182990
+run URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28293182990
+job URL: https://github.com/RenDeHuang/OPL-Webui/actions/runs/28293182990/job/83829620259
 target host: https://opl.medopl.cn
-image: uswccr.ccs.tencentyun.com/webopl/opl-webui:743dc0d
+image: uswccr.ccs.tencentyun.com/webopl/opl-webui:f0f96ee
 browser: chromium
 steps: real_browser_login,api_key_binding,research_task_template_selected,ordinary_chat,paper_runtime_gate,grant_runtime_gate,audit_events
 audit kinds: chat.completed,runtime_gate.required
