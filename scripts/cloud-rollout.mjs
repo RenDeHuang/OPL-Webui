@@ -483,7 +483,7 @@ function selectReadyPod(expectedImage = image) {
     .filter((pod) => pod.status?.phase === 'Running')
     .filter((pod) => hasReadyCondition(pod))
     .filter((pod) => containerStatus(pod)?.ready === true)
-    .filter((pod) => !expectedImage || containerStatus(pod)?.image === expectedImage)
+    .filter((pod) => podMatchesExpectedImage(pod, expectedImage))
     .sort((left, right) => (right.metadata?.creationTimestamp ?? '').localeCompare(left.metadata?.creationTimestamp ?? ''));
 
   const selected = candidates[0]?.metadata?.name;
@@ -506,6 +506,18 @@ function containerStatus(pod) {
   return (pod.status?.containerStatuses ?? []).find((status) => status.name === container);
 }
 
+function podMatchesExpectedImage(pod, expectedImage) {
+  if (!expectedImage) return true;
+  const status = containerStatus(pod);
+  if (!status) return false;
+  if (status.image === expectedImage || status.imageID === expectedImage) return true;
+  const expectedDigest = expectedImage.match(/@sha256:([0-9a-f]{64})$/)?.[1];
+  if (!expectedDigest) return false;
+  return [status.image, status.imageID].some((value) => (
+    value === `sha256:${expectedDigest}` || (value ?? '').includes(`@sha256:${expectedDigest}`)
+  ));
+}
+
 function formatPodSummary(pods) {
   if (pods.length === 0) {
     return 'Pod summary: no pods returned.';
@@ -518,6 +530,7 @@ function formatPodSummary(pods) {
       `ready=${hasReadyCondition(pod)}`,
       `containerReady=${status?.ready === true}`,
       `image=${status?.image ?? '(unknown)'}`,
+      `imageID=${status?.imageID ?? '(unknown)'}`,
     ].join(' ');
   });
   return ['Pod summary:', ...lines].join('\n');

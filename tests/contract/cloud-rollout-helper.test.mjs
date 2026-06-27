@@ -361,6 +361,44 @@ test('cloud rollout helper execs the current Running Ready pod when old Error po
   }
 });
 
+test('cloud rollout helper accepts digest rollout pods whose status image is a config digest', () => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-digest-'));
+  const commandLog = join(tempDir, 'commands.log');
+  const manifestDigest = 'df4d10fe835dea09849d65db83b22073789495d3b6fe25a89e1146ba6a177333';
+  const configDigest = '62fe43416a96bcd3b19e5270dfee3ee4233dba2a4407cf415a432e463de28835';
+  const targetImage = `uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:${manifestDigest}`;
+
+  writeFakeKubectl(tempDir);
+  writeFakeCurl(tempDir);
+  writeFakeDocker(tempDir);
+
+  try {
+    const output = execFileSync(process.execPath, [helperPath, '--apply'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${tempDir}:${process.env.PATH}`,
+        KUBECONFIG: join(tempDir, 'kubeconfig'),
+        OPL_IMAGE: targetImage,
+        OPL_BASE_URL: 'https://opl.medopl.cn',
+        OPL_NAMESPACE: 'opl-webui',
+        TARGET_IMAGE: targetImage,
+        FAKE_POD_STATUS_IMAGE: `sha256:${configDigest}`,
+        FAKE_POD_IMAGE_ID: `containerd://uswccr.ccs.tencentyun.com/webopl/opl-webui@sha256:${manifestDigest}`,
+        COMMAND_LOG: commandLog,
+      },
+    });
+
+    assert.match(output, /selected pod\nopl-webui-control-plane-new-ready/);
+    assert.doesNotMatch(output, /No Running Ready pod found/);
+    const commands = readFileSync(commandLog, 'utf8');
+    assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary db/);
+    assert.match(commands, /exec opl-webui-control-plane-new-ready -- \/app\/opl-webui-control-plane canary opl-cli/);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 test('cloud rollout helper fails closed on semantic smoke regressions', () => {
   const tempDir = mkdtempSync(join(tmpdir(), 'opl-cloud-rollout-smoke-'));
   const commandLog = join(tempDir, 'commands.log');
@@ -564,13 +602,16 @@ process.stderr.write('unexpected kubectl args: ' + args.join(' ') + '\\n');
 process.exit(64);
 
 function pod(name, phase, ready) {
-  const image = process.env.ROLLBACK_IMAGE || process.env.TARGET_IMAGE;
+  const image = ready
+    ? process.env.FAKE_POD_STATUS_IMAGE || process.env.ROLLBACK_IMAGE || process.env.TARGET_IMAGE
+    : process.env.ROLLBACK_IMAGE || process.env.TARGET_IMAGE;
+  const imageID = ready ? process.env.FAKE_POD_IMAGE_ID || name : name;
   return {
     metadata: { name, creationTimestamp: ready ? '2026-06-17T08:01:00Z' : '2026-06-17T08:00:00Z' },
     status: {
       phase,
       conditions: [{ type: 'Ready', status: ready ? 'True' : 'False' }],
-      containerStatuses: [{ name: 'control-plane', ready, image, imageID: name }],
+      containerStatuses: [{ name: 'control-plane', ready, image, imageID }],
     },
   };
 }
