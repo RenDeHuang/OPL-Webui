@@ -47,18 +47,17 @@ try {
   await activate(cdp, '[data-save-key-button]');
   await waitForAuditKindCount(cdp, 'api_key.saved', apiKeySaveCount + 1);
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
-  await openChatRoute(cdp);
-
-  await submitResearchPromptWithRetry(cdp);
+  await openChatRoute(cdp); await submitResearchPromptWithRetry(cdp);
   await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;` });
 
+  const runtimeGateBlockedCount = await auditKindCount(cdp, 'runtime_gate.blocked');
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
-  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 1);
+  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 1);
   await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible")', 'paper runtime gate');
   await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@论文"', 'paper runtime task card');
 
   await submitPrompt(cdp, '@基金 帮我拆解标书结构');
-  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 2);
+  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 2);
   await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@基金"', 'grant runtime task card');
   await activate(cdp, '[data-shell-action="projects"]');
   await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 2', () => describePageState(cdp, 'task history center missing recent tasks'));

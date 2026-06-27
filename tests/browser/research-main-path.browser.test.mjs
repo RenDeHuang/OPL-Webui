@@ -182,6 +182,16 @@ test('production browser e2e waits for API key save completion on already-bound 
   assert.doesNotMatch(runner, /activate\(cdp, '\[data-save-key-button\]'\);\n\s*await waitForAuthState\(cdp, 'authenticated_bound', 'api key binding'\)/);
 });
 
+test('production browser e2e waits for runtime gate audit increments per run', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /const runtimeGateBlockedCount = await auditKindCount\(cdp, 'runtime_gate\.blocked'\)/);
+  assert.match(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 1\)/);
+  assert.match(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 2\)/);
+  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', 1\)/);
+  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', 2\)/);
+});
+
 test('production browser e2e waits for async research results and reports page evidence', () => {
   const runner = readFileSync(runnerPath, 'utf8');
   const markerExpression = '\'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"\'';
