@@ -493,6 +493,7 @@ function bindClicks() {
   }));
   app?.querySelectorAll('[data-public-task-entry], [data-research-task]').forEach((button) => button.addEventListener('click', () => applyTaskPrompt(button)));
   app?.querySelectorAll('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authTab; render(); }));
+  app?.querySelectorAll('[data-auth-submit]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authAction || state.authTab; }));
   app?.querySelector('[data-toggle-password]')?.addEventListener('click', () => { state.showPassword = !state.showPassword; render(); });
   app?.querySelectorAll('[data-shell-action]').forEach((button) => button.addEventListener('click', () => runShellAction(button.dataset.shellAction)));
   app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; render(); });
@@ -533,7 +534,8 @@ async function authSubmit(event) {
   event.preventDefault();
   const email = app.querySelector('#auth-email')?.value.trim() || '';
   const password = app.querySelector('#auth-password')?.value || '';
-  const authAction = event.submitter?.dataset?.authAction || state.authTab;
+  const activeSubmitter = document.activeElement?.closest?.('[data-auth-submit]');
+  const authAction = event.submitter?.dataset?.authAction || activeSubmitter?.dataset?.authAction || state.authTab;
   const wasRegister = authAction === 'register';
   state.authTab = wasRegister ? 'register' : 'login';
   state.busy = true;
