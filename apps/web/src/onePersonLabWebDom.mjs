@@ -606,7 +606,7 @@ async function chatSubmit(event) {
     return;
   }
   state.shellState = 'running_turn';
-  state.showInspector = true;
+  state.showInspector = shouldAutoOpenInspector();
   render();
   const result = await sendChatMessage(fetch, message);
   document.body.dataset.chatState = chatStateForResult(result);
@@ -741,6 +741,10 @@ function openInspector(tab = 'progress') {
 function closeInspector() {
   state.showInspector = false;
   render();
+}
+
+function shouldAutoOpenInspector() {
+  return window.matchMedia?.('(min-width: 1041px)').matches === true;
 }
 
 function openAPIKeyDialog() {

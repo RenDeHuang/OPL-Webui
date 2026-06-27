@@ -249,7 +249,7 @@ textarea {
 }
 .sidebar {
   background: var(--sidebar);
-  border-right: 1px solid var(--border);
+  box-shadow: inset -1px 0 0 var(--border);
   display: flex;
   flex: 0 0 240px;
   flex-direction: column;

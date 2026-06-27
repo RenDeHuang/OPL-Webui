@@ -88,6 +88,7 @@ test('research main path runs in a real browser and records page-state evidence'
 
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
 
   for (const required of [
     '--production',
@@ -122,6 +123,10 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.match(runner, /async function openAccountPopover/);
   assert.match(runner, /Boolean\(document\.querySelector\("#auth-email"\) && document\.querySelector\("#auth-email"\)\.offsetParent !== null\)/);
   assert.match(runner, /Boolean\(document\.querySelector\("#api-key"\) && document\.querySelector\("#api-key"\)\.offsetParent !== null\)/);
+  assert.match(domSource, /function shouldAutoOpenInspector/);
+  assert.match(domSource, /window\.matchMedia\?\.\('\(min-width: 1041px\)'\)\.matches === true/);
+  assert.match(domSource, /state\.showInspector = shouldAutoOpenInspector\(\)/);
+  assert.doesNotMatch(domSource, /state\.showInspector = true;\s*\n\s*render\(\);\s*\n\s*const result = await sendChatMessage/);
   const accountPopoverHelper = runner.match(/async function openAccountPopover[\s\S]*?\n}\n/)?.[0] || '';
   assert.match(accountPopoverHelper, /\[data-account-toggle\]/);
   assert.doesNotMatch(accountPopoverHelper, /#auth-email|#api-key/);
