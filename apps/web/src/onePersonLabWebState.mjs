@@ -1,6 +1,6 @@
 export const FIXED_BASE_URL = 'https://gflabtoken.cn/v1';
 export const MEDOPL_DEEP_LINK = 'https://medopl.medopl.cn';
-export const FIGMA_MAKE_SOURCE = 'E8nYfNFc2D9P01FYZ8UwBW';
+export const FIGMA_MAKE_SOURCE = '1MNO5l7PQYKZVNqQgw6DGS';
 export const LIGHTWEIGHT_MARKERS = ['@科研'];
 export const RUNTIME_REQUIRED_MARKERS = ['@论文', '@基金', '@综述', '@文件', '@PPT', '@书'];
 export const CAPABILITY_MARKER_SEMANTICS = [

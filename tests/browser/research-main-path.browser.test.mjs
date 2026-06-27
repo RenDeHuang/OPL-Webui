@@ -29,7 +29,7 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.ok(evidence.upstreamRequests >= 1);
   assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');
   assert.deepEqual(evidence.visualQuality.figmaSource, {
-    fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
+    fileKey: '1MNO5l7PQYKZVNqQgw6DGS',
     nodeId: '0:1',
   });
   assert.equal(evidence.visualQuality.currentPhase, 'responsive_visual_qa');

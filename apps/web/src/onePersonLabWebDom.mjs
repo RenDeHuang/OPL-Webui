@@ -1,656 +1,779 @@
 import {
+  FIGMA_MAKE_SOURCE,
+  MEDOPL_DEEP_LINK,
+  RESEARCH_TASK_INTENTS,
   checkRuntimeGate,
+  chatStateForPrompt,
+  chatStateForResult,
   createInitialOnePersonLabViewModel,
   loadOnePersonLabWebState,
   loginAccount,
   logoutAccount,
   registerAccount,
-  researchResultForChat,
   reliabilityStatusForResult,
   requiresRuntimeGate,
+  researchResultForChat,
   runRuntimeTask,
   runtimeTaskCardForGate,
   runtimeTaskCardForPrompt,
   saveAPIKey,
-  chatStateForResult,
-  chatStateForPrompt,
   sendChatMessage,
   viewFromHash,
 } from './onePersonLabWebState.mjs';
 
+const app = typeof document === 'undefined' ? null : document.querySelector('#app');
+const state = {
+  view: createInitialOnePersonLabViewModel(),
+  shellState: 'public_landing',
+  authTab: 'login',
+  showPassword: false,
+  showAccount: false,
+  showSearch: false,
+  showBilling: false,
+  showInspector: false,
+  inspectorTab: 'progress',
+  activeConversationId: '',
+  activeConversationMeta: null,
+  messages: [],
+  lastResult: null,
+  lastRuntimeTaskCard: null,
+  pendingPublicTask: null,
+  busy: false,
+};
+
 export async function initOnePersonLabWeb() {
-  let view = createInitialOnePersonLabViewModel();
-  document.body.dataset.shellState = 'home_default';
-  document.body.dataset.inspectorState = document.body.dataset.inspectorState || 'hidden';
-  document.body.dataset.apiKeyDialogState = document.body.dataset.apiKeyDialogState || 'closed';
-  document.body.dataset.chatState = chatStateForResult(null);
+  window.addEventListener('hashchange', syncRouteFromLocation);
+  document.addEventListener('keydown', handleGlobalKeydown);
+  document.addEventListener('click', handleOutsideClick);
+  syncRouteFromLocation();
+  render();
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  state.shellState = state.view.accountState === 'anonymous' ? 'public_landing' : 'home_default';
+  syncDocumentState();
+  render();
+}
 
-  syncHashView();
-  window.addEventListener('hashchange', syncHashView);
-  bindShellControls();
-  bindCapabilityButtons();
-  bindPublicGrowthActions();
-  bindAccountPopover();
-  bindChatForm(() => view);
-  bindSettingsForms(() => view, (next) => {
-    view = next;
-    renderView(view);
+function render() {
+  if (!app) return;
+  const shouldFocusAPIKeyPrimary = document.body.dataset.apiKeyDialogState === 'open';
+  syncDocumentState();
+  app.innerHTML = state.view.accountState === 'anonymous'
+    ? renderAnonymous()
+    : renderAuthenticated();
+  bindCurrentDOM();
+  if (shouldFocusAPIKeyPrimary) app.querySelector('[data-api-key-dialog-primary]')?.focus({ preventScroll: true });
+}
+
+function renderAnonymous() {
+  if (state.shellState === 'auth_login_register') return renderAuthPage();
+  return renderPublicLanding();
+}
+
+function renderPublicLanding() {
+  return `
+    <div class="public-landing" data-shell-state="public_landing" data-public-growth-layer data-public-landing-surface>
+      <header class="public-nav">
+        <span class="brand-text">One Person Lab</span>
+        <div class="nav-actions">
+          <button class="text-button" type="button" data-public-start-cta data-auth-mode="login">登录</button>
+          <button class="primary-button" type="button" data-public-start-cta data-account-toggle data-auth-mode="register">注册</button>
+        </div>
+      </header>
+      <main class="public-hero" data-public-hero>
+        <div class="hero-content">
+          <div class="status-pill"><span></span>AI 原生科研工作台 · opl.medopl.cn</div>
+          <h1>为研究者而建的<br>AI 工作台</h1>
+          <p>从开题到成稿，覆盖论文、基金、综述、演示的全链路 AI 科研辅助。账户制，多端同步，数据隔离。</p>
+          <div class="hero-pills" data-public-task-section>
+            ${RESEARCH_TASK_INTENTS.map((task) => `
+              <button type="button" data-public-task-entry data-research-task-intent="${escapeAttr(task.id)}" data-prompt="${escapeAttr(task.prompt)}">
+                <span>${escapeHTML(task.marker)}</span>${escapeHTML(shortTaskLabel(task.label))}
+              </button>
+            `).join('')}
+          </div>
+          <div class="hero-actions">
+            <button class="primary-button large" type="button" data-public-start-cta data-auth-mode="register">开始使用 <span aria-hidden="true">-></span></button>
+            <button class="secondary-button large" type="button" data-public-start-cta data-auth-mode="login">了解更多</button>
+          </div>
+        </div>
+        <div class="trust-strip">
+          <span data-public-output-section>progress refs · deliverable refs · materials refs</span>
+          <span data-public-audience-section>个人研究者 · 博士/硕士 · PI · 课题组/单位</span>
+          <span data-public-trust-section>blocker/next step · MedOPL/OPL deeplink</span>
+          <span data-public-start-path>登录后回到任务入口</span>
+        </div>
+      </main>
+    </div>`;
+}
+
+function renderAuthPage() {
+  const isRegister = state.authTab === 'register';
+  const pendingPrompt = state.pendingPublicTask?.prompt || '';
+  return `
+    <div class="auth-page" data-shell-state="auth_login_register" data-auth-surface data-account-popover>
+      <section class="auth-wrap">
+        <div class="auth-brand">
+          <span>One Person Lab</span>
+          <p>AI 原生科研工作台</p>
+        </div>
+        <div class="auth-card">
+          <div class="auth-tabs" role="tablist" aria-label="登录或注册">
+            <button type="button" data-auth-tab="login" aria-selected="${String(!isRegister)}">登录</button>
+            <button type="button" data-auth-tab="register" aria-selected="${String(isRegister)}">注册</button>
+          </div>
+          <form class="auth-form" data-auth-form>
+            <label for="auth-email">邮箱</label>
+            <div class="field-with-icon"><span aria-hidden="true">@</span><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="researcher@lab.edu"></div>
+            <label for="auth-password">密码</label>
+            <div class="field-with-icon">
+              <span aria-hidden="true">#</span>
+              <input id="auth-password" name="password" type="${state.showPassword ? 'text' : 'password'}" autocomplete="current-password" placeholder="${isRegister ? '至少 8 位' : '********'}">
+              <button type="button" data-toggle-password aria-label="${state.showPassword ? '隐藏密码' : '显示密码'}">${state.showPassword ? 'Hide' : 'Show'}</button>
+            </div>
+            <p class="form-message" data-settings-message role="status"></p>
+            <div class="auth-submit-row">
+              <button class="primary-button full" type="submit" data-auth-submit data-auth-action="login" data-login-button>
+                ${state.busy && !isRegister ? '处理中...' : '登录'}
+              </button>
+              <button class="primary-button full" type="submit" data-auth-submit data-auth-action="register" data-register-button>
+                ${state.busy && isRegister ? '处理中...' : '创建账号'}
+              </button>
+            </div>
+            <input id="chat-input" type="hidden" value="${escapeAttr(pendingPrompt)}">
+            <p class="terms-copy">登录即表示同意服务条款与隐私政策。</p>
+          </form>
+        </div>
+        <button class="auth-account-toggle-sentinel" type="button" data-account-toggle tabindex="-1" aria-hidden="true" aria-label="账户入口"></button>
+        <button class="auth-account-toggle-sentinel" type="button" data-logout-button tabindex="-1" aria-hidden="true" aria-label="退出登录"></button>
+      </section>
+    </div>`;
+}
+
+function renderAuthenticated() {
+  return `
+    <div class="app-shell" data-app-shell data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more">
+      ${renderSidebar()}
+      <div class="workspace-frame">
+        <main class="workspace-main main-stage">
+          ${renderMainSurface()}
+        </main>
+        ${state.showInspector ? renderInspector() : ''}
+      </div>
+      ${state.showSearch ? renderSearchSheet() : ''}
+      ${state.showBilling ? renderBillingSummary() : ''}
+      ${renderAPIKeyDialog()}
+      <button class="auth-account-toggle-sentinel" type="button" data-logout-button data-authenticated-logout-sentinel tabindex="-1" aria-hidden="true" aria-label="退出登录"></button>
+    </div>`;
+}
+
+function renderSidebar() {
+  const projects = projectsFromView();
+  return `
+    <aside class="sidebar" data-side-navigation aria-label="One Person Lab navigation">
+      <div class="sidebar-brand">One Person Lab</div>
+      <nav class="top-nav">
+        <button type="button" data-shell-action="home"><span aria-hidden="true">+</span><span class="nav-label">新对话</span></button>
+        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">项目</span></button>
+        <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">Skill</span></button>
+        <button type="button" data-shell-action="workflows"><span aria-hidden="true">⌘</span><span class="nav-label">工作流</span></button>
+        <button type="button" data-search-trigger><span aria-hidden="true">?</span><span class="nav-label">搜索</span></button>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="project-tree" data-task-history-route>
+        <div class="tree-heading"><span>置顶</span></div>
+        <button class="tree-row" type="button" data-shell-action="home"><span aria-hidden="true">Folder</span><span class="tree-label">v20文件夹</span><small>2 个月</small></button>
+        <div class="tree-heading"><span>项目</span><button type="button" aria-label="新建项目">+</button></div>
+        ${projects.map((project) => `
+          <section class="project-group" data-project-group>
+            <button class="project-title" type="button" data-project-toggle><span aria-hidden="true">Folder</span><span class="tree-label">${escapeHTML(project.name)}</span><small>${project.tasks.length}</small></button>
+            <div class="conversation-list" data-task-history-list>
+              ${project.tasks.length === 0 ? '<p>空项目</p>' : project.tasks.map((task) => `
+                <button type="button" data-conversation-entry data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
+                  <span>${escapeHTML(sidebarTaskTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
+                </button>
+              `).join('')}
+              <button class="show-more" type="button">展开显示</button>
+            </div>
+          </section>
+        `).join('')}
+      </div>
+      <div class="sidebar-bottom">
+        <button type="button" data-shell-action="more"><span>...</span>更多</button>
+        <div class="account-anchor">
+          <button type="button" data-account-toggle aria-expanded="${String(state.showAccount)}" aria-controls="account-popover">
+            <span class="account-avatar" aria-hidden="true">研</span>
+            <span><strong data-session-label>${escapeHTML(state.view.session.email || 'Researcher')}</strong><small>account capability</small></span>
+          </button>
+          ${state.showAccount ? renderAccountPopover() : ''}
+        </div>
+      </div>
+    </aside>`;
+}
+
+function renderMainSurface() {
+  if (state.shellState === 'running_turn') return renderResultView();
+  if (state.shellState === 'blocked_turn') return renderBlockedView();
+  if (state.shellState === 'quota_exceeded') return renderQuotaView();
+  if (state.shellState === 'files') return renderTaskHistoryCenter();
+  if (state.shellState === 'skill_plaza') return renderSkillPlaza();
+  if (state.shellState === 'workflow_plaza') return renderWorkflowPlaza();
+  if (state.shellState === 'more') return renderMoreSurface();
+  return renderHomeComposer();
+}
+
+function renderHomeComposer() {
+  return `
+    <section class="home-composer" data-shell-state="home_default" data-workbench-surface data-first-view>
+      <h1>What should we get done?</h1>
+      <form id="composer-form" class="composer-box" data-chat-form>
+        <input id="chat-input" class="composer-input" placeholder="随心输入" aria-label="选择一个任务入口或直接输入问题">
+      </form>
+      <div class="composer-toolbar" data-composer-toolbar>
+        <button type="button" class="icon-button" aria-label="添加" tabindex="-1">+</button>
+        <button type="button" class="secondary-button" tabindex="-1">完全访问</button>
+        <button type="button" class="secondary-button model-selector" data-model-selector tabindex="-1">5.5 超高</button>
+        <button type="button" class="secondary-button" data-inspector-open="files">Refs</button>
+        <button type="submit" form="composer-form" class="round-send" data-chat-submit aria-label="发送">↑</button>
+      </div>
+      <div class="mode-grid" data-research-launcher data-starter-chips>
+        ${RESEARCH_TASK_INTENTS.slice(0, 4).map(renderModeButton).join('')}
+      </div>
+      <div class="mode-grid lower-grid">
+        ${RESEARCH_TASK_INTENTS.slice(4).map(renderModeButton).join('')}
+      </div>
+    </section>`;
+}
+
+function renderModeButton(task) {
+  return `
+    <button type="button" data-research-task data-research-task-intent="${escapeAttr(task.id)}" data-capability-marker="${escapeAttr(task.marker)}" data-capability-mode="${escapeAttr(task.runtimePolicy)}" data-prompt="${escapeAttr(task.prompt)}">
+      <span>${escapeHTML(task.marker)}</span>
+      <small>${escapeHTML(taskDescription(task))}</small>
+    </button>`;
+}
+
+function renderResultView() {
+  const result = state.lastResult;
+  const research = result?.researchResult;
+  return `
+    <section class="result-view" data-shell-state="running_turn" data-results-surface>
+      <div class="result-badge">${escapeHTML(state.activeConversationMeta?.project || 'OPL')}</div>
+      <header class="result-topbar">
+        <button type="button" data-shell-action="home">‹ 新对话</button>
+        <span>${escapeHTML(state.activeConversationMeta?.title || result?.prompt || '@科研')}</span>
+        <button type="button" data-inspector-open="files">Files</button>
+        <button type="button" data-inspector-open="progress">Inspector</button>
+      </header>
+      <div class="result-scroll" data-chat-log>
+        ${state.messages.map(renderMessage).join('')}
+        ${research ? renderResearchResult(research) : ''}
+      </div>
+      <form class="pill-input" data-chat-form>
+        <button type="button" aria-label="添加">+</button>
+        <input id="chat-input" name="message" placeholder="有问题，尽管问">
+        <button type="button">API key</button>
+        <button type="submit" data-chat-submit aria-label="发送">▮▮▮</button>
+      </form>
+    </section>`;
+}
+
+function renderResearchResult(result) {
+  document.body.dataset.lastResearchResultSections = String(result.sections.length);
+  return `
+    <article class="research-result" data-research-result="${escapeAttr(result.kind)}" data-research-result-marker="${escapeAttr(result.marker)}">
+      <div class="status-line">MedOPL continuation ready / refs available</div>
+      ${result.sections.map((section) => `
+        <section data-research-result-section="${escapeAttr(section.id)}">
+          <h3>${escapeHTML(section.title)}</h3>
+          <p>${escapeHTML(section.body)}</p>
+        </section>
+      `).join('')}
+      <div class="result-actions" aria-label="结果操作">
+        <button type="button" aria-label="复制">Copy</button>
+        <button type="button" aria-label="收藏">Save</button>
+        <button type="button" aria-label="重新生成">Again</button>
+        <button type="button" aria-label="更多">More</button>
+      </div>
+    </article>`;
+}
+
+function renderMessage(message) {
+  return `<article class="message ${escapeAttr(message.role)}-message"><p>${escapeHTML(message.content)}</p></article>`;
+}
+
+function renderBlockedView() {
+  const taskCard = state.lastRuntimeTaskCard || runtimeTaskCardForPrompt('@论文');
+  document.body.dataset.lastRuntimeTaskMarker = taskCard.marker || '';
+  return `
+    <section class="blocked-view" data-shell-state="blocked_turn">
+      <div class="reliability-banner" data-reliability-status data-state="runtime_required">
+        <strong data-reliability-title>需要 MedOPL 授权</strong>
+        <span data-reliability-action>去 MedOPL</span>
+        <small data-reliability-details>该能力需要在 MedOPL 开通后继续。</small>
+      </div>
+      <article class="runtime-card is-visible" data-runtime-gate>
+        <div data-runtime-task-card="${escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${escapeAttr(taskCard.marker || '')}">
+          <span>runtime admission - 检查清单</span>
+          <h2>${escapeHTML(taskCard.title || '需要 MedOPL 授权')}</h2>
+          <p>${escapeHTML(taskCard.message || 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。')}</p>
+          <a href="${escapeAttr(taskCard.deepLink || MEDOPL_DEEP_LINK)}">前往 MedOPL 处理</a>
+        </div>
+      </article>
+      <button type="button" data-shell-action="home">返回主界面</button>
+      <form class="pill-input" data-chat-form>
+        <button type="button" aria-label="添加">+</button>
+        <input id="chat-input" name="message" placeholder="继续输入任务">
+        <button type="submit" data-chat-submit aria-label="发送">↑</button>
+      </form>
+    </section>`;
+}
+
+function renderQuotaView() {
+  return `
+    <section class="quota-view" data-shell-state="quota_exceeded">
+      <div class="reliability-banner" data-reliability-status data-state="quota_exceeded">
+        <strong data-reliability-title>额度已用完</strong>
+        <span data-reliability-action>查看额度</span>
+        <small data-reliability-details>当前只显示 API key / quota projection，不提供 Web-owned payment。</small>
+      </div>
+      <a class="primary-button" href="${MEDOPL_DEEP_LINK}/billing">external capability handoff</a>
+      <button type="button" data-shell-action="home">返回主界面</button>
+    </section>`;
+}
+
+function renderTaskHistoryCenter() {
+  const tasks = state.view.taskHistory?.tasks || [];
+  return `
+    <section class="file-library" data-shell-state="task_history_deliverable_continuation_center" data-task-history-center>
+      <header><h1>任务历史</h1><button type="button" data-shell-action="home">新对话</button></header>
+      <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
+      <div class="file-list" data-task-history-list>
+        ${tasks.length === 0 ? '<p data-task-history-empty>当前没有 task history refs。</p>' : tasks.map(renderTaskHistoryCard).join('')}
+      </div>
+    </section>`;
+}
+
+function renderTaskHistoryCard(task) {
+  const title = sidebarTaskTitle(task);
+  const refsCount = (task.progressRefs?.length || 0) + (task.deliverableRefs?.length || 0) + (task.materialRefs?.length || 0);
+  return `
+    <article data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
+      <strong>${escapeHTML(title || '未命名任务')}</strong>
+      <small>${escapeHTML(task.status || 'projection')} · ${escapeHTML(formatShortDate(task.updatedAt))} · ${refsCount} refs</small>
+      <a data-task-history-continue href="${escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续到 MedOPL</a>
+    </article>`;
+}
+
+function renderSkillPlaza() {
+  return `
+    <section class="plaza-view" data-shell-state="skill_plaza">
+      <header><h1>Skill Plaza</h1><button type="button">导入 Skill</button></header>
+      <div class="drop-zone">拖拽 .json / .yaml / .zip 到此处导入，或点击选择文件</div>
+      <div class="plaza-grid">
+        ${['PubMed 文献检索', '引文网络分析', '实验方案生成', '统计方法推荐', '基金摘要优化', '图表解读'].map((name) => `<article><strong>${name}</strong><small>只作为任务入口；执行权威留在 MedOPL/OPL。</small></article>`).join('')}
+      </div>
+    </section>`;
+}
+
+function renderWorkflowPlaza() {
+  return `
+    <section class="plaza-view" data-shell-state="workflow_plaza">
+      <div class="empty-workflow">
+        <span>工作流 · 即将上线</span>
+        <p>Agentic 研究工作流作为未来 capability placeholder，当前不新增 runtime sync。</p>
+      </div>
+    </section>`;
+}
+
+function renderMoreSurface() {
+  return `
+    <section class="more-view" data-more-overflow>
+      <h1>暂时没有更多入口</h1>
+      <p data-more-empty>More 作为轻量 overflow 保留；账号、登录和 API Key 从左下角头像进入。</p>
+    </section>`;
+}
+
+function renderSearchSheet() {
+  const conversations = state.view.conversations || [];
+  return `
+    <div class="sheet-backdrop" data-overlay-close="search"></div>
+    <aside class="search-sheet" data-search-sheet data-overlay-state="open">
+      <header><span>Search</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
+      <input id="conversation-search" type="search" data-conversation-search placeholder="搜索对话历史..." aria-label="搜索对话历史">
+      <div class="conversation-history" data-conversation-history>
+        ${conversations.length === 0 ? '' : conversations.map((conversation) => `<button type="button" data-conversation-entry><strong>${escapeHTML(conversation.title || '未命名对话')}</strong><small>${escapeHTML(formatShortDate(conversation.updatedAt))}</small></button>`).join('')}
+      </div>
+      <p class="empty-state" data-conversation-empty ${conversations.length > 0 ? 'hidden' : ''}>暂无历史对话</p>
+    </aside>`;
+}
+
+function renderAccountPopover() {
+  const providerStatus = state.view.provider.apiKeyConfigured ? `已绑定：${state.view.provider.maskedKey}` : '未绑定';
+  return `
+    <aside class="account-popover" id="account-popover" data-account-popover>
+      <header><span>Account</span><button type="button" data-account-popover-close aria-label="关闭账号弹层">x</button></header>
+      <dl>
+        <div><dt>登录状态</dt><dd data-session-status>${escapeHTML(state.view.session.email || '未登录')}</dd></div>
+        <div><dt>API Key 绑定状态</dt><dd data-provider-status>${escapeHTML(providerStatus)}</dd></div>
+      </dl>
+      <form data-provider-form>
+        <label for="api-key">API Key</label>
+        <input id="api-key" name="apiKey" type="password" autocomplete="off" placeholder="sk-...">
+        <p>只保存到 Go control plane；页面只显示 masked key，不回显 raw API Key。</p>
+        <button class="primary-button full" type="submit" data-save-key-button>保存/更新 API Key</button>
+        <button class="secondary-button full" type="button" data-billing-summary-open>readonly commercial projection</button>
+        <button class="text-button full" type="button" data-logout-button>退出登录</button>
+        <p class="form-message" data-settings-message role="status"></p>
+      </form>
+    </aside>`;
+}
+
+function renderBillingSummary() {
+  const quota = state.view.billingSummary.quota || {};
+  return `
+    <div class="sheet-backdrop" data-billing-close></div>
+    <aside class="billing-panel" data-surface="billing_summary_projection">
+      <header><div><h2>用量概览</h2><p>只读投影 · commercial authority 由 MedOPL 持有</p></div><button type="button" data-billing-close aria-label="关闭用量概览">x</button></header>
+      <dl>
+        <div><dt>API key / quota projection</dt><dd>${Number(quota.used || 0)} / ${Number(quota.limit || 0)}</dd></div>
+        <div><dt>external capability handoff</dt><dd><a href="${MEDOPL_DEEP_LINK}/billing">MedOPL</a></dd></div>
+      </dl>
+    </aside>`;
+}
+
+function renderInspector() {
+  return `
+    <aside class="inspector-sheet" data-inspector-sheet data-inspector-state="${escapeAttr(state.inspectorTab)}" data-responsive-placement="bottom_sheet">
+      <header><span>Inspector</span><button type="button" data-inspector-close aria-label="关闭检查器">x</button></header>
+      <div class="inspector-tabs" role="tablist">
+        ${['files', 'progress', 'output'].map((tab) => `<button type="button" data-inspector-tab="${tab}" aria-selected="${String(state.inspectorTab === tab)}">${tabLabel(tab)}</button>`).join('')}
+      </div>
+      <section data-inspector-panel="files" ${state.inspectorTab === 'files' ? '' : 'hidden'}>
+        <h3>deliverable refs</h3>
+        <p>deliverable refs 由 MedOPL 投影；此处仅显示引用路径。</p>
+        <dl><div><dt>progress refs</dt><dd>来自 Go control plane task history projection</dd></div><div><dt>materials refs</dt><dd>等待材料引用</dd></div></dl>
+      </section>
+      <section data-inspector-panel="progress" ${state.inspectorTab === 'progress' ? '' : 'hidden'}>
+        <h3>Progress</h3>
+        <ol><li>runtime gate checked</li><li>refs available</li><li>continuation ready</li></ol>
+      </section>
+      <section data-inspector-panel="output" ${state.inspectorTab === 'output' ? '' : 'hidden'}>
+        <h3>Output</h3>
+        <p>结果生成后显示 deliverable refs，不返回 artifact body。</p>
+      </section>
+    </aside>`;
+}
+
+function renderAPIKeyDialog() {
+  const open = document.body.dataset.apiKeyDialogState === 'open';
+  return `
+    <aside class="api-key-dialog" data-api-key-dialog data-api-key-dialog-state="${open ? 'open' : 'closed'}" role="dialog" aria-modal="true" aria-labelledby="api-key-dialog-title" ${open ? '' : 'hidden'}>
+      <div class="api-key-dialog-panel">
+        <span>API Key</span>
+        <h2 id="api-key-dialog-title">发送前需要绑定 API Key</h2>
+        <p>绑定后即可发送普通聊天；页面不会回显 raw API Key。</p>
+        <button class="primary-button full" type="button" data-api-key-dialog-primary>去绑定</button>
+        <button class="text-button full" type="button" data-api-key-dialog-close>稍后处理</button>
+      </div>
+    </aside>`;
+}
+
+function bindCurrentDOM() {
+  bindClicks();
+  bindForms();
+  bindSearch();
+}
+
+function bindClicks() {
+  app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => {
+    state.authTab = button.dataset.authMode === 'register' ? 'register' : 'login';
+    state.shellState = 'auth_login_register';
+    render();
+    document.querySelector('#auth-email')?.focus({ preventScroll: true });
+  }));
+  app?.querySelectorAll('[data-public-task-entry], [data-research-task]').forEach((button) => button.addEventListener('click', () => applyTaskPrompt(button)));
+  app?.querySelectorAll('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authTab; render(); }));
+  app?.querySelector('[data-toggle-password]')?.addEventListener('click', () => { state.showPassword = !state.showPassword; render(); });
+  app?.querySelectorAll('[data-shell-action]').forEach((button) => button.addEventListener('click', () => runShellAction(button.dataset.shellAction)));
+  app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; render(); });
+  app?.querySelector('[data-account-toggle]')?.addEventListener('click', (event) => { event.stopPropagation(); state.showAccount = !state.showAccount; render(); });
+  app?.querySelector('[data-account-popover-close]')?.addEventListener('click', () => { state.showAccount = false; render(); });
+  app?.querySelectorAll('[data-overlay-close="search"]').forEach((button) => button.addEventListener('click', () => { state.showSearch = false; render(); }));
+  app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
+  app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
+  app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
+  app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'progress')));
+  app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
+  app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab)));
+  app?.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
+  app?.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => { closeAPIKeyDialog(false); state.showAccount = true; render(); document.querySelector('#api-key')?.focus({ preventScroll: true }); });
+}
+
+function bindForms() {
+  app?.querySelector('[data-auth-form]')?.addEventListener('submit', authSubmit);
+  app?.querySelectorAll('[data-chat-form]').forEach((form) => form.addEventListener('submit', chatSubmit));
+  app?.querySelector('[data-provider-form]')?.addEventListener('submit', providerSubmit);
+}
+
+function bindSearch() {
+  app?.querySelector('[data-conversation-search]')?.addEventListener('input', (event) => {
+    const value = event.currentTarget.value.trim().toLowerCase();
+    let visible = 0;
+    app.querySelectorAll('[data-conversation-entry]').forEach((entry) => {
+      const show = !value || entry.textContent.toLowerCase().includes(value);
+      entry.hidden = !show;
+      if (show) visible += 1;
+    });
+    const empty = app.querySelector('[data-conversation-empty]');
+    if (empty) empty.hidden = visible > 0;
   });
-
-  view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
-  renderView(view);
 }
 
-function syncHashView() {
-  const view = viewFromHash(window.location.hash);
-  document.body.dataset.view = view;
-  syncNavCurrent(view);
-  closeTransientOverlays();
-  if (view === 'home') {
-    document.querySelector('#home')?.setAttribute('tabindex', '-1');
+async function authSubmit(event) {
+  event.preventDefault();
+  const email = app.querySelector('#auth-email')?.value.trim() || '';
+  const password = app.querySelector('#auth-password')?.value || '';
+  const authAction = event.submitter?.dataset?.authAction || state.authTab;
+  const wasRegister = authAction === 'register';
+  state.authTab = wasRegister ? 'register' : 'login';
+  state.busy = true;
+  render();
+  const result = wasRegister
+    ? await registerAccount(fetch, email, password)
+    : await loginAccount(fetch, email, password);
+  state.busy = false;
+  if (!result.ok) {
+    state.shellState = 'auth_login_register';
+    render();
+    setSettingsMessage(result.message || result.errorCode || '认证失败。');
+    return;
   }
-  if (view === 'skills') {
-    document.querySelector('#skills')?.setAttribute('tabindex', '-1');
-    document.querySelector('#skills')?.focus({ preventScroll: true });
-  }
-  if (view === 'workflows') {
-    document.querySelector('#workflows')?.setAttribute('tabindex', '-1');
-    document.querySelector('#workflows')?.focus({ preventScroll: true });
-  }
-  if (view === 'projects') {
-    document.querySelector('#projects')?.setAttribute('tabindex', '-1');
-    document.querySelector('#projects')?.focus({ preventScroll: true });
-  }
-  if (view === 'more') {
-    document.querySelector('[data-more-overflow]')?.setAttribute('tabindex', '-1');
-    document.querySelector('[data-more-overflow]')?.focus({ preventScroll: true });
-  }
+  document.body.dataset.authState = 'authenticated_unbound';
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  state.shellState = 'home_default';
+  state.showAccount = false;
+  render();
+  restorePendingPublicTask();
 }
 
-function bindCapabilityButtons() {
-  for (const button of document.querySelectorAll('[data-prompt]')) {
-    button.addEventListener('click', () => {
-      applyTaskPrompt(button);
-      if (requiresRuntimeGate(button.dataset.prompt)) {
-        showRuntimeGate(button.dataset.prompt, {
-          ok: false,
-          gateState: {
-            ready: false,
-            blockers: [{ kind: 'runtime_required', title: '请发送后检查 MedOPL runtime gate', deepLink: 'https://medopl.medopl.cn' }],
-            nextAction: { id: 'check_runtime_gate', label: '检查 MedOPL gate', deepLink: 'https://medopl.medopl.cn' },
-          },
-        });
-      }
-    });
+async function providerSubmit(event) {
+  event.preventDefault();
+  const apiKey = app.querySelector('#api-key')?.value.trim() || '';
+  const result = await saveAPIKey(fetch, apiKey, state.view.session);
+  if (!result.ok) {
+    setSettingsMessage(result.message || result.errorCode || '保存失败。');
+    return;
   }
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  state.showAccount = true;
+  render();
+  setSettingsMessage(`API Key 已更新：${result.maskedKey || '已绑定'}`);
 }
 
-function bindPublicGrowthActions() {
-  for (const action of document.querySelectorAll('[data-public-start-cta], [data-public-task-entry]')) {
-    action.addEventListener('click', (event) => {
-      if (document.body.dataset.authState !== 'anonymous') return;
-      event.stopPropagation();
-      const task = action.matches('[data-public-task-entry]')
-        ? action
-        : document.querySelector(`[data-research-task-intent="${action.dataset.loginReturnTaskIntent || 'research_direction'}"]`);
-      if (task) {
-        applyTaskPrompt(task);
-        document.body.dataset.pendingPublicTaskIntent = task.dataset.researchTaskIntent || '';
-        document.body.dataset.pendingPublicTaskPrompt = task.dataset.prompt || '';
-      }
-      document.body.dataset.loginReturnTarget = 'public_growth_home';
-      openAccountPopover(action);
-      document.querySelector('#auth-email')?.focus({ preventScroll: true });
-    });
+async function chatSubmit(event) {
+  event.preventDefault();
+  const input = app.querySelector('#chat-input');
+  const message = input?.value.trim() || '';
+  if (!message) return;
+  document.body.dataset.chatState = chatStateForPrompt(message);
+  state.messages.push({ role: 'user', content: message });
+  if (state.view.accountState === 'authenticated_unbound') {
+    openAPIKeyDialog();
+    state.messages.push({ role: 'assistant', content: '请先绑定 API Key 后继续。' });
+    render();
+    return;
   }
+  if (requiresRuntimeGate(message)) {
+    await handleRuntimePrompt(message);
+    return;
+  }
+  state.shellState = 'running_turn';
+  state.showInspector = true;
+  render();
+  const result = await sendChatMessage(fetch, message);
+  document.body.dataset.chatState = chatStateForResult(result);
+  if (!result.ok) {
+    state.messages.push({ role: 'assistant', content: result.message || result.errorCode || '上游暂时不可用。' });
+    render();
+    return;
+  }
+  const researchResult = researchResultForChat({ ...result, prompt: message });
+  state.lastResult = { prompt: message, researchResult };
+  if (!researchResult) state.messages.push({ role: 'assistant', content: result.assistantMessage?.content || '已收到。' });
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  render();
+}
+
+async function handleRuntimePrompt(message) {
+  state.shellState = 'blocked_turn';
+  state.lastRuntimeTaskCard = runtimeTaskCardForPrompt(message);
+  render();
+  const gate = await checkRuntimeGate(fetch, runtimeTaskFromPrompt(message));
+  state.lastRuntimeTaskCard = runtimeTaskCardForGate(message, gate) || state.lastRuntimeTaskCard;
+  document.body.dataset.chatState = chatStateForResult(gate);
+  if (gate.ok && gate.gateState?.ready) {
+    const run = await runRuntimeTask(fetch, runtimeTaskFromPrompt(message));
+    document.body.dataset.chatState = run.ok ? 'runtime_required' : chatStateForResult(run);
+  }
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  render();
 }
 
 function applyTaskPrompt(button) {
-  const input = document.querySelector('#chat-input');
-  input.value = button.dataset.prompt || '';
-  input.focus();
-  if (button.dataset.researchTaskIntent) {
-    document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent;
+  const prompt = button.dataset.prompt || '';
+  if (state.view.accountState === 'anonymous') {
+    state.pendingPublicTask = { prompt, intent: button.dataset.researchTaskIntent || '' };
+    document.body.dataset.pendingPublicTaskIntent = state.pendingPublicTask.intent;
+    document.body.dataset.researchTaskIntent = state.pendingPublicTask.intent;
+    document.body.dataset.chatState = chatStateForPrompt(prompt);
+    state.authTab = 'login';
+    state.shellState = 'auth_login_register';
+    render();
+    return;
   }
-  document.body.dataset.chatState = chatStateForPrompt(button.dataset.prompt);
+  state.shellState = 'home_default';
+  render();
+  const input = app.querySelector('#chat-input');
+  if (input) {
+    input.value = prompt;
+    input.focus({ preventScroll: true });
+  }
+  document.body.dataset.researchTaskIntent = button.dataset.researchTaskIntent || '';
+  document.body.dataset.chatState = chatStateForPrompt(prompt);
 }
 
-function bindAccountPopover() {
-  const button = document.querySelector('[data-account-toggle]');
-  const popover = document.querySelector('[data-account-popover]');
-  if (!button || !popover) return;
-  button.addEventListener('click', (event) => {
-    event.stopPropagation();
-    toggleAccountPopover();
-  });
-  document.querySelector('[data-account-popover-close]')?.addEventListener('click', () => closeAccountPopover(true));
-}
-
-function bindChatForm(getView) {
-  document.querySelector('[data-chat-form]')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const view = getView();
-    const input = document.querySelector('#chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-    document.body.dataset.chatState = chatStateForPrompt(message);
-    appendMessage('你', message, 'user-message');
-    if (view.accountState === 'anonymous') {
-      setShellTurnState('blocked_turn');
-      renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'AUTH_REQUIRED' }));
-      appendMessage('OPL', '请先登录或注册后再发送。', 'assistant-message');
-      openAccountPopover(document.querySelector('[data-chat-submit]'));
-      return;
-    }
-    if (view.accountState === 'authenticated_unbound') {
-      setShellTurnState('blocked_turn');
-      openAPIKeyDialog();
-      renderReliabilityStatus(reliabilityStatusForResult({ ok: false, errorCode: 'API_KEY_REQUIRED' }));
-      appendMessage('OPL', '请先绑定 API Key 后继续。', 'assistant-message');
-      return;
-    }
-    setShellTurnState('running_turn');
-    document.body.dataset.chatState = chatStateForResult(null, true);
-    renderReliabilityStatus(reliabilityStatusForResult(null));
-    if (requiresRuntimeGate(message)) {
-      const task = runtimeTaskFromPrompt(message);
-      const gate = await checkRuntimeGate(fetch, task);
-      document.body.dataset.chatState = chatStateForResult(gate);
-      renderReliabilityStatus(reliabilityStatusForResult(gate));
-      if (!gate.ok || !gate.gateState?.ready) {
-        setShellTurnState('blocked_turn');
-        showRuntimeGate(message, gate);
-        appendRuntimeGateMessage(gate);
-        await refreshTaskHistoryProjection();
-        return;
-      }
-      const run = await runRuntimeTask(fetch, { ...task, gateRefs: gate.gateState?.refs || {} });
-      document.body.dataset.chatState = run.ok ? 'runtime_required' : chatStateForResult(run);
-      setShellTurnState(run.ok ? 'home_default' : 'blocked_turn');
-      renderReliabilityStatus(reliabilityStatusForResult(run.ok ? null : run));
-      showRuntimeGate(message, gate);
-      appendRuntimeRunProjection(run);
-      await refreshTaskHistoryProjection();
-      return;
-    }
-    const result = await sendChatMessage(fetch, message);
-    document.body.dataset.chatState = chatStateForResult(result);
-    setShellTurnState(result.ok ? 'home_default' : 'blocked_turn');
-    renderReliabilityStatus(reliabilityStatusForResult(result));
-    if (result.errorCode === 'RUNTIME_REQUIRED') showRuntimeGate(message);
-    const researchResult = result.ok ? researchResultForChat({ ...result, prompt: message }) : null;
-    if (researchResult) appendResearchResult(researchResult);
-    else appendMessage('OPL', result.assistantMessage?.content || result.message || result.errorCode || '上游暂时不可用。', 'assistant-message');
-  });
-}
-
-function bindShellControls() {
-  for (const action of document.querySelectorAll('[data-shell-action]')) {
-    action.addEventListener('click', (event) => {
-      const handled = runShellAction(action.dataset.shellAction);
-      if (handled) event.preventDefault();
-    });
+function restorePendingPublicTask() {
+  if (!state.pendingPublicTask) return;
+  const pending = state.pendingPublicTask;
+  state.shellState = 'home_default';
+  render();
+  const input = app.querySelector('#chat-input');
+  if (input) {
+    input.value = pending.prompt;
+    input.focus({ preventScroll: true });
   }
-
-  for (const button of document.querySelectorAll('[data-inspector-open]')) {
-    button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'files', button));
-    button.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      openInspector(button.dataset.inspectorOpen || 'files', button);
-    });
-  }
-
-  for (const tab of document.querySelectorAll('[data-inspector-tab]')) {
-    tab.addEventListener('click', () => openInspector(tab.dataset.inspectorTab || 'files', tab));
-  }
-
-  bindInspectorResize();
-  document.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector(true));
-  for (const close of document.querySelectorAll('[data-overlay-close]')) {
-    close.addEventListener('click', () => closeOverlay(close.dataset.overlayClose, true));
-  }
-  document.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog(true));
-  document.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => {
-    closeAPIKeyDialog();
-    openAccountPopover(document.querySelector('[data-api-key-dialog-primary]'));
-    document.querySelector('#api-key')?.focus({ preventScroll: true });
-  });
-  document.querySelector('[data-conversation-search]')?.addEventListener('input', (event) => filterConversationEntries(event.currentTarget.value));
-  document.addEventListener('keydown', handleGlobalKeydown);
-  document.addEventListener('click', handleOutsideClick);
+  document.body.dataset.loginReturnState = state.view.accountState;
+  document.body.dataset.pendingPublicTaskIntent = pending.intent;
+  document.body.dataset.researchTaskIntent = pending.intent;
+  document.body.dataset.chatState = chatStateForPrompt(pending.prompt);
+  state.pendingPublicTask = null;
 }
 
 function runShellAction(action) {
-  const input = document.querySelector('#chat-input');
   if (action === 'home') {
+    state.shellState = 'home_default';
+    state.showInspector = false;
     setHashView('home');
-    document.body.dataset.shellState = 'home_default';
-    input?.focus({ preventScroll: true });
-    return true;
-  }
-  if (action === 'skills' || action === 'workflows' || action === 'projects') {
-    setHashView(action);
-    return true;
-  }
-  if (action === 'search') {
-    setHashView('home');
-    openOverlay('search', document.querySelector('[data-search-trigger]'));
-    document.querySelector('[data-conversation-search]')?.focus({ preventScroll: true });
-    return true;
-  }
-  if (action === 'more') {
+  } else if (action === 'projects') {
+    state.shellState = 'files';
+    setHashView('projects');
+  } else if (action === 'skills') {
+    state.shellState = 'skill_plaza';
+    setHashView('skills');
+  } else if (action === 'workflows') {
+    state.shellState = 'workflow_plaza';
+    setHashView('workflows');
+  } else if (action === 'more') {
+    state.shellState = 'more';
     setHashView('more');
-    return true;
   }
-  return false;
+  render();
+}
+
+async function logoutAndRefresh() {
+  await logoutAccount(fetch);
+  state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  state.shellState = 'auth_login_register';
+  state.authTab = 'login';
+  state.showAccount = false;
+  state.messages = [];
+  render();
+}
+
+function syncRouteFromLocation() {
+  const view = viewFromHash(window.location.hash || (window.location.pathname === '/home' ? '#home' : ''));
+  document.body.dataset.view = view;
+  if (state.view.accountState === 'anonymous') return;
+  if (view === 'skills') state.shellState = 'skill_plaza';
+  else if (view === 'workflows') state.shellState = 'workflow_plaza';
+  else if (view === 'projects') state.shellState = 'files';
+  else if (view === 'more') state.shellState = 'more';
+  else state.shellState = state.shellState === 'public_landing' ? 'home_default' : state.shellState;
+}
+
+function syncDocumentState() {
+  document.body.dataset.authState = state.view.accountState || 'anonymous';
+  document.body.dataset.shellState = state.shellState;
+  document.body.dataset.inspectorState = state.showInspector ? state.inspectorTab : 'hidden';
+  document.body.dataset.apiKeyDialogState = document.body.dataset.apiKeyDialogState || 'closed';
 }
 
 function setHashView(view) {
-  const nextHash = view === 'home' ? '#home' : `#${view}`;
-  if (window.location.hash === nextHash) syncHashView();
-  else window.location.hash = nextHash;
+  const hash = view === 'home' ? '#home' : `#${view}`;
+  if (window.location.hash !== hash) window.history.replaceState(null, '', hash);
+  document.body.dataset.view = view;
 }
 
-function filterConversationEntries(query) {
-  const normalized = String(query || '').trim().toLowerCase();
-  let visible = 0;
-  for (const entry of document.querySelectorAll('[data-conversation-entry]')) {
-    const matches = !normalized || entry.textContent.toLowerCase().includes(normalized) || (entry.dataset.conversationTitle || '').toLowerCase().includes(normalized);
-    entry.hidden = !matches;
-    if (matches) visible += 1;
-  }
-  const empty = document.querySelector('[data-conversation-empty]');
-  if (empty) empty.hidden = visible > 0;
+function openInspector(tab = 'progress') {
+  state.inspectorTab = ['files', 'progress', 'output'].includes(tab) ? tab : 'progress';
+  state.showInspector = true;
+  render();
 }
 
-function syncNavCurrent(view) {
-  const currentID = ['home', 'skills', 'workflows', 'projects', 'more'].includes(view) ? view : 'home';
-  for (const item of document.querySelectorAll('[data-nav-item]')) {
-    if (item.dataset.navItem === currentID) item.setAttribute('aria-current', 'page');
-    else item.removeAttribute('aria-current');
-  }
-}
-
-function openInspector(state = 'files', trigger = null) {
-  const inspector = document.querySelector('[data-inspector-sheet]');
-  if (!inspector) return;
-  const normalized = ['files', 'progress', 'output'].includes(state) ? state : 'files';
-  setFocusReturn(inspector, trigger);
-  inspector.hidden = false;
-  inspector.dataset.inspectorState = normalized;
-  document.body.dataset.inspectorState = normalized;
-  document.body.dataset.shellState = `inspector_${normalized}`;
-  for (const tab of document.querySelectorAll('[data-inspector-tab]')) {
-    tab.setAttribute('aria-selected', String(tab.dataset.inspectorTab === normalized));
-  }
-  for (const panel of document.querySelectorAll('[data-inspector-panel]')) {
-    panel.hidden = panel.dataset.inspectorPanel !== normalized;
-  }
-}
-
-function closeInspector(restoreFocus = false) {
-  const inspector = document.querySelector('[data-inspector-sheet]');
-  if (!inspector) return;
-  inspector.hidden = true;
-  inspector.dataset.inspectorState = 'hidden';
-  document.body.dataset.inspectorState = 'hidden';
-  document.body.dataset.shellState = 'home_default';
-  if (restoreFocus) restoreFocusFor(inspector);
-}
-
-function bindInspectorResize() {
-  const inspector = document.querySelector('[data-inspector-sheet]');
-  const handle = document.querySelector('[data-inspector-resize-handle]');
-  if (!inspector || !handle) return;
-  const clampWidth = (value) => Math.max(320, Math.min(520, value));
-  const setWidth = (value) => {
-    const width = clampWidth(value);
-    inspector.style.setProperty('--inspector-width', `${width}px`);
-    inspector.dataset.inspectorWidth = String(width);
-  };
-  handle.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    event.preventDefault();
-    const current = Number(inspector.dataset.inspectorWidth || inspector.getBoundingClientRect().width || 420);
-    setWidth(current + (event.key === 'ArrowLeft' ? 24 : -24));
-  });
-  handle.addEventListener('pointerdown', (event) => {
-    event.preventDefault();
-    handle.setPointerCapture?.(event.pointerId);
-    const startX = event.clientX;
-    const startWidth = inspector.getBoundingClientRect().width;
-    const move = (moveEvent) => setWidth(startWidth + startX - moveEvent.clientX);
-    const stop = () => {
-      handle.releasePointerCapture?.(event.pointerId);
-      document.removeEventListener('pointermove', move);
-      document.removeEventListener('pointerup', stop);
-      document.removeEventListener('pointercancel', stop);
-    };
-    document.addEventListener('pointermove', move);
-    document.addEventListener('pointerup', stop);
-    document.addEventListener('pointercancel', stop);
-  });
+function closeInspector() {
+  state.showInspector = false;
+  render();
 }
 
 function openAPIKeyDialog() {
-  const dialog = document.querySelector('[data-api-key-dialog]');
-  if (!dialog) return;
-  setFocusReturn(dialog, document.querySelector('[data-chat-submit]'));
-  dialog.hidden = false;
-  dialog.dataset.apiKeyDialogState = 'open';
   document.body.dataset.apiKeyDialogState = 'open';
-  document.body.dataset.shellState = 'api_key_required_modal';
-  dialog.querySelector('[data-api-key-dialog-primary]')?.focus({ preventScroll: true });
+  state.shellState = 'api_key_required_modal';
 }
 
-function closeAPIKeyDialog(restoreFocus = false) {
-  const dialog = document.querySelector('[data-api-key-dialog]');
-  if (!dialog) return;
-  dialog.hidden = true;
-  dialog.dataset.apiKeyDialogState = 'closed';
+function closeAPIKeyDialog(shouldRender = true) {
   document.body.dataset.apiKeyDialogState = 'closed';
-  if (document.body.dataset.shellState === 'api_key_required_modal') {
-    document.body.dataset.shellState = 'home_default';
-  }
-  if (restoreFocus) restoreFocusFor(dialog);
-}
-
-function setShellTurnState(state) {
-  document.querySelector('[data-running-turn]').hidden = state !== 'running_turn';
-  document.querySelector('[data-blocked-turn]').hidden = state !== 'blocked_turn';
-  document.body.dataset.shellState = state;
-}
-
-function openOverlay(name, trigger = null) {
-  const overlay = document.querySelector(`[data-${name}-sheet]`);
-  if (!overlay) return;
-  closeTransientOverlays(name);
-  setFocusReturn(overlay, trigger);
-  overlay.hidden = false;
-  overlay.dataset.overlayState = 'open';
-  document.body.dataset.shellState = `${name}_sheet_open`;
-  overlay.querySelector('input, button, a[href], textarea')?.focus({ preventScroll: true });
-}
-
-function closeOverlay(name, restoreFocus = false) {
-  const overlay = document.querySelector(`[data-${name}-sheet]`);
-  if (!overlay) return;
-  overlay.hidden = true;
-  overlay.dataset.overlayState = 'closed';
-  if (document.body.dataset.shellState === `${name}_sheet_open`) {
-    document.body.dataset.shellState = 'home_default';
-  }
-  if (restoreFocus) restoreFocusFor(overlay);
-}
-
-function closeTransientOverlays(except = '') {
-  for (const name of ['search']) {
-    if (name !== except) closeOverlay(name);
-  }
-  closeAccountPopover();
-}
-
-function openAccountPopover(trigger = null) {
-  const popover = document.querySelector('[data-account-popover]');
-  const button = document.querySelector('[data-account-toggle]');
-  if (!button || !popover) return;
-  closeTransientOverlays();
-  setFocusReturn(popover, trigger || button);
-  popover.hidden = false;
-  button.setAttribute('aria-expanded', 'true');
-}
-
-function toggleAccountPopover() {
-  const popover = document.querySelector('[data-account-popover]');
-  if (!popover) return;
-  if (popover.hidden) openAccountPopover();
-  else closeAccountPopover(true);
-}
-
-function closeAccountPopover(restoreFocus = false) {
-  const popover = document.querySelector('[data-account-popover]');
-  const button = document.querySelector('[data-account-toggle]');
-  if (!button || !popover || popover.hidden) return;
-  popover.hidden = true;
-  button.setAttribute('aria-expanded', 'false');
-  if (restoreFocus) restoreFocusFor(popover);
+  if (state.shellState === 'api_key_required_modal') state.shellState = 'home_default';
+  if (shouldRender) render();
 }
 
 function handleGlobalKeydown(event) {
-  if (trapAPIKeyDialogFocus(event)) return;
+  if (document.body.dataset.apiKeyDialogState === 'open' && event.key === 'Tab') {
+    const dialog = app?.querySelector('[data-api-key-dialog]');
+    const focusable = [...(dialog?.querySelectorAll('button, a[href], input, [tabindex]:not([tabindex="-1"])') || [])].filter((node) => !node.disabled && !node.hidden);
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); return; }
+    if (first && last && !event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); return; }
+  }
   if (event.key !== 'Escape') return;
-  closeAPIKeyDialog(true);
-  closeInspector(true);
-  for (const name of ['search']) closeOverlay(name, true);
-  closeAccountPopover(true);
-}
-
-function trapAPIKeyDialogFocus(event) {
-  if (event.key !== 'Tab') return false;
-  const dialog = document.querySelector('[data-api-key-dialog]');
-  if (!dialog || dialog.hidden) return false;
-  const focusable = getFocusableElements(dialog);
-  if (focusable.length === 0) return false;
-  const first = focusable[0];
-  const last = focusable.at(-1);
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus({ preventScroll: true });
-    return true;
-  }
-  if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus({ preventScroll: true });
-    return true;
-  }
-  if (!dialog.contains(document.activeElement)) {
-    event.preventDefault();
-    first.focus({ preventScroll: true });
-    return true;
-  }
-  return false;
-}
-
-function getFocusableElements(root) {
-  return Array.from(root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
-    .filter((element) => {
-      const rect = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-    });
+  state.showSearch = false;
+  state.showBilling = false;
+  state.showAccount = false;
+  closeAPIKeyDialog(false);
+  if (state.showInspector) state.showInspector = false;
+  render();
 }
 
 function handleOutsideClick(event) {
   const target = event.target;
-  if (!target.closest('[data-account-popover], [data-account-toggle]')) closeAccountPopover();
-  for (const name of ['search']) {
-    const overlay = document.querySelector(`[data-${name}-sheet]`);
-    const trigger = document.querySelector(`[data-shell-action="${name}"]`);
-    if (overlay && !overlay.hidden && !target.closest(`[data-${name}-sheet]`) && !trigger?.contains(target)) {
-      closeOverlay(name);
-    }
+  if (!target.closest?.('[data-account-popover], [data-account-toggle]') && state.showAccount) {
+    state.showAccount = false;
+    render();
   }
 }
 
-function setFocusReturn(surface, trigger) {
-  if (!surface || !trigger) return;
-  const key = `focus-return-${Math.random().toString(36).slice(2)}`;
-  trigger.dataset.focusReturnKey = key;
-  surface.dataset.focusReturnKey = key;
+function setSettingsMessage(message) {
+  const node = app.querySelector('[data-settings-message]');
+  if (node) node.textContent = message;
 }
 
-function restoreFocusFor(surface) {
-  const key = surface?.dataset.focusReturnKey;
-  if (!key) return;
-  document.querySelector(`[data-focus-return-key="${key}"]`)?.focus({ preventScroll: true });
-}
-
-function bindSettingsForms(getView, setView) {
-  document.querySelector('[data-register-button]')?.addEventListener('click', async () => authAction('register', setView));
-  document.querySelector('[data-login-button]')?.addEventListener('click', async () => authAction('login', setView));
-  document.querySelector('[data-logout-button]')?.addEventListener('click', async () => {
-    await logoutAccount(fetch);
-    setSettingsMessage('已退出登录。');
-    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
-  });
-  document.querySelector('[data-provider-form]')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const view = getView();
-    const apiKey = document.querySelector('#api-key').value.trim();
-    const result = await saveAPIKey(fetch, apiKey, view.session);
-    if (!result.ok) {
-      setSettingsMessage(result.message || result.errorCode || '保存失败。');
-      renderReliabilityStatus(reliabilityStatusForResult(result));
-      return;
-    }
-    document.querySelector('#api-key').value = '';
-    setSettingsMessage(`API Key 已更新：${result.maskedKey || '已绑定'}`);
-    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
-  });
-}
-
-async function authAction(kind, setView) {
-  const email = document.querySelector('#auth-email').value.trim();
-  const password = document.querySelector('#auth-password').value;
-  const result = kind === 'register'
-    ? await registerAccount(fetch, email, password)
-    : await loginAccount(fetch, email, password);
-  setSettingsMessage(result.ok ? '账号已就绪。' : result.message || result.errorCode || '认证失败。');
-  if (!result.ok) renderReliabilityStatus(reliabilityStatusForResult(result));
-  if (result.ok) {
-    setView(await loadOnePersonLabWebState(fetch, { loadSnapshot: false }));
-    restorePublicGrowthTaskAfterAuth();
-  }
-}
-
-function restorePublicGrowthTaskAfterAuth() {
-  const intent = document.body.dataset.pendingPublicTaskIntent;
-  if (!intent) return;
-  setHashView('home');
-  const task = document.querySelector(`[data-public-task-entry][data-research-task-intent="${intent}"][data-prompt]`);
-  if (task) applyTaskPrompt(task);
-  else applyPendingPublicTask(intent);
-  document.body.dataset.loginReturnState = document.body.dataset.authState || '';
-  delete document.body.dataset.pendingPublicTaskIntent;
-  delete document.body.dataset.pendingPublicTaskPrompt;
-  closeAccountPopover();
-}
-
-function applyPendingPublicTask(intent) {
-  const prompt = document.body.dataset.pendingPublicTaskPrompt || '';
-  if (!prompt) return;
-  const input = document.querySelector('#chat-input');
-  input.value = prompt;
-  input.focus();
-  document.body.dataset.researchTaskIntent = intent;
-  document.body.dataset.chatState = chatStateForPrompt(prompt);
-}
-
-function renderView(view) {
-  document.body.dataset.authState = view.accountState;
-  document.body.dataset.chatState = document.body.dataset.chatState || chatStateForResult(null);
-  const submit = document.querySelector('[data-chat-submit]');
-  if (submit) submit.textContent = view.primaryCTA;
-  const modelSelector = document.querySelector('[data-model-selector]');
-  if (modelSelector) modelSelector.textContent = view.modelSelector.label;
-  const sessionLabel = document.querySelector('[data-session-label]');
-  if (sessionLabel) sessionLabel.textContent = view.session.ok ? view.session.email : '未登录';
-  setTextAll('[data-session-status]', view.session.ok ? `已登录：${view.session.email}` : '未登录');
-  const providerStatus = view.provider.apiKeyConfigured ? `已绑定：${view.provider.maskedKey}` : '未绑定';
-  setTextAll('[data-provider-status]', providerStatus);
-  setTextAll('[data-account-lifecycle-status]', view.accountLifecycle.lifecycleLabel);
-  setTextAll('[data-team-readiness-status]', view.accountLifecycle.teamReadinessLabel);
-  setTextAll('[data-quota-status]', view.accountLifecycle.quotaLabel);
-  setTextAll('[data-account-audit-status]', view.accountLifecycle.auditLabel);
-  renderReliabilityStatus(view.reliabilityStatus);
-  renderConversationHistory(view.conversations);
-  renderTaskHistory(view.taskHistory);
-  const accountHint = document.querySelector('[data-account-hint]');
-  if (accountHint) accountHint.textContent = view.session.ok ? '账号状态' : '登录 / 注册';
-}
-
-async function refreshTaskHistoryProjection() {
-  const view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
-  renderTaskHistory(view.taskHistory);
-}
-
-function setTextAll(selector, text) {
-  for (const node of document.querySelectorAll(selector)) node.textContent = text;
-}
-
-function appendMessage(sender, content, className) {
-  const log = document.querySelector('[data-chat-log]');
-  const message = document.createElement('article');
-  message.className = `message ${className}`;
-  message.innerHTML = `<span></span><p></p>`;
-  message.querySelector('span').textContent = sender;
-  message.querySelector('p').textContent = content;
-  log.append(message);
-}
-
-function appendResearchResult(result) {
-  const log = document.querySelector('[data-chat-log]');
-  const card = document.createElement('article');
-  card.className = 'research-result-card';
-  card.dataset.researchResult = result.kind;
-  card.dataset.researchResultMarker = result.marker;
-  const title = document.createElement('h3');
-  title.textContent = result.title;
-  card.append(title);
-  const sectionList = document.createElement('div');
-  sectionList.className = 'research-result-sections';
-  for (const section of result.sections) {
-    const item = document.createElement('section');
-    item.dataset.researchResultSection = section.id;
-    const heading = document.createElement('h4');
-    heading.textContent = section.title;
-    const body = document.createElement('p');
-    body.textContent = section.body;
-    item.append(heading, body);
-    sectionList.append(item);
-  }
-  card.append(sectionList);
-  log.append(card);
-}
-
-function showRuntimeGate(prompt = '', gateResult = null) {
-  const gate = document.querySelector('[data-runtime-gate]');
-  if (!gate) return;
-  gate.classList.add('is-visible');
-  const taskCard = gateResult ? runtimeTaskCardForGate(prompt, gateResult) : runtimeTaskCardForPrompt(prompt);
-  if (!taskCard) return;
-  renderRuntimeTaskCard(gate, taskCard);
-}
-
-function renderRuntimeTaskCard(gate, taskCard) {
-  gate.querySelector('[data-runtime-task-card]')?.remove();
-  const card = document.createElement('article');
-  card.className = 'runtime-task-card';
-  card.dataset.runtimeTaskCard = taskCard.kind;
-  card.dataset.runtimeTaskMarker = taskCard.marker;
-  const title = document.createElement('h3');
-  title.textContent = taskCard.title;
-  const body = document.createElement('p');
-  body.textContent = taskCard.message;
-  const meta = document.createElement('p');
-  meta.className = 'runtime-task-meta';
-  meta.textContent = `需要能力：${taskCard.requiredCapability}; Web 仅提供接续入口`;
-  const blockerList = document.createElement('ul');
-  blockerList.className = 'runtime-task-blockers';
-  for (const blocker of taskCard.blockers || []) {
-    const item = document.createElement('li');
-    item.textContent = `${blocker.kind}: ${blocker.title}`;
-    blockerList.append(item);
-  }
-  const action = document.createElement('a');
-  action.className = 'runtime-task-action';
-  action.href = taskCard.nextAction?.deepLink || taskCard.deepLink;
-  action.textContent = taskCard.nextAction?.label || '去 MedOPL';
-  card.append(title, body, meta);
-  if ((taskCard.blockers || []).length > 0) card.append(blockerList);
-  card.append(action);
-  gate.prepend(card);
+function projectsFromView() {
+  const tasks = state.view.taskHistory?.tasks || [];
+  return [
+    { name: 'New project', tasks: [] },
+    { name: 'opl', tasks },
+    { name: 'medopl', tasks: [] },
+  ];
 }
 
 function runtimeTaskFromPrompt(prompt = '') {
@@ -663,129 +786,49 @@ function runtimeTaskFromPrompt(prompt = '') {
     '@PPT': 'presentation_foundry',
     '@书': 'book_foundry',
   };
-  return {
-    taskIntent: intentByMarker[marker] || 'runtime_required_task',
-    marker,
-    prompt,
+  return { taskIntent: intentByMarker[marker] || 'runtime_required_task', marker, prompt };
+}
+
+function sidebarTaskTitle(task) {
+  return `${task.marker || ''} ${task.taskType || task.taskIntent || '任务'}`.trim();
+}
+
+function shortTaskLabel(label) {
+  return label.replace('开题/', '').replace('/长稿', '');
+}
+
+function taskDescription(task) {
+  const byId = {
+    research_direction: '开题 · 研究设计',
+    paper_question: '论文问题 · 引文',
+    grant_plan: '基金申报 · 计划书',
+    review_map: '文献综述 · 知识图',
+    materials_refs: '材料线索 · 分析',
+    presentation_foundry: '演示文稿 · 汇报',
+    book_foundry: '长稿 · 书稿规划',
   };
+  return byId[task.id] || task.label;
 }
 
-function appendRuntimeGateMessage(gate = {}) {
-  const blockers = gate.gateState?.blockers || [];
-  const summary = blockers.length > 0
-    ? blockers.map((blocker) => blocker.title || blocker.kind).join(' / ')
-    : gate.message || 'MedOPL runtime gate 尚未 ready。';
-  appendMessage('OPL', summary, 'assistant-message');
-}
-
-function appendRuntimeRunProjection(run = {}) {
-  if (!run.ok) {
-    appendMessage('OPL', run.blocker?.title || run.message || 'MedOPL runtime run blocked。', 'assistant-message');
-    return;
-  }
-  const parts = [
-    `Run: ${run.run?.runId || 'pending'}`,
-    `Status: ${run.status || 'unknown'}`,
-    `Artifact ref: ${run.artifactRef || 'pending'}`,
-    `Progress refs: ${(run.progress || []).map((item) => item.stage || item.state).filter(Boolean).join(', ') || 'pending'}`,
-    `Deliverables: ${(run.deliverables || []).map((item) => item.deliverableId || item.artifactRef).filter(Boolean).join(', ') || 'pending'}`,
-  ];
-  appendMessage('MedOPL', parts.join(' / '), 'assistant-message');
-}
-
-function setSettingsMessage(message) {
-  const node = document.querySelector('[data-settings-message]');
-  if (node) node.textContent = message;
-}
-
-function renderConversationHistory(conversations = []) {
-  const list = document.querySelector('[data-conversation-history]');
-  const empty = document.querySelector('[data-conversation-empty]');
-  if (!list || !empty) return;
-  list.textContent = '';
-  for (const conversation of conversations) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.conversationEntry = conversation.conversationId || conversation.id || '';
-    button.dataset.conversationTitle = conversation.title || '';
-    const title = document.createElement('strong');
-    title.textContent = conversation.title || '未命名对话';
-    const meta = document.createElement('small');
-    meta.textContent = conversation.updatedAt ? `更新于 ${formatConversationDate(conversation.updatedAt)}` : '历史对话';
-    button.append(title, meta);
-    button.addEventListener('click', () => {
-      const input = document.querySelector('#chat-input');
-      input.value = conversation.title || '';
-      closeOverlay('search', true);
-      input.focus({ preventScroll: true });
-    });
-    list.append(button);
-  }
-  empty.hidden = conversations.length > 0;
-  filterConversationEntries(document.querySelector('[data-conversation-search]')?.value || '');
-}
-
-function renderTaskHistory(taskHistory = {}) {
-  const list = document.querySelector('[data-task-history-list]');
-  const empty = document.querySelector('[data-task-history-empty]');
-  if (!list || !empty) return;
-  const tasks = Array.isArray(taskHistory.tasks) ? taskHistory.tasks : [];
-  list.textContent = '';
-  for (const task of tasks) {
-    list.append(taskHistoryCard(task));
-  }
-  empty.hidden = tasks.length > 0;
-}
-
-function taskHistoryCard(task) {
-  const card = document.createElement('article');
-  card.className = 'task-history-card';
-  card.dataset.taskHistoryItem = task.taskId || '';
-  card.dataset.taskHistoryStatus = task.status || '';
-  const title = document.createElement('h3');
-  title.textContent = `${task.marker || ''} ${task.taskType || '任务'}`.trim();
-  const meta = document.createElement('p');
-  meta.className = 'task-history-meta';
-  meta.textContent = `${task.status || 'unknown'} · ${formatConversationDate(task.updatedAt)}`;
-  const refs = document.createElement('dl');
-  refs.className = 'task-history-refs';
-  appendTaskRefs(refs, 'Progress refs', task.progressRefs);
-  appendTaskRefs(refs, 'Deliverable refs', task.deliverableRefs);
-  appendTaskRefs(refs, 'Materials refs', task.materialRefs);
-  const blocker = document.createElement('p');
-  blocker.className = 'task-history-blocker';
-  blocker.textContent = task.blocker?.kind ? `${task.blocker.kind}: ${task.blocker.title}` : `Next step: ${task.nextStep || 'continue_in_medopl'}`;
-  const action = document.createElement('a');
-  action.className = 'task-history-continue';
-  action.dataset.taskHistoryContinue = task.taskId || '';
-  const nextAction = task.allowedNextActions?.[0] || {};
-  action.href = nextAction.deepLink || task.deeplink || 'https://medopl.medopl.cn';
-  action.textContent = nextAction.label || '继续';
-  card.append(title, meta, refs, blocker, action);
-  return card;
-}
-
-function appendTaskRefs(list, label, refs = []) {
-  const row = document.createElement('div');
-  const term = document.createElement('dt');
-  term.textContent = label;
-  const value = document.createElement('dd');
-  value.textContent = refs.length > 0 ? refs.map((ref) => ref.label || ref.ref).join(', ') : '暂无 refs';
-  row.append(term, value);
-  list.append(row);
-}
-
-function formatConversationDate(value) {
+function formatShortDate(value) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '历史对话';
+  if (Number.isNaN(date.getTime())) return '刚刚';
   return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
 }
 
-function renderReliabilityStatus(status) {
-  const panel = document.querySelector('[data-reliability-status]');
-  if (!panel || !status) return;
-  panel.dataset.state = status.state;
-  panel.querySelector('[data-reliability-title]').textContent = status.title;
-  panel.querySelector('[data-reliability-action]').textContent = status.action;
-  panel.querySelector('[data-reliability-details]').textContent = status.details || '';
+function tabLabel(tab) {
+  return { files: '文件', progress: '进度', output: '输出' }[tab] || tab;
+}
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function escapeAttr(value) {
+  return escapeHTML(value).replaceAll('`', '&#96;');
 }

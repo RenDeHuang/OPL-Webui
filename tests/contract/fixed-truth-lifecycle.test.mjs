@@ -571,7 +571,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
     'concurrency_and_load',
     'opl_auto_update_from_github',
   ]);
-  assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
+  assert.equal(gui.figmaSource.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(gui.figmaSource.nodeId, '0:1');
   assert.equal(gui.figmaSource.rejectedPatterns.includes('runtime_truth_ownership'), true);
   assert.equal(gui.figmaSource.rejectedPatterns.includes('unlimited_compute_claim'), true);

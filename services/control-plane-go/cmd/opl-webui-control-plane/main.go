@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/oplbridge"
 	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/runtimegate"
@@ -31,7 +33,7 @@ func main() {
 	mux.HandleFunc("/metricsz", handleMetricsz)
 	mux.HandleFunc("/api/opl/snapshot", oplbridge.HandleSnapshot)
 	webapp.RegisterRoutes(mux)
-	mux.Handle("/", http.FileServer(http.Dir("apps/web")))
+	mux.HandleFunc("/", handleWebApp)
 
 	addr := serverAddress()
 	log.Printf("OPL WebUI Go control plane listening on http://%s", addr)
@@ -39,6 +41,60 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func handleWebApp(response http.ResponseWriter, request *http.Request) {
+	if strings.HasPrefix(request.URL.Path, "/api/") {
+		http.NotFound(response, request)
+		return
+	}
+
+	if request.Method != http.MethodGet && request.Method != http.MethodHead {
+		response.Header().Set("allow", "GET, HEAD")
+		http.Error(response, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	requestPath := request.URL.Path
+	cleanPath := filepath.Clean(strings.TrimPrefix(requestPath, "/"))
+	if cleanPath == "." {
+		cleanPath = "index.html"
+	}
+	if cleanPath == ".." || strings.HasPrefix(cleanPath, "../") {
+		http.NotFound(response, request)
+		return
+	}
+
+	root := webRootDir()
+	candidate := filepath.Join(root, cleanPath)
+	if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+		http.ServeFile(response, request, candidate)
+		return
+	}
+
+	if filepath.Ext(cleanPath) != "" {
+		http.NotFound(response, request)
+		return
+	}
+	http.ServeFile(response, request, filepath.Join(root, "index.html"))
+}
+
+func webRootDir() string {
+	workingDir, err := os.Getwd()
+	if err == nil {
+		for {
+			candidate := filepath.Join(workingDir, "apps", "web")
+			if info, statErr := os.Stat(filepath.Join(candidate, "index.html")); statErr == nil && !info.IsDir() {
+				return candidate
+			}
+			parent := filepath.Dir(workingDir)
+			if parent == workingDir {
+				break
+			}
+			workingDir = parent
+		}
+	}
+	return filepath.Join("apps", "web")
 }
 
 func runCLI(args []string, stdout io.Writer, stderr io.Writer) (bool, int) {

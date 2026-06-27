@@ -713,7 +713,7 @@
     "contrastMinimum": "wcag_2_2_aa"
   },
   "figmaSource": {
-    "fileKey": "E8nYfNFc2D9P01FYZ8UwBW",
+    "fileKey": "1MNO5l7PQYKZVNqQgw6DGS",
     "nodeId": "0:1",
     "requiredSourceFiles": ["src/app/App.tsx", "src/styles/theme.css", "src/styles/index.css"],
     "adoptedPatterns": ["account_popover_status", "missing_api_key_resource_gate", "side_navigation_new_chat_projects_skill_workflow_search_more", "ai_native_center_composer", "starter_chips", "prompt_command_center", "research_skill_launcher", "agentic_workflow_cards", "inspector_sheet_tabs_files_progress_output", "running_blocked_turn_state"],

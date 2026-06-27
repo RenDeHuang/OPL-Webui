@@ -346,7 +346,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(gui.components.find((component) => component.id === 'TaskHistoryCenter').actions, ['continue_task']);
   assert.equal(gui.components.find((component) => component.id === 'ApiKeyDialog').primaryActionLabel, '保存');
   assert.deepEqual(Object.keys(gui.componentTokens), ['Button', 'Input', 'Card', 'Popover', 'Modal', 'Nav', 'Chip', 'Tabs', 'Sheet']);
-  assert.equal(gui.figmaSource.fileKey, 'E8nYfNFc2D9P01FYZ8UwBW');
+  assert.equal(gui.figmaSource.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(gui.figmaSource.nodeId, '0:1');
   assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['account_popover_status', 'missing_api_key_resource_gate', 'side_navigation_new_chat_projects_skill_workflow_search_more', 'ai_native_center_composer', 'starter_chips', 'prompt_command_center', 'research_skill_launcher', 'agentic_workflow_cards', 'inspector_sheet_tabs_files_progress_output', 'running_blocked_turn_state']);
@@ -952,7 +952,7 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
 
   assert.equal(view.title, '科研人员的 One Person Lab Web');
   assert.match(view.subtitle, /研究问题、项目和 Skill/);
-  assert.equal(view.figmaMakeSource, 'E8nYfNFc2D9P01FYZ8UwBW');
+  assert.equal(view.figmaMakeSource, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(view.shell.sideNavigation, true);
   assert.equal(view.shell.accountDock, true);
   assert.equal(view.shell.promptCommandCenter, true);

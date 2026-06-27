@@ -67,6 +67,7 @@ try {
     mode === 'production' ? productionChatResultTimeoutMs : 60000,
   );
   await waitForAuditKind(cdp, 'chat.completed');
+  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;` });
 
   await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
   await waitForAuditKindCount(cdp, 'runtime_gate.blocked', 1);
@@ -79,6 +80,7 @@ try {
   await activate(cdp, '[data-shell-action="projects"]');
   await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 2', () => describePageState(cdp, 'task history center missing recent tasks'));
   await assertPage(cdp, 'document.querySelector("[data-task-history-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'task history continue deeplink');
+  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastTaskHistoryCount = document.querySelectorAll('[data-task-history-item]').length; document.body.dataset.lastTaskHistoryStatus = document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus || ''; document.body.dataset.lastTaskHistoryContinueHref = document.querySelector('[data-task-history-continue]')?.href || '';` });
   await activate(cdp, '[data-shell-action="home"]');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
@@ -94,11 +96,11 @@ try {
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
     selectedTaskIntent: document.body.dataset.researchTaskIntent,
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
-    researchResultSections: document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length,
-    runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
-    taskHistoryCount: document.querySelectorAll('[data-task-history-item]').length,
-    taskHistoryStatus: document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus,
-    taskHistoryContinueHref: document.querySelector('[data-task-history-continue]')?.href,
+    researchResultSections: Number(document.body.dataset.lastResearchResultSections || document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length),
+    runtimeTaskMarker: document.body.dataset.lastRuntimeTaskMarker || document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
+    taskHistoryCount: Number(document.body.dataset.lastTaskHistoryCount || document.querySelectorAll('[data-task-history-item]').length),
+    taskHistoryStatus: document.body.dataset.lastTaskHistoryStatus || document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus,
+    taskHistoryContinueHref: document.body.dataset.lastTaskHistoryContinueHref || document.querySelector('[data-task-history-continue]')?.href,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked'].includes(kind));
@@ -352,7 +354,6 @@ async function submitPrompt(cdp, prompt) {
 }
 
 async function typeInto(cdp, selector, text) {
-  await userClick(cdp, selector);
   await focusElement(cdp, selector);
   await selectAll(cdp);
   await keyPress(cdp, { key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 });
@@ -382,8 +383,13 @@ async function userClick(cdp, selector) {
 
 async function activate(cdp, selector) {
   await userClick(cdp, selector);
+  if (!await elementExists(cdp, selector)) return;
   await focusElement(cdp, selector);
   await delay(50);
+}
+
+async function elementExists(cdp, selector) {
+  return Boolean((await cdp.send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}) !== null`, returnByValue: true })).result?.value);
 }
 
 async function elementCenter(cdp, selector) {
@@ -574,9 +580,9 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     };
   }
   const artifactChecks = await evaluateJSON(cdp, `(() => {
-    const raw = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;
-    const cards = document.querySelectorAll('[data-research-result]').length;
-    const sections = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0;
+    const raw = Number(document.body.dataset.lastRawAssistantTranscriptCount || Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length);
+    const cards = Number(document.body.dataset.lastResearchArtifactCardCount || document.querySelectorAll('[data-research-result]').length);
+    const sections = Number(document.body.dataset.lastResearchArtifactSectionCount || document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0);
     return { researchArtifactDensityPass: raw === 0 && cards === 1 && sections === 3, rawAssistantTranscriptCount: raw, researchArtifactCardCount: cards };
   })()`);
 
@@ -585,7 +591,7 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     currentPhase: 'responsive_visual_qa',
     source: 'browser_cdp',
     figmaSource: {
-      fileKey: 'E8nYfNFc2D9P01FYZ8UwBW',
+      fileKey: '1MNO5l7PQYKZVNqQgw6DGS',
       nodeId: '0:1',
     },
     responsiveBreakpoints: viewportSpecs.map((viewport) => viewport.id),

@@ -132,6 +132,31 @@ func TestHandleMetricszRejectsNonGet(t *testing.T) {
 	}
 }
 
+func TestHandleWebAppServesSPAHomeRoute(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/home", nil)
+	response := httptest.NewRecorder()
+
+	handleWebApp(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("/home status = %d, body=%s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), "One Person Lab Web") {
+		t.Fatalf("/home should serve the web app shell, got %q", response.Body.String())
+	}
+}
+
+func TestHandleWebAppDoesNotFallbackMissingAssets(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/missing.css", nil)
+	response := httptest.NewRecorder()
+
+	handleWebApp(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("missing asset status = %d, want %d", response.Code, http.StatusNotFound)
+	}
+}
+
 func TestRunDBCanaryUsesDatabaseURLWithoutLeakingIt(t *testing.T) {
 	t.Setenv("OPL_DATABASE_URL", "postgres://user:secret@example/oplweb")
 	called := false
