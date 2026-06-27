@@ -47,8 +47,8 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(visual.layout.activeInspectorPanel.visible, true);
     assert.equal(visual.layout.hiddenOverlayInterceptsInput, false);
     assert.equal(visual.layout.chatInputHitTarget, true);
-    assert.equal(visual.layout.textOverflowCount, 0);
-    assert.equal(visual.layout.interactiveTargetFailures.length, 0);
+    assert.equal(visual.layout.textOverflowCount, 0, JSON.stringify({ viewport, samples: visual.layout.textOverflowSamples }));
+    assert.equal(visual.layout.interactiveTargetFailures.length, 0, JSON.stringify({ viewport, failures: visual.layout.interactiveTargetFailures }));
     assert.equal(visual.layout.focusableWithoutName.length, 0);
     assert.equal(visual.layout.focusRingProbe.visible, true);
   }
@@ -186,6 +186,7 @@ test('production browser e2e waits for async research results and reports page e
   const runner = readFileSync(runnerPath, 'utf8');
   const markerExpression = '\'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"\'';
 
+  assert.match(runner, /document\.fonts\.ready/);
   assert.match(runner, /describeResearchResultState/);
   assert.doesNotMatch(runner, new RegExp(`assertPage\\(cdp,\\s*${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
   assert.match(runner, new RegExp(`waitFor\\([\\s\\S]*?cdp,[\\s\\S]*?${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?60000`));

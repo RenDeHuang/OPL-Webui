@@ -76,6 +76,7 @@ test('web shell css follows the Figma Make layout and responsive inspector shape
   assert.match(css, /\.auth-page/);
   assert.match(css, /\.app-shell/);
   assert.match(css, /\.sidebar/);
+  assert.match(css, /\.sidebar \* \{ min-width: 0; max-width: 100%; \}/);
   assert.match(css, /\.home-composer/);
   assert.match(css, /\.result-view/);
   assert.match(css, /\.inspector-sheet/);

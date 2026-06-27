@@ -258,6 +258,7 @@ textarea {
   overflow-x: clip;
   user-select: none;
 }
+.sidebar * { min-width: 0; max-width: 100%; }
 .sidebar-brand {
   color: var(--foreground);
   font-size: 15px;
@@ -318,7 +319,7 @@ textarea {
   font-weight: 500;
   text-transform: uppercase;
 }
-.tree-heading button { background: transparent; border: 0; }
+.tree-heading button { background: transparent; border: 0; min-height: 36px; min-width: 36px; }
 .tree-row small, .conversation-list small, .project-title small {
   margin-left: auto;
   overflow: hidden;
@@ -362,10 +363,10 @@ textarea {
   justify-content: center;
   width: 24px;
 }
-.account-anchor strong, .account-anchor small { display: block; }
+.account-anchor strong, .account-anchor small { display: block; overflow-wrap: anywhere; }
 .account-anchor strong { color: var(--foreground); font-size: 12px; }
 .account-anchor small { font-size: 10px; }
-.account-anchor > button > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.account-anchor > button > span:last-child { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .workspace-frame {
   display: flex;

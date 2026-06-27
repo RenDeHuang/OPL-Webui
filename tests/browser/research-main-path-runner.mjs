@@ -33,7 +33,7 @@ try {
   await cdp.send('Runtime.enable');
   await cdp.send('Page.navigate', { url: app.baseUrl });
   await waitFor(cdp, 'document.readyState === "complete"');
-  await waitFor(cdp, 'document.body.dataset.authState');
+  await waitFor(cdp, 'document.body.dataset.authState && performance.getEntriesByName(new URL("/api/session/current", location.href).href).some((entry) => entry.responseEnd > 0)');
   await waitFor(cdp, 'document.querySelector("[data-account-toggle]")?.offsetParent !== null || document.querySelector("[data-auth-surface]")?.offsetParent !== null');
 
   if (mode === 'production') await resetSessionIfAuthenticated(cdp);
@@ -569,7 +569,7 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
   for (const viewport of viewportSpecs) {
     await keyPress(cdp, { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
     await setViewport(cdp, viewport);
-    await waitFor(cdp, 'document.readyState === "complete"');
+    await waitFor(cdp, 'document.readyState === "complete" && (!document.fonts || document.fonts.ready.then(() => true))');
     await activate(cdp, '[data-inspector-open="files"]'); await keyPress(cdp, { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 }); await waitFor(cdp, 'document.body.dataset.inspectorState === "files" && document.querySelector("[data-inspector-sheet]")?.hidden === false', () => describePageState(cdp, `inspector did not open for ${viewport.id}`));
     const path = join('.runtime', 'browser-visual', `research-main-path-${runMode}-${viewport.id}-${stamp}.png`);
     await captureScreenshot(cdp, path);
