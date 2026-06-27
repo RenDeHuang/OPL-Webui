@@ -35,13 +35,14 @@ try {
   await cdp.send('Page.navigate', { url: app.baseUrl });
   await waitFor(cdp, 'document.readyState === "complete"');
   await waitFor(cdp, 'document.body.dataset.authState');
+  await waitFor(cdp, 'document.querySelector("[data-account-toggle]")?.offsetParent !== null || document.querySelector("[data-auth-surface]")?.offsetParent !== null');
 
   if (mode === 'production') await resetSessionIfAuthenticated(cdp);
   await authenticate(cdp, config);
   const accessibilityCloseout = await captureAccessibilityCloseout(cdp);
 
   await openAccountPopover(cdp);
-  await waitFor(cdp, 'document.querySelector("#api-key")?.offsetParent !== null');
+  await waitFor(cdp, 'Boolean(document.querySelector("#api-key") && document.querySelector("#api-key").offsetParent !== null)');
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
@@ -105,7 +106,6 @@ try {
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked'].includes(kind));
   const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
-
   console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
 } catch (error) {
   console.error(error?.stack || error);
@@ -135,7 +135,7 @@ function resolveRunConfig(runMode) {
 }
 
 async function authenticate(cdp, config) {
-  await openAccountPopover(cdp);
+  await openAnonymousAuthForm(cdp);
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-register-button]');
@@ -150,13 +150,14 @@ async function authenticate(cdp, config) {
   await waitForBoundOrUnboundAuthState(cdp, 'login');
 }
 
+async function openAnonymousAuthForm(cdp) {
+  await openAccountPopover(cdp);
+  await waitFor(cdp, 'document.querySelector("[data-account-popover]")?.hidden === false && Boolean(document.querySelector("#auth-email") && document.querySelector("#auth-email").offsetParent !== null)', () => describePageState(cdp, 'account popover did not expose auth form'));
+}
+
 async function openAccountPopover(cdp) {
   await activate(cdp, '[data-account-toggle]');
-  await waitFor(
-    cdp,
-    'document.querySelector("[data-account-popover]")?.hidden === false && document.querySelector("#auth-email")?.offsetParent !== null',
-    () => describePageState(cdp, 'account popover did not expose auth form'),
-  );
+  await waitFor(cdp, 'document.querySelector("[data-account-popover]")?.hidden === false', () => describePageState(cdp, 'account popover did not expose account panel'));
 }
 
 async function openChatRoute(cdp) {
@@ -191,10 +192,7 @@ function spawnSyncStatus(command, args) {
 }
 
 function findPlaywrightChromiumBinary() {
-  const roots = [
-    process.env.PLAYWRIGHT_BROWSERS_PATH,
-    join(homedir(), '.cache/ms-playwright'),
-  ].filter(Boolean);
+  const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH, join(homedir(), '.cache/ms-playwright')].filter(Boolean);
 
   for (const root of roots) {
     if (!existsSync(root)) continue;
@@ -259,9 +257,7 @@ async function startControlPlane(upstreamBaseUrl, cleanup) {
   await waitForHTTP(`${baseUrl}/healthz`, () => {
     if (child.exitCode !== null) throw new Error(`control plane exited early:\n${output.join('')}`);
   }, 120000);
-  return {
-    baseUrl,
-  };
+  return { baseUrl };
 }
 
 async function startBrowser(binary) {
@@ -296,9 +292,7 @@ async function startBrowser(binary) {
   const version = await fetchJSON(versionURL);
   if (!version.webSocketDebuggerUrl) throw new Error('/json/version did not expose webSocketDebuggerUrl');
   const devtoolsBaseUrl = versionURL.replace('/json/version', '');
-  return {
-    devtoolsBaseUrl,
-  };
+  return { devtoolsBaseUrl };
 }
 
 function browserStartupError(binary, child, output) {
@@ -384,7 +378,7 @@ async function userClick(cdp, selector) {
 async function activate(cdp, selector) {
   await userClick(cdp, selector);
   if (!await elementExists(cdp, selector)) return;
-  await focusElement(cdp, selector);
+  await focusElement(cdp, selector, { required: false });
   await delay(50);
 }
 
@@ -416,11 +410,12 @@ async function elementCenter(cdp, selector) {
   }, 5000, () => `element is not clickable at center: ${selector}`);
 }
 
-async function focusElement(cdp, selector) {
+async function focusElement(cdp, selector, options = {}) {
   await cdp.send('Runtime.evaluate', {
     expression: `document.querySelector(${JSON.stringify(selector)})?.focus()`,
     awaitPromise: true,
   });
+  if (options.required === false) return;
   await waitFor(cdp, `document.activeElement === document.querySelector(${JSON.stringify(selector)})`);
 }
 

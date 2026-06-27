@@ -106,6 +106,7 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'webSocketDebuggerUrl',
     'document.readyState === "complete"',
     'openAccountPopover',
+    'openAnonymousAuthForm',
     '[data-account-toggle]',
     '[data-shell-action="more"]',
     'openChatRoute',
@@ -117,6 +118,13 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.doesNotMatch(runner, /\.value\s*=(?!=)/);
   assert.doesNotMatch(runner, /\.click\(\)/);
   assert.doesNotMatch(runner, /requestSubmit\(\)/);
+  assert.match(runner, /async function openAnonymousAuthForm/);
+  assert.match(runner, /async function openAccountPopover/);
+  assert.match(runner, /Boolean\(document\.querySelector\("#auth-email"\) && document\.querySelector\("#auth-email"\)\.offsetParent !== null\)/);
+  assert.match(runner, /Boolean\(document\.querySelector\("#api-key"\) && document\.querySelector\("#api-key"\)\.offsetParent !== null\)/);
+  const accountPopoverHelper = runner.match(/async function openAccountPopover[\s\S]*?\n}\n/)?.[0] || '';
+  assert.match(accountPopoverHelper, /\[data-account-toggle\]/);
+  assert.doesNotMatch(accountPopoverHelper, /#auth-email|#api-key/);
   assert.doesNotMatch(runner, /KUBECONFIG|kubectl|postgres:\/\//i);
   assert.doesNotMatch(runner, /console\.log[^\n]*(OPL_DOGFOOD_API_KEY|OPL_DOGFOOD_PASSWORD|config\.apiKey|config\.password)/);
 });

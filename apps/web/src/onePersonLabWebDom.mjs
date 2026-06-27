@@ -48,7 +48,9 @@ export async function initOnePersonLabWeb() {
   syncRouteFromLocation();
   render();
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
-  state.shellState = state.view.accountState === 'anonymous' ? 'public_landing' : 'home_default';
+  if (!preserveInteractiveShellAfterBootstrap()) {
+    state.shellState = state.view.accountState === 'anonymous' ? 'public_landing' : 'home_default';
+  }
   syncDocumentState();
   render();
 }
@@ -485,19 +487,22 @@ function bindCurrentDOM() {
 }
 
 function bindClicks() {
-  app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => {
-    state.authTab = button.dataset.authMode === 'register' ? 'register' : 'login';
-    state.shellState = 'auth_login_register';
-    render();
-    document.querySelector('#auth-email')?.focus({ preventScroll: true });
-  }));
+  app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => openAnonymousAuth(button.dataset.authMode)));
   app?.querySelectorAll('[data-public-task-entry], [data-research-task]').forEach((button) => button.addEventListener('click', () => applyTaskPrompt(button)));
   app?.querySelectorAll('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authTab; render(); }));
   app?.querySelectorAll('[data-auth-submit]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authAction || state.authTab; }));
   app?.querySelector('[data-toggle-password]')?.addEventListener('click', () => { state.showPassword = !state.showPassword; render(); });
   app?.querySelectorAll('[data-shell-action]').forEach((button) => button.addEventListener('click', () => runShellAction(button.dataset.shellAction)));
   app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; render(); });
-  app?.querySelector('[data-account-toggle]')?.addEventListener('click', (event) => { event.stopPropagation(); state.showAccount = !state.showAccount; render(); });
+  app?.querySelector('[data-account-toggle]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (state.view.accountState === 'anonymous') {
+      openAnonymousAuth(event.currentTarget.dataset.authMode);
+      return;
+    }
+    state.showAccount = !state.showAccount;
+    render();
+  });
   app?.querySelector('[data-account-popover-close]')?.addEventListener('click', () => { state.showAccount = false; render(); });
   app?.querySelectorAll('[data-overlay-close="search"]').forEach((button) => button.addEventListener('click', () => { state.showSearch = false; render(); }));
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
@@ -528,6 +533,17 @@ function bindSearch() {
     const empty = app.querySelector('[data-conversation-empty]');
     if (empty) empty.hidden = visible > 0;
   });
+}
+
+function openAnonymousAuth(mode = 'login') {
+  state.authTab = mode === 'register' ? 'register' : 'login';
+  state.shellState = 'auth_login_register';
+  render();
+  document.querySelector('#auth-email')?.focus({ preventScroll: true });
+}
+
+function preserveInteractiveShellAfterBootstrap() {
+  return state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register';
 }
 
 async function authSubmit(event) {

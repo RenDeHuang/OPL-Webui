@@ -70,6 +70,17 @@ test('public page-state contract exposes anonymous task start and login return p
   assertIncludesAll(growth.cannotClaim, ['authenticated task success', 'runtime execution', 'artifact body authority', 'full SaaS', 'payment/team/RBAC/HA'], 'page-state cannot-claim');
 });
 
+test('public direct-copy auth entry does not rely on authenticated account popover state', () => {
+  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+
+  assert.match(domSource, /function openAnonymousAuth/);
+  assert.match(domSource, /data-public-start-cta[\s\S]*?openAnonymousAuth/);
+  assert.match(domSource, /state\.view\.accountState === 'anonymous'[\s\S]*?state\.shellState = 'auth_login_register'/);
+  assert.match(domSource, /data-account-toggle[\s\S]*?state\.view\.accountState === 'anonymous'[\s\S]*?openAnonymousAuth/);
+  assert.match(domSource, /preserveInteractiveShellAfterBootstrap/);
+  assert.match(domSource, /state\.shellState === 'auth_login_register'/);
+});
+
 test('Figma parity UI replacement target is scoped to public and user product UI only', () => {
   const gui = readJson('contracts/web-gui-product-contract.json');
   const pageState = readJson('contracts/web-page-state-matrix.json');

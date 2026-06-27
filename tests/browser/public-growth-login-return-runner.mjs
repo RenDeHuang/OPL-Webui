@@ -19,6 +19,7 @@ try {
   await cdp.send('DOM.enable');
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
+  await installDelayedInitialSessionProbe(cdp);
   await cdp.send('Page.navigate', { url: app.baseUrl });
   await waitFor(cdp, 'document.readyState === "complete"');
   await waitFor(cdp, 'document.body.dataset.authState === "anonymous"');
@@ -28,9 +29,12 @@ try {
   await waitFor(cdp, 'document.querySelector("[data-account-popover]")?.hidden === false');
   await waitFor(cdp, 'document.body.dataset.chatState === "grant_entry_selected"');
   await waitFor(cdp, 'document.querySelector("#chat-input")?.value?.startsWith("@基金") === true');
+  await wait(1200);
+  await waitFor(cdp, 'Boolean(document.querySelector("#auth-email") && document.querySelector("#auth-email").offsetParent !== null)');
   const afterTaskClick = await evaluateJSON(cdp, `({
     initialAuthState: 'anonymous',
     accountPopoverOpenAfterTaskClick: document.querySelector('[data-account-popover]')?.hidden === false,
+    authFormStillVisibleAfterBootstrap: Boolean(document.querySelector("#auth-email") && document.querySelector("#auth-email").offsetParent !== null),
     pendingPublicTaskIntent: document.body.dataset.pendingPublicTaskIntent,
     chatStateAfterTaskClick: document.body.dataset.chatState,
     promptAfterTaskClick: document.querySelector('#chat-input')?.value,
@@ -182,7 +186,30 @@ async function activate(cdp, selector) {
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
   await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+  await cdp.send('Runtime.evaluate', {
+    expression: `document.querySelector(${JSON.stringify(selector)})?.focus()`,
+    awaitPromise: true,
+  });
   await wait(50);
+}
+
+async function installDelayedInitialSessionProbe(cdp) {
+  await cdp.send('Page.addScriptToEvaluateOnNewDocument', {
+    source: `
+      (() => {
+        const originalFetch = window.fetch.bind(window);
+        let delayedInitialSessionProbe = false;
+        window.fetch = async (input, init) => {
+          const url = typeof input === 'string' ? input : input?.url || '';
+          if (!delayedInitialSessionProbe && url.includes('/api/session/current')) {
+            delayedInitialSessionProbe = true;
+            await new Promise((resolve) => setTimeout(resolve, 900));
+          }
+          return originalFetch(input, init);
+        };
+      })();
+    `,
+  });
 }
 
 async function typeInto(cdp, selector, value) {
@@ -230,7 +257,11 @@ async function waitFor(cdp, expression, timeoutMs = 30000) {
     researchTaskIntent: document.body.dataset.researchTaskIntent,
     pendingPublicTaskIntent: document.body.dataset.pendingPublicTaskIntent,
     loginReturnState: document.body.dataset.loginReturnState,
+    settingsMessage: document.querySelector("[data-settings-message]")?.textContent,
+    emailLength: document.querySelector("#auth-email")?.value?.length,
+    passwordLength: document.querySelector("#auth-password")?.value?.length,
     prompt: document.querySelector("#chat-input")?.value,
+    activeElement: document.activeElement?.id || document.activeElement?.tagName,
   })`);
   throw new Error(`timed out waiting for: ${expression}\nstate: ${JSON.stringify(debug)}`);
 }
