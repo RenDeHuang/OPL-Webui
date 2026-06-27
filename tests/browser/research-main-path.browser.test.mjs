@@ -218,3 +218,14 @@ test('production browser e2e retries only audited transient upstream failures', 
   assert.match(runner, /structured research result sections missing/);
   assert.doesNotMatch(runner, /service_unavailable[\s\S]{0,80}ok: true/);
 });
+
+test('production browser e2e closes account overlays before clicking workbench task launchers', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+
+  assert.match(runner, /closeBlockingOverlays/);
+  assert.match(runner, /data-account-popover-close/);
+  assert.match(runner, /data-api-key-dialog-close/);
+  assert.match(runner, /document\.querySelector\("\[data-account-popover\]"\) === null/);
+  assert.match(runner, /\[data-research-task\]\[data-research-task-intent="research_direction"\]/);
+  assert.doesNotMatch(runner, /await userClick\(cdp, '\[data-research-task-intent="research_direction"\]'\)/);
+});

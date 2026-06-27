@@ -7,11 +7,9 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 const repoRoot = new URL('../../', import.meta.url).pathname;
 
-const state = { cleanup: [] };
-const mode = process.argv.includes('--production') ? 'production' : 'local';
+const state = { cleanup: [] }, mode = process.argv.includes('--production') ? 'production' : 'local';
 const productionChatResultTimeoutMs = 120000;
-const productionResearchAttemptLimit = 2;
-const retryableProductionUpstreamKinds = new Set(['network', 'connect_error', 'dns_error', 'request_timeout', 'response_header_timeout']);
+const productionResearchAttemptLimit = 2, retryableProductionUpstreamKinds = new Set(['network', 'connect_error', 'dns_error', 'request_timeout', 'response_header_timeout']);
 
 try {
   if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1') {
@@ -146,13 +144,14 @@ async function openChatRoute(cdp) {
   await activate(cdp, '[data-shell-action="home"]');
   await waitFor(
     cdp,
-    'document.body.dataset.view === "home" && document.querySelector("[data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
+    'document.body.dataset.view === "home" && document.querySelector("[data-research-task][data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
     () => describePageState(cdp, 'chat route did not expose research launcher'),
   );
 }
 async function submitResearchPromptWithRetry(cdp) {
   for (let attempt = 1; attempt <= (mode === 'production' ? productionResearchAttemptLimit : 1); attempt += 1) {
-    await userClick(cdp, '[data-research-task-intent="research_direction"]');
+    await closeBlockingOverlays(cdp);
+    await userClick(cdp, '[data-research-task][data-research-task-intent="research_direction"]');
     await assertPage(cdp, 'document.body.dataset.chatState === "research_entry_selected"', 'research task template selected');
     await assertPage(cdp, 'document.querySelector("#chat-input")?.value.includes("@科研")', 'research task template prompt');
     await activate(cdp, '[data-chat-submit]');
@@ -165,10 +164,11 @@ async function submitResearchPromptWithRetry(cdp) {
     } catch (error) {
       if (attempt >= productionResearchAttemptLimit || !await retryableProductionUpstreamFailure(cdp)) throw error;
       await activate(cdp, '[data-shell-action="home"]');
-      await waitFor(cdp, 'document.body.dataset.view === "home" && document.querySelector("[data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null');
+      await waitFor(cdp, 'document.body.dataset.view === "home" && document.querySelector("[data-research-task][data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null');
     }
   }
 }
+async function closeBlockingOverlays(cdp) { for (const selector of ['[data-api-key-dialog-close]', '[data-account-popover-close]']) if (await evaluateJSON(cdp, `(() => { const element = document.querySelector(${JSON.stringify(selector)}); return Boolean(element && element.offsetParent !== null && !element.closest('[hidden]')); })()`)) await activate(cdp, selector); await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden !== false && document.querySelector("[data-account-popover]") === null'); }
 async function retryableProductionUpstreamFailure(cdp) {
   if (mode !== 'production') return false;
   const state = await describeResearchResultState(cdp, 'production research retry probe').then(JSON.parse);
