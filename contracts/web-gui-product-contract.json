@@ -31,10 +31,10 @@
     "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "task_history_continuation_center_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
     "mustNotShow": ["dashboard_first_app_home", "explanatory_landing_inside_app_shell", "left_rail_primary_navigation", "workspace_sidebar_primary_shell", "raw_trace_console", "runtime_truth_panel", "billing_source_of_truth", "node_pool_console", "artifact_body_authority", "multi_column_sidebar_sprawl", "duplicated_files_progress_panels", "raw_upstream_transcript_for_structured_research_result", "floating_desktop_inspector_overlay", "heavy_mobile_inspector_sheet", "visible_fixed_base_url_in_user_shell", "model_gateway_url_pill", "settings_status_dump_in_more", "test_evidence_copy_in_inspector", "fake_input_progress_output_refs", "account_glyph_text_person"]
   },
-  "uiUxReferenceCandidate": {
+  "figmaParityUiReplacementTarget": {
     "id": "figma_make_ui_ux_for_commercial_launch",
-    "state": "accepted_reference_candidate",
-    "role": "visual_direction_and_user_flow_reference_only",
+    "state": "accepted_replacement_target",
+    "role": "figma_parity_ui_replacement_target",
     "source": {
       "kind": "figma_make_code_bundle",
       "name": "UI UX for Commercial Launch",
@@ -44,9 +44,9 @@
       "doNotVendorBundle": true
     },
     "appliesTo": ["public_growth_layer", "account_based_user_product_layer"],
-    "doesNotApplyTo": ["minimal_admin_ops_layer"],
+    "doesNotApplyTo": ["minimal_admin_ops_layer", "/_ops", "operator_controls"],
     "appliesToProductLayers": ["public_growth_layer", "account_based_user_product_layer"],
-    "notApplicableToProductLayers": ["minimal_admin_ops_layer"],
+    "notApplicableToProductLayers": ["minimal_admin_ops_layer", "/_ops", "operator_controls"],
     "references": {
       "publicGrowthLayerUIReference": {
         "layer": "public_growth_layer",
@@ -102,12 +102,22 @@
     "forbiddenVisibleClaims": ["web_owned_payment", "web_owned_runtime_execution", "web_owned_storage_truth", "artifact_body_authority", "full_saas", "admin_ops_operator_controls", "_ops_ui", "operator_controls", "production_ready_saas"],
     "forbiddenFalseClaims": ["web_owned_payment", "web_owned_runtime_execution", "web_owned_storage_truth", "artifact_body_authority", "full_saas", "admin_ops_operator_controls", "_ops_ui", "operator_controls", "production_ready_saas"],
     "futureCapabilityPlaceholders": ["payment_or_commercial_lifecycle_with_contract_and_evidence", "medopl_owned_runtime_execution_with_contract_and_evidence", "medopl_owned_storage_or_artifact_body_with_contract_and_evidence", "team_rbac_or_org_workspace_with_contract_and_evidence"],
+    "replacementPolicy": {
+      "oldSurfacesMustBeRetiredPerReplacementSlice": true,
+      "noParallelOldNewShellAfterSliceCloseout": true,
+      "visualInteractionParityTarget": "as_close_to_1_to_1_as_current_contracts_allow",
+      "dataStateTruth": "go_control_plane_and_contracts_only",
+      "mockTruthPolicy": "forbidden",
+      "zipPrototypePolicy": "local_implementation_reference_only_no_vendor_import",
+      "eachSliceMustDeclare": ["target_surface", "old_surface_retirement", "new_implementation", "contract_page_state_mapping", "browser_visual_test", "repo_bloat_check"]
+    },
     "implementationPolicy": {
-      "directReplacement": "forbidden",
+      "fullUiReplacementInThisSlice": "forbidden",
+      "zipPrototypeImport": "forbidden",
       "largeDependencyImport": "forbidden",
       "adminOpsImplementation": "forbidden",
       "releaseEvidenceChange": "forbidden_in_this_slice",
-      "allowedNextSlice": "ui_ux_candidate_alignment_public_user_layers",
+      "allowedNextSlice": "figma_parity_public_growth_surface_replacement",
       "requiresBeforeImplementation": ["wording_rewrite", "page_state_alignment", "registered_contract_or_browser_tests", "repo_bloat_check"]
     }
   },

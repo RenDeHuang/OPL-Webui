@@ -50,6 +50,12 @@ const NOT_PUBLIC_GROWTH_EVIDENCE = Object.freeze([
   'full SaaS',
   'payment/team/RBAC/HA',
 ]);
+const NOT_FIGMA_PARITY_REPLACEMENT_IMPLEMENTATION_EVIDENCE = Object.freeze([
+  'UI already implemented',
+  'production rollout',
+  'payment/runtime/storage/full SaaS capability',
+  'Admin/Ops UI',
+]);
 const NOT_TASK_HISTORY_EVIDENCE = Object.freeze([
   'runtime execution',
   'artifact body authority',
@@ -504,8 +510,8 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'static',
     claimScope: 'repo',
     contracts: ['contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-api.openapi.json', 'contracts/web-gui-product-contract.json'],
-    proves: ['public growth layer product/page-state/API/release contract is done v1 as an unauthenticated education and start-path surface', 'commercial launch Figma Make UI/UX reference grammar is scoped to public and account-based user product layers without Admin/Ops or false Web-owned payment/runtime/storage claims'],
-    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE],
+    proves: ['public growth layer product/page-state/API/release contract is done v1 as an unauthenticated education and start-path surface', 'Figma Make commercial launch bundle is registered as a Figma parity UI replacement target for public and account-based user product layers with old surface retirement policy'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE, ...NOT_FIGMA_PARITY_REPLACEMENT_IMPLEMENTATION_EVIDENCE],
     riskTriggers: ['apps-web', 'docs-truth', 'page-state'],
     verifySuites: ['current', 'contract'],
   }),

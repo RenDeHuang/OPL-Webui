@@ -49,6 +49,19 @@
     },
     "cannotClaim": ["authenticated task success", "runtime execution", "artifact body authority", "full SaaS", "payment/team/RBAC/HA"]
   },
+  "uiReplacementTarget": {
+    "id": "figma_make_ui_ux_for_commercial_launch",
+    "slice": "figma_parity_replacement_contract_slice_v0",
+    "state": "planned_not_implemented",
+    "targetContract": "contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget",
+    "productionUiReplaced": false,
+    "releaseEvidenceImpact": "none_until_future_rollout_evidence",
+    "appliesToRoutes": ["home", "projects", "skills", "workflows"],
+    "doesNotApplyTo": ["minimal_admin_ops_layer", "/_ops", "operator_controls"],
+    "stateTruth": "go_control_plane_and_contracts_only",
+    "oldSurfaceRetirementPolicy": "retire_per_replacement_slice_no_parallel_old_new_shell_after_closeout",
+    "doesNotAddProductCapability": true
+  },
   "routes": [
     {
       "id": "home",
