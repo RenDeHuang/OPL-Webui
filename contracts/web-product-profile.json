@@ -6,11 +6,12 @@
     "OPL-WebUI",
     "OPL-Webui"
   ],
-  "repoRole": "product_repo",
-  "positioning": "One Person Lab knowledge delivery Web platform",
-  "topLevelProductCategory": "knowledge_delivery_web_platform",
+  "repoRole": "web_interaction_platform_repo",
+  "positioning": "One Person Lab Web interaction platform / browser entry for knowledge delivery",
+  "topLevelProductCategory": "web_interaction_platform",
   "publicHost": "opl.medopl.cn",
   "sourceApp": "one-person-lab-app",
+  "productIdentity": {"category":"web_interaction_platform","primaryRole":"browser_entry","defaultUserPath":"ordinary_browser_interaction","ownedTruth":["route","auth","account","BYOK","task_intent","page_state","refs_projection","deeplink"],"ordinaryUserDefaultRequires":[],"ordinaryUserDefaultDoesNotRequire":["runtime","storage","node_pool","workspace_runtime_storage_binding"],"specialistExecutionPath":{"mode":"medopl_managed_runtime_resource_path","requiredForMarkers":["@论文","@基金","@综述","@文件","@PPT","@书"],"notRequiredForMarkers":["@科研"],"webRole":["runtime_gate_bridge","run_intent_submission","typed_blocker_projection","refs_projection","deeplink"]},"authoritySplit":{"onePersonLab":"framework_execution_semantics","MedOPL":"runtime_resource_billing_storage","FoundryAgents":"domain_truth_quality_artifact_authority"},"releaseEvidenceBoundary":"Release evidence can support readiness for a commit or rollout, but it cannot define, change, or rewrite OPL-Webui product identity.","cannotClaim":["execution platform","runtime truth","storage truth","artifact body authority","domain verdict authority"]},
   "targetUsers": [
     "research_staff",
     "masters_students",
@@ -896,7 +897,7 @@
   },
   "claims": {
     "canClaim": [
-      "One Person Lab Web is a One Person Lab knowledge delivery Web platform.",
+      "One Person Lab Web is the Web interaction platform and browser entry for One Person Lab knowledge delivery.",
       "The public growth layer explains research, paper, grant, review, file, PPT, and book knowledge delivery entries to unauthenticated users and routes them to login/register with task return state.",
       "The account-based user product layer is done v1 at repo/browser evidence level for the personal account-based Web edition of One Person Lab App.",
       "Researchers, graduate students, PhD students, principal investigators, and research teams can open Web, log in, bind an API Key or use admitted account capability, choose a task, and continue through result/gate, refs, blocker/next step, and MedOPL/OPL deeplink states.",
@@ -905,7 +906,7 @@
       "Ordinary chat is available for low-risk explanation and organization, while the account-based task path remains the primary product positioning.",
       "Runtime-requiring OPL work stops at a MedOPL gate.",
       "The explicit real-medopl lane proves a real local MedOPL Go backend bridge for gate, owner actions, run refs, billing ledger refs, and release/storage readonly projection.",
-      "Runtime/storage are product target capabilities when opened through MedOPL; Web owns entry, authorization status, readonly refs projection, deeplink, and fail-closed gate.",
+      "Ordinary users do not require runtime or storage by default; specialist execution enters MedOPL-managed runtime/resource paths.",
       "One Person Lab Web owns product surface, page state, account/session, and sanitized projections only.",
       "single-node controlled launch readiness"
     ],

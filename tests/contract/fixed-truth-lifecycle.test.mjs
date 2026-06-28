@@ -91,9 +91,9 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
     assert.match(text, /one-person-lab-web|One Person Lab Web/);
   }
 
-  assert.match(readme, /One Person Lab knowledge delivery Web platform/);
-  assert.match(readme, /personal account-based Web edition/);
-  assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`/);
+  assert.match(readme, /Web interaction platform and browser entry/);
+  assert.match(readme, /Ordinary users do not need runtime or storage by default/);
+  assert.match(readme, /@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, (?:and|or) `@书`/);
   assert.match(agents, /不使用 `changes\/active` 七件套作为默认开发系统/);
   assert.match(taste, /Read `README\.md`/);
   assert.match(status, /three-layer product modules plus explicit gap slices/);
@@ -190,8 +190,8 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   const { latest, dogfoodState, availabilityState, observabilityState, browserState } = latestEvidence(release);
 
   assert.equal(product.productId, 'one-person-lab-web');
-  assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
-  assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
+  assert.equal(product.positioning, 'One Person Lab Web interaction platform / browser entry for knowledge delivery');
+  assert.deepEqual([product.topLevelProductCategory, product.productIdentity.category, product.productIdentity.primaryRole], ['web_interaction_platform', 'web_interaction_platform', 'browser_entry']);
   assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
   assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
   assert.equal(product.accountBasedWebAppMainPath.mode, 'account_based_web_edition_main_path_v1');
@@ -521,7 +521,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.doesNotMatch(status, /后续优先级按产品主链路排序：V3 UI 线上验收、真实 auth\/session/);
   assert.doesNotMatch(JSON.stringify(product), /UI 是中文 AI workspace|用户可见 workspace 系统|纯 ChatGPT 页面/);
   assert.doesNotMatch(JSON.stringify(product), /拥有完整 billing|billing source of truth 是 OPL-Webui/);
-  assert.match(status, /One Person Lab knowledge delivery Web platform/);
+  assert.match(status, /Web interaction platform and browser entry/);
   assert.match(status, /Account-based User Product Layer is done v1 at repo\/browser evidence level/);
   assert.match(JSON.stringify(product.claims.canClaim), /account-based task path remains the primary product positioning/);
   assert.match(status, /default production budget is `60s` via `OPL_CHAT_UPSTREAM_TIMEOUT_SECONDS`/);
@@ -629,7 +629,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
     ['artifact_body_authority_contract', 'missing', 'authority_contract'],
   ]);
 
-  assert.match(status, /Production deploy is release evidence only and must not substitute for product\/eval work/);
+  assert.match(status, /Production deploy is release evidence only: it can support readiness.*cannot define, change, or rewrite OPL-Webui product identity/);
   assert.equal(active.includes(`Production rollout latest-main evidence is folded back for commit \`${latest.commit}\` through Cloud Rollout run \`${latest.runId}\``), true);
   assert.match(active, /Further UI\/UX work must refresh Figma MCP source context first|UI\/UX Product Depth now requires Figma MCP/);
   assert.match(decisions, /Product gaps use acceptance contracts before deploy evidence/);

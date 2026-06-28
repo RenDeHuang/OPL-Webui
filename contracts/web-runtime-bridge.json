@@ -4,6 +4,7 @@
   "owner": "MedOPL",
   "mode": "gate_and_readonly_projection_v1",
   "webuiRuntimeExecution": "forbidden",
+  "defaultPathBoundary": {"ordinaryUserDefaultRequires":[],"ordinaryUserDefaultDoesNotRequire":["runtime","storage","node_pool","workspace_runtime_storage_binding"],"specialistExecutionOnly":true,"specialistExecutionMarkers":["@论文","@基金","@综述","@文件","@PPT","@书"],"lightweightMarkers":["@科研"],"authoritySplit":{"onePersonLab":"framework_execution_semantics","MedOPL":"runtime_resource_billing_storage","FoundryAgents":"domain_truth_quality_artifact_authority"}},
   "medoplDeepLink": "https://medopl.medopl.cn",
   "medoplApiBridge": {
     "mode": "go_control_plane_to_medopl_api_bridge_v1",

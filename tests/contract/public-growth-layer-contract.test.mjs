@@ -18,8 +18,8 @@ test('public growth layer contract is implemented without expanding into full Sa
   const release = readJson('contracts/web-release-profile.json');
   const api = readJson('contracts/web-api.openapi.json');
 
-  assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
-  assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
+  assert.equal(product.positioning, 'One Person Lab Web interaction platform / browser entry for knowledge delivery');
+  assert.deepEqual([product.topLevelProductCategory, product.productIdentity.category, product.productIdentity.primaryRole], ['web_interaction_platform', 'web_interaction_platform', 'browser_entry']);
   assert.equal(product.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'done_v1');
   assert.equal(product.gapMap.layers.find((layer) => layer.id === 'growth_layer')?.status, 'done_v1');
   assert.equal(pageState.productLayers.find((layer) => layer.id === 'public_growth_layer')?.status, 'done_v1');

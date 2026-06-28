@@ -4,14 +4,11 @@ import test from 'node:test';
 import * as web from '../../apps/web/src/onePersonLabWeb.mjs';
 
 function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')); }
-
 function assertIncludesAll(actual, expected, label) { for (const item of expected) assert.equal(actual.includes(item), true, `missing ${label}: ${item}`); }
-
 function latestEvidence(release) {
   const latest = release.latestMainEvidence;
   return { latest, dogfoodState: `executed_success_run_${latest.runId}_real_chat_${release.productionDogfoodReadiness.latestSuccessfulRun.medoplReadonly === true ? 'readonly_confirmed' : 'readonly_unconfirmed'}`, availabilityState: `executed_success_run_${latest.runId}_after_apply`, observabilityState: `release_probe_executed_run_${latest.runId}_scheduled_canary_success_pending_long_term_ops`, browserState: `executed_success_run_${latest.runId}` };
 }
-
 function assertLatestRun(run, latest) {
   for (const key of ['runId', 'commit', 'image']) assert.equal(run[key], latest[key]);
   if (run.runUrl) assert.equal(run.runUrl, latest.runUrl);
@@ -29,8 +26,11 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
 
   assert.equal(product.productId, 'one-person-lab-web');
   assert.equal(product.canonicalProductName, 'One Person Lab Web');
-  assert.equal(product.positioning, 'One Person Lab knowledge delivery Web platform');
-  assert.equal(product.topLevelProductCategory, 'knowledge_delivery_web_platform');
+  assert.equal(product.positioning, 'One Person Lab Web interaction platform / browser entry for knowledge delivery');
+  assert.deepEqual([product.topLevelProductCategory, product.productIdentity.category, product.productIdentity.primaryRole], ['web_interaction_platform', 'web_interaction_platform', 'browser_entry']);
+  assert.deepEqual([product.productIdentity.ordinaryUserDefaultRequires, product.productIdentity.authoritySplit], [[], { onePersonLab: 'framework_execution_semantics', MedOPL: 'runtime_resource_billing_storage', FoundryAgents: 'domain_truth_quality_artifact_authority' }]);
+  assert.deepEqual(product.productIdentity.specialistExecutionPath.requiredForMarkers, product.primaryEntryMarkers.filter((marker) => marker !== '@科研'));
+  assert.equal(product.productIdentity.releaseEvidenceBoundary.includes('cannot define, change, or rewrite OPL-Webui product identity'), true);
   assert.equal(product.primaryUserPath, 'account_based_web_app_main_path');
   assert.equal(product.primaryEntryModel, 'login_bind_key_then_task_entry');
   assert.deepEqual(product.accountBasedWebAppMainPath.orderedSteps.map((step) => step.id), ['open_web', 'login_account', 'bind_api_key_or_use_account_capability', 'choose_research_task', 'view_result_or_medopl_gate', 'view_progress_refs', 'view_deliverable_refs', 'view_blocker_next_step', 'continue_via_medopl_deeplink']);

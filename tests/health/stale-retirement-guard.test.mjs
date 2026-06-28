@@ -65,6 +65,15 @@ const productDebtAllowedPatterns = [
   /^docs\/history\/process\/closeouts\.md$/,
 ];
 
+const productIdentityTruthFiles = [
+  'README.md',
+  'docs/project.md',
+  'docs/status.md',
+  'docs/architecture.md',
+  'contracts/web-product-profile.json',
+  'contracts/web-runtime-bridge.json',
+];
+
 function* walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
@@ -144,5 +153,27 @@ test('retired Go task projection surfaces are deleted from active source', () =>
   const tombstones = readFileSync('docs/history/tombstones/README.md', 'utf8');
   for (const retiredName of ['task_projections', 'usage_events', 'tenant_plans', 'opl.cli.readonly.task-route']) {
     assert.match(tombstones, new RegExp(retiredName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+});
+
+test('active truth keeps OPL-Webui as browser interaction platform instead of execution platform', () => {
+  const product = JSON.parse(readFileSync('contracts/web-product-profile.json', 'utf8'));
+  const runtime = JSON.parse(readFileSync('contracts/web-runtime-bridge.json', 'utf8'));
+  const requiredIdentity = product.productIdentity;
+
+  assert.equal(requiredIdentity?.category, 'web_interaction_platform');
+  assert.equal(requiredIdentity?.primaryRole, 'browser_entry');
+  assert.deepEqual(requiredIdentity?.ownedTruth, ['route', 'auth', 'account', 'BYOK', 'task_intent', 'page_state', 'refs_projection', 'deeplink']);
+  assert.deepEqual(requiredIdentity?.ordinaryUserDefaultRequires, []);
+  assert.deepEqual(requiredIdentity?.specialistExecutionPath?.requiredForMarkers, runtime.runtimeRequiredMarkers);
+  assert.equal(requiredIdentity?.authoritySplit?.onePersonLab, 'framework_execution_semantics');
+  assert.equal(requiredIdentity?.authoritySplit?.MedOPL, 'runtime_resource_billing_storage');
+  assert.equal(requiredIdentity?.authoritySplit?.FoundryAgents, 'domain_truth_quality_artifact_authority');
+
+  for (const file of productIdentityTruthFiles) {
+    const text = readFileSync(file, 'utf8');
+    assert.doesNotMatch(text, /WebUI (?:owns|is|acts as).{0,80}(?:execution platform|runtime platform|storage platform)/i, file);
+    assert.doesNotMatch(text, /ordinary users?(?![^.]{0,80}do not require).{0,80}(?:must|are required to|require|requires).{0,80}(?:runtime|storage)/i, file);
+    assert.doesNotMatch(text, /release evidence.{0,120}(?:defines|changes|rewrites|owns).{0,80}product identity/i, file);
   }
 });

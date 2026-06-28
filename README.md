@@ -5,9 +5,9 @@
 - state: active_truth
 - machine boundary: human-readable navigation; contracts, source, tests, scripts, and API behavior are authoritative.
 
-One Person Lab Web is a One Person Lab knowledge delivery Web platform at `opl.medopl.cn`. It serves personal researchers, graduate students, PhD students, principal investigators, and research groups or organizations across research, paper, grant, review, file, PPT, and book knowledge delivery scenarios. The current basically done product layer is the personal account-based Web edition: open Web, log in, bind an API Key or use MedOPL account/resource-state capability, choose `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, and `@书`, then continue through result, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL deeplink states.
+One Person Lab Web is the One Person Lab Web interaction platform and browser entry at `opl.medopl.cn`. It serves personal researchers, graduate students, PhD students, principal investigators, and research groups or organizations across research, paper, grant, review, file, PPT, and book knowledge delivery scenarios. The current product identity is browser interaction first: open Web, log in, bind an API Key or use admitted account capability, choose `@科研`, `@论文`, `@基金`, `@综述`, `@文件`, `@PPT`, or `@书`, then continue through result, progress refs, deliverable refs, blocker/next step, and MedOPL/OPL deeplink states.
 
-This repo owns the browser product surface, account/session experience, hidden multi-tenant isolation, BYOK API Key binding, research capability entry, ordinary chat fallback, Web page state, same-origin Go control plane API, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
+This repo owns route/auth/account/BYOK, task intent, page state, refs projection, deeplink, account/session experience, hidden tenant isolation, ordinary chat fallback, same-origin Go control plane API, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
 
 It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo owns the desktop product entry, while this repo owns the browser product entry.
 
@@ -26,9 +26,10 @@ It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo own
 
 ## Product Boundary
 
-- Web owns the account-based product entry, static shell, account/session path, hidden tenant isolation, fixed provider binding, research capability launcher, ordinary chat fallback, page state, sanitized audit projection, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
+- Web owns the account-based browser entry, static shell, route/auth/account/BYOK path, hidden tenant isolation, fixed provider binding, research capability launcher, ordinary chat fallback, task intent, page state, sanitized audit projection, refs projection, deeplink, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
 - Go control plane is the only backend business entry for this repo.
-- MedOPL owns runtime, storage, package, billing, resource release, ledger, and workspace/runtime/storage binding authority. OPL Framework/domain agents own execution semantics, quality verdict, and artifact authority.
+- Ordinary users do not need runtime or storage by default. Specialist execution markers enter the MedOPL-managed runtime/resource path.
+- one-person-lab owns framework and execution semantics. MedOPL owns runtime, resource, billing, and storage authority. Foundry Agents own domain truth, quality, and artifact authority.
 - This repo does not own desktop App packaging/updater, OPL Framework runtime truth, domain-agent judgment authority, billing source of truth, storage truth, node pool lifecycle, API gateway truth, OPL execution truth, artifact/body authority, payment mutation, or storage mutation.
 
 ## Development Loop
