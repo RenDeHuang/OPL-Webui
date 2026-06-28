@@ -669,7 +669,7 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'browser',
     claimScope: 'ci',
     contracts: ['tests/browser/interaction-truth-runner.mjs', 'contracts/web-interaction-contract.json', 'contracts/web-page-state-matrix.json'],
-    proves: ['real browser route/auth/pending task/sidebar evidence enforces formal launch interaction truth before public launch'],
+    proves: ['real browser route/auth/pending task/sidebar evidence enforces formal launch interaction truth before public launch', 'interaction truth runner uses CI-safe Chromium DevTools startup diagnostics without bypassing browser assertions'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux'],
     verifySuites: ['browser', 'full'],

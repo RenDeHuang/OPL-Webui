@@ -76,3 +76,14 @@ test('formal launch interaction truth is enforced by real browser evidence', { t
   assert.match(evidence.browser, /chrome|chromium/i);
   assert.deepEqual(collectViolations(evidence), []);
 });
+
+test('interaction truth runner lets Chromium allocate the DevTools port in CI', () => {
+  const runner = String(spawnSync('node', ['-e', `console.log(require('node:fs').readFileSync(${JSON.stringify(runnerPath)}, 'utf8'))`], {
+    encoding: 'utf8',
+  }).stdout);
+
+  assert.match(runner, /--remote-debugging-port=0/);
+  assert.match(runner, /DevTools listening on/);
+  assert.match(runner, /browserStartupError/);
+  assert.doesNotMatch(runner, /`--remote-debugging-port=\$\{port\}`/);
+});

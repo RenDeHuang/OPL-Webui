@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import http from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -168,30 +168,57 @@ async function startControlPlane(cleanup) {
 
 async function startBrowser(binary) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'opl-webui-interaction-truth-browser-'));
-  mkdirSync(userDataDir, { recursive: true });
   state.cleanup.push(async () => rmSync(userDataDir, { recursive: true, force: true }));
-  const port = await freePort();
+  let devtools = '';
+  const output = { stdout: [], stderr: [] };
   const child = spawn(binary, [
     '--headless=new',
     '--no-sandbox',
     '--disable-gpu',
+    '--no-first-run',
+    '--no-default-browser-check',
     '--disable-dev-shm-usage',
-    `--remote-debugging-port=${port}`,
+    '--remote-debugging-port=0',
     `--user-data-dir=${userDataDir}`,
     'about:blank',
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
+  ], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   state.cleanup.push(() => closeChildProcess(child));
-  const devtoolsBaseUrl = `http://127.0.0.1:${port}`;
-  await waitForHTTP(`${devtoolsBaseUrl}/json/version`, () => {
-    if (child.exitCode !== null) throw new Error(`browser exited before DevTools became available: ${child.exitCode}`);
-  }, 30000);
+  child.stdout.on('data', (chunk) => output.stdout.push(String(chunk)));
+  child.stderr.on('data', (chunk) => {
+    const text = String(chunk);
+    output.stderr.push(text);
+    const match = text.match(/DevTools listening on (ws:\/\/\S+)/);
+    if (match) devtools = match[1];
+  });
+  await waitUntil(() => {
+    if (child.exitCode !== null) throw new Error(browserStartupError(binary, child, output));
+    return devtools;
+  }, 30000, () => browserStartupError(binary, child, output));
+  const versionURL = devtools.replace(/^ws:\/\/([^/]+).*$/, 'http://$1/json/version');
+  const version = await fetchJSON(versionURL);
+  if (!version.webSocketDebuggerUrl) throw new Error('/json/version did not expose webSocketDebuggerUrl');
+  const devtoolsBaseUrl = versionURL.replace('/json/version', '');
   return { devtoolsBaseUrl };
 }
 
+function browserStartupError(binary, child, output) {
+  return [
+    'browser exited before DevTools became available',
+    `binary: ${binary}`,
+    `exitCode: ${child.exitCode}`,
+    `signalCode: ${child.signalCode || ''}`,
+    `stderr: ${trimProcessOutput(output.stderr.join(''))}`,
+    `stdout: ${trimProcessOutput(output.stdout.join(''))}`,
+  ].join('\n');
+}
+
 async function createPageTarget(devtoolsBaseUrl) {
-  const response = await fetch(`${devtoolsBaseUrl}/json/new?about:blank`, { method: 'PUT' });
-  const target = await response.json();
-  return target.webSocketDebuggerUrl;
+  const created = await fetchJSON(`${devtoolsBaseUrl}/json/new?about:blank`, { method: 'PUT' });
+  if (created.webSocketDebuggerUrl) return created.webSocketDebuggerUrl;
+  const targets = await fetchJSON(`${devtoolsBaseUrl}/json/list`);
+  const page = targets.find((target) => target.type === 'page' && target.webSocketDebuggerUrl);
+  if (!page) throw new Error('Chrome did not expose a page target webSocketDebuggerUrl');
+  return page.webSocketDebuggerUrl;
 }
 
 async function connectCDP(webSocketDebuggerUrl) {
@@ -380,6 +407,33 @@ async function waitForHTTP(url, onAttempt, timeoutMs) {
     }
   }
   throw new Error(`timed out waiting for HTTP ${url}`);
+}
+
+async function waitUntil(predicate, timeoutMs = 30000, describe = () => 'condition timed out') {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const result = await predicate();
+    if (result) return result;
+    await wait(100);
+  }
+  throw new Error(typeof describe === 'function' ? await describe() : String(describe));
+}
+
+async function fetchJSON(url, init = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+    return response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function trimProcessOutput(value) {
+  const text = String(value || '').trim();
+  return text.length > 2000 ? `${text.slice(-2000)}` : text;
 }
 
 async function freePort() {
