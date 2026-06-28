@@ -56,7 +56,9 @@ try {
     && document.body.dataset.researchTaskIntent === "grant_plan"
     && document.querySelector("#chat-input")?.value?.startsWith("@基金") === true
     && document.querySelector("[data-side-navigation]")?.textContent.includes("任务历史")`);
+  const workbenchEvidence = await workbenchState(cdp);
   const afterAuth = await pageState(cdp, {
+    ...workbenchEvidence,
     sidebarText: await textContent(cdp, '[data-side-navigation]'),
     taskHistoryEmptyVisible: await isVisible(cdp, '[data-task-history-empty]'),
     taskHistoryItems: await count(cdp, '[data-task-history-item]'),
@@ -110,6 +112,38 @@ async function pageState(cdp, extra = {}) {
     taskHistoryItemCount: document.querySelectorAll('[data-task-history-item]').length,
     prompt: document.querySelector('#chat-input')?.value || '',
     ${Object.entries(extra).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(',\n    ')}
+    };
+  })()`);
+}
+
+async function workbenchState(cdp) {
+  return evaluateJSON(cdp, `(() => {
+    const shell = document.querySelector('[data-app-shell]');
+    const sidebar = document.querySelector('[data-side-navigation]');
+    const composer = document.querySelector('[data-workbench-surface]');
+    const composerBox = document.querySelector('[data-composer-box]');
+    const toolbar = document.querySelector('[data-composer-toolbar]');
+    const input = document.querySelector('#chat-input');
+    const sidebarRect = sidebar?.getBoundingClientRect();
+    const composerRect = composer?.getBoundingClientRect();
+    const composerBoxRect = composerBox?.getBoundingClientRect();
+    const viewportCenter = (sidebarRect?.right || 0) + ((window.innerWidth - (sidebarRect?.right || 0)) / 2);
+    const composerCenter = composerBoxRect ? composerBoxRect.left + composerBoxRect.width / 2 : 0;
+    return {
+      workbenchSlice: shell?.getAttribute('data-figma-slice') || '',
+      workbench: {
+        sidebarVisible: Boolean(sidebar && sidebar.offsetParent !== null),
+        sidebarWidth: Math.round(sidebarRect?.width || 0),
+        composerVisible: Boolean(composer && composer.offsetParent !== null),
+        composerCentered: Boolean(composerBoxRect && Math.abs(composerCenter - viewportCenter) < 18),
+        composerMaxWidth: Math.round(composerBoxRect?.width || 0),
+        toolbarVisible: Boolean(toolbar && toolbar.offsetParent !== null),
+        taskLauncherCount: document.querySelectorAll('[data-research-task]').length,
+        promptRestored: input?.value?.startsWith('@基金') === true,
+        taskHistoryProjectionOnly: Boolean(document.querySelector('[data-task-history-list]') && document.querySelector('[data-task-history-empty]')),
+        accountTriggerVisible: Boolean(document.querySelector('[data-account-toggle]')?.offsetParent !== null),
+        searchTriggerVisible: Boolean(document.querySelector('[data-search-trigger]')?.offsetParent !== null),
+      },
     };
   })()`);
 }

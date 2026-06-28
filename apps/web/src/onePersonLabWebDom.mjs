@@ -159,7 +159,7 @@ function renderAuthPage() {
 
 function renderAuthenticated() {
   return `
-    <div class="app-shell" data-app-shell data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more">
+    <div class="app-shell" data-app-shell data-figma-pattern="side_navigation_new_chat_projects_skill_workflow_search_more" data-figma-slice="figma_home_workbench_shell_slice">
       ${renderSidebar()}
       <div class="workspace-frame">
         <main class="workspace-main main-stage">
@@ -225,7 +225,7 @@ function renderHomeComposer() {
   return `
     <section class="home-composer" data-shell-state="home_default" data-workbench-surface data-first-view>
       <h1>What should we get done?</h1>
-      <form id="composer-form" class="composer-box" data-chat-form>
+      <form id="composer-form" class="composer-box" data-chat-form data-composer-box>
         <input id="chat-input" class="composer-input" placeholder="随心输入" aria-label="选择一个任务入口或直接输入问题">
       </form>
       <div class="composer-toolbar" data-composer-toolbar>

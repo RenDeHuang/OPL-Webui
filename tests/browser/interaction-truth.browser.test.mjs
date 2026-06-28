@@ -56,6 +56,32 @@ function collectViolations(evidence) {
       pass: !forbiddenSidebarCopy.test(evidence.afterAuth.sidebarText),
     },
     {
+      label: 'authenticated workbench shell must carry Figma home slice marker',
+      pass: evidence.afterAuth.workbenchSlice === 'figma_home_workbench_shell_slice',
+    },
+    {
+      label: 'authenticated workbench sidebar must follow Figma 240px side navigation shape',
+      pass: evidence.afterAuth.workbench.sidebarVisible === true && evidence.afterAuth.workbench.sidebarWidth === 240,
+    },
+    {
+      label: 'authenticated workbench composer must remain centered with toolbar',
+      pass: evidence.afterAuth.workbench.composerVisible === true
+        && evidence.afterAuth.workbench.composerCentered === true
+        && evidence.afterAuth.workbench.composerMaxWidth <= 680
+        && evidence.afterAuth.workbench.toolbarVisible === true,
+    },
+    {
+      label: 'authenticated workbench task launchers and pending prompt must stay real-state backed',
+      pass: evidence.afterAuth.workbench.taskLauncherCount === 7
+        && evidence.afterAuth.workbench.promptRestored === true
+        && evidence.afterAuth.workbench.taskHistoryProjectionOnly === true,
+    },
+    {
+      label: 'authenticated workbench search and account triggers must remain available',
+      pass: evidence.afterAuth.workbench.accountTriggerVisible === true
+        && evidence.afterAuth.workbench.searchTriggerVisible === true,
+    },
+    {
       label: 'cannot-claim boundary must include fake project/workspace data',
       pass: evidence.cannotClaim.includes('fake project/workspace data retired'),
     },
