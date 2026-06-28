@@ -15,6 +15,14 @@ test('unauthenticated public task entry opens login and restores selected task a
 
   assert.equal(evidence.ok, true);
   assert.equal(evidence.path, 'public-growth-login-return');
+  assert.equal(evidence.pageStates.publicLandingSlice, 'figma_public_landing_slice');
+  assert.equal(evidence.pageStates.publicLandingTheme.background, '#f5f2ec');
+  assert.equal(evidence.pageStates.publicLandingTheme.primary, '#2f6b4f');
+  assert.equal(evidence.pageStates.publicLanding.heroCentered, true);
+  assert.equal(evidence.pageStates.publicLanding.taskPillCount, 7);
+  assert.equal(evidence.pageStates.publicLanding.hasPrimaryStartPath, true);
+  assert.equal(evidence.pageStates.publicLanding.hasSecondaryStartPath, true);
+  assert.equal(evidence.pageStates.publicLanding.hasTrustStrip, true);
   assert.equal(evidence.pageStates.initialAuthState, 'anonymous');
   assert.equal(evidence.pageStates.accountPopoverOpenAfterTaskClick, true);
   assert.equal(evidence.pageStates.pendingPublicTaskIntent, 'grant_plan');

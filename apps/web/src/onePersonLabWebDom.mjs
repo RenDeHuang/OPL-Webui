@@ -75,7 +75,7 @@ function renderAnonymous() {
 
 function renderPublicLanding() {
   return `
-    <div class="public-landing" data-shell-state="public_landing" data-public-growth-layer data-public-landing-surface>
+    <div class="public-landing" data-shell-state="public_landing" data-public-growth-layer data-public-landing-surface data-figma-slice="figma_public_landing_slice">
       <header class="public-nav">
         <span class="brand-text">One Person Lab</span>
         <div class="nav-actions">
@@ -96,11 +96,11 @@ function renderPublicLanding() {
             `).join('')}
           </div>
           <div class="hero-actions">
-            <button class="primary-button large" type="button" data-public-start-cta data-auth-mode="register">开始使用 <span aria-hidden="true">-></span></button>
-            <button class="secondary-button large" type="button" data-public-start-cta data-auth-mode="login">了解更多</button>
+            <button class="primary-button large" type="button" data-public-start-cta data-public-primary-start data-auth-mode="register">开始使用 <span aria-hidden="true">-></span></button>
+            <button class="secondary-button large" type="button" data-public-start-cta data-public-secondary-start data-auth-mode="login">了解更多</button>
           </div>
         </div>
-        <div class="trust-strip">
+        <div class="trust-strip" data-public-trust-strip>
           <span data-public-output-section>progress refs · deliverable refs · materials refs</span>
           <span data-public-audience-section>个人研究者 · 博士/硕士 · PI · 课题组/单位</span>
           <span data-public-trust-section>blocker/next step · MedOPL/OPL deeplink</span>

@@ -23,6 +23,7 @@ try {
   await cdp.send('Page.navigate', { url: app.baseUrl });
   await waitFor(cdp, 'document.readyState === "complete"');
   await waitFor(cdp, 'document.body.dataset.authState === "anonymous"');
+  const publicLandingEvidence = await publicLandingState(cdp);
 
   await waitFor(cdp, 'document.querySelector(\'[data-public-task-entry][data-research-task-intent="grant_plan"]\')?.offsetParent !== null');
   await activate(cdp, '[data-public-task-entry][data-research-task-intent="grant_plan"]');
@@ -51,6 +52,7 @@ try {
   await waitFor(cdp, 'document.querySelector("#chat-input")?.value?.startsWith("@基金") === true');
   await waitFor(cdp, 'document.body.dataset.loginReturnState === "authenticated_unbound"');
   const pageStates = await evaluateJSON(cdp, `({
+    ...${JSON.stringify(publicLandingEvidence)},
     ...${JSON.stringify(afterTaskClick)},
     authStateAfterLogin: document.body.dataset.authState,
     restoredTaskIntent: document.body.dataset.researchTaskIntent,
@@ -74,6 +76,34 @@ try {
   for (const cleanup of state.cleanup.reverse()) {
     await cleanup().catch?.(() => {});
   }
+}
+
+async function publicLandingState(cdp) {
+  return evaluateJSON(cdp, `(() => {
+    const landing = document.querySelector('[data-public-landing-surface]');
+    const hero = document.querySelector('[data-public-hero]');
+    const primary = document.querySelector('[data-public-primary-start]');
+    const secondary = document.querySelector('[data-public-secondary-start]');
+    const trust = document.querySelector('[data-public-trust-strip]');
+    const style = getComputedStyle(document.documentElement);
+    const heroRect = hero?.getBoundingClientRect();
+    const viewportCenter = window.innerWidth / 2;
+    const heroCenter = heroRect ? heroRect.left + heroRect.width / 2 : 0;
+    return {
+      publicLandingSlice: landing?.getAttribute('data-figma-slice') || '',
+      publicLandingTheme: {
+        background: style.getPropertyValue('--background').trim(),
+        primary: style.getPropertyValue('--primary').trim(),
+      },
+      publicLanding: {
+        heroCentered: Boolean(heroRect && Math.abs(heroCenter - viewportCenter) < 12),
+        taskPillCount: document.querySelectorAll('[data-public-task-entry]').length,
+        hasPrimaryStartPath: Boolean(primary && primary.offsetParent !== null),
+        hasSecondaryStartPath: Boolean(secondary && secondary.offsetParent !== null),
+        hasTrustStrip: Boolean(trust && trust.offsetParent !== null),
+      },
+    };
+  })()`);
 }
 
 function findBrowserBinary() {
