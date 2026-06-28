@@ -82,6 +82,42 @@ function collectViolations(evidence) {
         && evidence.afterAuth.workbench.searchTriggerVisible === true,
     },
     {
+      label: 'search sheet must follow Figma projection slice and close with Escape',
+      pass: evidence.afterAuth.dialogSheetProjection.searchOpen.slice === 'figma_dialog_sheet_projection_slice'
+        && evidence.afterAuth.dialogSheetProjection.searchOpen.visible === true
+        && evidence.afterAuth.dialogSheetProjection.searchOpen.hasClose === true
+        && evidence.afterAuth.dialogSheetProjection.searchOpen.hasEmptyState === true
+        && evidence.afterAuth.dialogSheetProjection.searchOpen.projectionOnly === true
+        && evidence.afterAuth.dialogSheetProjection.searchClosed === true,
+    },
+    {
+      label: 'account popover must follow Figma projection slice and close to trigger',
+      pass: evidence.afterAuth.dialogSheetProjection.accountOpen.slice === 'figma_dialog_sheet_projection_slice'
+        && evidence.afterAuth.dialogSheetProjection.accountOpen.visible === true
+        && evidence.afterAuth.dialogSheetProjection.accountOpen.hasClose === true
+        && evidence.afterAuth.dialogSheetProjection.accountOpen.hasEmptyState === true
+        && evidence.afterAuth.dialogSheetProjection.accountOpen.projectionOnly === true
+        && evidence.afterAuth.dialogSheetProjection.accountClosed === true,
+    },
+    {
+      label: 'API key dialog must follow Figma projection slice without payment/runtime/storage truth',
+      pass: evidence.afterAuth.dialogSheetProjection.apiKeyOpen.slice === 'figma_dialog_sheet_projection_slice'
+        && evidence.afterAuth.dialogSheetProjection.apiKeyOpen.visible === true
+        && evidence.afterAuth.dialogSheetProjection.apiKeyOpen.hasClose === true
+        && evidence.afterAuth.dialogSheetProjection.apiKeyOpen.hasEmptyState === true
+        && evidence.afterAuth.dialogSheetProjection.apiKeyOpen.projectionOnly === true
+        && evidence.afterAuth.dialogSheetProjection.apiKeyClosed === true,
+    },
+    {
+      label: 'inspector sheet must follow Figma projection slice and remain refs-only',
+      pass: evidence.afterAuth.dialogSheetProjection.inspectorOpen.slice === 'figma_dialog_sheet_projection_slice'
+        && evidence.afterAuth.dialogSheetProjection.inspectorOpen.visible === true
+        && evidence.afterAuth.dialogSheetProjection.inspectorOpen.hasClose === true
+        && evidence.afterAuth.dialogSheetProjection.inspectorOpen.hasEmptyState === true
+        && evidence.afterAuth.dialogSheetProjection.inspectorOpen.projectionOnly === true
+        && evidence.afterAuth.dialogSheetProjection.inspectorClosed === true,
+    },
+    {
       label: 'cannot-claim boundary must include fake project/workspace data',
       pass: evidence.cannotClaim.includes('fake project/workspace data retired'),
     },

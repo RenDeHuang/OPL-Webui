@@ -57,12 +57,17 @@ try {
     && document.querySelector("#chat-input")?.value?.startsWith("@基金") === true
     && document.querySelector("[data-side-navigation]")?.textContent.includes("任务历史")`);
   const workbenchEvidence = await workbenchState(cdp);
-  const afterAuth = await pageState(cdp, {
+  const afterAuthBase = await pageState(cdp, {
     ...workbenchEvidence,
     sidebarText: await textContent(cdp, '[data-side-navigation]'),
     taskHistoryEmptyVisible: await isVisible(cdp, '[data-task-history-empty]'),
     taskHistoryItems: await count(cdp, '[data-task-history-item]'),
   });
+  const projectionEvidence = await dialogSheetProjectionState(cdp);
+  const afterAuth = {
+    ...afterAuthBase,
+    ...projectionEvidence,
+  };
 
   console.log(JSON.stringify({
     ok: true,
@@ -113,6 +118,90 @@ async function pageState(cdp, extra = {}) {
     prompt: document.querySelector('#chat-input')?.value || '',
     ${Object.entries(extra).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(',\n    ')}
     };
+  })()`);
+}
+
+async function dialogSheetProjectionState(cdp) {
+  await waitFor(cdp, 'Boolean(document.querySelector("[data-search-trigger]")?.offsetParent !== null)');
+  await typeInto(cdp, '#chat-input', '');
+  await activate(cdp, '[data-search-trigger]');
+  await waitFor(cdp, visibleSelectorExpression('[data-search-sheet]'));
+  const searchOpen = await overlayState(cdp, 'search');
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await waitFor(cdp, '!document.querySelector("[data-search-sheet]")');
+  const searchClosed = await evaluateJSON(cdp, 'document.activeElement?.matches("[data-search-trigger]") === true');
+
+  await activate(cdp, '[data-account-toggle]');
+  await waitFor(cdp, visibleSelectorExpression('[data-account-popover]'));
+  const accountOpen = await overlayState(cdp, 'account');
+  await activate(cdp, '[data-account-popover-close]');
+  await waitFor(cdp, '!document.querySelector("[data-account-popover]")');
+  const accountClosed = await evaluateJSON(cdp, 'document.activeElement?.matches("[data-account-toggle]") === true');
+
+  await typeInto(cdp, '#chat-input', '普通问题');
+  await submitVisibleButton(cdp, '[data-chat-submit]');
+  await waitFor(cdp, 'document.body.dataset.apiKeyDialogState === "open"');
+  const apiKeyOpen = await overlayState(cdp, 'apiKey');
+  await activate(cdp, '[data-api-key-dialog-close]');
+  await waitFor(cdp, 'document.body.dataset.apiKeyDialogState === "closed"');
+  const apiKeyClosed = await evaluateJSON(cdp, 'document.activeElement?.id === "chat-input"');
+
+  await activate(cdp, '[data-inspector-open="files"]');
+  await waitFor(cdp, visibleSelectorExpression('[data-inspector-sheet]'));
+  const inspectorOpen = await overlayState(cdp, 'inspector');
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });
+  await waitFor(cdp, '!document.querySelector("[data-inspector-sheet]")');
+  const inspectorClosed = await evaluateJSON(cdp, 'document.activeElement?.matches("[data-inspector-open]") === true');
+
+  return {
+    dialogSheetProjection: {
+      searchOpen,
+      searchClosed,
+      accountOpen,
+      accountClosed,
+      apiKeyOpen,
+      apiKeyClosed,
+      inspectorOpen,
+      inspectorClosed,
+    },
+  };
+}
+
+function visibleSelectorExpression(selector) {
+  return `(() => {
+    const node = document.querySelector(${JSON.stringify(selector)});
+    if (!node || node.hidden) return false;
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+    return Boolean(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
+  })()`;
+}
+
+async function overlayState(cdp, kind) {
+  return evaluateJSON(cdp, `(() => {
+    const selectors = {
+      search: '[data-search-sheet]',
+      account: '[data-account-popover]',
+      apiKey: '[data-api-key-dialog]',
+      inspector: '[data-inspector-sheet]',
+    };
+    const element = document.querySelector(selectors[${JSON.stringify(kind)}]);
+    const text = element?.textContent || '';
+    return {
+      slice: element?.getAttribute('data-figma-slice') || '',
+      visible: isVisible(element),
+      hasClose: Boolean(element?.querySelector('button[aria-label*="关闭"], [data-overlay-close], [data-api-key-dialog-close], [data-inspector-close], [data-account-popover-close]')),
+      hasEmptyState: Boolean(element?.querySelector('[data-conversation-empty], [data-settings-message], [data-inspector-panel], [data-api-key-dialog-primary]')),
+      projectionOnly: !/artifact body|runtime completed|storage ready|payment status|Pro 套餐|积分余额|充值/.test(text),
+    };
+    function isVisible(node) {
+      if (!node || node.hidden) return false;
+      const style = window.getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      return Boolean(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
+    }
   })()`);
 }
 
@@ -322,8 +411,12 @@ async function navigate(cdp, url) {
 async function activate(cdp, selector) {
   const { x, y } = await elementCenter(cdp, selector);
   await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+  if (!await elementExists(cdp, selector)) {
+    await wait(50);
+    return;
+  }
   await cdp.send('Runtime.evaluate', {
     expression: `document.querySelector(${JSON.stringify(selector)})?.focus()`,
     awaitPromise: true,
@@ -331,10 +424,20 @@ async function activate(cdp, selector) {
   await wait(50);
 }
 
+async function elementExists(cdp, selector) {
+  return evaluateJSON(cdp, `document.querySelector(${JSON.stringify(selector)}) !== null`);
+}
+
 async function typeInto(cdp, selector, value) {
   await focusElement(cdp, selector);
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', modifiers: 2 });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', modifiers: 2 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+  if (value === '') {
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 });
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 });
+    await waitFor(cdp, `document.querySelector(${JSON.stringify(selector)})?.value === ""`);
+    return;
+  }
   await cdp.send('Input.insertText', { text: value });
   await waitFor(cdp, `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(value)}`);
 }

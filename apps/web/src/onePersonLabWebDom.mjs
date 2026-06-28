@@ -397,7 +397,7 @@ function renderSearchSheet() {
   const conversations = state.view.conversations || [];
   return `
     <div class="sheet-backdrop" data-overlay-close="search"></div>
-    <aside class="search-sheet" data-search-sheet data-overlay-state="open">
+    <aside class="search-sheet" data-search-sheet data-overlay-state="open" data-figma-slice="figma_dialog_sheet_projection_slice">
       <header><span>Search</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
       <input id="conversation-search" type="search" data-conversation-search placeholder="搜索对话历史..." aria-label="搜索对话历史">
       <div class="conversation-history" data-conversation-history>
@@ -410,7 +410,7 @@ function renderSearchSheet() {
 function renderAccountPopover() {
   const providerStatus = state.view.provider.apiKeyConfigured ? `已绑定：${state.view.provider.maskedKey}` : '未绑定';
   return `
-    <aside class="account-popover" id="account-popover" data-account-popover>
+    <aside class="account-popover" id="account-popover" data-account-popover data-figma-slice="figma_dialog_sheet_projection_slice">
       <header><span>Account</span><button type="button" data-account-popover-close aria-label="关闭账号弹层">x</button></header>
       <dl>
         <div><dt>登录状态</dt><dd data-session-status>${escapeHTML(state.view.session.email || '未登录')}</dd></div>
@@ -443,7 +443,7 @@ function renderBillingSummary() {
 
 function renderInspector() {
   return `
-    <aside class="inspector-sheet" data-inspector-sheet data-inspector-state="${escapeAttr(state.inspectorTab)}" data-responsive-placement="bottom_sheet">
+    <aside class="inspector-sheet" data-inspector-sheet data-inspector-state="${escapeAttr(state.inspectorTab)}" data-responsive-placement="bottom_sheet" data-figma-slice="figma_dialog_sheet_projection_slice">
       <header><span>Inspector</span><button type="button" data-inspector-close aria-label="关闭检查器">x</button></header>
       <div class="inspector-tabs" role="tablist">
         ${['files', 'progress', 'output'].map((tab) => `<button type="button" data-inspector-tab="${tab}" aria-selected="${String(state.inspectorTab === tab)}">${tabLabel(tab)}</button>`).join('')}
@@ -459,7 +459,7 @@ function renderInspector() {
       </section>
       <section data-inspector-panel="output" ${state.inspectorTab === 'output' ? '' : 'hidden'}>
         <h3>Output</h3>
-        <p>结果生成后显示 deliverable refs，不返回 artifact body。</p>
+        <p>结果生成后仅显示 deliverable refs 和引用投影；Web 不持有产物正文权威。</p>
       </section>
     </aside>`;
 }
@@ -467,7 +467,7 @@ function renderInspector() {
 function renderAPIKeyDialog() {
   const open = document.body.dataset.apiKeyDialogState === 'open';
   return `
-    <aside class="api-key-dialog" data-api-key-dialog data-api-key-dialog-state="${open ? 'open' : 'closed'}" role="dialog" aria-modal="true" aria-labelledby="api-key-dialog-title" ${open ? '' : 'hidden'}>
+    <aside class="api-key-dialog" data-api-key-dialog data-api-key-dialog-state="${open ? 'open' : 'closed'}" role="dialog" aria-modal="true" aria-labelledby="api-key-dialog-title" data-figma-slice="figma_dialog_sheet_projection_slice" ${open ? '' : 'hidden'}>
       <div class="api-key-dialog-panel">
         <span>API Key</span>
         <h2 id="api-key-dialog-title">发送前需要绑定 API Key</h2>
