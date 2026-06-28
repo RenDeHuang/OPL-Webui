@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "id": "opl_webui_commercial_consumer_contract",
+  "productId": "one-person-lab-web",
+  "ownerSurface": "opl-webui-commercial-consumer",
+  "consumer": ["Web shell", "Go control plane", "contract tests", "AI agent"],
+  "state": "active_contract",
+  "productRole": "web_interaction_platform_consumer",
+  "authoritativeFor": "OPL-Webui consumption of MedOPL projections and deeplinks",
+  "notAuthoritativeFor": "MedOPL current truth or payment/billing/runtime/storage/resource-control ownership",
+  "productBoundary": {
+    "webuiOwns": [
+      "ordinary_chat",
+      "research_interaction",
+      "task_intent",
+      "task_experience",
+      "account_session",
+      "byok_binding",
+      "page_state",
+      "readonly_projection_rendering",
+      "deeplink_handoff"
+    ],
+    "medoplOwns": [
+      "account_plan_truth",
+      "balance_quota_truth",
+      "runtime_admission_truth",
+      "storage_status_truth",
+      "billing_payment_truth",
+      "resource_control_truth",
+      "account_resource_provisioning_truth"
+    ],
+    "onePersonLabOwns": [
+      "framework_execution_semantics",
+      "task_lifecycle_semantics",
+      "domain_execution_boundaries"
+    ]
+  },
+  "ordinaryPath": {
+    "defaultRequiresRuntime": false,
+    "defaultRequiresStorage": false,
+    "runtimeStoragePolicy": "not_required_by_default",
+    "webuiOwnedInteractions": [
+      "ordinary_chat",
+      "@科研",
+      "task_intent_capture",
+      "prompt_composer"
+    ],
+    "forbiddenClaims": [
+      "runtime_execution",
+      "storage_truth",
+      "artifact_body_authority"
+    ]
+  },
+  "specialistPath": {
+    "enteredOnlyWhenRuntimeRequired": true,
+    "runtimeResourceOwner": "MedOPL",
+    "webuiMode": "projection_consumer_and_deeplink_handoff",
+    "taskMarkers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
+    "allowedStates": ["blocked", "ready", "onboarding_required"],
+    "autoRunWithoutMedOPLReadyProjection": false,
+    "fakeReadyForbidden": true
+  },
+  "projectionSurfaces": [
+    {
+      "id": "account",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["account capability display", "onboarding status display", "deeplink target selection"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "plan",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["plan status display", "runtime admission blocker explanation", "MedOPL plan deeplink"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "balance_quota",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["quota projection", "usage blocker explanation", "MedOPL recharge deeplink"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "runtime_admission",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["blocked ready onboarding state", "next action", "specialist task gate"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "storage_status",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["storage readiness projection", "refs-only delivery boundary", "MedOPL storage deeplink"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "billing",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["readonly billing summary", "payment handoff copy", "MedOPL billing deeplink"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    },
+    {
+      "id": "release",
+      "sourceOwner": "MedOPL",
+      "webuiMode": "readonly_projection",
+      "webuiMutationAllowed": false,
+      "webuiSourceOfTruth": false,
+      "fakeProjectionAllowed": false,
+      "allowedUse": ["release capability projection", "commercial readiness display", "handoff next action"],
+      "forbiddenUse": ["source_of_truth_claim", "mutation", "fake_ready"]
+    }
+  ],
+  "deeplinkContract": {
+    "sourceOwner": "MedOPL",
+    "webuiOwnsDeepLinkRendering": true,
+    "webuiOwnsTargetBehavior": false,
+    "returnToOplRequired": true,
+    "allowedTargets": ["plan", "billing", "runtime", "storage", "onboarding", "return_to_task"]
+  },
+  "apiConsumers": [
+    "/api/account/commercial-status",
+    "/api/account/billing-summary",
+    "/api/medopl/runtime/status",
+    "/api/medopl/materials-deliverables/projection",
+    "/api/opl/runtime-gate",
+    "/api/opl/runs",
+    "/api/tasks"
+  ],
+  "forbiddenWebuiClaims": [
+    "payment_truth",
+    "billing_truth",
+    "runtime_truth",
+    "storage_truth",
+    "resource_control_truth",
+    "artifact_body_authority",
+    "full_saas",
+    "production_ready_saas"
+  ],
+  "futureCapabilityPlaceholders": [
+    {
+      "id": "payment_or_billing_ui",
+      "currentStatus": "current_stage_evidence_boundary_not_permanent_denial",
+      "requiresMedOPLAuthority": true,
+      "requiresNewContractAndTests": true,
+      "webuiMaySelfAuthorize": false
+    },
+    {
+      "id": "runtime_execution_projection",
+      "currentStatus": "current_stage_evidence_boundary_not_permanent_denial",
+      "requiresMedOPLAuthority": true,
+      "requiresNewContractAndTests": true,
+      "webuiMaySelfAuthorize": false
+    },
+    {
+      "id": "storage_or_artifact_projection",
+      "currentStatus": "current_stage_evidence_boundary_not_permanent_denial",
+      "requiresMedOPLAuthority": true,
+      "requiresNewContractAndTests": true,
+      "webuiMaySelfAuthorize": false
+    },
+    {
+      "id": "resource_control_admin",
+      "currentStatus": "current_stage_evidence_boundary_not_permanent_denial",
+      "requiresMedOPLAuthority": true,
+      "requiresNewContractAndTests": true,
+      "webuiMaySelfAuthorize": false
+    }
+  ],
+  "doesNotProve": [
+    "production rollout",
+    "MedOPL readiness",
+    "payment readiness",
+    "billing source of truth",
+    "runtime execution",
+    "storage truth",
+    "resource-control truth",
+    "full SaaS capability"
+  ]
+}
