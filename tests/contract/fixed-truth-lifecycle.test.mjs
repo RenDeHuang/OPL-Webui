@@ -131,7 +131,7 @@ test('active baton and tombstone preserve next-agent context without becoming ma
   assert.equal(active.includes(latest.commit), true);
   assert.match(active, /28142197152.*historical-only/);
   assert.match(active, /Production Availability Probe After Apply/);
-  assert.match(active, /confirmed historically with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`/);
+  assert.match(active, /confirmed for latest-main run `\d+` with sanitized `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` foldback/);
   assert.match(active, /Production browser e2e evidence passed/);
   assert.match(active, /not MedOPL runtime execution/);
   assert.doesNotMatch(active, /27823251419/);
@@ -495,7 +495,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.equal(runbook.includes(latest.commit.slice(0, 7)), true);
   assert.match(runbook, /production browser e2e passed/);
   assert.match(runbook, /real chat: true/);
-  assert.match(runbook, /readonly projection: unconfirmed by public metadata/);
+  assert.match(runbook, /readonly projection: true \(sanitized foldback confirms OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1\)/);
   assert.match(runbook, /production authenticated dogfood e2e passed/);
   assert.match(runbook, /Production availability probe closeout/);
   assert.match(runbook, /Production availability probe/);
@@ -541,7 +541,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /P1 commercial operations contracts are present/);
   assert.match(status, /P2 SLA\/HA operations contracts are present/);
   assert.match(status, /external production evidence still pending after this RC closeout/);
-  assert.match(status, /confirmed historically with `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1`/);
+  assert.match(status, /confirmed for latest-main run `\d+` with sanitized `OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1` foldback/);
   assert.match(status, new RegExp(`Latest main production evidence is folded back from GitHub Actions run \`${latest.runId}\``));
   assert.doesNotMatch(status, /本阶段没有执行 production authenticated dogfood e2e/);
   assert.doesNotMatch(status, /本阶段没有执行 production real ordinary chat completion dogfood/);
