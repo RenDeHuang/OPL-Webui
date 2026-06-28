@@ -175,7 +175,7 @@
       "id": "commercial_launch_ui_implementation",
       "ownerSurface": "apps-web",
       "state": "active",
-      "currentPhaseId": "figma_auth_surface_slice",
+      "currentPhaseId": "figma_home_workbench_shell_slice",
       "currentStatus": "not_started",
       "cannotClaim": ["Figma UI implementation complete", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
       "sourceTruth": {
@@ -224,6 +224,7 @@
         },
         {
           "id": "figma_auth_surface_slice",
+          "status": "done",
           "objective": "Implement `/login` Auth Surface with Figma auth card, tabs, and form interaction while satisfying login/register contract truth.",
           "entryCriteria": ["figma_public_landing_slice is done", "`/login` route truth remains Login/Register Auth Surface", "login/register tab contract is machine-guarded"],
           "exitCriteria": ["`/login` follows Figma auth surface visual and interaction pattern", "login tab shows only login submit and register tab shows only create-account submit", "auth surface can return to public landing and preserves pending task intent"],
