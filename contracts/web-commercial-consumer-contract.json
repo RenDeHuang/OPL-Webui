@@ -188,6 +188,128 @@
       "webuiMaySelfAuthorize": false
     }
   ],
+  "commercialWebuiMedoplE2ELaunchContract": {
+    "goalId": "goal-commercial-webui-medopl-e2e-launch-contract",
+    "scope": "cross_repo_local_contract_only",
+    "medoplContractRef": "contracts/medopl-api-contract.json#/medopl_api_contract/opl_webui_e2e_launch_contract",
+    "buildPushDeployLiveTestAllowed": false,
+    "doesNotReplaceMedoplNextRecommendedGoal": "goal-commercial-release-metadata-rollback-maturity",
+    "identityMapping": {
+      "sharedKeys": ["userId", "email", "tenantId", "workspaceId"],
+      "webuiSessionProjection": {
+        "owner": "OPL-Webui",
+        "sourceOfCommercialTruth": false,
+        "fields": ["userId", "email", "tenantId", "workspaceId", "sessionState"]
+      },
+      "medoplCommercialTruth": {
+        "owner": "MedOPL",
+        "sourceOfCommercialTruth": true,
+        "fields": [
+          "accountId",
+          "planId",
+          "balance",
+          "quota",
+          "runtimeBindingId",
+          "storageBindingId",
+          "billingAttributionId"
+        ]
+      },
+      "forbiddenCrossings": [
+        "rawProviderKey",
+        "paymentToken",
+        "runtimeToken",
+        "storageObjectKey",
+        "artifactBody"
+      ]
+    },
+    "pathMatrix": [
+      {
+        "id": "ordinary_path",
+        "owner": "OPL-Webui",
+        "entry": "authenticated ordinary chat or @科研 task intent",
+        "runtimeRequired": false,
+        "storageRequired": false,
+        "medoplProjectionRequired": false,
+        "webuiEvidence": ["session_current", "ordinary_chat_allowed", "task_intent_capture"],
+        "medoplEvidence": [],
+        "cannotClaim": ["runtime execution", "storage truth", "artifact body authority"]
+      },
+      {
+        "id": "specialist_blocked_handoff",
+        "owner": "MedOPL",
+        "entry": "runtime_required specialist task before commercial readiness",
+        "runtimeRequired": true,
+        "storageRequired": true,
+        "medoplProjectionRequired": true,
+        "webuiAutoRunAllowed": false,
+        "medoplReadonlyProjection": [
+          "account",
+          "plan",
+          "balance_quota",
+          "runtime_admission",
+          "storage_status",
+          "billing",
+          "release"
+        ],
+        "handoffNextActions": [
+          "open_medopl_onboarding",
+          "select_plan",
+          "recharge_or_credit_required",
+          "open_runtime_storage"
+        ],
+        "deeplinkRequired": true,
+        "cannotClaim": ["payment readiness", "runtime execution", "storage truth"]
+      },
+      {
+        "id": "specialist_onboarding_required",
+        "owner": "MedOPL",
+        "entry": "runtime_required specialist task without approved commercial account",
+        "state": "onboarding_required",
+        "runtimeRequired": true,
+        "storageRequired": true,
+        "medoplProjectionRequired": true,
+        "webuiAutoRunAllowed": false,
+        "handoffNextActions": ["open_medopl_onboarding"],
+        "deeplinkRequired": true,
+        "cannotClaim": ["MedOPL account ready", "runtime execution readiness", "payment readiness"]
+      },
+      {
+        "id": "specialist_ready_projection",
+        "owner": "MedOPL",
+        "entry": "runtime_required specialist task after MedOPL approval credit plan runtime storage",
+        "state": "ready",
+        "runtimeRequired": true,
+        "storageRequired": true,
+        "readySourceOwner": "MedOPL",
+        "allowedWebuiBridgeActions": ["POST /api/opl/runtime-gate", "POST /api/opl/runs"],
+        "projectionPolicy": "refs_progress_deliverables_only",
+        "cannotClaim": [
+          "runtime execution completed",
+          "artifact body authority",
+          "storage truth ownership",
+          "domain verdict authority"
+        ]
+      }
+    ],
+    "verification": {
+      "localCommands": ["npm run verify:contract", "npm run verify:health", "npm run verify"],
+      "forbiddenCommands": ["build", "push", "deploy", "live-test"],
+      "evidenceLevel": "local_static_contract_and_registered_repo_verification"
+    },
+    "canClaim": [
+      "cross-repo commercial launch contract matrix is defined locally",
+      "OPL-Webui ordinary path remains outside runtime/storage blocking",
+      "OPL-Webui specialist path consumes MedOPL readonly projection and deeplink handoff"
+    ],
+    "cannotClaim": [
+      "cloud deploy executed",
+      "build or push executed",
+      "live production test executed",
+      "MedOPL payment readiness",
+      "MedOPL runtime execution completed",
+      "storage truth ownership by OPL-Webui"
+    ]
+  },
   "doesNotProve": [
     "production rollout",
     "MedOPL readiness",

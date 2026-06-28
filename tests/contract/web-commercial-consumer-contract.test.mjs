@@ -126,3 +126,102 @@ test('OPL-Webui commercial consumer contract keeps MedOPL as commercial runtime 
     'full SaaS capability',
   ], 'does-not-prove boundary');
 });
+
+test('OPL-Webui commercial launch matrix fixes cross-repo identity and handoff contract', () => {
+  const contract = readJson('contracts/web-commercial-consumer-contract.json');
+  const launch = contract.commercialWebuiMedoplE2ELaunchContract;
+
+  assert.equal(launch.goalId, 'goal-commercial-webui-medopl-e2e-launch-contract');
+  assert.equal(launch.scope, 'cross_repo_local_contract_only');
+  assert.equal(launch.medoplContractRef, 'contracts/medopl-api-contract.json#/medopl_api_contract/opl_webui_e2e_launch_contract');
+  assert.equal(launch.buildPushDeployLiveTestAllowed, false);
+  assert.equal(launch.doesNotReplaceMedoplNextRecommendedGoal, 'goal-commercial-release-metadata-rollback-maturity');
+
+  assert.deepEqual(launch.identityMapping.sharedKeys, ['userId', 'email', 'tenantId', 'workspaceId']);
+  assert.equal(launch.identityMapping.webuiSessionProjection.owner, 'OPL-Webui');
+  assert.equal(launch.identityMapping.webuiSessionProjection.sourceOfCommercialTruth, false);
+  assert.equal(launch.identityMapping.medoplCommercialTruth.owner, 'MedOPL');
+  assert.equal(launch.identityMapping.medoplCommercialTruth.sourceOfCommercialTruth, true);
+  assertIncludesAll(launch.identityMapping.medoplCommercialTruth.fields, [
+    'accountId',
+    'planId',
+    'balance',
+    'quota',
+    'runtimeBindingId',
+    'storageBindingId',
+    'billingAttributionId',
+  ], 'MedOPL commercial truth field');
+  assertIncludesAll(launch.identityMapping.forbiddenCrossings, [
+    'rawProviderKey',
+    'paymentToken',
+    'runtimeToken',
+    'storageObjectKey',
+    'artifactBody',
+  ], 'forbidden identity crossing');
+
+  const paths = new Map(launch.pathMatrix.map((path) => [path.id, path]));
+  assert.deepEqual([...paths.keys()], [
+    'ordinary_path',
+    'specialist_blocked_handoff',
+    'specialist_onboarding_required',
+    'specialist_ready_projection',
+  ]);
+
+  assert.equal(paths.get('ordinary_path').runtimeRequired, false);
+  assert.equal(paths.get('ordinary_path').storageRequired, false);
+  assert.equal(paths.get('ordinary_path').medoplProjectionRequired, false);
+  assertIncludesAll(paths.get('ordinary_path').webuiEvidence, ['session_current', 'ordinary_chat_allowed'], 'ordinary path evidence');
+  assertIncludesAll(paths.get('ordinary_path').cannotClaim, ['runtime execution', 'storage truth'], 'ordinary path cannot-claim');
+
+  assert.equal(paths.get('specialist_blocked_handoff').runtimeRequired, true);
+  assert.equal(paths.get('specialist_blocked_handoff').medoplProjectionRequired, true);
+  assert.equal(paths.get('specialist_blocked_handoff').webuiAutoRunAllowed, false);
+  assertIncludesAll(paths.get('specialist_blocked_handoff').medoplReadonlyProjection, [
+    'account',
+    'plan',
+    'balance_quota',
+    'runtime_admission',
+    'storage_status',
+    'billing',
+    'release',
+  ], 'blocked projection');
+  assertIncludesAll(paths.get('specialist_blocked_handoff').handoffNextActions, [
+    'open_medopl_onboarding',
+    'select_plan',
+    'recharge_or_credit_required',
+    'open_runtime_storage',
+  ], 'blocked next action');
+  assert.equal(paths.get('specialist_blocked_handoff').deeplinkRequired, true);
+
+  assert.equal(paths.get('specialist_onboarding_required').state, 'onboarding_required');
+  assert.equal(paths.get('specialist_onboarding_required').webuiAutoRunAllowed, false);
+  assertIncludesAll(paths.get('specialist_onboarding_required').handoffNextActions, ['open_medopl_onboarding'], 'onboarding next action');
+
+  assert.equal(paths.get('specialist_ready_projection').state, 'ready');
+  assert.equal(paths.get('specialist_ready_projection').readySourceOwner, 'MedOPL');
+  assert.deepEqual(paths.get('specialist_ready_projection').allowedWebuiBridgeActions, [
+    'POST /api/opl/runtime-gate',
+    'POST /api/opl/runs',
+  ]);
+  assert.equal(paths.get('specialist_ready_projection').projectionPolicy, 'refs_progress_deliverables_only');
+  assertIncludesAll(paths.get('specialist_ready_projection').cannotClaim, [
+    'runtime execution completed',
+    'artifact body authority',
+    'storage truth ownership',
+  ], 'ready path cannot-claim');
+
+  assertIncludesAll(launch.verification.localCommands, ['npm run verify:contract', 'npm run verify:health', 'npm run verify'], 'local verification command');
+  assertIncludesAll(launch.canClaim, [
+    'cross-repo commercial launch contract matrix is defined locally',
+    'OPL-Webui ordinary path remains outside runtime/storage blocking',
+    'OPL-Webui specialist path consumes MedOPL readonly projection and deeplink handoff',
+  ], 'can-claim');
+  assertIncludesAll(launch.cannotClaim, [
+    'cloud deploy executed',
+    'build or push executed',
+    'live production test executed',
+    'MedOPL payment readiness',
+    'MedOPL runtime execution completed',
+    'storage truth ownership by OPL-Webui',
+  ], 'cannot-claim');
+});
