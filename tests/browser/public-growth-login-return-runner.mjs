@@ -32,7 +32,9 @@ try {
   await waitFor(cdp, 'document.querySelector("#chat-input")?.value?.startsWith("@基金") === true');
   await wait(1200);
   await waitFor(cdp, 'Boolean(document.querySelector("#auth-email") && document.querySelector("#auth-email").offsetParent !== null)');
+  const authSurfaceEvidence = await authSurfaceState(cdp);
   const afterTaskClick = await evaluateJSON(cdp, `({
+    ...${JSON.stringify(authSurfaceEvidence)},
     initialAuthState: 'anonymous',
     accountPopoverOpenAfterTaskClick: document.querySelector('[data-account-popover]')?.hidden === false,
     authFormStillVisibleAfterBootstrap: Boolean(document.querySelector("#auth-email") && document.querySelector("#auth-email").offsetParent !== null),
@@ -101,6 +103,39 @@ async function publicLandingState(cdp) {
         hasPrimaryStartPath: Boolean(primary && primary.offsetParent !== null),
         hasSecondaryStartPath: Boolean(secondary && secondary.offsetParent !== null),
         hasTrustStrip: Boolean(trust && trust.offsetParent !== null),
+      },
+    };
+  })()`);
+}
+
+async function authSurfaceState(cdp) {
+  return evaluateJSON(cdp, `(() => {
+    const surface = document.querySelector('[data-auth-surface]');
+    const wrap = document.querySelector('.auth-wrap');
+    const card = document.querySelector('[data-auth-card]');
+    const tabs = Array.from(document.querySelectorAll('[data-auth-tab]'));
+    const selectedTab = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
+    const email = document.querySelector('#auth-email');
+    const password = document.querySelector('#auth-password');
+    const submitButtons = Array.from(document.querySelectorAll('[data-auth-submit]')).filter((button) => button.offsetParent !== null);
+    const wrapRect = wrap?.getBoundingClientRect();
+    const viewportCenter = window.innerWidth / 2;
+    const wrapCenter = wrapRect ? wrapRect.left + wrapRect.width / 2 : 0;
+    return {
+      authSurfaceSlice: surface?.getAttribute('data-figma-slice') || '',
+      authSurface: {
+        centeredCard: Boolean(wrapRect && wrapRect.width <= 400 && Math.abs(wrapCenter - viewportCenter) < 12),
+        cardVisible: Boolean(card && card.offsetParent !== null),
+        tabCount: tabs.length,
+        selectedTab: selectedTab?.dataset.authTab || '',
+        visibleSubmitCount: submitButtons.length,
+        visibleSubmitAction: submitButtons[0]?.dataset.authAction || '',
+        brandText: document.querySelector('[data-auth-brand]')?.textContent?.trim() || '',
+        subtitleText: document.querySelector('[data-auth-subtitle]')?.textContent?.trim() || '',
+        emailPlaceholder: email?.getAttribute('placeholder') || '',
+        passwordPlaceholder: password?.getAttribute('placeholder') || '',
+        hasPasswordToggle: Boolean(document.querySelector('[data-toggle-password]')),
+        hasTermsCopy: Boolean(document.querySelector('[data-auth-terms]')),
       },
     };
   })()`);

@@ -114,13 +114,13 @@ function renderAuthPage() {
   const isRegister = state.authTab === 'register';
   const pendingPrompt = state.pendingPublicTask?.prompt || '';
   return `
-    <div class="auth-page" data-shell-state="auth_login_register" data-auth-surface data-account-popover>
+    <div class="auth-page" data-shell-state="auth_login_register" data-auth-surface data-account-popover data-figma-slice="figma_auth_surface_slice">
       <section class="auth-wrap">
         <div class="auth-brand">
-          <span>One Person Lab</span>
-          <p>AI 原生科研工作台</p>
+          <span data-auth-brand>One Person Lab</span>
+          <p data-auth-subtitle>AI 原生科研工作台</p>
         </div>
-        <div class="auth-card">
+        <div class="auth-card" data-auth-card>
           <button class="auth-close" type="button" data-auth-close aria-label="返回产品介绍">x</button>
           <div class="auth-tabs" role="tablist" aria-label="登录或注册">
             <button type="button" data-auth-tab="login" aria-selected="${String(!isRegister)}">登录</button>
@@ -148,7 +148,7 @@ function renderAuthPage() {
               `}
             </div>
             <input id="chat-input" type="hidden" value="${escapeAttr(pendingPrompt)}">
-            <p class="terms-copy">登录即表示同意服务条款与隐私政策。</p>
+            <p class="terms-copy" data-auth-terms>登录即表示同意服务条款与隐私政策。</p>
           </form>
         </div>
         <button class="auth-account-toggle-sentinel" type="button" data-account-toggle tabindex="-1" aria-hidden="true" aria-label="账户入口"></button>
