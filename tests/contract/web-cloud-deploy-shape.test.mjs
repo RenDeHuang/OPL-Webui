@@ -295,3 +295,40 @@ test('commercial deploy config baseline exists without replacing cloud rollout',
   });
   assert.match(stdout, /config check passed/i);
 });
+
+test('commercial troubleshooting and owner split runbook stays diagnostic only', () => {
+  const deployReadme = readFileSync('deploy/README.md', 'utf8');
+  const runbook = readFileSync(runbookPath, 'utf8');
+  const combined = `${deployReadme}\n${runbook}`;
+
+  for (const required of [
+    'runtime admission blocked',
+    'runtime gate ready',
+    'onboarding required',
+    'Production Browser E2E fail',
+    'MedOPL endpoint missing',
+    'dogfood account state',
+    'API key save fail',
+    'task projection missing',
+    'rollout apply passed but browser E2E failed',
+    'release evidence foldback blocked',
+    'backup/migration owner split',
+    'Webui backs up only web interaction config and sanitized audit projection',
+    'MedOPL owns canonical PostgreSQL runtime/billing/resource/workspace truth',
+    'one-person-lab owns framework execution semantics',
+    'minimal /_ops diagnostics',
+    'health/ready',
+    'config check',
+    'MedOPL bridge status',
+    'runtime admission diagnostic',
+    'audit/task projection diagnostic',
+    'release evidence summary',
+    'no MedOPL resource admin',
+    'no payment admin',
+    'no production mutation installer',
+  ]) {
+    assert.match(combined, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'), `missing ${required}`);
+  }
+
+  assert.doesNotMatch(combined, /Webui backs up MedOPL runtime|Web-owned artifact body|MedOPL resource admin UI/i);
+});

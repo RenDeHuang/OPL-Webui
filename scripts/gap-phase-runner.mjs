@@ -374,9 +374,14 @@ function evaluateCommercialProductMaturityGap(gap) {
       status: phaseIds.includes('webui_config_deploy_baseline')
         && phaseIds.includes('release_security_ci_hardening')
         && phaseIds.includes('ops_diagnostics_and_troubleshooting')
+        && (gap?.state === 'closed' || gap.phases.find((phase) => phase.id === 'ops_diagnostics_and_troubleshooting')?.status === 'done')
+        ? 'pass'
+        : phaseIds.includes('webui_config_deploy_baseline')
+        && phaseIds.includes('release_security_ci_hardening')
+        && phaseIds.includes('ops_diagnostics_and_troubleshooting')
         ? 'blocked'
         : 'fail',
-      proves: ['future Webui-owned maturity implementation phases are registered and pending'],
+      proves: ['Webui-owned maturity implementation phases are registered and closed or pending with explicit owner split'],
       doesNotProve: ['those phases are implemented', 'production mutation installer', 'full SaaS'],
     }),
   ];

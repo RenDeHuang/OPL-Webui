@@ -161,6 +161,11 @@
       "hiddenRoute": "/_ops",
       "hiddenRouteStatus": "optional_reserved_not_implemented"
     },
+    "opsDiagnosticsPlan": {
+      "status": "planned_contract_only",
+      "surfaces": ["health_ready", "config_check", "medopl_bridge_status", "runtime_admission_diagnostic", "audit_task_projection_diagnostic", "release_evidence_summary"],
+      "forbiddenCapabilities": ["payment_admin", "runtime_resource_admin", "storage_admin", "artifact_body_viewer", "production_mutation_installer"]
+    },
     "apiDataPath": [
       "GET /api/ops/registration-policy",
       "PUT /api/ops/registration-policy",

@@ -106,7 +106,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(
-      !['commercial_product_maturity_gap_v1', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      !['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
       gap.readyToAdvance,
     );
   }
@@ -155,11 +155,11 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'production_browser_e2e_split').status, 'pass');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'medopl_dogfood_provisioning_gap').status, 'pass');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'aligned_production_browser_e2e').status, 'pass');
-  assert.equal(byGap.commercial_product_maturity_gap_v1.status, 'partial');
+  assert.equal(byGap.commercial_product_maturity_gap_v1.status, 'done');
   assert.equal(byGap.commercial_product_maturity_gap_v1.currentPhaseId, 'ops_diagnostics_and_troubleshooting');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_classification_contract').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'webui_owner_boundary').status, 'pass');
-  assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'blocked');
+  assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').status, 'pass');
@@ -199,10 +199,10 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 8);
+  assert.equal(report.readyToAdvanceCount, 9);
   assert.deepEqual(report.summary, {
-    done: 8,
-    partial: 2,
+    done: 9,
+    partial: 1,
     blocked: 2,
     not_started: 0,
   });
@@ -319,10 +319,10 @@ test('commercial product maturity gap queue classifies reference-project maturit
   const gap = registry.gaps.find((item) => item.id === 'commercial_product_maturity_gap_v1');
   const classification = gap?.maturityClassification ?? {};
 
-  assert.equal(gap?.state, 'active');
+  assert.equal(gap?.state, 'closed');
   assert.equal(gap?.ownerSurface, 'product-boundary');
   assert.equal(gap?.currentPhaseId, 'ops_diagnostics_and_troubleshooting');
-  assert.equal(gap?.currentStatus, 'partial');
+  assert.equal(gap?.currentStatus, 'done');
   assert.deepEqual(gap?.phases.map((phase) => phase.id), [
     'maturity_gap_queue_registration',
     'webui_config_deploy_baseline',
@@ -331,6 +331,7 @@ test('commercial product maturity gap queue classifies reference-project maturit
   ]);
   assert.equal(gap?.phases.find((phase) => phase.id === 'webui_config_deploy_baseline')?.status, 'done');
   assert.equal(gap?.phases.find((phase) => phase.id === 'release_security_ci_hardening')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'ops_diagnostics_and_troubleshooting')?.status, 'done');
   for (const path of [
     'deploy/README.md',
     'deploy/.env.example',

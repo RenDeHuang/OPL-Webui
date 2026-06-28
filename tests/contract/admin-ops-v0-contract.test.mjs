@@ -26,6 +26,22 @@ test('Admin/Ops v0 contract fixes registration policy and user status boundaries
   assert.equal(product.minimalAdminOpsLayerContract.completedSlices.includes('registration_policy_user_status_v0'), true);
   assert.equal(product.minimalAdminOpsLayerContract.nextGaps.dogfoodReleaseEvidenceSummary, 'not_started');
   assert.equal(product.minimalAdminOpsLayerContract.uiSurface.hiddenRouteStatus, 'optional_reserved_not_implemented');
+  assert.equal(product.minimalAdminOpsLayerContract.opsDiagnosticsPlan.status, 'planned_contract_only');
+  assert.deepEqual(product.minimalAdminOpsLayerContract.opsDiagnosticsPlan.surfaces, [
+    'health_ready',
+    'config_check',
+    'medopl_bridge_status',
+    'runtime_admission_diagnostic',
+    'audit_task_projection_diagnostic',
+    'release_evidence_summary',
+  ]);
+  assert.deepEqual(product.minimalAdminOpsLayerContract.opsDiagnosticsPlan.forbiddenCapabilities, [
+    'payment_admin',
+    'runtime_resource_admin',
+    'storage_admin',
+    'artifact_body_viewer',
+    'production_mutation_installer',
+  ]);
   assert.deepEqual(product.minimalAdminOpsLayerContract.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
   assert.deepEqual(product.minimalAdminOpsLayerContract.userStatus.disabledDenies, ['login', 'session_current', 'chat', 'api_key_binding', 'user_product_path']);
   assert.equal(product.minimalAdminOpsLayerContract.operatorAuth.mode, 'operator_token_required');
