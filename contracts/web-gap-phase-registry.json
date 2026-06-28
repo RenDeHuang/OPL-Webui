@@ -174,10 +174,10 @@
     {
       "id": "commercial_launch_ui_implementation",
       "ownerSurface": "apps-web",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "figma_dialog_sheet_projection_slice",
-      "currentStatus": "not_started",
-      "cannotClaim": ["Figma UI implementation complete", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
+      "currentStatus": "done",
+      "cannotClaim": ["owner visual acceptance", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
       "sourceTruth": {
         "contract": "contracts/web-product-profile.json#/uiSourceTruth",
         "figmaUrl": "https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0",
@@ -260,6 +260,7 @@
         },
         {
           "id": "figma_dialog_sheet_projection_slice",
+          "status": "done",
           "objective": "Implement search sheet, account popover, API key dialog, and inspector sheet using Figma interaction patterns while staying projection-only.",
           "entryCriteria": ["figma_home_workbench_shell_slice is done", "dialog/sheet truth is machine-guarded", "projection-only runtime/storage/artifact boundary remains fixed"],
           "exitCriteria": ["search sheet, account popover, API key dialog, and inspector sheet follow Figma interaction patterns", "open, close, Escape, focus return, empty state, and error state are implemented", "runtime/storage/artifact body truth is not claimed"],

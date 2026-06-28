@@ -254,8 +254,7 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
     evalResult({
       id: 'commercial_launch_phase_queue',
       dimension: 'contract',
-      status: gap.state === 'active'
-        && allowedCommercialLaunchCurrentPhase(gap.currentPhaseId, implementationMap)
+      status: allowedCommercialLaunchQueueState(gap, implementationMap)
         && requiredPhaseIds.every((id, index) => phaseIds[index] === id)
         ? 'pass'
         : 'fail',
@@ -279,6 +278,13 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
       doesNotProve: ['mock copy has been removed from implemented UI', 'production readiness', 'runtime/storage ownership'],
     }),
   ];
+}
+
+function allowedCommercialLaunchQueueState(gap, implementationMap) {
+  if (gap.state === 'active') return allowedCommercialLaunchCurrentPhase(gap.currentPhaseId, implementationMap);
+  if (gap.state !== 'closed' || gap.currentStatus !== 'done') return false;
+  if (gap.currentPhaseId !== 'figma_dialog_sheet_projection_slice') return false;
+  return gap.phases.every((phase) => phase.status === 'done');
 }
 
 function allowedCommercialLaunchCurrentPhase(currentPhaseId, implementationMap) {

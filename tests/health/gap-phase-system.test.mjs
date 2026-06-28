@@ -103,7 +103,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(
-      !['commercial_launch_ui_implementation', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      !['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
       gap.readyToAdvance,
     );
   }
@@ -129,9 +129,9 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
-  assert.equal(byGap.commercial_launch_ui_implementation.status, 'not_started');
+  assert.equal(byGap.commercial_launch_ui_implementation.status, 'done');
   assert.equal(byGap.commercial_launch_ui_implementation.currentPhaseId, 'figma_dialog_sheet_projection_slice');
-  assert.equal(byGap.commercial_launch_ui_implementation.readyToAdvance, false);
+  assert.equal(byGap.commercial_launch_ui_implementation.readyToAdvance, true);
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_figma_source').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_phase_queue').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_mock_truth_boundary').status, 'pass');
@@ -175,12 +175,12 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 5);
+  assert.equal(report.readyToAdvanceCount, 6);
   assert.deepEqual(report.summary, {
-    done: 5,
+    done: 6,
     partial: 1,
     blocked: 2,
-    not_started: 1,
+    not_started: 0,
   });
 });
 
@@ -200,13 +200,14 @@ test('Commercial Launch UI implementation queue is phase-driven and Figma-source
   assert.equal(product.uiSourceTruth.source.primaryAppSource, 'src/app/App.tsx');
   assert.deepEqual(product.uiSourceTruth.source.styleSourcesToRead, ['src/styles/theme.css']);
 
-  assert.equal(gap?.state, 'active');
+  assert.equal(gap?.state, 'closed');
   assert.equal(gap?.ownerSurface, 'apps-web');
   assert.equal(gap?.currentPhaseId, 'figma_dialog_sheet_projection_slice');
-  assert.equal(gap?.currentStatus, 'not_started');
+  assert.equal(gap?.currentStatus, 'done');
   assert.equal(gap?.phases.find((phase) => phase.id === 'figma_public_landing_slice')?.status, 'done');
   assert.equal(gap?.phases.find((phase) => phase.id === 'figma_auth_surface_slice')?.status, 'done');
   assert.equal(gap?.phases.find((phase) => phase.id === 'figma_home_workbench_shell_slice')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_dialog_sheet_projection_slice')?.status, 'done');
   assert.deepEqual(phaseIds, [
     'figma_to_code_implementation_map',
     'figma_public_landing_slice',
@@ -227,7 +228,7 @@ test('Commercial Launch UI implementation queue is phase-driven and Figma-source
       'git_diff_check',
     ]);
   }
-  assert.ok(gap.cannotClaim.includes('Figma UI implementation complete'));
+  assert.ok(gap.cannotClaim.includes('owner visual acceptance'));
   assert.ok(gap.cannotClaim.includes('production rollout'));
   assert.ok(gap.cannotClaim.includes('payment/runtime/storage/full SaaS capability'));
   assert.ok(gap.cannotClaim.includes('Admin/Ops UI'));
