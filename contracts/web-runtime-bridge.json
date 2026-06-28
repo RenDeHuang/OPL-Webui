@@ -38,6 +38,7 @@
     },
     "typedBlockers": [
       "api_key_required",
+      "account_not_approved",
       "package_required",
       "compute_required",
       "storage_required",
@@ -122,6 +123,7 @@
     "notReadyActions": [
       "select_plan",
       "open_medopl_purchase",
+      "open_medopl_onboarding",
       "recharge_or_credit_required",
       "open_runtime_storage",
       "return_to_opl_task"

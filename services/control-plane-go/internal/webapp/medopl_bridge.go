@@ -539,6 +539,8 @@ func blockerKindForReason(reason string) string {
 	switch reason {
 	case "provider_key_required":
 		return "provider_key_required"
+	case "account_not_approved":
+		return "account_not_approved"
 	case "account_required", "plan_required", "package_required", "credit_required", "insufficient_balance":
 		return "package_required"
 	case "runtime_storage_not_opened", "runtime_storage_pending":
@@ -556,6 +558,8 @@ func titleForBlockerKind(kind string) string {
 	switch kind {
 	case "provider_key_required":
 		return "需要在 MedOPL 绑定 provider key"
+	case "account_not_approved":
+		return "需要完成 MedOPL 账号审批"
 	case "package_required":
 		return "需要购买套餐或充值"
 	case "compute_required":
@@ -575,6 +579,8 @@ func labelForAction(action string) string {
 	switch action {
 	case "open_medopl_purchase":
 		return "去 MedOPL 购买"
+	case "open_medopl_onboarding":
+		return "去 MedOPL 开通"
 	case "select_plan":
 		return "选择套餐"
 	case "recharge_or_credit_required":

@@ -78,6 +78,19 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
       idempotencyKey: `real-medopl-credit-${context.workspaceId}`,
     });
 
+    const approvalBlockedGate = await webuiRuntimeGate(webui.baseUrl, session.cookieHeader, context);
+    assert.equal(approvalBlockedGate.response.status, 424);
+    assert.equal(approvalBlockedGate.body.gateState.ready, false);
+    assert.equal(approvalBlockedGate.body.gateState.blockers[0].kind, 'account_not_approved');
+    assert.equal(approvalBlockedGate.body.gateState.nextAction.id, 'open_medopl_purchase');
+    assertNoSensitiveMaterial(approvalBlockedGate.body);
+
+    await medoplPost(medopl.baseUrl, '/api/v22/users/approve', {
+      tenantId: context.tenantId,
+      portalUserId: context.portalUserId,
+      workspaceId: context.workspaceId,
+    });
+
     const preOpenGate = await webuiRuntimeGate(webui.baseUrl, session.cookieHeader, context);
     assert.equal(preOpenGate.response.status, 424);
     assert.equal(preOpenGate.body.gateState.blockers[0].kind, 'compute_required');

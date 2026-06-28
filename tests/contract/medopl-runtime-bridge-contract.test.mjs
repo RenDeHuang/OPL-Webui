@@ -229,6 +229,39 @@ test('runtime gate maps missing MedOPL compute storage to open runtime storage a
   }
 });
 
+test('runtime gate maps unapproved MedOPL account to onboarding handoff without fake ready', async () => {
+  const medopl = await startMedOPLContractFixture({
+    runtimeGate: blockedRuntimeGate({
+      reason: 'account_not_approved',
+      action: 'open_medopl_onboarding',
+      medoplDeeplink: '/onboarding',
+    }),
+  });
+  const { child, baseUrl } = await startGoServerWithEnv({ ...secureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
+  try {
+    const session = await register(baseUrl, 'gate-account-not-approved-user@example.com');
+    await saveAPIKey(baseUrl, session.cookieHeader, 'sk-gate-account-not-approved-secret');
+    const gate = await jsonFetch(`${baseUrl}/api/opl/runtime-gate`, {
+      method: 'POST',
+      headers: { cookie: session.cookieHeader },
+      body: { taskIntent: 'paper_question', marker: '@论文', prompt: '@论文 生成选题' },
+    });
+
+    assert.equal(gate.response.status, 424);
+    assert.equal(gate.body.ok, false);
+    assert.equal(gate.body.gateState.ready, false);
+    assert.equal(gate.body.gateState.blockers[0].kind, 'account_not_approved');
+    assert.equal(gate.body.gateState.blockers[0].nextAction, 'open_medopl_onboarding');
+    assert.equal(gate.body.gateState.nextAction.id, 'open_medopl_onboarding');
+    assert.match(gate.body.gateState.nextAction.deepLink, /^https:\/\/medopl\.medopl\.cn\/onboarding/);
+    assert.equal(gate.body.webuiRuntimeExecution, 'forbidden');
+    assertNoSensitiveMaterial(gate.body);
+  } finally {
+    await stopGoServer(child);
+    await medopl.close();
+  }
+});
+
 test('runtime gate proxies MedOPL typed not-ready blockers without fake ready', async () => {
   const medopl = await startMedOPLContractFixture({
     runtimeGate: {
