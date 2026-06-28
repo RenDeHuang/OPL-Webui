@@ -74,6 +74,15 @@ const productIdentityTruthFiles = [
   'contracts/web-runtime-bridge.json',
 ];
 
+const uiSourceTruthFiles = [
+  'README.md',
+  'docs/project.md',
+  'docs/status.md',
+  'docs/architecture.md',
+  'contracts/web-product-profile.json',
+  'contracts/web-gui-product-contract.json',
+];
+
 function* walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
@@ -175,5 +184,30 @@ test('active truth keeps OPL-Webui as browser interaction platform instead of ex
     assert.doesNotMatch(text, /WebUI (?:owns|is|acts as).{0,80}(?:execution platform|runtime platform|storage platform)/i, file);
     assert.doesNotMatch(text, /ordinary users?(?![^.]{0,80}do not require).{0,80}(?:must|are required to|require|requires).{0,80}(?:runtime|storage)/i, file);
     assert.doesNotMatch(text, /release evidence.{0,120}(?:defines|changes|rewrites|owns).{0,80}product identity/i, file);
+  }
+});
+
+test('active UI truth keeps Figma Make as the canonical visual source', () => {
+  const product = JSON.parse(readFileSync('contracts/web-product-profile.json', 'utf8'));
+  const uiTruth = product.uiSourceTruth;
+
+  assert.equal(uiTruth?.state, 'figma_canonical_source_v1');
+  assert.equal(uiTruth?.source?.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
+  assert.equal(uiTruth?.source?.fileName, 'UI_UX for Commercial Launch');
+  assert.equal(uiTruth?.source?.primaryAppSource, 'src/app/App.tsx');
+  assert.deepEqual(uiTruth?.source?.styleSourcesToRead, ['src/styles/theme.css', 'src/styles/globals.css']);
+  assert.equal(uiTruth?.implementationBoundary?.codexMaySelfDesignSurfaces, false);
+  assert.equal(uiTruth?.implementationBoundary?.doNotVendorGeneratedApp, true);
+  assert.equal(uiTruth?.implementationBoundary?.visualTruth, 'figma_make_source');
+  assert.equal(uiTruth?.mockTruthPolicy?.figmaMockDataIsProductTruth, false);
+  assert.equal(uiTruth?.contractProofBoundary?.contractTestsReplaceFigmaVisualTruth, false);
+  assert.deepEqual(uiTruth?.appliesTo, ['public_growth_layer', 'account_based_user_product_layer']);
+  assert.deepEqual(uiTruth?.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls']);
+
+  for (const file of uiSourceTruthFiles) {
+    const text = readFileSync(file, 'utf8');
+    assert.doesNotMatch(text, /Codex (?:self-designed|designed).{0,80}(?:landing|sidebar|workbench|auth|search|dialog|sheet|task|UI)/i, file);
+    assert.doesNotMatch(text, /(?:self-designed|self designed).{0,80}(?:landing|sidebar|workbench|auth|search|dialog|sheet|task|UI)/i, file);
+    assert.doesNotMatch(text, /contract tests?.{0,120}(?:replace|substitute for).{0,80}Figma visual truth/i, file);
   }
 });

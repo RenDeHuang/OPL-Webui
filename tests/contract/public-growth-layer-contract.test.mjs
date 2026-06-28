@@ -83,11 +83,27 @@ test('public direct-copy auth entry does not rely on authenticated account popov
 
 test('Figma parity UI replacement target is scoped to public and user product UI only', () => {
   const gui = readJson('contracts/web-gui-product-contract.json');
+  const product = readJson('contracts/web-product-profile.json');
   const pageState = readJson('contracts/web-page-state-matrix.json');
   const release = readJson('contracts/web-release-profile.json');
   const target = gui.figmaParityUiReplacementTarget;
+  const uiTruth = product.uiSourceTruth;
   const latest = release.latestMainEvidence;
 
+  assert.equal(uiTruth.state, 'figma_canonical_source_v1');
+  assert.equal(uiTruth.source.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
+  assert.equal(uiTruth.source.fileName, 'UI_UX for Commercial Launch');
+  assert.equal(uiTruth.source.url, 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=c6JjbjSRg22dfHKu-0');
+  assert.equal(uiTruth.source.primaryAppSource, 'src/app/App.tsx');
+  assert.deepEqual(uiTruth.source.styleSourcesToRead, ['src/styles/theme.css', 'src/styles/globals.css']);
+  assert.deepEqual(uiTruth.appliesTo, ['public_growth_layer', 'account_based_user_product_layer']);
+  assertIncludesAll(uiTruth.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'UI source exclusion');
+  assert.equal(uiTruth.implementationBoundary.codexMaySelfDesignSurfaces, false);
+  assert.equal(uiTruth.implementationBoundary.doNotVendorGeneratedApp, true);
+  assert.equal(uiTruth.mockTruthPolicy.figmaMockDataIsProductTruth, false);
+  assertIncludesAll(uiTruth.mockTruthPolicy.staticProjectCopyForbiddenAsTruth, ['New project', 'opl', 'medopl', '空项目', '新建项目'], 'Figma mock static copy');
+  assertIncludesAll(uiTruth.mockTruthPolicy.mockRuntimeStoragePaymentCopyForbiddenAsTruth, ['runtime completed', 'storage ready', 'artifact body', 'payment status', 'Pro', 'credit', 'recharge'], 'Figma mock capability copy');
+  assert.equal(uiTruth.contractProofBoundary.contractTestsReplaceFigmaVisualTruth, false);
   assert.equal(gui.uiUxReferenceCandidate, undefined);
   assert.equal(target.id, 'figma_make_ui_ux_for_commercial_launch');
   assert.equal(target.state, 'deployed_replacement_candidate');

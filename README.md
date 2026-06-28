@@ -9,6 +9,8 @@ One Person Lab Web is the One Person Lab Web interaction platform and browser en
 
 This repo owns route/auth/account/BYOK, task intent, page state, refs projection, deeplink, account/session experience, hidden tenant isolation, ordinary chat fallback, same-origin Go control plane API, MedOPL runtime gate/run bridge projection, billing ledger refs projection, and Web release/deploy evidence.
 
+UI source truth is Figma Make `UI_UX for Commercial Launch` (`1MNO5l7PQYKZVNqQgw6DGS`). OPL-Webui UI work must translate that Figma Make source into the current Web architecture; Codex does not self-design landing, sidebar, workbench, auth, search, dialog, sheet, or task UI. Figma mock data and generated app code are design input only, not task history, runtime, storage, payment, or artifact truth.
+
 It is the Web product peer of `gaofeng21cn/one-person-lab-app`: the App repo owns the desktop product entry, while this repo owns the browser product entry.
 
 ## Read First
