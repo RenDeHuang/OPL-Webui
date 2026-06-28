@@ -14,6 +14,28 @@ function assertContractRefExists(ref, label) {
   assert.ok(existsSync(path), `${label} references missing contract: ${ref}`);
 }
 
+function isCompactedClosedGap(gap) {
+  return gap.state === 'closed' && gap.closedSummary;
+}
+
+function assertCompactedClosedGap(gap, expected) {
+  assert.equal(gap?.state, 'closed', `${expected.id} must remain closed`);
+  assert.equal(gap?.currentStatus, 'done', `${expected.id} must remain done`);
+  assert.equal(gap?.currentPhaseId, expected.finalPhaseId, `${expected.id} final phase`);
+  assert.equal(gap?.closedSummary?.finalPhaseId, expected.finalPhaseId, `${expected.id} closedSummary final phase`);
+  assert.deepEqual(gap?.phases, undefined, `${expected.id} compacted closed gap must not keep full phases`);
+  assert.ok(gap?.closedSummary?.summary.length > 0, `${expected.id} must keep closed summary`);
+  assertIncludesAll(gap?.closedSummary?.stableContracts ?? [], expected.stableContracts, `${expected.id} stable contract`);
+  assert.ok(gap?.closedSummary?.tombstoneRef?.startsWith('docs/history/process/closeouts.md#'), `${expected.id} must keep provenance tombstoneRef`);
+  assert.ok(gap?.closedSummary?.cannotClaimRetained, `${expected.id} must retain cannotClaim`);
+}
+
+function assertIncludesAll(actual, expected, label) {
+  for (const item of expected) {
+    assert.equal(actual.includes(item), true, `missing ${label}: ${item}`);
+  }
+}
+
 test('gap phase registry defines phase queues without creating durable process logs', () => {
   assert.equal(existsSync(registryPath), true, 'missing gap phase registry');
   const registry = readJson(registryPath);
@@ -63,9 +85,23 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     assert.equal(typeof gap.ownerSurface, 'string', `${gap.id} must declare ownerSurface`);
     assert.ok(gap.ownerSurface.length > 0, `${gap.id} ownerSurface must be non-empty`);
     assert.ok(registry.gapStateValues.includes(gap.state), `${gap.id} must declare supported state`);
-    assert.ok(gap.phases.length > 0, `${gap.id} must declare phases`);
-    assert.ok(gap.phases.some((phase) => phase.id === gap.currentPhaseId), `${gap.id} current phase must exist`);
     assert.ok(Array.isArray(gap.cannotClaim) && gap.cannotClaim.length > 0, `${gap.id} must declare cannotClaim`);
+
+    if (isCompactedClosedGap(gap)) {
+      assert.equal(gap.currentStatus, 'done', `${gap.id} compacted closed gap must remain done`);
+      assert.equal(gap.closedSummary.finalPhaseId, gap.currentPhaseId, `${gap.id} closed summary must point at final phase`);
+      assert.equal(gap.closedSummary.cannotClaimRetained, true, `${gap.id} closed summary must retain cannotClaim`);
+      assert.ok(gap.closedSummary.summary.length > 0, `${gap.id} compacted closed gap must declare summary`);
+      assert.ok(gap.closedSummary.stableContracts.length > 0, `${gap.id} compacted closed gap must declare stable contracts`);
+      assert.ok(gap.closedSummary.tombstoneRef.length > 0, `${gap.id} compacted closed gap must declare tombstoneRef`);
+      for (const ref of gap.closedSummary.stableContracts) {
+        assertContractRefExists(ref, `${gap.id} closedSummary stable contract`);
+      }
+      continue;
+    }
+
+    assert.ok(gap.phases.length > 0, `${gap.id} active paused or un-compacted closed gap must declare phases`);
+    assert.ok(gap.phases.some((phase) => phase.id === gap.currentPhaseId), `${gap.id} current phase must exist`);
 
     for (const phase of gap.phases) {
       assert.equal(typeof phase.objective, 'string', `${gap.id}/${phase.id} must declare objective`);
@@ -120,7 +156,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
 
   for (const gap of report.gaps) {
     assert.ok(Array.isArray(gap.evalResults), `${gap.id} must report machine eval results`);
-    assert.ok(gap.evalResults.length >= 5, `${gap.id} must evaluate multiple dimensions`);
+    assert.ok(gap.evalResults.length >= 3, `${gap.id} must evaluate multiple dimensions`);
     assert.ok(gap.evalResults.some((result) => result.dimension === 'cleanup'), `${gap.id} must evaluate cleanup`);
     assert.ok(gap.evalResults.every((result) => registry.evalDimensionPolicy.dimensions.includes(result.dimension)), `${gap.id} eval dimensions must be declared by contract`);
     assert.ok(gap.evalResults.every((result) => typeof result.id === 'string' && result.id.length > 0), `${gap.id} eval ids must be stable`);
@@ -135,38 +171,22 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_launch_ui_implementation.status, 'done');
   assert.equal(byGap.commercial_launch_ui_implementation.currentPhaseId, 'figma_dialog_sheet_projection_slice');
   assert.equal(byGap.commercial_launch_ui_implementation.readyToAdvance, true);
-  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_figma_source').status, 'pass');
-  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_phase_queue').status, 'pass');
-  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_mock_truth_boundary').status, 'pass');
+  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.commercial_launch_readiness_closeout.status, 'done');
   assert.equal(byGap.commercial_launch_readiness_closeout.currentPhaseId, 'post_release_closeout');
   assert.equal(byGap.commercial_launch_readiness_closeout.readyToAdvance, true);
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'owner_visual_acceptance_prep').status, 'pass');
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'remote_sync_pr_readiness').status, 'pass');
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'push_or_pr_owner_authorization').status, 'pass');
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'ci_observation_after_push').status, 'pass');
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'production_release_authorization').status, 'pass');
-  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'post_release_closeout_authorization').status, 'pass');
-  assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
+  assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.status, 'done');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.currentPhaseId, 'production_e2e_rerun_after_alignment');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.readyToAdvance, true);
-  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'commercial_runtime_admission_contract').status, 'pass');
-  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'production_browser_e2e_split').status, 'pass');
-  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'medopl_dogfood_provisioning_gap').status, 'pass');
-  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'aligned_production_browser_e2e').status, 'pass');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.status, 'done');
   assert.equal(byGap.commercial_product_maturity_gap_v1.currentPhaseId, 'ops_diagnostics_and_troubleshooting');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_classification_contract').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'webui_owner_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'pass');
-  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
-  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
-  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').status, 'pass');
-  assert.equal(
-    byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').evidenceSource,
-    'conditions',
-  );
+  assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_readonly_projection').status, 'pass');
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_owner_receipt').status, 'pass');
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_consumer_contract').status, 'blocked');
@@ -193,11 +213,9 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'single_node_pause_policy').status, 'pass');
   assert.equal(byGap.ha_and_resilience.evalResults.find((result) => result.id === 'multi_node_ha_evidence').status, 'blocked');
   assert.equal(byGap.concurrency_and_load.status, 'done');
-  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'local_tenant_isolation_contract').status, 'pass');
-  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'production_load_evidence').status, 'pass');
+  assert.equal(byGap.concurrency_and_load.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.opl_auto_update_from_github.status, 'done');
-  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'image_build_pinned_opl_context').status, 'pass');
-  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'runtime_github_sync_loop').status, 'pass');
+  assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
 
   assert.equal(report.readyToAdvanceCount, 9);
   assert.deepEqual(report.summary, {
@@ -208,110 +226,28 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   });
 });
 
-test('Commercial Launch UI implementation queue is phase-driven and Figma-source bounded', () => {
+test('compacted closed gaps keep stable contract provenance without full phase queues', () => {
   const registry = readJson(registryPath);
-  const product = readJson('contracts/web-product-profile.json');
-  const gap = registry.gaps.find((item) => item.id === 'commercial_launch_ui_implementation');
-  const phaseIds = gap?.phases.map((phase) => phase.id);
-  const evalsByPhase = Object.fromEntries(gap?.phases.map((phase) => [
-    phase.id,
-    phase.requiredEvals.map((evalRef) => evalRef.id),
-  ]) ?? []);
+  const compacted = [
+    ['commercial_launch_ui_implementation', 'figma_dialog_sheet_projection_slice', ['contracts/web-product-profile.json#/uiSourceTruth', 'contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget']],
+    ['commercial_launch_readiness_closeout', 'post_release_closeout', ['contracts/web-product-profile.json#/commercialLaunchReadiness', 'contracts/web-release-profile.json#/latestMainEvidence']],
+    ['medopl_readonly_evidence', 'production_readonly_foldback', ['contracts/web-release-profile.json#/productionDogfoodReadiness']],
+    ['commercial_runtime_admission_alignment_v1', 'production_e2e_rerun_after_alignment', ['contracts/web-runtime-bridge.json#/commercialRuntimeAdmission', 'contracts/web-release-profile.json#/productionBrowserE2EReadiness']],
+    ['runtime_execution_boundary', 'execution_admission', ['contracts/web-runtime-bridge.json#/executionAdmission']],
+    ['concurrency_and_load', 'production_concurrency_load_evidence', ['contracts/web-product-profile.json#/concurrencyAndLoad']],
+    ['opl_auto_update_from_github', 'runtime_sync_admission', ['contracts/web-release-profile.json#/oplAutoUpdateReadiness']],
+  ];
 
-  assert.equal(product.uiSourceTruth.source.url, 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0');
-  assert.equal(product.uiSourceTruth.source.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
-  assert.equal(product.uiSourceTruth.source.fileName, 'UI_UX for Commercial Launch');
-  assert.equal(product.uiSourceTruth.source.primaryAppSource, 'src/app/App.tsx');
-  assert.deepEqual(product.uiSourceTruth.source.styleSourcesToRead, ['src/styles/theme.css']);
-
-  assert.equal(gap?.state, 'closed');
-  assert.equal(gap?.ownerSurface, 'apps-web');
-  assert.equal(gap?.currentPhaseId, 'figma_dialog_sheet_projection_slice');
-  assert.equal(gap?.currentStatus, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_public_landing_slice')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_auth_surface_slice')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_home_workbench_shell_slice')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_dialog_sheet_projection_slice')?.status, 'done');
-  assert.deepEqual(phaseIds, [
-    'figma_to_code_implementation_map',
-    'figma_public_landing_slice',
-    'figma_auth_surface_slice',
-    'figma_home_workbench_shell_slice',
-    'figma_dialog_sheet_projection_slice',
-  ]);
-  assert.deepEqual(evalsByPhase.figma_to_code_implementation_map, [
-    'verify_health',
-    'verify_contract',
-    'git_diff_check',
-  ]);
-  for (const phaseId of phaseIds.slice(1)) {
-    assert.deepEqual(evalsByPhase[phaseId], [
-      'verify_interaction',
-      'verify_browser',
-      'verify_current',
-      'git_diff_check',
-    ]);
+  for (const [id, finalPhaseId, stableContracts] of compacted) {
+    assertCompactedClosedGap(registry.gaps.find((gap) => gap.id === id), { id, finalPhaseId, stableContracts });
   }
-  assert.ok(gap.cannotClaim.includes('owner visual acceptance'));
-  assert.ok(gap.cannotClaim.includes('production rollout'));
-  assert.ok(gap.cannotClaim.includes('payment/runtime/storage/full SaaS capability'));
-  assert.ok(gap.cannotClaim.includes('Admin/Ops UI'));
-});
 
-test('Commercial Launch readiness closeout queue stops at owner-authorized remote actions', () => {
-  const registry = readJson(registryPath);
-  const gap = registry.gaps.find((item) => item.id === 'commercial_launch_readiness_closeout');
-  const phaseIds = gap?.phases.map((phase) => phase.id);
-
-  assert.equal(gap?.state, 'closed');
-  assert.equal(gap?.ownerSurface, 'release-evidence');
-  assert.equal(gap?.currentPhaseId, 'post_release_closeout');
-  assert.equal(gap?.currentStatus, 'done');
-  assert.deepEqual(phaseIds, [
-    'commercial_launch_acceptance_prep',
-    'remote_sync_pr_readiness',
-    'ci_observation_after_push',
-    'production_release_readiness',
-    'post_release_closeout',
-  ]);
-  assert.equal(gap?.phases.find((phase) => phase.id === 'commercial_launch_acceptance_prep')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'remote_sync_pr_readiness')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'ci_observation_after_push')?.ownerReceipt.status, 'accepted');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'production_release_readiness')?.ownerReceipt.status, 'accepted');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'post_release_closeout')?.ownerReceipt.status, 'accepted');
-  assert.ok(gap?.cannotClaim.includes('owner visual acceptance'));
-  assert.ok(gap?.cannotClaim.includes('production-ready claim'));
-  assert.ok(gap?.dynamicRetirement.closeCompletedLocalPrep, 'local prep phases must close after completion');
-  assert.equal(gap?.dynamicRetirement.releaseEvidenceOnlyInReleaseProfile, true);
-});
-
-test('commercial runtime admission alignment queue splits E2E paths before rerun', async () => {
-  const registry = readJson(registryPath);
-  const gap = registry.gaps.find((item) => item.id === 'commercial_runtime_admission_alignment_v1');
-  const runtime = readJson('contracts/web-runtime-bridge.json');
-  const runnerSource = readFileSync('tests/browser/research-main-path-runner.mjs', 'utf8');
-
-  assert.equal(gap?.state, 'closed');
-  assert.equal(gap?.ownerSurface, 'runtime-gate');
-  assert.equal(gap?.currentPhaseId, 'production_e2e_rerun_after_alignment');
-  assert.equal(gap?.currentStatus, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'truth_evidence_alignment')?.status, 'done');
-  assert.equal(gap?.phases.find((phase) => phase.id === 'production_e2e_rerun_after_alignment')?.ownerReceipt.status, 'accepted');
-  assert.deepEqual(gap?.phases.map((phase) => phase.id), ['truth_evidence_alignment', 'production_e2e_rerun_after_alignment']);
-  assert.equal(gap?.dynamicRetirement.doNotTreatBlockedGateAsOnlyCommercialPath, true);
-  assert.equal(runtime.commercialRuntimeAdmission.mode, 'commercial_runtime_admission_alignment_v1');
-  assert.deepEqual(runtime.commercialRuntimeAdmission.productionE2ESplit.map((item) => item.id), ['ordinary_path', 'specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path']);
-  assert.equal(runtime.commercialRuntimeAdmission.dogfoodAccountStrategy.productionE2EDefault, 'auto_resolve_from_runtime_gate_projection');
-  assert.match(runnerSource, /resolveRuntimeAdmissionScenario/);
-  assert.match(runnerSource, /exerciseSpecialistReadyPath/);
-  assert.match(runnerSource, /exerciseOnboardingPath/);
-
-  const runner = await import('../../scripts/gap-phase-runner.mjs');
-  const report = runner.buildPhaseStatusReport(registry);
-  const gapReport = report.gaps.find((item) => item.id === 'commercial_runtime_admission_alignment_v1');
-  assert.equal(gapReport.status, 'done');
-  assert.equal(gapReport.readyToAdvance, true);
-  assert.deepEqual(gapReport.readyToAdvanceBlockedBy, []);
+  const active = registry.gaps.find((gap) => gap.id === 'commercial_saas_depth');
+  const partial = registry.gaps.find((gap) => gap.id === 'operations_maturity');
+  const paused = registry.gaps.find((gap) => gap.id === 'ha_and_resilience');
+  assert.ok(active.phases.length > 0, 'active gaps keep full phases');
+  assert.ok(partial.phases.length > 0, 'partial active gaps keep full phases');
+  assert.ok(paused.phases.length > 0, 'paused gaps keep full phases');
 });
 
 test('commercial product maturity gap queue classifies reference-project maturity without copying ownership', () => {

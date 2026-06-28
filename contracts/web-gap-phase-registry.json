@@ -171,210 +171,122 @@
         }
       ]
     },
-    {
+        {
       "id": "commercial_launch_ui_implementation",
       "ownerSurface": "apps-web",
       "state": "closed",
       "currentPhaseId": "figma_dialog_sheet_projection_slice",
       "currentStatus": "done",
-      "cannotClaim": ["owner visual acceptance", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
-      "sourceTruth": {
-        "contract": "contracts/web-product-profile.json#/uiSourceTruth",
-        "figmaUrl": "https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0",
-        "fileKey": "1MNO5l7PQYKZVNqQgw6DGS",
-        "fileName": "UI_UX for Commercial Launch",
-        "primarySource": "src/app/App.tsx",
-        "styleSource": "src/styles/theme.css"
-      },
-      "phases": [
-        {
-          "id": "figma_to_code_implementation_map",
-          "objective": "Create the Figma-to-code implementation map only; do not implement UI.",
-          "status": "done",
-          "entryCriteria": ["Figma Commercial Launch UI source truth is pinned in web-product-profile", "product identity truth remains Web interaction platform / browser entry", "current production UI is not changed by this phase"],
-          "exitCriteria": ["Figma section to OPL-Webui route, component, and test mapping is complete", "Figma shape, layout, visual hierarchy, spacing, copy, and interaction rhythm are preserved as implementation requirements", "mock task/runtime/storage/payment truth is explicitly retired or mapped to real Go control plane projection", "implementation slices are explicit and bounded", "Figma generated app is not vendored"],
-          "evidenceSources": ["repo_local"],
-          "blockerTypes": ["missing_contract", "missing_eval"],
-          "acceptance": ["Figma section -> OPL-Webui route/component/test mapping exists in the current source of truth", "mock truth retirement is explicit before implementation", "implementation slices are listed without shipping UI changes", "generated Figma dependencies remain outside the repo"],
-          "nextStepOpeners": ["Open figma_public_landing_slice after implementation map evals pass", "Do not start UI implementation until this map is committed and absorbed"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase creates an implementation map, not an owner-visible UI claim"},
-          "requiredEvals": [
-            {"id": "verify_health", "contract": "package.json#/scripts/verify:health", "proves": ["health guards accept the Figma-to-code map and phase queue"], "doesNotProve": ["UI implementation", "browser parity", "production rollout"], "failureBlocks": ["figma_public_landing_slice"]},
-            {"id": "verify_contract", "contract": "package.json#/scripts/verify:contract", "proves": ["contract truth remains aligned with product identity and Figma source"], "doesNotProve": ["browser behavior", "production evidence", "visual parity"], "failureBlocks": ["figma_public_landing_slice"]},
-            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["runtime behavior", "production evidence", "visual parity"], "failureBlocks": ["phase closeout"]}
+      "cannotClaim": [
+        "owner visual acceptance",
+        "production rollout",
+        "payment/runtime/storage/full SaaS capability",
+        "Admin/Ops UI",
+        "release evidence changed"
+      ],
+      "closedSummary": {
+        "finalPhaseId": "figma_dialog_sheet_projection_slice",
+        "summary": "Commercial Launch Figma parity UI implementation phases are closed at repo-local scope; implementation truth is folded into UI source truth and GUI replacement target contracts.",
+        "stableContracts": [
+          "contracts/web-product-profile.json#/uiSourceTruth",
+          "contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "Public Growth and Account-based User Product UI implementation",
+          "notWebui": [
+            "Admin/Ops UI",
+            "payment/runtime/storage/full SaaS capability"
           ]
         },
-        {
-          "id": "figma_public_landing_slice",
-          "status": "done",
-          "objective": "Implement only `/` Public Landing with Figma shape, layout, typography, color, task pills, and interaction rhythm in the current OPL-Webui architecture.",
-          "entryCriteria": ["figma_to_code_implementation_map is done", "route truth keeps `/` as Public Growth Landing", "pending task truth is contract-backed"],
-          "exitCriteria": ["`/` visually and interactively follows the Figma Public Landing surface", "unauthenticated task entry preserves pending task intent", "no fake result, runtime, storage, payment, or release evidence claim is introduced"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval", "missing_contract"],
-          "acceptance": ["Public Landing replacement retires the old landing surface for this slice", "pending task intent remains preserved for unauthenticated task entry", "mock runtime/storage/payment copy is absent from visible claim surfaces"],
-          "nextStepOpeners": ["Open figma_auth_surface_slice after interaction, browser, current, and diff-check evals pass"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
-          "requiredEvals": [
-            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["route/auth/pending/sidebar/dialog interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser flows still pass after landing replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
-            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
-          ]
-        },
-        {
-          "id": "figma_auth_surface_slice",
-          "status": "done",
-          "objective": "Implement `/login` Auth Surface with Figma auth card, tabs, and form interaction while satisfying login/register contract truth.",
-          "entryCriteria": ["figma_public_landing_slice is done", "`/login` route truth remains Login/Register Auth Surface", "login/register tab contract is machine-guarded"],
-          "exitCriteria": ["`/login` follows Figma auth surface visual and interaction pattern", "login tab shows only login submit and register tab shows only create-account submit", "auth surface can return to public landing and preserves pending task intent"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval", "missing_contract"],
-          "acceptance": ["Auth replacement retires the old auth DOM/CSS/assertions for this slice", "pending task intent is restored after successful auth without auto-running tasks", "no fake account or project data is introduced"],
-          "nextStepOpeners": ["Open figma_home_workbench_shell_slice after interaction, browser, current, and diff-check evals pass"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
-          "requiredEvals": [
-            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["auth interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser auth flows still pass after auth replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
-            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
-          ]
-        },
-        {
-          "id": "figma_home_workbench_shell_slice",
-          "status": "done",
-          "objective": "Implement `/home` workbench shell, composer, and sidebar shape while sidebar data comes only from `/api/tasks` projection or contract-backed empty state.",
-          "entryCriteria": ["figma_auth_surface_slice is done", "`/home` route truth remains authenticated workbench route", "sidebar task history projection truth is machine-guarded"],
-          "exitCriteria": ["`/home` shell follows Figma workbench visual hierarchy and interaction rhythm", "sidebar task history is sourced from Go control plane `/api/tasks` projection", "contract-backed empty state replaces static Figma project copy"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval", "missing_contract"],
-          "acceptance": ["Workbench shell replacement retires the old shell/sidebar/composer surface for this slice", "static Figma project copy remains absent from task history", "no fake task history or project workspace data is introduced"],
-          "nextStepOpeners": ["Open figma_dialog_sheet_projection_slice after interaction, browser, current, and diff-check evals pass"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
-          "requiredEvals": [
-            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["workbench and sidebar interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser workbench flows still pass after shell replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
-            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
-          ]
-        },
-        {
-          "id": "figma_dialog_sheet_projection_slice",
-          "status": "done",
-          "objective": "Implement search sheet, account popover, API key dialog, and inspector sheet using Figma interaction patterns while staying projection-only.",
-          "entryCriteria": ["figma_home_workbench_shell_slice is done", "dialog/sheet truth is machine-guarded", "projection-only runtime/storage/artifact boundary remains fixed"],
-          "exitCriteria": ["search sheet, account popover, API key dialog, and inspector sheet follow Figma interaction patterns", "open, close, Escape, focus return, empty state, and error state are implemented", "runtime/storage/artifact body truth is not claimed"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval", "missing_contract"],
-          "acceptance": ["Dialog and sheet replacement retires old overlay DOM/CSS/assertions for this slice", "empty and error states are contract-backed instead of mock data", "projection-only boundary remains visible in tests and contracts"],
-          "nextStepOpeners": ["Open owner visual review or release candidate planning only after all interaction/browser/current/diff-check evals pass"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
-          "requiredEvals": [
-            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["dialog and sheet interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser overlay flows still pass after dialog/sheet replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
-            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
-            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
-          ]
-        }
-      ]
+        "retiredPhaseIds": [
+          "figma_to_code_implementation_map",
+          "figma_public_landing_slice",
+          "figma_auth_surface_slice",
+          "figma_home_workbench_shell_slice",
+          "figma_dialog_sheet_projection_slice"
+        ],
+        "retiredEvalIds": [
+          "verify_health",
+          "verify_contract",
+          "git_diff_check",
+          "verify_interaction",
+          "verify_browser",
+          "verify_current",
+          "git_diff_check",
+          "verify_interaction",
+          "verify_browser",
+          "verify_current",
+          "git_diff_check",
+          "verify_interaction",
+          "verify_browser",
+          "verify_current",
+          "git_diff_check",
+          "verify_interaction",
+          "verify_browser",
+          "verify_current",
+          "git_diff_check"
+        ],
+        "retirementRule": "Old detailed implementation phases stay closed; reopen through a new active UI gap instead of restoring the full phase queue.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
-    {
+        {
       "id": "commercial_launch_readiness_closeout",
       "ownerSurface": "release-evidence",
       "state": "closed",
       "currentPhaseId": "post_release_closeout",
       "currentStatus": "done",
-      "cannotClaim": ["owner visual acceptance", "push/PR completed", "GitHub CI passed for local main", "production rollout", "release evidence foldback", "production-ready claim"],
-      "dependsOn": ["commercial_launch_ui_implementation"],
-      "dynamicRetirement": {
-        "closeCompletedLocalPrep": true,
-        "completedLocalPrepPhases": ["commercial_launch_acceptance_prep", "remote_sync_pr_readiness"],
-        "blockRemotePhasesUntilOwnerAuthorization": true,
-        "releaseEvidenceOnlyInReleaseProfile": true,
-        "ownerAcceptanceIsEvidenceNotUiTruth": true,
-        "temporaryArtifacts": [".runtime/browser-visual/*", ".runtime/phase-runs/*", "screenshots", "raw CI output", "release raw logs"],
-        "cleanupRule": "local prep phases stay closed; remote/deploy/foldback phases remain blocked until explicit owner authorization and sanitized evidence"
-      },
-      "phases": [
-        {
-          "id": "commercial_launch_acceptance_prep",
-          "status": "done",
-          "objective": "Prepare the owner visual acceptance checklist for Commercial Launch UI surfaces without claiming owner acceptance.",
-          "entryCriteria": ["Commercial Launch UI implementation queue is closed at repo-local scope", "verify/browser/integration/release/gate hygiene passed on local main"],
-          "exitCriteria": ["checklist covers `/`, `/login`, `/home`, sidebar, search sheet, account popover, API key dialog, inspector sheet, and responsive/mobile", "checklist states owner acceptance is pending and cannot be inferred from tests", "no screenshots or raw artifacts are committed"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_eval"],
-          "acceptance": ["owner visual review checklist is represented in this phase queue", "surfaces and responsive scope are explicit", "owner visual acceptance remains cannot-claim"],
-          "nextStepOpeners": ["Open owner visual review only after remote sync or production URL review is authorized", "Do not treat local browser evidence as owner acceptance"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase prepares a checklist only"},
-          "requiredEvals": [
-            {"id": "owner_visual_acceptance_prep", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout", "proves": ["owner visual acceptance checklist exists for all required surfaces"], "doesNotProve": ["owner visual acceptance", "production rollout", "production-ready claim"], "failureBlocks": ["owner visual review"]}
+      "dependsOn": [
+        "commercial_launch_ui_implementation"
+      ],
+      "cannotClaim": [
+        "owner visual acceptance",
+        "push/PR completed",
+        "GitHub CI passed for local main",
+        "production rollout",
+        "release evidence foldback",
+        "production-ready claim"
+      ],
+      "closedSummary": {
+        "finalPhaseId": "post_release_closeout",
+        "summary": "Commercial launch readiness closeout is folded into commercialLaunchReadiness and release latest-main evidence; owner visual acceptance remains separate evidence.",
+        "stableContracts": [
+          "contracts/web-product-profile.json#/commercialLaunchReadiness",
+          "contracts/web-release-profile.json#/latestMainEvidence"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "release readiness summary and controlled launch evidence consumer",
+          "external": [
+            "owner authorization",
+            "GitHub CI",
+            "Cloud Rollout",
+            "release evidence foldback"
           ]
         },
-        {
-          "id": "remote_sync_pr_readiness",
-          "status": "done",
-          "objective": "Summarize the local main ahead commits, changed surfaces, risks, and verification evidence so owner can authorize push or PR.",
-          "entryCriteria": ["commercial_launch_acceptance_prep is done", "local main is ahead of origin/main and clean"],
-          "exitCriteria": ["ahead commits are summarized", "changed surfaces and risks are explicit", "fresh repo-local verification evidence is listed", "push/PR is prepared but not executed"],
-          "evidenceSources": ["repo_local"],
-          "blockerTypes": ["missing_eval"],
-          "acceptance": ["remote sync readiness is represented in this phase queue", "push/PR remains owner-authorized only", "release evidence latest run is not modified"],
-          "nextStepOpeners": ["Wait for owner authorization before push, PR, or remote merge", "After owner authorization, run ci_observation_after_push"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase prepares remote sync decision context only"},
-          "requiredEvals": [
-            {"id": "remote_sync_pr_readiness", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout", "proves": ["push/PR readiness summary exists without executing remote mutation"], "doesNotProve": ["GitHub main updated", "GitHub CI passed", "production rollout"], "failureBlocks": ["push/PR authorization"]}
-          ]
-        },
-        {
-          "id": "ci_observation_after_push",
-          "objective": "After owner authorizes push or PR, observe GitHub CI for the pushed commit and confirm no unintended deploy or release trigger occurred.",
-          "entryCriteria": ["owner explicitly authorizes push or PR", "remote_sync_pr_readiness is done"],
-          "exitCriteria": ["GitHub main or PR commit matches the pushed local commit", "GitHub CI passes", "no unexpected deploy/release workflow was triggered"],
-          "evidenceSources": ["external_owner"],
-          "blockerTypes": ["missing_owner_receipt"],
-          "acceptance": ["push/PR authorization is explicit", "CI observation is recorded only after remote mutation", "CI evidence does not change product identity or release evidence"],
-          "nextStepOpeners": ["Open production_release_readiness only after owner authorizes rollout", "Do not execute release evidence foldback from CI alone"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_push_and_ci_observation"},
-          "requiredEvals": [
-            {"id": "push_or_pr_owner_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["owner authorized remote mutation when present"], "doesNotProve": ["CI passed", "production rollout", "owner visual acceptance"], "failureBlocks": ["push", "PR"]},
-            {"id": "ci_observation_after_push", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["GitHub CI passed for the pushed commit when present"], "doesNotProve": ["production rollout", "release evidence foldback", "production-ready claim"], "failureBlocks": ["production release readiness"]}
-          ]
-        },
-        {
-          "id": "production_release_readiness",
-          "objective": "After owner authorizes rollout, run release lane, production browser, dogfood, availability, and release evidence consistency checks.",
-          "entryCriteria": ["ci_observation_after_push is done", "owner explicitly authorizes rollout"],
-          "exitCriteria": ["latest image exists for latest main", "Cloud Rollout covers dry run, image preflight, apply, availability probe, authenticated dogfood, and production browser e2e", "failures are root-caused without skipped or lowered assertions"],
-          "evidenceSources": ["production_secret_gated", "external_owner"],
-          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
-          "acceptance": ["rollout authorization is explicit", "production release readiness evidence is collected only through release lane", "production evidence remains separate from product identity"],
-          "nextStepOpeners": ["Open post_release_closeout only after rollout succeeds", "Do not claim production-ready SaaS from controlled launch evidence"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_controlled_launch_rollout"},
-          "requiredEvals": [
-            {"id": "production_release_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/production_release_readiness", "proves": ["owner authorized rollout when present"], "doesNotProve": ["rollout succeeded", "release evidence folded back", "production-ready claim"], "failureBlocks": ["Cloud Rollout"]},
-            {"id": "production_release_readiness", "contract": "contracts/web-release-profile.json#/controlledLaunchReadiness", "proves": ["production release lane succeeded when folded evidence exists"], "doesNotProve": ["full SaaS", "payment/runtime/storage ownership", "production-ready SaaS"], "failureBlocks": ["release foldback"]}
-          ]
-        },
-        {
-          "id": "post_release_closeout",
-          "objective": "After successful rollout and owner authorization, fold back sanitized release evidence, close stale queue state, and update can/cannot claim.",
-          "entryCriteria": ["production_release_readiness is done", "owner authorizes release evidence foldback"],
-          "exitCriteria": ["release evidence is folded back through npm run release:evidence", "stale queue state is retired", "repo bloat, gap phase, gate review, and diff check pass", "owner acceptance remains evidence/status, not a second UI truth"],
-          "evidenceSources": ["production_secret_gated", "human_owner_receipt"],
-          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
-          "acceptance": ["release foldback is sanitized and limited to web-release-profile/status/baton", "temporary artifacts are ignored or cleaned", "can/cannot claim boundaries are updated without expanding product identity"],
-          "nextStepOpeners": ["Open production owner visual acceptance only with explicit human receipt", "Open further product capability phases only with owner, consumer, contract, and registered tests"],
-          "status": "done",
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_release_evidence_foldback"},
-          "requiredEvals": [
-            {"id": "post_release_closeout_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/post_release_closeout", "proves": ["owner authorized release evidence foldback when present"], "doesNotProve": ["owner visual acceptance", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]},
-            {"id": "post_release_closeout", "contract": "contracts/web-release-profile.json", "proves": ["sanitized release evidence and stale queue closeout are folded back when present"], "doesNotProve": ["payment/runtime/storage/full SaaS capability", "owner visual acceptance"], "failureBlocks": ["production closeout"]}
-          ]
-        }
-      ]
+        "retiredPhaseIds": [
+          "commercial_launch_acceptance_prep",
+          "remote_sync_pr_readiness",
+          "ci_observation_after_push",
+          "production_release_readiness",
+          "post_release_closeout"
+        ],
+        "retiredEvalIds": [
+          "owner_visual_acceptance_prep",
+          "remote_sync_pr_readiness",
+          "push_or_pr_owner_authorization",
+          "ci_observation_after_push",
+          "production_release_authorization",
+          "production_release_readiness",
+          "post_release_closeout_authorization",
+          "post_release_closeout"
+        ],
+        "retirementRule": "Release evidence remains in web-release-profile; closed readiness phases must not become product identity truth.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
-    {
+        {
       "id": "medopl_readonly_evidence",
       "ownerSurface": "release-evidence",
       "state": "closed",
@@ -386,109 +298,69 @@
         "payment readiness",
         "long-term production stability"
       ],
-      "phases": [
-        {
-          "id": "production_readonly_foldback",
-          "objective": "Confirm readonly projection with secret-gated production dogfood and fold back only sanitized evidence.",
-          "entryCriteria": [
-            "production dogfood workflow available",
-            "readonly foldback policy exists"
-          ],
-          "exitCriteria": [
-            "OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1 confirmed",
-            "sanitized dogfood stdout folded back",
-            "raw secret absence confirmed"
-          ],
-          "evidenceSources": [
-            "production_secret_gated"
-          ],
-          "blockerTypes": [
-            "missing_production_evidence"
-          ],
-          "acceptance": [
-            "readonly foldback policy requires OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1",
-            "dogfood stdout confirms runtime status, materials/deliverables, and billing readonly projection checks",
-            "release evidence foldback stores sanitized summary only and forbids raw logs or secret values",
-            "production readonly switch and sanitized stdout evidence are folded back for run 28142197152"
-          ],
-          "nextStepOpeners": [
-            "Keep future readonly evidence folded back through release:evidence with sanitized summaries only",
-            "Do not infer MedOPL runtime execution, payment readiness, or long-term stability from readonly projection dogfood",
-            "Reopen production_readonly_foldback only if a future rollout regresses readonly projection coverage"
-          ],
-          "ownerReceipt": {
-            "required": false,
-            "source": "production_secret_gated",
-            "reason": "the blocker is missing production evidence, not missing product owner approval"
-          },
-          "requiredEvals": [
-            {
-              "id": "medopl_readonly_foldback_eval",
-              "contract": "contracts/web-release-profile.json#/productionDogfoodReadiness/readonlyFoldbackPolicy",
-              "proves": [
-                "production readonly projection dogfood confirmed"
-              ],
-              "doesNotProve": [
-                "runtime execution correctness",
-                "billing source of truth",
-                "long-term production stability"
-              ],
-              "failureBlocks": [
-                "production MedOPL readonly projection dogfood"
-              ]
-            }
-          ]
-        }
-      ]
+      "closedSummary": {
+        "finalPhaseId": "production_readonly_foldback",
+        "summary": "MedOPL readonly projection evidence is folded into production dogfood readiness; it remains historical release evidence only.",
+        "stableContracts": [
+          "contracts/web-release-profile.json#/productionDogfoodReadiness"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "readonly projection dogfood consumer evidence",
+          "MedOPL": "runtime, billing, payment, and long-term production authority"
+        },
+        "retiredPhaseIds": [
+          "production_readonly_foldback"
+        ],
+        "retiredEvalIds": [
+          "medopl_readonly_foldback_eval"
+        ],
+        "retirementRule": "Future readonly evidence must fold back through release:evidence and must not imply MedOPL runtime execution.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
-    {
+        {
       "id": "commercial_runtime_admission_alignment_v1",
       "ownerSurface": "runtime-gate",
       "state": "closed",
       "currentPhaseId": "production_e2e_rerun_after_alignment",
       "currentStatus": "done",
       "launchBlocking": true,
-      "cannotClaim": ["runtime execution completed", "artifact body authority", "storage truth ownership", "payment readiness", "production-ready SaaS"],
-      "dependsOn": ["commercial_launch_readiness_closeout", "runtime_execution_boundary"],
-      "dynamicRetirement": {
-        "doNotTreatBlockedGateAsOnlyCommercialPath": true,
-        "releaseEvidenceOnlyInReleaseProfile": true,
-        "medoplReadinessSource": "contracts/web-runtime-bridge.json#/commercialRuntimeAdmission",
-        "temporaryArtifacts": [".runtime/browser-visual/*", ".runtime/phase-runs/*", "raw CI output", "release raw logs"]
-      },
-      "phases": [
-        {
-          "id": "truth_evidence_alignment",
-          "status": "done",
-          "objective": "Split commercial runtime admission into ordinary, specialist not-ready, specialist ready, and onboarding paths before rerunning production browser E2E.",
-          "entryCriteria": ["Production Browser E2E failed on hard-coded runtime_gate.blocked wait", "commercial paths require MedOPL readiness projection"],
-          "exitCriteria": ["commercialRuntimeAdmission contract defines ordinary, blocked, ready, and onboarding paths", "production browser runner classifies dogfood account by live MedOPL runtime gate projection", "ready path validates runtime_gate.ready, run_intent.accepted, runtime_run.projected, and refs-only projection", "not-ready and onboarding paths validate typed blockers/deeplinks without fake ready"],
-          "evidenceSources": ["repo_local", "browser"],
-          "blockerTypes": ["missing_contract", "missing_eval"],
-          "acceptance": ["runtime admission truth is separated from release evidence", "Production Browser E2E is split by scenario instead of hard-coded blocked audit", "MedOPL dogfood provisioning gap is explicit if dedicated accounts are missing"],
-          "nextStepOpeners": ["Rerun production E2E only after this alignment is merged and image is built", "Open MedOPL safe dogfood provisioning if dedicated ready/blocked/onboarding accounts are required"],
-          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase aligns existing Web/MedOPL contract and test evidence only"},
-          "requiredEvals": [
-            {"id": "commercial_runtime_admission_contract", "contract": "contracts/web-runtime-bridge.json#/commercialRuntimeAdmission", "proves": ["ordinary blocked ready onboarding runtime admission paths are machine-readable"], "doesNotProve": ["production rollout", "MedOPL account is ready", "runtime execution completed"], "failureBlocks": ["production browser e2e rerun"]},
-            {"id": "production_browser_e2e_split", "contract": "tests/browser/research-main-path-runner.mjs", "proves": ["Production Browser E2E dispatches by MedOPL runtime gate projection"], "doesNotProve": ["all dedicated dogfood accounts exist", "payment/runtime/storage ownership"], "failureBlocks": ["production browser e2e rerun"]}
-          ]
+      "dependsOn": [
+        "commercial_launch_readiness_closeout",
+        "runtime_execution_boundary"
+      ],
+      "cannotClaim": [
+        "runtime execution completed",
+        "artifact body authority",
+        "storage truth ownership",
+        "payment readiness",
+        "production-ready SaaS"
+      ],
+      "closedSummary": {
+        "finalPhaseId": "production_e2e_rerun_after_alignment",
+        "summary": "Commercial runtime admission split is folded into runtime bridge admission truth and production browser E2E readiness evidence.",
+        "stableContracts": [
+          "contracts/web-runtime-bridge.json#/commercialRuntimeAdmission",
+          "contracts/web-release-profile.json#/productionBrowserE2EReadiness"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "ordinary, blocked, ready, and onboarding interaction projection consumer",
+          "MedOPL": "runtime/resource/storage readiness source of truth"
         },
-        {
-          "id": "production_e2e_rerun_after_alignment",
-          "objective": "After owner authorizes a new release cycle, rerun CI, image, Cloud Rollout, and production browser E2E with aligned runtime admission scenarios.",
-          "entryCriteria": ["truth_evidence_alignment is done", "owner authorizes push and rollout"],
-          "exitCriteria": ["Production Browser E2E passes under one of the contracted runtime admission scenarios", "failed scenario emits typed blocker and owner", "no release evidence foldback unless rollout and production validation pass"],
-          "evidenceSources": ["production_secret_gated", "external_owner"],
-          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
-          "acceptance": ["production E2E result is classified as ordinary, blocked, ready, or onboarding", "release evidence stays in web-release-profile only"],
-          "nextStepOpeners": ["Fold back release evidence after successful rollout and production validation", "Open MedOPL dedicated dogfood provisioning if scenario coverage is incomplete"],
-          "status": "done",
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_aligned_runtime_admission_rollout"},
-          "requiredEvals": [
-            {"id": "aligned_production_browser_e2e", "contract": "contracts/web-release-profile.json#/productionBrowserE2EReadiness", "proves": ["production browser E2E passed with aligned runtime admission scenario when folded back"], "doesNotProve": ["runtime execution completed", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]}
-          ]
-        }
-      ]
+        "retiredPhaseIds": [
+          "truth_evidence_alignment",
+          "production_e2e_rerun_after_alignment"
+        ],
+        "retiredEvalIds": [
+          "commercial_runtime_admission_contract",
+          "production_browser_e2e_split",
+          "aligned_production_browser_e2e"
+        ],
+        "retirementRule": "Do not restore a single blocked runtime path; production release evidence stays separate from runtime admission truth.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
     {
       "id": "commercial_product_maturity_gap_v1",
@@ -506,7 +378,7 @@
         {"id":"ops_diagnostics_and_troubleshooting","status":"done","objective":"Add troubleshooting, backup/migration owner split, and minimal /_ops diagnostics plan without MedOPL resource admin.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["troubleshooting docs and owner split are present","/_ops scope stays diagnostics only","data sidecar remains projection/audit only"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["operator diagnostics stay minimal","Webui does not backup MedOPL runtime/storage/artifacts","data management sidecar is not introduced"],"nextStepOpeners":["close maturity queue or move remaining items to owner-specific queues"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"docs/diagnostics plan only"},"requiredEvals":[{"id":"ops_diagnostics_and_troubleshooting_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/ops_diagnostics_and_troubleshooting","proves":["ops diagnostics and troubleshooting boundaries are registered when implemented"],"doesNotProve":["MedOPL resource admin","production-ready SaaS"],"failureBlocks":["ops diagnostics maturity claim"]}]}
       ]
     },
-    {
+        {
       "id": "runtime_execution_boundary",
       "ownerSurface": "runtime-gate",
       "state": "closed",
@@ -518,66 +390,28 @@
         "OPL runtime execution from Web",
         "artifact body authority"
       ],
-      "phases": [
-        {
-          "id": "execution_admission",
-          "objective": "Accept the local MedOPL runtime gate/run bridge as refs-only projection while production execution remains unclaimed.",
-          "entryCriteria": [
-            "runtime bridge contract exists",
-            "Go control plane remains only backend business entry"
-          ],
-          "exitCriteria": [
-            "owner accepts local MedOPL gate/run bridge boundary",
-            "Web runtime command policy allows no runtime commands and is not a product access policy",
-            "Web runtime mutation remains forbidden",
-            "MedOPL remains runtime/storage/package/billing/resource release authority",
-            "OPL Framework/domain agents remain execution semantics, quality verdict, and artifact authority"
-          ],
-          "evidenceSources": [
-            "repo_local",
-            "human_owner_receipt"
-          ],
-          "blockerTypes": [
-            "future_execution_not_admitted"
-          ],
-          "acceptance": [
-            "executionAdmission currentStatus stays not_admitted",
-            "Web runtime command policy allows no runtime commands, is not product access policy, and Web may not install, repair, module exec, return artifact body, own domain verdict, mutate runtime, mutate storage, or mutate billing",
-            "MedOPL and OPL Framework remain execution and artifact authority while Web remains gate/run refs-only projection",
-            "production runtime execution still requires production MedOPL runtime execution evidence, registered bridge eval, human authorization, tenant audit, and artifact/body authority contract"
-          ],
-          "nextStepOpeners": [
-            "Configure operator MEDOPL_API_BASE_URL before collecting production runtime bridge evidence",
-            "Fold back production gate/run evidence before claiming runtime execution",
-            "Continue to list OPL runtime execution from Web and artifact body authority as cannot-claim"
-          ],
-          "ownerReceipt": {
-            "required": true,
-            "source": "human_owner_receipt",
-            "status": "accepted",
-            "acceptedAt": "2026-06-26",
-            "acceptedClaim": "medopl_runtime_gate_run_bridge_local_refs_only_accepted",
-            "reason": "owner accepted local MedOPL gate/run refs-only projection while production execution remains external"
-          },
-          "requiredEvals": [
-            {
-              "id": "runtime_execution_admission_eval",
-              "contract": "contracts/web-runtime-bridge.json#/executionAdmission",
-              "proves": [
-                "runtime execution admission is either fully satisfied or fail-closed"
-              ],
-              "doesNotProve": [
-                "MedOPL runtime execution",
-                "artifact body authority"
-              ],
-              "failureBlocks": [
-                "OPL runtime execution from Web",
-                "artifact body authority"
-              ]
-            }
-          ]
-        }
-      ]
+      "closedSummary": {
+        "finalPhaseId": "execution_admission",
+        "summary": "Runtime execution boundary is folded into executionAdmission; Web remains refs-only and execution not admitted.",
+        "stableContracts": [
+          "contracts/web-runtime-bridge.json#/executionAdmission"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "gate/run refs projection and fail-closed interaction",
+          "MedOPL": "runtime/resource/storage authority",
+          "onePersonLab": "framework execution semantics",
+          "FoundryAgents": "domain truth and artifact authority"
+        },
+        "retiredPhaseIds": [
+          "execution_admission"
+        ],
+        "retiredEvalIds": [
+          "runtime_execution_admission_eval"
+        ],
+        "retirementRule": "Keep durable cannot-claim until a future owner-approved execution admission contract and production evidence exist.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
     {
       "id": "commercial_saas_depth",
@@ -837,148 +671,73 @@
       "launchBlocking": false,
       "launchBlockingRationale": "not blocking single-node controlled launch; HA remains paused until cloud owner approves second node, replicas=2, and production topology evidence"
     },
-    {
+        {
       "id": "concurrency_and_load",
       "ownerSurface": "control-plane-go",
       "state": "closed",
       "currentPhaseId": "production_concurrency_load_evidence",
       "currentStatus": "done",
+      "durableCannotClaim": true,
       "cannotClaim": [
         "production concurrent SaaS readiness",
         "production load-tested multi-user chat",
         "production database pool sizing readiness",
         "production slow upstream backpressure readiness"
       ],
-      "phases": [
-        {
-          "id": "production_concurrency_load_evidence",
-          "objective": "Accept concurrency/load v1 as staging-safe 10-user baseline evidence, while production concurrency readiness remains explicitly unclaimed.",
-          "entryCriteria": [
-            "local auth/session/API key/chat contract tests exist",
-            "Postgres-backed store path exists"
-          ],
-          "exitCriteria": [
-            "staging-safe 10-user concurrent register/login/API key/chat/quota baseline passes locally",
-            "DB pool sizing baseline is configurable and tested",
-            "slow upstream timeout/fail-closed baseline is tested",
-            "production concurrency readiness remains cannot-claim"
-          ],
-          "evidenceSources": [
-            "repo_local",
-            "ci"
-          ],
-          "blockerTypes": [
-            "future_production_load_not_admitted"
-          ],
-          "acceptance": [
-            "registered local eval covers 10 concurrent account, API key, chat, quota, and tenant isolation flows",
-            "DB pool sizing baseline is explicit and bounded by Go-side tests",
-            "slow upstream timeout and sanitized fail-closed behavior are covered by Go-side tests",
-            "production concurrent SaaS readiness remains cannot-claim until staging or production load evidence is folded back"
-          ],
-          "nextStepOpeners": [
-            "Open production load claim only after staging or production run evidence is folded back as sanitized aggregate summary",
-            "Keep raw emails, API keys, request bodies, DB URLs, and upstream payloads out of git",
-            "Scale beyond 10 users only through a new owner-approved load profile contract"
-          ],
-          "ownerReceipt": {
-            "required": false,
-            "source": "repo_local",
-            "reason": "owner authorized staging-first 10-user baseline and no production load claim is made"
-          },
-          "requiredEvals": [
-            {
-              "id": "concurrency_load_eval",
-              "contract": "contracts/web-product-profile.json#/concurrencyAndLoad",
-              "proves": [
-                "staging-safe 10-user baseline separates local concurrency proof from production load readiness"
-              ],
-              "doesNotProve": [
-                "production concurrent SaaS readiness",
-                "production database pool sizing",
-                "production slow upstream backpressure readiness"
-              ],
-              "failureBlocks": [
-                "staging-safe concurrency baseline"
-              ]
-            }
-          ]
-        }
-      ],
-      "durableCannotClaim": true
+      "closedSummary": {
+        "finalPhaseId": "production_concurrency_load_evidence",
+        "summary": "Concurrency and load v1 is folded into product concurrencyAndLoad as staging-safe local baseline without production load claim.",
+        "stableContracts": [
+          "contracts/web-product-profile.json#/concurrencyAndLoad"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "tenant/session/API key/chat isolation and configurable pool baseline",
+          "external": "future staging or production load evidence owner"
+        },
+        "retiredPhaseIds": [
+          "production_concurrency_load_evidence"
+        ],
+        "retiredEvalIds": [
+          "concurrency_load_eval"
+        ],
+        "retirementRule": "Production concurrent SaaS readiness remains unclaimed until folded staging or production load evidence exists.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     },
-    {
+        {
       "id": "opl_auto_update_from_github",
       "ownerSurface": "deploy",
       "state": "closed",
       "currentPhaseId": "runtime_sync_admission",
       "currentStatus": "done",
+      "durableCannotClaim": true,
       "cannotClaim": [
         "runtime continuous GitHub sync",
         "background updater parity with one-person-lab-app",
         "self-healing OPL framework updates",
         "runtime update rollback"
       ],
-      "phases": [
-        {
-          "id": "runtime_sync_admission",
-          "objective": "Accept OPL update v1 as build-time pinned image-release policy; runtime GitHub sync remains forbidden and out of scope.",
-          "entryCriteria": [
-            "Dockerfile.cloud pins OPL context at image build time",
-            "Cloud Rollout deploys immutable image tags"
-          ],
-          "exitCriteria": [
-            "owner accepts build-time pinned update policy",
-            "image release pipeline remains the update mechanism",
-            "runtime GitHub sync mechanisms remain forbidden",
-            "future runtime sync admission requirements stay explicit"
-          ],
-          "evidenceSources": [
-            "repo_local",
-            "external_owner"
-          ],
-          "blockerTypes": [
-            "future_runtime_sync_not_admitted"
-          ],
-          "acceptance": [
-            "current mechanism is build-time pinned OPL context inside immutable Web images",
-            "owner accepted no runtime GitHub sync or background updater in Web for this phase",
-            "runtime pod does not git pull, self-update, npm install, or sync unverified GitHub HEAD",
-            "runtime continuous GitHub sync, background updater parity, self-healing updates, and runtime update rollback remain cannot-claim"
-          ],
-          "nextStepOpeners": [
-            "Open runtime sync only after owner chooses Web-owned updater authority",
-            "Add signed-source verification, rollback, tenant-safe maintenance, and registered eval before runtime sync",
-            "Prefer image rebuild and Cloud Rollout while runtime update authority is external"
-          ],
-          "ownerReceipt": {
-            "required": true,
-            "source": "human_owner_receipt",
-            "status": "accepted",
-            "acceptedAt": "2026-06-24",
-            "acceptedClaim": "opl_update_build_time_pinned_policy_accepted",
-            "acceptedScope": "Web updates OPL context through image release and Cloud Rollout only"
-          },
-          "requiredEvals": [
-            {
-              "id": "opl_auto_update_admission_eval",
-              "contract": "contracts/web-release-profile.json#/oplAutoUpdateReadiness",
-              "proves": [
-                "OPL updates are image-release pinned and runtime sync remains forbidden"
-              ],
-              "doesNotProve": [
-                "runtime continuous GitHub sync",
-                "background updater parity with one-person-lab-app",
-                "runtime update rollback"
-              ],
-              "failureBlocks": [
-                "OPL build-time pinned update policy"
-              ]
-            }
-          ]
-        }
-      ],
-      "durableCannotClaim": true
+      "closedSummary": {
+        "finalPhaseId": "runtime_sync_admission",
+        "summary": "OPL auto-update policy is folded into release auto-update readiness as build-time pinned image-release policy.",
+        "stableContracts": [
+          "contracts/web-release-profile.json#/oplAutoUpdateReadiness"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "image build and Cloud Rollout update consumer",
+          "notWebui": "runtime GitHub sync, background updater, self-healing updates, runtime update rollback"
+        },
+        "retiredPhaseIds": [
+          "runtime_sync_admission"
+        ],
+        "retiredEvalIds": [
+          "opl_auto_update_admission_eval"
+        ],
+        "retirementRule": "Runtime sync stays forbidden until a new owner-approved updater authority gap is opened.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
     }
   ]
 }

@@ -416,7 +416,7 @@
       {
         "id": "commercial_launch_ui_implementation",
         "ownerSurface": "apps-web",
-        "acceptanceContract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_ui_implementation",
+        "acceptanceContract": "contracts/web-product-profile.json#/uiSourceTruth",
         "disposition": "closed_repo_local_implementation_complete_pending_owner_visual_remote_release",
         "evidenceRequired": [
           "figma_to_code_implementation_map",
@@ -426,8 +426,8 @@
           "git_diff_check"
         ]
       },
-      {"id":"commercial_launch_readiness_closeout","ownerSurface":"release-evidence","acceptanceContract":"contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout","disposition":"local_acceptance_and_remote_sync_prep_done_blocked_on_owner_authorized_push_ci_rollout_foldback","evidenceRequired":["owner_visual_acceptance_checklist","remote_sync_pr_readiness","owner_authorized_push_or_pr","GitHub_CI_after_push","owner_authorized_rollout","release_evidence_foldback","owner_visual_receipt_optional"]},
-      {"id":"commercial_runtime_admission_alignment_v1","ownerSurface":"runtime-gate","acceptanceContract":"contracts/web-gap-phase-registry.json#/gaps/commercial_runtime_admission_alignment_v1","disposition":"ordinary_blocked_ready_onboarding_paths_aligned_before_production_e2e_rerun","launchBlocking":true,"evidenceRequired":["ordinary_path_chat_completed","specialist_not_ready_runtime_gate_blocked","specialist_ready_runtime_gate_ready_run_intent_projected","onboarding_medopl_deeplink","MedOPL_safe_dogfood_provisioning_if_dedicated_accounts_required"]},
+      {"id":"commercial_launch_readiness_closeout","ownerSurface":"release-evidence","acceptanceContract":"contracts/web-product-profile.json#/commercialLaunchReadiness","disposition":"local_acceptance_and_remote_sync_prep_done_blocked_on_owner_authorized_push_ci_rollout_foldback","evidenceRequired":["owner_visual_acceptance_checklist","remote_sync_pr_readiness","owner_authorized_push_or_pr","GitHub_CI_after_push","owner_authorized_rollout","release_evidence_foldback","owner_visual_receipt_optional"]},
+      {"id":"commercial_runtime_admission_alignment_v1","ownerSurface":"runtime-gate","acceptanceContract":"contracts/web-runtime-bridge.json#/commercialRuntimeAdmission","disposition":"ordinary_blocked_ready_onboarding_paths_aligned_before_production_e2e_rerun","launchBlocking":true,"evidenceRequired":["ordinary_path_chat_completed","specialist_not_ready_runtime_gate_blocked","specialist_ready_runtime_gate_ready_run_intent_projected","onboarding_medopl_deeplink","MedOPL_safe_dogfood_provisioning_if_dedicated_accounts_required"]},
       {
         "id": "medopl_readonly_evidence",
         "ownerSurface": "release-evidence",
@@ -442,7 +442,7 @@
       {
         "id": "runtime_execution_boundary",
         "ownerSurface": "runtime-gate",
-        "acceptanceContract": "contracts/web-runtime-bridge.json",
+        "acceptanceContract": "contracts/web-runtime-bridge.json#/executionAdmission",
         "disposition": "medopl_account_resource_state_driven_local_gate_run_bridge_refs_only_production_execution_unclaimed",
         "launchBlocking": true,
         "evidenceRequired": [

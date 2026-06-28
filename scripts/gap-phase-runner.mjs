@@ -8,7 +8,7 @@ const defaultRuntimeRoot = '.runtime/phase-runs';
 
 export function buildPhaseStatusReport(registry, context = readEvalContext()) {
   const gaps = registry.gaps.map((gap) => {
-    const currentPhase = gap.phases.find((phase) => phase.id === gap.currentPhaseId);
+    const currentPhase = currentPhaseForGap(gap);
     const status = gap.currentStatus ?? statusFromPhase(currentPhase);
     const evalResults = evaluateGap(gap, currentPhase, context);
     const readyToAdvanceBlockedBy = evalResults
@@ -146,6 +146,26 @@ function readEvalContext() {
 }
 
 function evaluateGap(gap, phase, context) {
+  if (isCompactedClosedGap(gap)) {
+    return [
+      ...evaluateCommonGap(gap, phase, context),
+      ...evaluateClosedSummaryGap(gap),
+    ];
+  }
+
+  return [
+    ...evaluateCommonGap(gap, phase, context),
+    ...({
+      ui_ux_product_depth: evaluateUiUxGap(context),
+      commercial_product_maturity_gap_v1: evaluateCommercialProductMaturityGap(gap),
+      commercial_saas_depth: evaluateCommercialGap(context),
+      operations_maturity: evaluateOperationsGap(context),
+      ha_and_resilience: evaluateHaGap(context),
+    }[gap.id] ?? []),
+  ];
+}
+
+function evaluateCommonGap(gap, phase, context) {
   const common = [
     evalResult({
       id: 'phase_contract',
@@ -165,23 +185,76 @@ function evaluateGap(gap, phase, context) {
       doesNotProve: ['gap acceptance', 'production readiness', 'owner acceptance'],
     }),
   ];
+  return common;
+}
 
-  const specific = {
-    ui_ux_product_depth: evaluateUiUxGap(context),
-    commercial_launch_ui_implementation: evaluateCommercialLaunchUiGap(gap, context),
-    commercial_launch_readiness_closeout: evaluateCommercialLaunchReadinessGap(gap, context),
-    commercial_runtime_admission_alignment_v1: evaluateCommercialRuntimeAdmissionGap(gap, context),
-    commercial_product_maturity_gap_v1: evaluateCommercialProductMaturityGap(gap),
-    medopl_readonly_evidence: evaluateMedoplReadonlyGap(context),
-    runtime_execution_boundary: evaluateRuntimeGap(context),
-    commercial_saas_depth: evaluateCommercialGap(context),
-    operations_maturity: evaluateOperationsGap(context),
-    ha_and_resilience: evaluateHaGap(context),
-    concurrency_and_load: evaluateConcurrencyGap(context),
-    opl_auto_update_from_github: evaluateOplAutoUpdateGap(context),
-  }[gap.id] ?? [];
+function currentPhaseForGap(gap) {
+  const phase = gap.phases?.find((item) => item.id === gap.currentPhaseId);
+  if (phase) return phase;
+  if (!isCompactedClosedGap(gap)) return undefined;
 
-  return [...common, ...specific];
+  return {
+    id: gap.currentPhaseId,
+    objective: gap.closedSummary.summary,
+    acceptance: gap.closedSummary.acceptance ?? ['closed summary is folded into stable contracts'],
+    nextStepOpeners: gap.closedSummary.nextStepOpeners ?? ['reopen through a new active gap with owner, contract, and evals'],
+    ownerReceipt: gap.closedSummary.ownerReceipt ?? { required: false, source: 'closed_summary' },
+    evidenceSources: ['repo_local', 'cleanup'],
+    blockerTypes: [],
+    requiredEvals: [
+      {
+        id: 'closed_summary_stable_contracts',
+        contract: 'contracts/web-gap-phase-registry.json',
+        proves: ['compacted closed gap points to stable contracts and provenance'],
+        doesNotProve: ['new product capability', 'production rollout', 'release evidence'],
+        failureBlocks: ['gap registry compaction'],
+      },
+    ],
+  };
+}
+
+function isCompactedClosedGap(gap) {
+  return gap?.state === 'closed' && gap?.closedSummary;
+}
+
+function evaluateClosedSummaryGap(gap) {
+  const stableContracts = gap.closedSummary?.stableContracts ?? [];
+  const stableContractsExist = stableContracts.length > 0 && stableContracts.every(contractRefExists);
+  const hasProvenance = typeof gap.closedSummary?.tombstoneRef === 'string'
+    && gap.closedSummary.tombstoneRef.startsWith('docs/history/process/closeouts.md#');
+  const keepsClosedDone = gap.state === 'closed'
+    && gap.currentStatus === 'done'
+    && gap.closedSummary?.finalPhaseId === gap.currentPhaseId
+    && gap.closedSummary?.cannotClaimRetained === true;
+
+  return [
+    evalResult({
+      id: 'closed_summary_contract',
+      dimension: 'contract',
+      status: keepsClosedDone ? 'pass' : 'fail',
+      proves: ['compacted gap remains closed and done without becoming not_started'],
+      doesNotProve: ['new active work', 'production rollout', 'owner acceptance beyond folded evidence'],
+    }),
+    evalResult({
+      id: 'closed_summary_stable_contracts',
+      dimension: 'contract',
+      status: stableContractsExist ? 'pass' : 'fail',
+      proves: ['closed gap truth is folded into existing stable contracts'],
+      doesNotProve: ['stable contracts changed in this run', 'release evidence changed'],
+    }),
+    evalResult({
+      id: 'closed_summary_provenance',
+      dimension: 'cleanup',
+      status: hasProvenance ? 'pass' : 'fail',
+      proves: ['closed gap keeps provenance in the existing closeout history'],
+      doesNotProve: ['closed gap is active', 'old narrative can return'],
+    }),
+  ];
+}
+
+function contractRefExists(ref) {
+  const [path] = String(ref).split('#');
+  return existsSync(path);
 }
 
 function evaluateUiUxGap({ gui }) {
@@ -224,116 +297,6 @@ function evaluateUiUxGap({ gui }) {
         : 'blocked',
       proves: ['human owner accepted the UI/UX production claim when present'],
       doesNotProve: ['production evidence', 'complete UI/UX design system', 'assistive technology conformance'],
-    }),
-  ];
-}
-
-function evaluateCommercialLaunchUiGap(gap, { product }) {
-  const uiTruth = product?.uiSourceTruth;
-  const implementationMap = uiTruth?.implementationMap;
-  const phaseIds = gap.phases.map((phase) => phase.id);
-  const requiredPhaseIds = [
-    'figma_to_code_implementation_map',
-    'figma_public_landing_slice',
-    'figma_auth_surface_slice',
-    'figma_home_workbench_shell_slice',
-    'figma_dialog_sheet_projection_slice',
-  ];
-  const expectedUrl = 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0';
-  return [
-    evalResult({
-      id: 'commercial_launch_figma_source',
-      dimension: 'contract',
-      status: uiTruth?.source?.url === expectedUrl
-        && uiTruth?.source?.fileKey === '1MNO5l7PQYKZVNqQgw6DGS'
-        && uiTruth?.source?.primaryAppSource === 'src/app/App.tsx'
-        && uiTruth?.source?.styleSourcesToRead?.length === 1
-        && uiTruth.source.styleSourcesToRead.includes('src/styles/theme.css')
-        ? 'pass'
-        : 'fail',
-      proves: ['Commercial Launch UI phase queue is pinned to the canonical Figma Make source'],
-      doesNotProve: ['UI implementation', 'visual parity', 'production rollout'],
-    }),
-    evalResult({
-      id: 'commercial_launch_phase_queue',
-      dimension: 'contract',
-      status: allowedCommercialLaunchQueueState(gap, implementationMap)
-        && requiredPhaseIds.every((id, index) => phaseIds[index] === id)
-        ? 'pass'
-        : 'fail',
-      proves: ['Commercial Launch UI work advances through the existing gap phase registry'],
-      doesNotProve: ['phase implementation complete', 'browser behavior', 'owner visual acceptance'],
-    }),
-    evalResult({
-      id: 'commercial_launch_mock_truth_boundary',
-      dimension: 'repo_local',
-      status: uiTruth?.mockTruthPolicy?.figmaMockDataIsProductTruth === false
-        && uiTruth?.implementationBoundary?.doNotVendorGeneratedApp === true
-        && uiTruth?.implementationBoundary?.doNotImportFigmaMakeDependencies === true
-        && uiTruth?.doesNotApplyTo?.includes('minimal_admin_ops_layer')
-        && (implementationMap?.status !== 'done'
-          || (implementationMap.mockTruthRetirement?.includes('initProjects')
-            && implementationMap.mockTruthRetirement?.includes('mockResult')
-            && implementationMap.forbiddenImplementation?.includes('vendor Figma generated app')))
-        ? 'pass'
-        : 'fail',
-      proves: ['Figma generated app, mock data, and Admin/Ops scope are barred from product truth'],
-      doesNotProve: ['mock copy has been removed from implemented UI', 'production readiness', 'runtime/storage ownership'],
-    }),
-  ];
-}
-
-function evaluateCommercialRuntimeAdmissionGap(gap, { runtime, release }) {
-  const admission = runtime?.commercialRuntimeAdmission;
-  const currentPhase = gap.phases.find((phase) => phase.id === gap.currentPhaseId);
-  const latestProductionBrowserE2E = release?.productionBrowserE2EReadiness?.latestAttempt;
-  const runner = existsSync('tests/browser/research-main-path-runner.mjs')
-    ? readFileSync('tests/browser/research-main-path-runner.mjs', 'utf8')
-    : '';
-  const requiredPaths = ['ordinary_path', 'specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path'];
-  return [
-    evalResult({
-      id: 'commercial_runtime_admission_contract',
-      dimension: 'contract',
-      status: admission?.mode === 'commercial_runtime_admission_alignment_v1'
-        && requiredPaths.every((id) => JSON.stringify(admission).includes(id))
-        && admission?.dogfoodAccountStrategy?.productionE2EDefault === 'auto_resolve_from_runtime_gate_projection'
-        ? 'pass'
-        : 'fail',
-      proves: ['commercial runtime admission paths are split into ordinary, blocked, ready, and onboarding scenarios'],
-      doesNotProve: ['production rollout', 'MedOPL account readiness', 'runtime execution completed'],
-    }),
-    evalResult({
-      id: 'production_browser_e2e_split',
-      dimension: 'browser',
-      status: runner.includes('resolveRuntimeAdmissionScenario')
-        && runner.includes('exerciseSpecialistNotReadyPath')
-        && runner.includes('exerciseSpecialistReadyPath')
-        && runner.includes('exerciseOnboardingPath')
-        && !runner.includes("waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 1)")
-        ? 'pass'
-        : 'fail',
-      proves: ['production browser E2E dispatches by MedOPL runtime gate projection instead of assuming blocked'],
-      doesNotProve: ['dedicated dogfood accounts exist', 'payment/runtime/storage ownership', 'production rollout'],
-    }),
-    evalResult({
-      id: 'medopl_dogfood_provisioning_gap',
-      dimension: 'production',
-      status: admission?.medoplRequiredWork?.some((item) => item.id === 'safe_dogfood_provisioning_flow')
-        ? 'pass'
-        : 'fail',
-      proves: ['dedicated MedOPL dogfood provisioning is explicitly owned by MedOPL when needed'],
-      doesNotProve: ['safe dogfood provisioning exists', 'specialist ready account exists', 'payment readiness'],
-    }),
-    evalResult({
-      id: 'aligned_production_browser_e2e',
-      dimension: 'production',
-      status: currentPhase?.status === 'done'
-        && latestProductionBrowserE2E?.status === 'success'
-        ? 'pass'
-        : 'blocked',
-      proves: ['production browser E2E passed after runtime admission alignment when folded back'],
-      doesNotProve: ['runtime execution completed', 'storage truth ownership', 'production-ready SaaS'],
     }),
   ];
 }
@@ -383,210 +346,6 @@ function evaluateCommercialProductMaturityGap(gap) {
         : 'fail',
       proves: ['Webui-owned maturity implementation phases are registered and closed or pending with explicit owner split'],
       doesNotProve: ['those phases are implemented', 'production mutation installer', 'full SaaS'],
-    }),
-  ];
-}
-
-function allowedCommercialLaunchQueueState(gap, implementationMap) {
-  if (gap.state === 'active') return allowedCommercialLaunchCurrentPhase(gap.currentPhaseId, implementationMap);
-  if (gap.state !== 'closed' || gap.currentStatus !== 'done') return false;
-  if (gap.currentPhaseId !== 'figma_dialog_sheet_projection_slice') return false;
-  return gap.phases.every((phase) => phase.status === 'done');
-}
-
-function allowedCommercialLaunchCurrentPhase(currentPhaseId, implementationMap) {
-  if (currentPhaseId === 'figma_to_code_implementation_map') return true;
-  if (implementationMap?.phaseId !== 'figma_to_code_implementation_map') return false;
-  if (implementationMap?.status !== 'done') return false;
-  return [
-    'figma_public_landing_slice',
-    'figma_auth_surface_slice',
-    'figma_home_workbench_shell_slice',
-    'figma_dialog_sheet_projection_slice',
-  ].includes(currentPhaseId);
-}
-
-function evaluateCommercialLaunchReadinessGap(gap, { product, registry, release }) {
-  const phase = (id) => gap.phases.find((item) => item.id === id);
-  const currentCommitReady = ['ready_not_pushed', 'pushed_ci_image_rollout_foldback_done'].includes(product?.commercialLaunchReadiness?.localMain?.state);
-  const completedLocalPrep = gap.dynamicRetirement?.completedLocalPrepPhases ?? [];
-  const hasRequiredSurfaces = [
-    '/',
-    '/login',
-    '/home',
-    'sidebar',
-    'search_sheet',
-    'account_popover',
-    'api_key_dialog',
-    'inspector_sheet',
-    'responsive_mobile',
-  ].every((surface) => product?.commercialLaunchReadiness?.ownerVisualAcceptancePrep?.surfaces?.includes(surface));
-  const remotePolicy = product?.commercialLaunchReadiness?.remoteSync?.policy ?? {};
-  return [
-    evalResult({
-      id: 'owner_visual_acceptance_prep',
-      dimension: 'repo_local',
-      status: phase('commercial_launch_acceptance_prep')?.status === 'done'
-        && completedLocalPrep.includes('commercial_launch_acceptance_prep')
-        && hasRequiredSurfaces
-        && product?.commercialLaunchReadiness?.ownerVisualAcceptancePrep?.ownerAccepted === false
-        ? 'pass'
-        : 'fail',
-      proves: ['owner visual acceptance checklist is prepared without claiming owner acceptance'],
-      doesNotProve: ['owner visual acceptance', 'production rollout', 'production-ready claim'],
-    }),
-    evalResult({
-      id: 'remote_sync_pr_readiness',
-      dimension: 'repo_local',
-      status: phase('remote_sync_pr_readiness')?.status === 'done'
-        && completedLocalPrep.includes('remote_sync_pr_readiness')
-        && currentCommitReady
-        && (product?.commercialLaunchReadiness?.remoteSync?.localMainAheadOrigin === true || product?.commercialLaunchReadiness?.remoteSync?.ciStatus === 'passed')
-        && remotePolicy.pushRequiresOwnerAuthorization === true
-        && remotePolicy.prRequiresOwnerAuthorization === true
-        ? 'pass'
-        : 'fail',
-      proves: ['remote sync readiness is prepared without pushing or opening a PR'],
-      doesNotProve: ['GitHub main updated', 'GitHub CI passed', 'production rollout'],
-    }),
-    evalResult({
-      id: 'push_or_pr_owner_authorization',
-      dimension: 'owner',
-      status: phase('ci_observation_after_push')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
-      proves: ['owner authorized push or PR when present'],
-      doesNotProve: ['GitHub CI passed', 'production rollout', 'owner visual acceptance'],
-    }),
-    evalResult({
-      id: 'ci_observation_after_push',
-      dimension: 'production',
-      status: product?.commercialLaunchReadiness?.remoteSync?.ciStatus === 'passed' ? 'pass' : 'blocked',
-      proves: ['GitHub CI passed for the pushed commit when present'],
-      doesNotProve: ['production rollout', 'release evidence foldback', 'production-ready claim'],
-    }),
-    evalResult({
-      id: 'production_release_authorization',
-      dimension: 'owner',
-      status: phase('production_release_readiness')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
-      proves: ['owner authorized rollout when present'],
-      doesNotProve: ['rollout succeeded', 'release evidence folded back', 'production-ready claim'],
-    }),
-    evalResult({
-      id: 'post_release_closeout_authorization',
-      dimension: 'owner',
-      status: phase('post_release_closeout')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
-      proves: ['owner authorized release evidence foldback when present'],
-      doesNotProve: ['owner visual acceptance', 'production-ready SaaS'],
-    }),
-    evalResult({
-      id: 'post_release_closeout',
-      dimension: 'production',
-      status: phase('post_release_closeout')?.status === 'done'
-        && release?.latestMainEvidence?.state === `folded_success_run_${release?.latestMainEvidence?.runId}`
-        ? 'pass'
-        : 'blocked',
-      proves: ['sanitized release evidence foldback is present for the latest controlled rollout'],
-      doesNotProve: ['owner visual acceptance', 'production-ready SaaS', 'full SaaS'],
-    }),
-    evalResult({
-      id: 'commercial_launch_queue_cleanup_policy',
-      dimension: 'cleanup',
-      status: registry?.runtimeArtifactPolicy?.rawLogs === 'forbidden_in_git'
-        && gap.dynamicRetirement?.releaseEvidenceOnlyInReleaseProfile === true
-        && gap.dynamicRetirement?.ownerAcceptanceIsEvidenceNotUiTruth === true
-        ? 'pass'
-        : 'fail',
-      proves: ['commercial launch queue keeps raw artifacts out of git and separates release evidence from UI truth'],
-      doesNotProve: ['release evidence exists', 'owner visual acceptance', 'production rollout'],
-    }),
-  ];
-}
-
-function evaluateMedoplReadonlyGap({ release }) {
-  const dogfood = release?.productionDogfoodReadiness;
-  const historicalReadonlyConfirmed = Number.isFinite(dogfood?.readonlyFoldbackPolicy?.confirmedBy?.runId);
-  return [
-    evalResult({
-      id: 'readonly_foldback_policy',
-      dimension: 'contract',
-      status: dogfood?.readonlyFoldbackPolicy?.requiredEvidence?.includes('OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY=1')
-        && dogfood?.readonlyFoldbackPolicy?.forbidRawLogs === true
-        ? 'pass'
-        : 'fail',
-      proves: ['MedOPL readonly foldback requires explicit production evidence and sanitized storage'],
-      doesNotProve: ['readonly production dogfood executed', 'runtime execution', 'billing source of truth'],
-    }),
-    evalResult({
-      id: 'readonly_production_foldback',
-      dimension: 'production',
-      status: historicalReadonlyConfirmed || (dogfood?.latestSuccessfulRun?.medoplReadonly === true
-        && dogfood?.latestSuccessfulRun?.publicMetadataConfirmsReadonlySwitch === true)
-        ? 'pass'
-        : 'blocked',
-      proves: ['secret-gated readonly projection dogfood evidence is folded back when present or historically confirmed'],
-      doesNotProve: ['latest-main readonly projection unless latest run explicitly confirms it', 'MedOPL runtime execution', 'payment readiness', 'long-term production stability'],
-    }),
-    evalResult({
-      id: 'readonly_raw_artifact_policy',
-      dimension: 'cleanup',
-      status: dogfood?.latestSuccessfulRun?.rawLogPolicy?.storesRawLogs === false
-        && dogfood?.latestSuccessfulRun?.rawLogPolicy?.storesSecretValues === false
-        ? 'pass'
-        : 'fail',
-      proves: ['readonly foldback does not store raw logs or secrets in active truth'],
-      doesNotProve: ['production readonly switch was enabled', 'runtime execution correctness'],
-    }),
-  ];
-}
-
-function evaluateRuntimeGap({ runtime }) {
-  const admission = runtime?.executionAdmission;
-  const conditions = admission?.conditions ?? [];
-  const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
-  const commandPolicy = admission?.webRuntimeCommandPolicy ?? {};
-  const bridgeBoundaryAccepted = Array.isArray(commandPolicy.allowedCommands)
-    && commandPolicy.allowedCommands.length === 0
-    && commandPolicy.productAccessPolicy === false
-    && admission?.ownerReceipt?.acceptedClaim === 'medopl_runtime_gate_run_bridge_local_refs_only_accepted';
-  return [
-    evalResult({
-      id: 'runtime_fail_closed',
-      dimension: 'repo_local',
-      status: runtime?.webuiRuntimeExecution === 'forbidden'
-        && admission?.currentStatus === 'not_admitted'
-        ? 'pass'
-        : 'fail',
-      proves: ['Web runtime mutation remains fail-closed'],
-      doesNotProve: ['runtime execution readiness', 'artifact body authority', 'MedOPL runtime behavior'],
-    }),
-    evalResult({
-      id: 'runtime_admission_contract',
-      dimension: 'contract',
-      status: Array.isArray(admission?.requiredBeforeAnyExecution)
-        && admission.requiredBeforeAnyExecution.includes('production MedOPL runtime execution evidence')
-        && admission.requiredBeforeAnyExecution.includes('registered bridge eval')
-        ? 'pass'
-        : 'fail',
-      proves: ['runtime bridge admission and production execution prerequisites are explicit'],
-      doesNotProve: ['the prerequisites exist', 'Web may execute runtime commands'],
-    }),
-    evalResult({
-      id: 'runtime_owner_receipt',
-      dimension: 'owner',
-      status: bridgeBoundaryAccepted ? 'pass' : 'blocked',
-      proves: ['runtime owner accepted the local MedOPL gate/run refs-only boundary when present'],
-      doesNotProve: ['runtime execution readiness', 'non-empty Web runtime command policy', 'artifact body authority'],
-    }),
-    evalResult({
-      id: 'runtime_command_policy_eval',
-      dimension: 'repo_local',
-      status: bridgeBoundaryAccepted
-        && conditionStatus('registered_bridge_eval') === 'pass'
-        && conditionStatus('web_runtime_command_policy') === 'present'
-        ? 'pass'
-        : 'blocked',
-      evidenceSource: 'conditions',
-      proves: ['empty Web runtime command policy is the accepted fail-closed mutation boundary and not product access policy'],
-      doesNotProve: ['production runtime execution', 'domain-agent quality', 'non-empty Web runtime command policy'],
     }),
   ];
 }
@@ -839,88 +598,6 @@ function evaluateHaGap({ release }) {
         : 'blocked',
       proves: ['multi-node HA production evidence exists when folded back'],
       doesNotProve: ['database HA', 'runtime execution resilience', 'payment readiness'],
-    }),
-  ];
-}
-
-function evaluateConcurrencyGap({ product }) {
-  const concurrency = product?.concurrencyAndLoad;
-  const conditions = concurrency?.evidenceConditions ?? [];
-  const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
-  return [
-    evalResult({
-      id: 'local_tenant_isolation_contract',
-      dimension: 'repo_local',
-      status: conditionStatus('local_tenant_isolation_contract') === 'present'
-        && conditionStatus('postgres_store_path') === 'present'
-        ? 'pass'
-        : 'fail',
-      proves: ['local tenant isolation and Postgres-backed store path evidence exist'],
-      doesNotProve: ['production concurrent SaaS readiness', 'load-tested multi-user chat'],
-    }),
-    evalResult({
-      id: 'load_boundary_contract',
-      dimension: 'contract',
-      status: concurrency?.mode === 'staging_safe_10_user_baseline_no_production_load_claim'
-        && concurrency?.productionEvidence?.status === 'not_claimed'
-        && concurrency?.requiredBeforeProductionClaim?.includes('production_or_staging_concurrent_register_login_chat_api_key_quota_test')
-        ? 'pass'
-        : 'fail',
-      proves: ['staging-safe local proof and production load proof are separated by contract'],
-      doesNotProve: ['production throughput', 'database pool sizing', 'slow upstream backpressure readiness'],
-    }),
-    evalResult({
-      id: 'production_load_evidence',
-      dimension: 'production',
-      status: conditionStatus('staging_10_user_baseline') === 'pass'
-        && conditionStatus('database_pool_sizing') === 'present'
-        && conditionStatus('slow_upstream_backpressure') === 'pass'
-        ? 'pass'
-        : 'blocked',
-      evidenceSource: 'evidenceConditions',
-      proves: ['staging-safe 10-user concurrency baseline exists when present'],
-      doesNotProve: ['production concurrent SaaS readiness', 'multi-node HA', 'payment lifecycle', 'runtime execution'],
-    }),
-  ];
-}
-
-function evaluateOplAutoUpdateGap({ release }) {
-  const readiness = release?.oplAutoUpdateReadiness;
-  const conditions = readiness?.evidenceConditions ?? [];
-  const conditionStatus = (id) => conditions.find((condition) => condition.id === id)?.status ?? 'missing';
-  return [
-    evalResult({
-      id: 'image_build_pinned_opl_context',
-      dimension: 'repo_local',
-      status: readiness?.mode === 'build_time_pinned_opl_context'
-        && conditionStatus('image_build_pinned_opl_context') === 'present'
-        ? 'pass'
-        : 'fail',
-      proves: ['OPL CLI/framework context is pinned into immutable Web image builds'],
-      doesNotProve: ['runtime continuous GitHub sync', 'background updater parity with one-person-lab-app'],
-    }),
-    evalResult({
-      id: 'runtime_sync_forbidden_mechanisms',
-      dimension: 'contract',
-      status: ['not_implemented', 'forbidden_by_current_policy'].includes(readiness?.runtimeGithubSync)
-        && readiness?.forbiddenRuntimeMechanisms?.includes('git_pull_inside_pod')
-        && readiness?.forbiddenRuntimeMechanisms?.includes('unverified_github_head_sync')
-        ? 'pass'
-        : 'fail',
-      proves: ['runtime sync mechanisms remain forbidden without admission evidence'],
-      doesNotProve: ['self-healing OPL framework updates', 'runtime update rollback'],
-    }),
-    evalResult({
-      id: 'runtime_github_sync_loop',
-      dimension: 'owner',
-      status: conditionStatus('runtime_github_sync_loop') === 'forbidden_by_policy'
-        && conditionStatus('owner_update_policy') === 'accepted'
-        && conditionStatus('runtime_sync_rollback_plan') === 'not_required_for_build_time_pinned_policy'
-        ? 'pass'
-        : 'blocked',
-      evidenceSource: 'evidenceConditions',
-      proves: ['owner accepted build-time pinned update policy and runtime sync remains forbidden'],
-      doesNotProve: ['runtime continuous GitHub sync', 'domain-agent correctness', 'tenant data migration safety'],
     }),
   ];
 }

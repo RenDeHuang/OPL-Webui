@@ -4,6 +4,12 @@
 - purpose: 单文件归档已关闭变更，避免每个切片继续增加 markdown 文件。
 - state: active
 
+## 2026-06-29 gap-registry-compaction-v1
+
+- summary: 压缩 `contracts/web-gap-phase-registry.json` 中已 stable foldback 的 closed gaps：`commercial_launch_ui_implementation`、`commercial_launch_readiness_closeout`、`medopl_readonly_evidence`、`commercial_runtime_admission_alignment_v1`、`runtime_execution_boundary`、`concurrency_and_load`、`opl_auto_update_from_github`。这些条目保留 `closedSummary`、`cannotClaim`、owner split、stable contract refs 和 retired phase/eval provenance；active/paused gaps 继续保留完整 phases，runner 仍区分 `closed/done` 与 `not_started`。
+- verified: `npm run verify:health`, `npm run verify:contract`, `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, `npm run line:budget`, `git diff --check`, `sentrux check .`。
+- cannot claim: 新产品能力、release evidence foldback、production rollout、Web-owned runtime/storage/payment/artifact truth、旧叙事可复活、active/paused gap 已关闭。
+
 ## 2026-06-14 foundation-to-task-store-baseline
 
 - summary: 合并归档早期 baseline：`foundation-loop-contracts`、`mvp-task-artifact-loop`、`web-demo-workspace-shell`、`cloud-mvp-service-slice`、`go-control-plane-replacement`、`post-go-cleanup`、`deploy-container-readiness`、`opl-readonly-bridge`、`opl-task-route-bridge`、`production-runtime-gate`、`task-store-boundary`。建立 repo governance、Go control plane、container health、OPL readonly snapshot、旧 `/api/mvp/task` bridge 和 task store 边界。
