@@ -188,6 +188,8 @@ test('commercial cross-repo browser canary is separated from strict ordinary ups
   assert.match(runner, /ordinary upstream failure must not show runtime gate/);
   assert.match(runner, /ordinaryChatOutcome\.state === 'structured_result'/);
   assert.match(runner, /chat\.upstream_failed/);
+  assert.match(runner, /mode === 'production' \? productionChatResultTimeoutMs : 60000/);
+  assert.doesNotMatch(runner, /mode === 'production' && !commercialCrossRepoCanary \? productionChatResultTimeoutMs : 60000/);
 });
 
 test('production browser e2e accepts reusable dogfood accounts that are already key-bound', () => {

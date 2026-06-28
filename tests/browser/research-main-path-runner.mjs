@@ -193,7 +193,7 @@ async function waitForOrdinaryResearchOutcome(cdp) {
     if (state.chatState === 'service_unavailable' && failure?.eventKind === 'chat.upstream_failed' && retryableProductionUpstreamKinds.has(failure.metadata?.upstreamKind || '')) return { state: 'upstream_service_unavailable_fail_closed', failureClass: 'chat.upstream_failed', upstreamKind: failure.metadata?.upstreamKind || '', upstreamHost: failure.metadata?.upstreamHost || '', canClaim: ['ordinary path reached authenticated WebUI and failed closed without runtime/storage gate'], cannotClaim: ['ordinary chat completion', 'upstream provider availability'] };
     if (state.runtimeGateVisible) return { state: 'ordinary_runtime_gate_violation', message: 'ordinary research path showed runtime gate' };
     return false;
-  }, mode === 'production' && !commercialCrossRepoCanary ? productionChatResultTimeoutMs : 60000, () => describeResearchResultState(cdp, 'structured research result marker missing'));
+  }, mode === 'production' ? productionChatResultTimeoutMs : 60000, () => describeResearchResultState(cdp, 'structured research result marker missing'));
 }
 async function closeBlockingOverlays(cdp) { for (const selector of ['[data-api-key-dialog-close]', '[data-account-popover-close]']) if (await evaluateJSON(cdp, `(() => { const element = document.querySelector(${JSON.stringify(selector)}); return Boolean(element && element.offsetParent !== null && !element.closest('[hidden]')); })()`)) await activate(cdp, selector); await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden !== false && document.querySelector("[data-account-popover]") === null'); }
 async function retryableProductionUpstreamFailure(cdp) {
