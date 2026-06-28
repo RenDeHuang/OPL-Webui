@@ -218,6 +218,11 @@
 - verified: RED/GREEN `node --test tests/contract/cloud-rollout-helper.test.mjs tests/health/workflow-entrypoint.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`；targeted `node --test tests/contract/go-control-plane-http.test.mjs` passed；final gates recorded in commit evidence。本轮不 production rollout。
 - cannot claim: production authenticated dogfood e2e 已在线执行、真实普通 chat completion online evidence、真实 authenticated quota exhaustion online evidence、MedOPL runtime status bridge、真实 OPL execution/mutation、object storage、billing/payment provider 或 node pool 生命周期。
 
+## 2026-06-29 - commercial-cross-repo-e2e-launch-completion
+- summary: 折回 scoped OPL-Webui -> MedOPL -> OPL-Webui commercial live canary 证据。OPL-Webui Cloud Rollout run `28332168943` / commit `d86c16354742e496d56327cbf7221cc6209fbf58` 通过 `Commercial Cross-Repo Browser Canary`；MedOPL Cloud Rollout run `28332365127` / commit `bdf32f3f79fa665ca1aa77a1d275b9ba16b9d0b1` 提供 redacted receipt manifest hash `sha256:fa71a90c267503d617c4d196353b55c1f30a6e4e7eaaddbba6b60837a2442234`。WebUI 只记录 consumer canary 和 minimum ops pointers，不更新 strict `latestMainEvidence`。
+- verified: GitHub Actions metadata reports both Cloud Rollout runs succeeded; local verification is recorded in the closing commit evidence.
+- cannot claim: strict Production Browser E2E for WebUI run `28332168943`, production-ready SaaS, Web-owned payment/billing/runtime/storage truth, external PSP settlement, all users/all tenants, SLA/multi-region, ongoing authorization, or enterprise compliance.
+
 ## 2026-06-18 - repo-governance-hardening
 - summary: 将 OPL-style 开发纪律写入仓库规则：`AGENTS.md` 固定文档生命周期、代码清退、测试登记和机器 gate 四个工作面；新增 `TASTE.md` 与核心 docs portfolio，把项目叙事从 agent instructions 拆出；新增 governance hardening 和 stale retirement guard 测试；bloat audit 将 active change 七件套按短期工作台单独计数。
 - verified: RED `node --test tests/health/governance-hardening.test.mjs` failed on missing governance surfaces；GREEN targeted governance/retirement/bloat/registry/workflow/lifecycle tests passed；`npm run verify` passed；`npm run gate:review` passed；`npm run repo:bloat` passed with 90 files, 17 tests, 17 durable markdown docs, 7 active change docs, largest file 260 lines；`sentrux check .` passed 9 rules with quality 7362。

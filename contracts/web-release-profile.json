@@ -600,6 +600,53 @@
       "nextRuntimeSyncRequires": ["owner_receipt_for_runtime_update_policy","signed_source_or_release_verification","rollback_plan","registered_eval","tenant_safe_maintenance_window"]
     }
   },
+  "commercialCrossRepoE2ELaunchCompletion": {
+    "mode": "scoped_live_cross_repo_canary_foldback",
+    "state": "executed_success_run_28332168943",
+    "owner": "opl-webui-commercial-consumer",
+    "consumer": "commercial_cross_repo_launch_review",
+    "scope": "OPL-Webui consumer live E2E canary only; this does not replace latestMainEvidence or strict Production Browser E2E evidence.",
+    "targetHost": "https://opl.medopl.cn",
+    "medoplTruthOwner": "MedOPL",
+    "contract": "contracts/web-commercial-consumer-contract.json#/commercialWebuiMedoplE2ELaunchContract",
+    "oplWebuiRun": {
+      "workflow": "Cloud Rollout",
+      "runId": 28332168943,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28332168943",
+      "commit": "d86c16354742e496d56327cbf7221cc6209fbf58",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:d86c163",
+      "passedJobs": ["Production Dry Run","Image Preflight","Production Apply","Availability Probe After Apply","Production Authenticated Dogfood E2E","Commercial Cross-Repo Browser Canary"],
+      "skippedByDesign": ["Production Browser E2E"]
+    },
+    "medoplRun": {
+      "workflow": "Cloud Rollout",
+      "runId": 28332365127,
+      "runUrl": "https://github.com/RenDeHuang/MedOPL/actions/runs/28332365127",
+      "commit": "bdf32f3f79fa665ca1aa77a1d275b9ba16b9d0b1",
+      "receiptManifestHash": "sha256:fa71a90c267503d617c4d196353b55c1f30a6e4e7eaaddbba6b60837a2442234",
+      "receiptManifestArtifact": "medopl-production-receipt-manifest"
+    },
+    "coveredPaths": ["ordinary_path_runtime_storage_not_blocking","specialist_blocked_handoff","specialist_onboarding_required","specialist_ready_projection","deeplink_handoff_next_action"],
+    "canClaim": ["OPL-Webui scoped live consumer canary consumed MedOPL readonly projection and deeplink handoff","ordinary path remained outside runtime/storage blocker for this scoped canary","specialist path can render MedOPL-owned blocked/onboarding/ready projection after MedOPL canary completion"],
+    "cannotClaim": ["strict Production Browser E2E for this run","production-ready SaaS","payment truth ownership","billing truth ownership","runtime truth ownership","storage truth ownership","external PSP settlement","all users/all tenants","SLA/multi-region","ongoing authorization"],
+    "rawLogPolicy": {
+      "storesRawLogs": false,
+      "storesSecretValues": false
+    }
+  },
+  "commercialCrossRepoOpsReadinessMinimum": {
+    "mode": "minimum_ops_readiness_boundary",
+    "state": "minimum_boundary_present_for_scoped_cross_repo_canary",
+    "owner": "one-person-lab-web-release",
+    "consumer": "commercial_cross_repo_launch_review",
+    "monitoringReadinessPointer": "contracts/web-release-profile.json#/productionObservabilityBaseline",
+    "rollbackDrillEvidencePointer": "contracts/web-release-profile.json#/productionRollbackReadiness and MedOPL Cloud Rollout run 28332365127 rollback_drill_receipt",
+    "troubleshootingPointer": "deploy/web-cloud/RUNBOOK.md",
+    "incidentFailedHandoffRunbookPointer": "contracts/web-commercial-consumer-contract.json#/commercialWebuiMedoplE2ELaunchContract plus docs/status.md cannot-claim boundaries",
+    "nextRecommendedGoal": "goal-commercial-webui-ha-resilience-error-budget-readiness",
+    "canClaim": ["minimum WebUI-side ops pointers exist for scoped commercial cross-repo canary follow-up","failed commercial handoff remains a MedOPL deeplink/projection incident boundary, not WebUI payment/runtime/storage ownership"],
+    "cannotClaim": ["full SLA","multi-region HA","automatic rollback","ongoing authorization","enterprise compliance","external PSP settlement","all users/all tenants production readiness"]
+  },
   "productionLaunchCloseout": {
     "mode": "explicit_final_release_decision_receipt",
     "state": "contract_present_pending_final_release_decision",
