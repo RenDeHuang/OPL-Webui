@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "productId": "one-person-lab-web",
+  "owner": "one-person-lab-web",
+  "purpose": "formal_launch_interaction_truth_contract",
+  "state": "active_implemented_guarded",
+  "machineBoundary": "Machine-readable interaction truth for top-level routes, auth flows, pending task restoration, account workbench navigation, static Figma-copy retirement, and dialog/sheet behavior before formal public launch.",
+  "releaseReadiness": {
+    "formalPublicLaunch": "interaction_truth_guards_green_release_evidence_unchanged",
+    "controlledLaunchEvidence": "still_historical_evidence_only_does_not_auto_prove_interaction_truth_v1",
+    "doesNotChangeReleaseEvidence": true
+  },
+  "routeTruth": {
+    "topLevelRoutes": [
+      {
+        "path": "/",
+        "routeId": "public_growth_landing",
+        "surface": "Public Growth Landing",
+        "audience": "anonymous_user",
+        "mustRender": ["public_product_intro", "task_scenarios", "output_showcase", "start_path"]
+      },
+      {
+        "path": "/login",
+        "routeId": "login_register_auth_surface",
+        "surface": "Login/Register Auth Surface",
+        "audience": "anonymous_or_signed_out_user",
+        "mustRender": ["auth_surface", "login_tab", "register_tab"],
+        "mustNotRender": ["authenticated_workbench", "fake_workbench"]
+      },
+      {
+        "path": "/home",
+        "routeId": "authenticated_workbench",
+        "surface": "Authenticated Workbench Route",
+        "audience": "authenticated_research_user",
+        "anonymousPolicy": "must_not_show_fake_workbench",
+        "anonymousAllowedOutcomes": ["public_growth_landing", "auth_required_start_path"],
+        "mustRenderWhenAuthenticated": ["workbench_shell", "task_composer", "task_history_continuation_navigation"]
+      }
+    ],
+    "hashRoutes": {
+      "scope": "authenticated_workbench_internal_views_only",
+      "allowed": ["#home", "#projects", "#skills", "#workflows", "#more"],
+      "mustNotReplaceTopLevelRouteTruth": true,
+      "anonymousPolicy": "hash_must_not_make_anonymous_user_look_authenticated"
+    }
+  },
+  "authInteractionTruth": {
+    "entryTriggers": ["login_nav", "register_nav", "public_start_cta", "public_task_entry"],
+    "authSurface": {
+      "mode": "page_or_dismissible_modal",
+      "closeOrReturnRequired": true,
+      "closeBehavior": "return_to_public_growth_landing_or_previous_public_focus",
+      "escapeBehavior": "close_auth_surface_when_dismissible_or_return_to_public_landing",
+      "focusReturn": "trigger_that_opened_auth_surface"
+    },
+    "tabs": {
+      "login": {
+        "visibleSubmitActions": ["login"],
+        "forbiddenVisibleSubmitActions": ["register"],
+        "primaryAction": "login_existing_account"
+      },
+      "register": {
+        "visibleSubmitActions": ["register"],
+        "forbiddenVisibleSubmitActions": ["login"],
+        "primaryAction": "create_account"
+      }
+    },
+    "forbiddenStates": ["login_and_register_submit_visible_at_same_time", "anonymous_fake_workbench_after_auth_cancel"]
+  },
+  "pendingTaskTruth": {
+    "markers": ["@科研", "@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
+    "anonymousClickBehavior": "save_pending_task_intent_then_open_auth_surface",
+    "storage": "document.body.dataset.pendingPublicTaskIntent",
+    "afterAuth": "restore_matching_task_entry_and_prompt",
+    "mustNotAutoRunTask": true,
+    "mustNotFabricateResult": true,
+    "mustNotCreateTaskHistoryUntilGoControlPlaneReturnsProjection": true
+  },
+  "sidebarTruth": {
+    "scope": "account_based_user_product_layer_only",
+    "surface": "authenticated_workbench_navigation",
+    "projectsSurfaceBusinessName": "任务历史 / 交付接续",
+    "genericProjectLanguagePolicy": "forbidden_until_real_project_contract_exists",
+    "taskHistorySource": "GET /api/tasks",
+    "taskHistoryProjection": "refs_status_metadata_only",
+    "emptyState": {
+      "id": "task_history_empty",
+      "copy": "当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。",
+      "mustBeShownWhen": "GET /api/tasks returns empty tasks array"
+    },
+    "forbiddenStaticCopy": ["v20文件夹", "New project", "opl", "medopl", "空项目", "新建项目"],
+    "forbiddenDataSources": ["figma_static_copy", "zip_mock_data", "hardcoded_project_tree", "workspace_placeholder"],
+    "mustNotClaim": ["fake project/workspace data"]
+  },
+  "dialogSheetTruth": {
+    "accountPopover": {
+      "openTrigger": "bottom_account_avatar",
+      "closeTrigger": "close_button_or_outside_click_or_escape",
+      "escapeBehavior": "close_and_return_focus_to_bottom_account_avatar",
+      "focusReturn": "bottom_account_avatar",
+      "emptyState": "signed_out_or_no_api_key_bound",
+      "errorState": "sanitized_settings_error"
+    },
+    "searchSheet": {
+      "openTrigger": "search_nav_action",
+      "closeTrigger": "close_button_or_escape",
+      "escapeBehavior": "close_and_return_focus_to_search_nav_action",
+      "focusReturn": "search_nav_action",
+      "emptyState": "no_conversation_history",
+      "errorState": "sanitized_conversation_load_error"
+    },
+    "apiKeyDialog": {
+      "openTrigger": "send_without_bound_api_key",
+      "closeTrigger": "close_button_or_escape_or_go_bind_key",
+      "escapeBehavior": "close_and_return_focus_to_composer",
+      "focusReturn": "composer_or_api_key_input",
+      "emptyState": "api_key_unbound",
+      "errorState": "sanitized_api_key_save_error"
+    },
+    "inspectorSheet": {
+      "openTrigger": "refs_or_inspector_action",
+      "closeTrigger": "close_button_or_escape",
+      "escapeBehavior": "close_and_return_focus_to_inspector_trigger",
+      "focusReturn": "inspector_trigger",
+      "emptyState": "no_refs_available",
+      "errorState": "sanitized_refs_projection_error"
+    },
+    "staticDataPolicy": "forbidden"
+  },
+  "cannotClaim": [
+    "payment",
+    "runtime execution",
+    "artifact body/storage truth",
+    "full SaaS",
+    "production-ready SaaS",
+    "fake project/workspace data"
+  ],
+  "implementationGate": {
+    "currentGreen": [
+      "contract_guard_green",
+      "browser_guard_green",
+      "repo_bloat_orphanGrowth_zero"
+    ],
+    "implementedBySlice": "launch_blocker_ui_truth_cleanup_v1",
+    "guards": [
+      "tests/contract/interaction-truth-contract.test.mjs",
+      "tests/browser/interaction-truth.browser.test.mjs"
+    ],
+    "requiresBeforeFormalLaunch": ["release_evidence_closeout_if_launch_claim_changes"]
+  }
+}

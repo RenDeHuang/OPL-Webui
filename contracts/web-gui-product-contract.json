@@ -5,6 +5,12 @@
   "purpose": "web_gui_product_contract",
   "state": "active",
   "machineBoundary": "GUI product grammar for AI design, Figma generation, frontend implementation, and UI acceptance tests; source, API contracts, and release evidence remain authoritative for runtime behavior.",
+  "formalLaunchInteractionTruth": {
+    "state": "active_red_guard_pending_implementation",
+    "contract": "contracts/web-interaction-contract.json",
+    "scope": "top_level_routes_auth_pending_task_sidebar_dialog_sheet_truth",
+    "formalPublicLaunch": "blocked_until_interaction_truth_guards_green"
+  },
   "layeredGovernance": {
     "subjectBeforePattern": {
       "productSubject": "ai_native_research_composer_with_project_session_result_workflow",
@@ -14,10 +20,11 @@
     },
     "layerOrder": ["product_subject", "information_architecture", "first_view_contract", "surface_budget", "interaction_contract", "component_behavior_law", "semantic_tokens"],
     "noNewTruthFile": true,
-    "truthOwners": ["contracts/web-gui-product-contract.json", "contracts/web-page-state-matrix.json", "contracts/web-shell-adapter.json", "TASTE.md", "docs/status.md", "docs/active/README.md"],
+    "truthOwners": ["contracts/web-gui-product-contract.json", "contracts/web-page-state-matrix.json", "contracts/web-interaction-contract.json", "contracts/web-shell-adapter.json", "TASTE.md", "docs/status.md", "docs/active/README.md"],
     "rulePlacement": {
       "hardUiRules": "contracts/web-gui-product-contract.json",
       "pageStateAndSelectors": "contracts/web-page-state-matrix.json",
+      "formalLaunchInteractionTruth": "contracts/web-interaction-contract.json",
       "humanJudgment": "TASTE.md",
       "currentClaimBoundary": "docs/status.md",
       "currentBaton": "docs/active/README.md"

@@ -9,6 +9,7 @@ import { currentDiffFingerprint, DEFAULT_EVIDENCE_PATH, resolveDefaultBaseRef } 
 const mode = process.argv[2] ?? 'current';
 const target = mode === 'suite' ? process.argv[3] : mode;
 const lanes = VERIFY_SUITES[target] ?? (TEST_LANE_REGISTRY[target] ? [target] : undefined);
+const serializedNodeLanes = new Set(['browser']);
 
 if (!lanes) {
   console.error(`Unknown verify target: ${target}`);
@@ -33,7 +34,8 @@ for (const laneName of lanes) {
   const nodeFiles = lane.tests.filter((entry) => entry.runner === 'node').map((entry) => entry.file);
   if (nodeFiles.length > 0) {
     console.log(`[verify] ${laneName}: ${nodeFiles.join(', ')}`);
-    const result = spawnSync(process.execPath, ['--test', ...nodeFiles], { stdio: 'inherit' });
+    const args = ['--test', ...(serializedNodeLanes.has(laneName) ? ['--test-concurrency=1'] : []), ...nodeFiles];
+    const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
     if (result.status !== 0) {
       failed = true;
     }

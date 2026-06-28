@@ -109,6 +109,7 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'openAccountPopover',
     'openAnonymousAuthForm',
     '[data-account-toggle]',
+    '[data-auth-tab="register"]',
     '[data-shell-action="more"]',
     'openChatRoute',
     '[data-shell-action="home"]',

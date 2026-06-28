@@ -27,6 +27,13 @@
     "forbiddenSurfaces": ["payment", "pricing", "subscription", "invoice", "refund", "team_rbac", "support_impersonation"],
     "doesNotProve": ["full SaaS", "payment lifecycle", "team/RBAC lifecycle", "HA", "runtime sync", "runtime execution"]
   },
+  "formalLaunchInteractionTruth": {
+    "state": "active_red_guard_pending_implementation",
+    "contract": "contracts/web-interaction-contract.json",
+    "topLevelRoutes": ["/", "/login", "/home"],
+    "hashRouteScope": "authenticated_workbench_internal_views_only",
+    "formalPublicLaunch": "blocked_until_interaction_truth_guards_green"
+  },
   "publicGrowthLayer": {
     "owner": "one-person-lab-web",
     "defaultAudience": "anonymous_user",

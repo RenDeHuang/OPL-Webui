@@ -41,6 +41,7 @@ try {
   })`);
 
   const email = `public-growth-${Date.now()}@example.test`;
+  await activate(cdp, '[data-auth-tab="register"]');
   await typeInto(cdp, '#auth-email', email);
   await typeInto(cdp, '#auth-password', 'public-growth-password');
   await activate(cdp, '[data-register-button]');

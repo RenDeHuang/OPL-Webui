@@ -56,6 +56,13 @@ const NOT_FIGMA_PARITY_REPLACEMENT_IMPLEMENTATION_EVIDENCE = Object.freeze([
   'payment/runtime/storage/full SaaS capability',
   'Admin/Ops UI',
 ]);
+const NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE = Object.freeze([
+  'UI behavior already fixed',
+  'production rollout',
+  'payment/runtime/storage/full SaaS capability',
+  'Admin/Ops UI',
+  'fake project/workspace data is retired',
+]);
 const NOT_TASK_HISTORY_EVIDENCE = Object.freeze([
   'runtime execution',
   'artifact body authority',
@@ -516,6 +523,21 @@ const TEST_ENTRIES = Object.freeze([
     verifySuites: ['current', 'contract'],
   }),
   testEntry({
+    file: 'tests/contract/interaction-truth-contract.test.mjs',
+    runner: 'node',
+    lane: 'contract',
+    ownerSurface: 'formal-launch-interaction-truth',
+    lifecycleRole: 'current-owner',
+    testKind: 'contract',
+    proofLevel: 'static',
+    claimScope: 'repo',
+    contracts: ['contracts/web-interaction-contract.json', 'contracts/web-gui-product-contract.json', 'contracts/web-page-state-matrix.json'],
+    proves: ['formal launch interaction truth fixes top-level route, auth, pending task, sidebar, dialog/sheet, fake project data, and cannot-claim boundaries; current implementation must stay RED until UI behavior is corrected'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE],
+    riskTriggers: ['apps-web', 'page-state', 'contract', 'ui-ux'],
+    verifySuites: ['current', 'contract'],
+  }),
+  testEntry({
     file: 'tests/smoke/foundation.test.mjs',
     runner: 'node',
     lane: 'smoke',
@@ -634,6 +656,22 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['anonymous public CTA or task entry opens login/register and restores the selected task entry after authentication'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'public-growth-layer'],
+    verifySuites: ['browser', 'full'],
+  }),
+  testEntry({
+    file: 'tests/browser/interaction-truth.browser.test.mjs',
+    runner: 'node',
+    lane: 'browser',
+    ownerSurface: 'formal-launch-interaction-truth',
+    lifecycleRole: 'integration',
+    cost: 'medium',
+    testKind: 'acceptance',
+    proofLevel: 'browser',
+    claimScope: 'ci',
+    contracts: ['tests/browser/interaction-truth-runner.mjs', 'contracts/web-interaction-contract.json', 'contracts/web-page-state-matrix.json'],
+    proves: ['real browser route/auth/pending task/sidebar evidence enforces formal launch interaction truth before public launch'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE],
+    riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux'],
     verifySuites: ['browser', 'full'],
   }),
   testEntry({

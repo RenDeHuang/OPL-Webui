@@ -38,6 +38,9 @@ const state = {
   lastResult: null,
   lastRuntimeTaskCard: null,
   pendingPublicTask: null,
+  authForm: { email: '', password: '' },
+  focusReturnSelector: '',
+  pendingFocusSelector: '',
   busy: false,
 };
 
@@ -48,9 +51,7 @@ export async function initOnePersonLabWeb() {
   syncRouteFromLocation();
   render();
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
-  if (!preserveInteractiveShellAfterBootstrap()) {
-    state.shellState = state.view.accountState === 'anonymous' ? 'public_landing' : 'home_default';
-  }
+  syncRouteFromLocation();
   syncDocumentState();
   render();
 }
@@ -64,6 +65,7 @@ function render() {
     : renderAuthenticated();
   bindCurrentDOM();
   if (shouldFocusAPIKeyPrimary) app.querySelector('[data-api-key-dialog-primary]')?.focus({ preventScroll: true });
+  flushPendingFocus();
 }
 
 function renderAnonymous() {
@@ -119,27 +121,31 @@ function renderAuthPage() {
           <p>AI 原生科研工作台</p>
         </div>
         <div class="auth-card">
+          <button class="auth-close" type="button" data-auth-close aria-label="返回产品介绍">x</button>
           <div class="auth-tabs" role="tablist" aria-label="登录或注册">
             <button type="button" data-auth-tab="login" aria-selected="${String(!isRegister)}">登录</button>
             <button type="button" data-auth-tab="register" aria-selected="${String(isRegister)}">注册</button>
           </div>
           <form class="auth-form" data-auth-form>
             <label for="auth-email">邮箱</label>
-            <div class="field-with-icon"><span aria-hidden="true">@</span><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="researcher@lab.edu"></div>
+            <div class="field-with-icon"><span aria-hidden="true">@</span><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="researcher@lab.edu" value="${escapeAttr(state.authForm.email)}"></div>
             <label for="auth-password">密码</label>
             <div class="field-with-icon">
               <span aria-hidden="true">#</span>
-              <input id="auth-password" name="password" type="${state.showPassword ? 'text' : 'password'}" autocomplete="current-password" placeholder="${isRegister ? '至少 8 位' : '********'}">
+              <input id="auth-password" name="password" type="${state.showPassword ? 'text' : 'password'}" autocomplete="current-password" placeholder="${isRegister ? '至少 8 位' : '********'}" value="${escapeAttr(state.authForm.password)}">
               <button type="button" data-toggle-password aria-label="${state.showPassword ? '隐藏密码' : '显示密码'}">${state.showPassword ? 'Hide' : 'Show'}</button>
             </div>
             <p class="form-message" data-settings-message role="status"></p>
             <div class="auth-submit-row">
-              <button class="primary-button full" type="submit" data-auth-submit data-auth-action="login" data-login-button>
-                ${state.busy && !isRegister ? '处理中...' : '登录'}
-              </button>
-              <button class="primary-button full" type="submit" data-auth-submit data-auth-action="register" data-register-button>
-                ${state.busy && isRegister ? '处理中...' : '创建账号'}
-              </button>
+              ${isRegister ? `
+                <button class="primary-button full" type="submit" data-auth-submit data-auth-action="register" data-register-button${state.busy ? ' disabled aria-disabled="true"' : ''}>
+                  ${state.busy ? '处理中...' : '创建账号'}
+                </button>
+              ` : `
+                <button class="primary-button full" type="submit" data-auth-submit data-auth-action="login" data-login-button${state.busy ? ' disabled aria-disabled="true"' : ''}>
+                  ${state.busy ? '处理中...' : '登录'}
+                </button>
+              `}
             </div>
             <input id="chat-input" type="hidden" value="${escapeAttr(pendingPrompt)}">
             <p class="terms-copy">登录即表示同意服务条款与隐私政策。</p>
@@ -169,35 +175,27 @@ function renderAuthenticated() {
 }
 
 function renderSidebar() {
-  const projects = projectsFromView();
+  const tasks = state.view.taskHistory?.tasks || [];
   return `
     <aside class="sidebar" data-side-navigation aria-label="One Person Lab navigation">
       <div class="sidebar-brand">One Person Lab</div>
       <nav class="top-nav">
         <button type="button" data-shell-action="home"><span aria-hidden="true">+</span><span class="nav-label">新对话</span></button>
-        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">项目</span></button>
+        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">任务历史 / 交付接续</span></button>
         <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">Skill</span></button>
         <button type="button" data-shell-action="workflows"><span aria-hidden="true">⌘</span><span class="nav-label">工作流</span></button>
         <button type="button" data-search-trigger><span aria-hidden="true">?</span><span class="nav-label">搜索</span></button>
       </nav>
       <div class="sidebar-divider"></div>
       <div class="project-tree" data-task-history-route>
-        <div class="tree-heading"><span>置顶</span></div>
-        <button class="tree-row" type="button" data-shell-action="home"><span aria-hidden="true">Folder</span><span class="tree-label">v20文件夹</span><small>2 个月</small></button>
-        <div class="tree-heading"><span>项目</span><button type="button" aria-label="新建项目">+</button></div>
-        ${projects.map((project) => `
-          <section class="project-group" data-project-group>
-            <button class="project-title" type="button" data-project-toggle><span aria-hidden="true">Folder</span><span class="tree-label">${escapeHTML(project.name)}</span><small>${project.tasks.length}</small></button>
-            <div class="conversation-list" data-task-history-list>
-              ${project.tasks.length === 0 ? '<p>空项目</p>' : project.tasks.map((task) => `
-                <button type="button" data-conversation-entry data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
-                  <span>${escapeHTML(sidebarTaskTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
-                </button>
-              `).join('')}
-              <button class="show-more" type="button">展开显示</button>
-            </div>
-          </section>
-        `).join('')}
+        <div class="tree-heading"><span>任务历史 / 交付接续</span></div>
+        <div class="conversation-list" data-task-history-list>
+          ${tasks.length === 0 ? '<p data-task-history-empty>当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map((task) => `
+            <button type="button" data-conversation-entry data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
+              <span>${escapeHTML(sidebarTaskTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
+            </button>
+          `).join('')}
+        </div>
       </div>
       <div class="sidebar-bottom">
         <button type="button" data-shell-action="more"><span>...</span>更多</button>
@@ -347,10 +345,10 @@ function renderTaskHistoryCenter() {
   const tasks = state.view.taskHistory?.tasks || [];
   return `
     <section class="file-library" data-shell-state="task_history_deliverable_continuation_center" data-task-history-center>
-      <header><h1>任务历史</h1><button type="button" data-shell-action="home">新对话</button></header>
+      <header><h1>任务历史 / 交付接续</h1><button type="button" data-shell-action="home">新对话</button></header>
       <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
       <div class="file-list" data-task-history-list>
-        ${tasks.length === 0 ? '<p data-task-history-empty>当前没有 task history refs。</p>' : tasks.map(renderTaskHistoryCard).join('')}
+        ${tasks.length === 0 ? '<p data-task-history-empty>当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map(renderTaskHistoryCard).join('')}
       </div>
     </section>`;
 }
@@ -487,36 +485,40 @@ function bindCurrentDOM() {
 }
 
 function bindClicks() {
-  app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => openAnonymousAuth(button.dataset.authMode)));
+  app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => openAnonymousAuth(button.dataset.authMode, '[data-public-start-cta]')));
   app?.querySelectorAll('[data-public-task-entry], [data-research-task]').forEach((button) => button.addEventListener('click', () => applyTaskPrompt(button)));
   app?.querySelectorAll('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authTab; render(); }));
   app?.querySelectorAll('[data-auth-submit]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authAction || state.authTab; }));
+  app?.querySelector('[data-auth-close]')?.addEventListener('click', () => closeAnonymousAuth());
   app?.querySelector('[data-toggle-password]')?.addEventListener('click', () => { state.showPassword = !state.showPassword; render(); });
   app?.querySelectorAll('[data-shell-action]').forEach((button) => button.addEventListener('click', () => runShellAction(button.dataset.shellAction)));
-  app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; render(); });
+  app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; state.focusReturnSelector = '[data-search-trigger]'; render(); });
   app?.querySelector('[data-account-toggle]')?.addEventListener('click', (event) => {
     event.stopPropagation();
     if (state.view.accountState === 'anonymous') {
-      openAnonymousAuth(event.currentTarget.dataset.authMode);
+      openAnonymousAuth(event.currentTarget.dataset.authMode, '[data-account-toggle]');
       return;
     }
     state.showAccount = !state.showAccount;
+    state.focusReturnSelector = '[data-account-toggle]';
     render();
   });
-  app?.querySelector('[data-account-popover-close]')?.addEventListener('click', () => { state.showAccount = false; render(); });
-  app?.querySelectorAll('[data-overlay-close="search"]').forEach((button) => button.addEventListener('click', () => { state.showSearch = false; render(); }));
+  app?.querySelector('[data-account-popover-close]')?.addEventListener('click', () => { state.showAccount = false; focusAfterRender('[data-account-toggle]'); render(); });
+  app?.querySelectorAll('[data-overlay-close="search"]').forEach((button) => button.addEventListener('click', () => { state.showSearch = false; focusAfterRender('[data-search-trigger]'); render(); }));
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
   app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
   app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
-  app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'progress')));
+  app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'progress', '[data-inspector-open]')));
   app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
-  app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab)));
+  app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab, state.focusReturnSelector || '[data-inspector-open]')));
   app?.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
   app?.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => { closeAPIKeyDialog(false); state.showAccount = true; render(); document.querySelector('#api-key')?.focus({ preventScroll: true }); });
 }
 
 function bindForms() {
   app?.querySelector('[data-auth-form]')?.addEventListener('submit', authSubmit);
+  app?.querySelector('#auth-email')?.addEventListener('input', (event) => { state.authForm.email = event.currentTarget.value; });
+  app?.querySelector('#auth-password')?.addEventListener('input', (event) => { state.authForm.password = event.currentTarget.value; });
   app?.querySelectorAll('[data-chat-form]').forEach((form) => form.addEventListener('submit', chatSubmit));
   app?.querySelector('[data-provider-form]')?.addEventListener('submit', providerSubmit);
 }
@@ -535,21 +537,24 @@ function bindSearch() {
   });
 }
 
-function openAnonymousAuth(mode = 'login') {
+function openAnonymousAuth(mode = 'login', focusReturnSelector = '[data-public-start-cta]') {
   state.authTab = mode === 'register' ? 'register' : 'login';
   state.shellState = 'auth_login_register';
+  state.focusReturnSelector = focusReturnSelector;
   render();
   document.querySelector('#auth-email')?.focus({ preventScroll: true });
 }
 
 function preserveInteractiveShellAfterBootstrap() {
-  return state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register';
+  return state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register' && window.location.pathname === '/login';
 }
 
 async function authSubmit(event) {
   event.preventDefault();
+  if (state.busy) return;
   const email = app.querySelector('#auth-email')?.value.trim() || '';
   const password = app.querySelector('#auth-password')?.value || '';
+  state.authForm = { email, password };
   const activeSubmitter = document.activeElement?.closest?.('[data-auth-submit]');
   const authAction = event.submitter?.dataset?.authAction || activeSubmitter?.dataset?.authAction || state.authTab;
   const wasRegister = authAction === 'register';
@@ -568,6 +573,7 @@ async function authSubmit(event) {
   }
   document.body.dataset.authState = 'authenticated_unbound';
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+  state.authForm = { email: '', password: '' };
   state.shellState = 'home_default';
   state.showAccount = false;
   render();
@@ -646,6 +652,7 @@ function applyTaskPrompt(button) {
     document.body.dataset.chatState = chatStateForPrompt(prompt);
     state.authTab = 'login';
     state.shellState = 'auth_login_register';
+    state.focusReturnSelector = '[data-public-task-entry]';
     render();
     return;
   }
@@ -709,9 +716,19 @@ async function logoutAndRefresh() {
 }
 
 function syncRouteFromLocation() {
-  const view = viewFromHash(window.location.hash || (window.location.pathname === '/home' ? '#home' : ''));
+  if (window.location.pathname === '/login' && state.view.accountState === 'anonymous') {
+    state.shellState = 'auth_login_register';
+    state.authTab = state.authTab === 'register' ? 'register' : 'login';
+    document.body.dataset.view = 'home';
+    return;
+  }
+  if (state.view.accountState === 'anonymous') {
+    state.shellState = 'public_landing';
+    document.body.dataset.view = 'home';
+    return;
+  }
+  const view = viewFromHash(window.location.pathname === '/home' ? window.location.hash : '');
   document.body.dataset.view = view;
-  if (state.view.accountState === 'anonymous') return;
   if (view === 'skills') state.shellState = 'skill_plaza';
   else if (view === 'workflows') state.shellState = 'workflow_plaza';
   else if (view === 'projects') state.shellState = 'files';
@@ -732,14 +749,16 @@ function setHashView(view) {
   document.body.dataset.view = view;
 }
 
-function openInspector(tab = 'progress') {
+function openInspector(tab = 'progress', focusReturnSelector = '[data-inspector-open]') {
   state.inspectorTab = ['files', 'progress', 'output'].includes(tab) ? tab : 'progress';
   state.showInspector = true;
+  state.focusReturnSelector = focusReturnSelector;
   render();
 }
 
 function closeInspector() {
   state.showInspector = false;
+  focusAfterRender(state.focusReturnSelector || '[data-inspector-open]');
   render();
 }
 
@@ -755,6 +774,7 @@ function openAPIKeyDialog() {
 function closeAPIKeyDialog(shouldRender = true) {
   document.body.dataset.apiKeyDialogState = 'closed';
   if (state.shellState === 'api_key_required_modal') state.shellState = 'home_default';
+  focusAfterRender('#chat-input');
   if (shouldRender) render();
 }
 
@@ -768,11 +788,21 @@ function handleGlobalKeydown(event) {
     if (first && last && !event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); return; }
   }
   if (event.key !== 'Escape') return;
+  if (state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register') {
+    closeAnonymousAuth();
+    return;
+  }
+  const focusTarget = state.showSearch ? '[data-search-trigger]'
+    : state.showAccount ? '[data-account-toggle]'
+      : state.showInspector ? (state.focusReturnSelector || '[data-inspector-open]')
+        : document.body.dataset.apiKeyDialogState === 'open' ? '#chat-input'
+          : '';
   state.showSearch = false;
   state.showBilling = false;
   state.showAccount = false;
   closeAPIKeyDialog(false);
   if (state.showInspector) state.showInspector = false;
+  if (focusTarget) focusAfterRender(focusTarget);
   render();
 }
 
@@ -780,6 +810,7 @@ function handleOutsideClick(event) {
   const target = event.target;
   if (!target.closest?.('[data-account-popover], [data-account-toggle]') && state.showAccount) {
     state.showAccount = false;
+    focusAfterRender('[data-account-toggle]');
     render();
   }
 }
@@ -787,15 +818,6 @@ function handleOutsideClick(event) {
 function setSettingsMessage(message) {
   const node = app.querySelector('[data-settings-message]');
   if (node) node.textContent = message;
-}
-
-function projectsFromView() {
-  const tasks = state.view.taskHistory?.tasks || [];
-  return [
-    { name: 'New project', tasks: [] },
-    { name: 'opl', tasks },
-    { name: 'medopl', tasks: [] },
-  ];
 }
 
 function runtimeTaskFromPrompt(prompt = '') {
@@ -830,6 +852,23 @@ function taskDescription(task) {
     book_foundry: '长稿 · 书稿规划',
   };
   return byId[task.id] || task.label;
+}
+
+function closeAnonymousAuth() {
+  state.shellState = 'public_landing';
+  focusAfterRender(state.focusReturnSelector || '[data-public-start-cta]');
+  render();
+}
+
+function focusAfterRender(selector) {
+  state.pendingFocusSelector = selector || '';
+}
+
+function flushPendingFocus() {
+  if (!state.pendingFocusSelector) return;
+  const selector = state.pendingFocusSelector;
+  state.pendingFocusSelector = '';
+  document.querySelector(selector)?.focus({ preventScroll: true });
 }
 
 function formatShortDate(value) {

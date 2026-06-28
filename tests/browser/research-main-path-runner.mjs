@@ -117,6 +117,7 @@ function resolveRunConfig(runMode) {
 
 async function authenticate(cdp, config) {
   await openAnonymousAuthForm(cdp);
+  await activate(cdp, '[data-auth-tab="register"]');
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-register-button]');

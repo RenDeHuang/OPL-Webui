@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -97,4 +97,12 @@ test('verify runner writes lane evidence for a passed target', () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('verify runner serializes browser lane tests because each starts its own Go control plane and browser', () => {
+  const verify = readFileSync('scripts/verify.mjs', 'utf8');
+
+  assert.match(verify, /serializedNodeLanes/);
+  assert.match(verify, /'browser'/);
+  assert.match(verify, /--test-concurrency=1/);
 });
