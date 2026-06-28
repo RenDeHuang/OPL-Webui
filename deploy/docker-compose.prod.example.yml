@@ -1,0 +1,24 @@
+services:
+  opl-webui:
+    image: uswccr.ccs.tencentyun.com/webopl/opl-webui:<short-commit-or-digest>
+    env_file:
+      - ./.env.example
+    environment:
+      - OPL_WEBUI_ENV=web_cloud
+      - HOST=0.0.0.0
+      - PORT=4173
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4173/readyz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+# production cloud rollout = authoritative production release.
+# prod compose example cannot claim production rollout.
+# This file is an operator reference only and must not replace Cloud Rollout.
+# OPL-Webui does not own runtime/storage/payment/artifact truth.
+# MedOPL owns runtime/resource/storage/billing/payment.
+# one-person-lab owns framework/execution semantics.

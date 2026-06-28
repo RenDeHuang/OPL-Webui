@@ -1,0 +1,26 @@
+services:
+  opl-webui:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: opl-webui:standalone
+    env_file:
+      - ./.env.example
+    environment:
+      - OPL_WEBUI_ENV=standalone
+      - HOST=0.0.0.0
+      - PORT=4173
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4173/readyz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+# standalone compose = single-node private deployment example.
+# Stateful services are externally managed and must be supplied through secrets or env.
+# OPL-Webui does not own runtime/storage/payment/artifact truth.
+# MedOPL owns runtime/resource/storage/billing/payment.
+# one-person-lab owns framework/execution semantics.

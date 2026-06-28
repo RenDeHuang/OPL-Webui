@@ -1,9 +1,19 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const fixturePath = 'deploy/web-cloud/opl-webui.k8s.json';
 const runbookPath = 'deploy/web-cloud/RUNBOOK.md';
+const deployBaselinePaths = [
+  'deploy/README.md',
+  'deploy/.env.example',
+  'deploy/config.example.yaml',
+  'deploy/docker-compose.local.yml',
+  'deploy/docker-compose.standalone.yml',
+  'deploy/docker-compose.prod.example.yml',
+  'deploy/scripts/config-check.sh',
+];
 
 function loadManifest() {
   const raw = readFileSync(fixturePath, 'utf8');
@@ -240,4 +250,48 @@ test('web cloud runbook routes daily rollout through the dry-run helper', () => 
   assert.match(runbook, /rollout revision/i);
   assert.match(runbook, /Deployment image/i);
   assert.match(runbook, /Pod imageID/i);
+});
+
+test('commercial deploy config baseline exists without replacing cloud rollout', () => {
+  for (const path of deployBaselinePaths) {
+    assert.equal(existsSync(path), true, `missing deploy baseline file: ${path}`);
+  }
+
+  const joined = deployBaselinePaths.map((path) => readFileSync(path, 'utf8')).join('\n');
+  assert.match(joined, /local compose = local verification/i);
+  assert.match(joined, /standalone compose = single-node private deployment example/i);
+  assert.match(joined, /production cloud rollout = authoritative production release/i);
+  assert.match(joined, /prod compose example cannot claim production rollout/i);
+  assert.match(joined, /MedOPL owns runtime\/resource\/storage\/billing\/payment/i);
+  assert.match(joined, /one-person-lab owns framework\/execution semantics/i);
+  assert.match(joined, /OPL-Webui does not own runtime\/storage\/payment\/artifact truth/i);
+  assert.doesNotMatch(joined, /postgres(?:ql)?:\/\/[^<\s]+/i);
+  assert.doesNotMatch(joined, /redis:\/\/[^<\s]+/i);
+  assert.doesNotMatch(joined, /password\s*[:=]\s*(?!["']?\$|["']?<)[^`\s]+/i);
+  assert.doesNotMatch(joined, /kubectl\s+apply|docker\s+push|helm\s+upgrade|terraform\s+apply/i);
+
+  const envExample = readFileSync('deploy/.env.example', 'utf8');
+  for (const key of [
+    'OPL_WEBUI_ENV',
+    'OPL_DATABASE_URL',
+    'OPL_SESSION_SECRET',
+    'OPL_API_KEY_ENCRYPTION_SECRET',
+    'OPL_CHAT_MODEL',
+    'MEDOPL_API_BASE_URL',
+  ]) {
+    assert.match(envExample, new RegExp(`^${key}=`, 'm'), `${key} must be present in env example`);
+  }
+
+  const localCompose = readFileSync('deploy/docker-compose.local.yml', 'utf8');
+  const standaloneCompose = readFileSync('deploy/docker-compose.standalone.yml', 'utf8');
+  const prodCompose = readFileSync('deploy/docker-compose.prod.example.yml', 'utf8');
+  assert.match(localCompose, /OPL_WEBUI_ENV=development/);
+  assert.match(standaloneCompose, /OPL_WEBUI_ENV=standalone/);
+  assert.match(prodCompose, /OPL_WEBUI_ENV=web_cloud/);
+  assert.doesNotMatch(`${localCompose}\n${standaloneCompose}\n${prodCompose}`, /postgres:\s|redis:\s|image:\s+postgres|image:\s+redis/i);
+
+  const stdout = execFileSync('sh', ['deploy/scripts/config-check.sh', 'deploy/config.example.yaml'], {
+    encoding: 'utf8',
+  });
+  assert.match(stdout, /config check passed/i);
 });

@@ -1,0 +1,45 @@
+# OPL-Webui example config.
+# This is documentation and config-check input only. The Go control plane still reads env vars.
+product:
+  identity: One Person Lab Web interaction platform / browser entry
+  owns:
+    - route/auth/account
+    - BYOK binding
+    - task intent
+    - page state
+    - readonly refs projection
+    - MedOPL deeplink
+  does_not_own:
+    - runtime truth
+    - storage truth
+    - payment truth
+    - artifact body authority
+
+deployment:
+  local_compose: local verification
+  standalone_compose: single-node private deployment example
+  production_cloud_rollout: authoritative production release
+  prod_compose_example: does not claim production rollout
+
+owners:
+  webui: web interaction and Go control-plane bridge
+  medopl: runtime/resource/storage/billing/payment and canonical PostgreSQL business truth
+  one_person_lab: framework/execution semantics
+
+server:
+  host: 0.0.0.0
+  port: 4173
+
+environment:
+  OPL_WEBUI_ENV: development
+  OPL_DATABASE_URL: <external-webui-postgres-dsn-from-secret-manager>
+  OPL_SESSION_SECRET: <secret-manager-value>
+  OPL_API_KEY_ENCRYPTION_SECRET: <secret-manager-value>
+  OPL_CHAT_MODEL: gpt-5.5
+  MEDOPL_API_BASE_URL: <medopl-api-base-url>
+
+forbidden:
+  - production mutation installer
+  - Web-owned runtime/storage/payment/artifact truth
+  - default PostgreSQL/Redis canonical dependency in Webui
+  - release evidence foldback from compose examples

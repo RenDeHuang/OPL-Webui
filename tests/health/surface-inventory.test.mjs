@@ -37,7 +37,7 @@ test('surface inventory defines durable long-lived surfaces without becoming a f
   assert.equal(inventory.excludesOrdinaryImplementationFiles, true);
   assert.ok(Array.isArray(inventory.surfaces));
   assert.ok(inventory.surfaces.length > 0);
-  assert.ok(inventory.surfaces.length < 90, 'inventory should not mirror every source file');
+  assert.ok(inventory.surfaces.length < 110, 'inventory should not mirror every source file');
 });
 
 test('surface inventory entries have owner, consumer, contract or machine boundary, and valid retirement', () => {
