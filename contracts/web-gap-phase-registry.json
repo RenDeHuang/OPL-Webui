@@ -172,6 +172,108 @@
       ]
     },
     {
+      "id": "commercial_launch_ui_implementation",
+      "ownerSurface": "apps-web",
+      "state": "active",
+      "currentPhaseId": "figma_to_code_implementation_map",
+      "currentStatus": "not_started",
+      "cannotClaim": ["Figma UI implementation complete", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
+      "sourceTruth": {
+        "contract": "contracts/web-product-profile.json#/uiSourceTruth",
+        "figmaUrl": "https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0",
+        "fileKey": "1MNO5l7PQYKZVNqQgw6DGS",
+        "fileName": "UI_UX for Commercial Launch",
+        "primarySource": "src/app/App.tsx",
+        "styleSource": "src/styles/theme.css"
+      },
+      "phases": [
+        {
+          "id": "figma_to_code_implementation_map",
+          "objective": "Create the Figma-to-code implementation map only; do not implement UI.",
+          "entryCriteria": ["Figma Commercial Launch UI source truth is pinned in web-product-profile", "product identity truth remains Web interaction platform / browser entry", "current production UI is not changed by this phase"],
+          "exitCriteria": ["Figma section to OPL-Webui route, component, and test mapping is complete", "Figma shape, layout, visual hierarchy, spacing, copy, and interaction rhythm are preserved as implementation requirements", "mock task/runtime/storage/payment truth is explicitly retired or mapped to real Go control plane projection", "implementation slices are explicit and bounded", "Figma generated app is not vendored"],
+          "evidenceSources": ["repo_local"],
+          "blockerTypes": ["missing_contract", "missing_eval"],
+          "acceptance": ["Figma section -> OPL-Webui route/component/test mapping exists in the current source of truth", "mock truth retirement is explicit before implementation", "implementation slices are listed without shipping UI changes", "generated Figma dependencies remain outside the repo"],
+          "nextStepOpeners": ["Open figma_public_landing_slice after implementation map evals pass", "Do not start UI implementation until this map is committed and absorbed"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase creates an implementation map, not an owner-visible UI claim"},
+          "requiredEvals": [
+            {"id": "verify_health", "contract": "package.json#/scripts/verify:health", "proves": ["health guards accept the Figma-to-code map and phase queue"], "doesNotProve": ["UI implementation", "browser parity", "production rollout"], "failureBlocks": ["figma_public_landing_slice"]},
+            {"id": "verify_contract", "contract": "package.json#/scripts/verify:contract", "proves": ["contract truth remains aligned with product identity and Figma source"], "doesNotProve": ["browser behavior", "production evidence", "visual parity"], "failureBlocks": ["figma_public_landing_slice"]},
+            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["runtime behavior", "production evidence", "visual parity"], "failureBlocks": ["phase closeout"]}
+          ]
+        },
+        {
+          "id": "figma_public_landing_slice",
+          "objective": "Implement only `/` Public Landing with Figma shape, layout, typography, color, task pills, and interaction rhythm in the current OPL-Webui architecture.",
+          "entryCriteria": ["figma_to_code_implementation_map is done", "route truth keeps `/` as Public Growth Landing", "pending task truth is contract-backed"],
+          "exitCriteria": ["`/` visually and interactively follows the Figma Public Landing surface", "unauthenticated task entry preserves pending task intent", "no fake result, runtime, storage, payment, or release evidence claim is introduced"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval", "missing_contract"],
+          "acceptance": ["Public Landing replacement retires the old landing surface for this slice", "pending task intent remains preserved for unauthenticated task entry", "mock runtime/storage/payment copy is absent from visible claim surfaces"],
+          "nextStepOpeners": ["Open figma_auth_surface_slice after interaction, browser, current, and diff-check evals pass"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
+          "requiredEvals": [
+            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["route/auth/pending/sidebar/dialog interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser flows still pass after landing replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
+            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
+          ]
+        },
+        {
+          "id": "figma_auth_surface_slice",
+          "objective": "Implement `/login` Auth Surface with Figma auth card, tabs, and form interaction while satisfying login/register contract truth.",
+          "entryCriteria": ["figma_public_landing_slice is done", "`/login` route truth remains Login/Register Auth Surface", "login/register tab contract is machine-guarded"],
+          "exitCriteria": ["`/login` follows Figma auth surface visual and interaction pattern", "login tab shows only login submit and register tab shows only create-account submit", "auth surface can return to public landing and preserves pending task intent"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval", "missing_contract"],
+          "acceptance": ["Auth replacement retires the old auth DOM/CSS/assertions for this slice", "pending task intent is restored after successful auth without auto-running tasks", "no fake account or project data is introduced"],
+          "nextStepOpeners": ["Open figma_home_workbench_shell_slice after interaction, browser, current, and diff-check evals pass"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
+          "requiredEvals": [
+            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["auth interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser auth flows still pass after auth replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
+            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
+          ]
+        },
+        {
+          "id": "figma_home_workbench_shell_slice",
+          "objective": "Implement `/home` workbench shell, composer, and sidebar shape while sidebar data comes only from `/api/tasks` projection or contract-backed empty state.",
+          "entryCriteria": ["figma_auth_surface_slice is done", "`/home` route truth remains authenticated workbench route", "sidebar task history projection truth is machine-guarded"],
+          "exitCriteria": ["`/home` shell follows Figma workbench visual hierarchy and interaction rhythm", "sidebar task history is sourced from Go control plane `/api/tasks` projection", "contract-backed empty state replaces static Figma project copy"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval", "missing_contract"],
+          "acceptance": ["Workbench shell replacement retires the old shell/sidebar/composer surface for this slice", "static Figma project copy remains absent from task history", "no fake task history or project workspace data is introduced"],
+          "nextStepOpeners": ["Open figma_dialog_sheet_projection_slice after interaction, browser, current, and diff-check evals pass"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
+          "requiredEvals": [
+            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["workbench and sidebar interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser workbench flows still pass after shell replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
+            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
+          ]
+        },
+        {
+          "id": "figma_dialog_sheet_projection_slice",
+          "objective": "Implement search sheet, account popover, API key dialog, and inspector sheet using Figma interaction patterns while staying projection-only.",
+          "entryCriteria": ["figma_home_workbench_shell_slice is done", "dialog/sheet truth is machine-guarded", "projection-only runtime/storage/artifact boundary remains fixed"],
+          "exitCriteria": ["search sheet, account popover, API key dialog, and inspector sheet follow Figma interaction patterns", "open, close, Escape, focus return, empty state, and error state are implemented", "runtime/storage/artifact body truth is not claimed"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval", "missing_contract"],
+          "acceptance": ["Dialog and sheet replacement retires old overlay DOM/CSS/assertions for this slice", "empty and error states are contract-backed instead of mock data", "projection-only boundary remains visible in tests and contracts"],
+          "nextStepOpeners": ["Open owner visual review or release candidate planning only after all interaction/browser/current/diff-check evals pass"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "browser and contract evidence gate the implementation slice before owner visual review"},
+          "requiredEvals": [
+            {"id": "verify_interaction", "contract": "package.json#/scripts/verify:interaction", "proves": ["dialog and sheet interaction truth still passes"], "doesNotProve": ["production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_browser", "contract": "package.json#/scripts/verify:browser", "proves": ["registered browser overlay flows still pass after dialog/sheet replacement"], "doesNotProve": ["production browser evidence", "owner visual acceptance", "runtime execution"], "failureBlocks": ["phase closeout"]},
+            {"id": "verify_current", "contract": "package.json#/scripts/verify", "proves": ["current lightweight repo gate passes"], "doesNotProve": ["release evidence", "production readiness", "MedOPL real integration"], "failureBlocks": ["phase closeout"]},
+            {"id": "git_diff_check", "contract": "scripts/gap-phase-runner.mjs#git_diff_check", "proves": ["phase diff has no whitespace errors"], "doesNotProve": ["visual parity", "production evidence", "runtime behavior"], "failureBlocks": ["phase closeout"]}
+          ]
+        }
+      ]
+    },
+    {
       "id": "medopl_readonly_evidence",
       "ownerSurface": "release-evidence",
       "state": "closed",

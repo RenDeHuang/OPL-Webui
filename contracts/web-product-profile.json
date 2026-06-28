@@ -12,7 +12,7 @@
   "publicHost": "opl.medopl.cn",
   "sourceApp": "one-person-lab-app",
   "productIdentity": {"category":"web_interaction_platform","primaryRole":"browser_entry","defaultUserPath":"ordinary_browser_interaction","ownedTruth":["route","auth","account","BYOK","task_intent","page_state","refs_projection","deeplink"],"ordinaryUserDefaultRequires":[],"ordinaryUserDefaultDoesNotRequire":["runtime","storage","node_pool","workspace_runtime_storage_binding"],"specialistExecutionPath":{"mode":"medopl_managed_runtime_resource_path","requiredForMarkers":["@论文","@基金","@综述","@文件","@PPT","@书"],"notRequiredForMarkers":["@科研"],"webRole":["runtime_gate_bridge","run_intent_submission","typed_blocker_projection","refs_projection","deeplink"]},"authoritySplit":{"onePersonLab":"framework_execution_semantics","MedOPL":"runtime_resource_billing_storage","FoundryAgents":"domain_truth_quality_artifact_authority"},"releaseEvidenceBoundary":"Release evidence can support readiness for a commit or rollout, but it cannot define, change, or rewrite OPL-Webui product identity.","cannotClaim":["execution platform","runtime truth","storage truth","artifact body authority","domain verdict authority"]},
-  "uiSourceTruth": {"state":"figma_canonical_source_v1","source":{"kind":"figma_make","fileKey":"1MNO5l7PQYKZVNqQgw6DGS","fileName":"UI_UX for Commercial Launch","url":"https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=c6JjbjSRg22dfHKu-0","primaryAppSource":"src/app/App.tsx","styleSourcesToRead":["src/styles/theme.css","src/styles/globals.css"],"knownMissingSourceFiles":["src/styles/globals.css"]},"appliesTo":["public_growth_layer","account_based_user_product_layer"],"doesNotApplyTo":["minimal_admin_ops_layer","/_ops","operator_controls"],"canonicalVisualTruth":["visual_hierarchy","layout","spacing","copy","component_relationship"],"implementationBoundary":{"codexMaySelfDesignSurfaces":false,"designCodeGapPolicy":"record_gap_before_implementation","productIdentityConflictPolicy":"product_identity_truth_wins_and_figma_gap_is_recorded","translateToCurrentArchitecture":true,"doNotVendorGeneratedApp":true,"doNotImportFigmaMakeDependencies":true,"visualTruth":"figma_make_source"},"readBeforeUiImplementation":["src/app/App.tsx","src/styles/theme.css","src/styles/globals.css","relevant components/images"],"mockTruthPolicy":{"figmaMockDataIsProductTruth":false,"staticProjectCopyForbiddenAsTruth":["v20文件夹","New project","opl","medopl","空项目","新建项目"],"mockRuntimeStoragePaymentCopyForbiddenAsTruth":["runtime completed","storage ready","artifact body","payment status","Pro","credit","recharge"]},"contractProofBoundary":{"contractTestsReplaceFigmaVisualTruth":false,"contractTestsProveOnlyBoundary":true},"cannotClaim":["UI already implemented from this truth alone","payment capability","runtime execution ownership","storage truth ownership","artifact body authority","Admin/Ops UI"]},
+  "uiSourceTruth": {"state":"figma_canonical_source_v1","source":{"kind":"figma_make","fileKey":"1MNO5l7PQYKZVNqQgw6DGS","fileName":"UI_UX for Commercial Launch","url":"https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0","primaryAppSource":"src/app/App.tsx","styleSourcesToRead":["src/styles/theme.css"],"knownMissingSourceFiles":[]},"appliesTo":["public_growth_layer","account_based_user_product_layer"],"doesNotApplyTo":["minimal_admin_ops_layer","/_ops","operator_controls"],"canonicalVisualTruth":["visual_hierarchy","layout","spacing","copy","component_relationship"],"implementationBoundary":{"codexMaySelfDesignSurfaces":false,"designCodeGapPolicy":"record_gap_before_implementation","productIdentityConflictPolicy":"product_identity_truth_wins_and_figma_gap_is_recorded","translateToCurrentArchitecture":true,"doNotVendorGeneratedApp":true,"doNotImportFigmaMakeDependencies":true,"visualTruth":"figma_make_source"},"readBeforeUiImplementation":["src/app/App.tsx","src/styles/theme.css","relevant components/images"],"mockTruthPolicy":{"figmaMockDataIsProductTruth":false,"staticProjectCopyForbiddenAsTruth":["v20文件夹","New project","opl","medopl","空项目","新建项目"],"mockRuntimeStoragePaymentCopyForbiddenAsTruth":["runtime completed","storage ready","artifact body","payment status","Pro","credit","recharge"]},"contractProofBoundary":{"contractTestsReplaceFigmaVisualTruth":false,"contractTestsProveOnlyBoundary":true},"cannotClaim":["UI already implemented from this truth alone","payment capability","runtime execution ownership","storage truth ownership","artifact body authority","Admin/Ops UI"]},
   "targetUsers": [
     "research_staff",
     "masters_students",
@@ -405,6 +405,19 @@
           "production_browser_e2e_or_screenshot_evidence",
           "accessibility_closeout_boundary",
           "sanitized_foldback"
+        ]
+      },
+      {
+        "id": "commercial_launch_ui_implementation",
+        "ownerSurface": "apps-web",
+        "acceptanceContract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_ui_implementation",
+        "disposition": "active_phase_queue_figma_to_code_map_not_started",
+        "evidenceRequired": [
+          "figma_to_code_implementation_map",
+          "interaction_lane",
+          "browser_lane",
+          "current_lane",
+          "git_diff_check"
         ]
       },
       {

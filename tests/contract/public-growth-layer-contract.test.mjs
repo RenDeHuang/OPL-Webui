@@ -93,9 +93,9 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assert.equal(uiTruth.state, 'figma_canonical_source_v1');
   assert.equal(uiTruth.source.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(uiTruth.source.fileName, 'UI_UX for Commercial Launch');
-  assert.equal(uiTruth.source.url, 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=c6JjbjSRg22dfHKu-0');
+  assert.equal(uiTruth.source.url, 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0');
   assert.equal(uiTruth.source.primaryAppSource, 'src/app/App.tsx');
-  assert.deepEqual(uiTruth.source.styleSourcesToRead, ['src/styles/theme.css', 'src/styles/globals.css']);
+  assert.deepEqual(uiTruth.source.styleSourcesToRead, ['src/styles/theme.css']);
   assert.deepEqual(uiTruth.appliesTo, ['public_growth_layer', 'account_based_user_product_layer']);
   assertIncludesAll(uiTruth.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'UI source exclusion');
   assert.equal(uiTruth.implementationBoundary.codexMaySelfDesignSurfaces, false);

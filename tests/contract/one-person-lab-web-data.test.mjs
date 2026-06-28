@@ -46,7 +46,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(product.publicUi.visibleRoutes, ['home', 'skills', 'workflows', 'projects', 'more']);
   assert.equal(product.visionGaps.state, 'active_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
-  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
+  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'commercial_launch_ui_implementation', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
   assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
   assert.equal(visionGap('medopl_readonly_evidence').disposition, 'production_readonly_projection_dogfood_confirmed_run_28142197152');
@@ -353,7 +353,7 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.deepEqual(Object.keys(gui.componentTokens), ['Button', 'Input', 'Card', 'Popover', 'Modal', 'Nav', 'Chip', 'Tabs', 'Sheet']);
   assert.equal(gui.figmaSource.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(gui.figmaSource.nodeId, '0:1');
-  assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css', 'src/styles/index.css']);
+  assert.deepEqual(gui.figmaSource.requiredSourceFiles, ['src/app/App.tsx', 'src/styles/theme.css']);
   assert.deepEqual(gui.figmaSource.adoptedPatterns, ['account_popover_status', 'missing_api_key_resource_gate', 'side_navigation_new_chat_projects_skill_workflow_search_more', 'ai_native_center_composer', 'starter_chips', 'prompt_command_center', 'research_skill_launcher', 'agentic_workflow_cards', 'inspector_sheet_tabs_files_progress_output', 'running_blocked_turn_state']);
   assert.deepEqual(gui.figmaSource.rejectedPatterns, ['drive_or_cloud_storage_ownership', 'runtime_truth_ownership', 'founder_plan_upsell', 'unlimited_compute_claim', 'dashboard_crm_primary_app', 'generic_office_content_design_video_skills', 'default_tech_blue_primary_palette', 'dominant_purple_primary_palette', 'purple_blue_gradient_primary_style', 'heavy_glassmorphism_primary_style', 'neumorphism_primary_style']);
   assert.equal(gui.visualGrammar.currentUiVariant, 'ai_native_research_home_v1');

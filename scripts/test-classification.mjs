@@ -328,7 +328,7 @@ const TEST_ENTRIES = Object.freeze([
     testKind: 'governance',
     proofLevel: 'static',
     claimScope: 'repo',
-    contracts: ['README.md', 'AGENTS.md', 'TASTE.md', 'docs/invariants.md', 'docs/status.md'],
+    contracts: ['README.md', 'AGENTS.md', 'TASTE.md', 'docs/invariants.md', 'docs/status.md', 'contracts/web-product-profile.json', 'contracts/web-gui-product-contract.json'],
     proves: ['retired routes, vocabulary, fake data, and stale product surfaces do not re-enter active source'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['retired-surface'],

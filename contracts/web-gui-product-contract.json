@@ -722,7 +722,7 @@
   "figmaSource": {
     "fileKey": "1MNO5l7PQYKZVNqQgw6DGS",
     "nodeId": "0:1",
-    "requiredSourceFiles": ["src/app/App.tsx", "src/styles/theme.css", "src/styles/index.css"],
+    "requiredSourceFiles": ["src/app/App.tsx", "src/styles/theme.css"],
     "adoptedPatterns": ["account_popover_status", "missing_api_key_resource_gate", "side_navigation_new_chat_projects_skill_workflow_search_more", "ai_native_center_composer", "starter_chips", "prompt_command_center", "research_skill_launcher", "agentic_workflow_cards", "inspector_sheet_tabs_files_progress_output", "running_blocked_turn_state"],
     "rejectedPatterns": ["drive_or_cloud_storage_ownership", "runtime_truth_ownership", "founder_plan_upsell", "unlimited_compute_claim", "dashboard_crm_primary_app", "generic_office_content_design_video_skills", "default_tech_blue_primary_palette", "dominant_purple_primary_palette", "purple_blue_gradient_primary_style", "heavy_glassmorphism_primary_style", "neumorphism_primary_style"]
   },

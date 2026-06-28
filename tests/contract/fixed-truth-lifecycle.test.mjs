@@ -568,6 +568,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   assert.equal(product.visionGaps.haPolicy.state, 'paused');
   assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), [
     'ui_ux_product_depth',
+    'commercial_launch_ui_implementation',
     'medopl_readonly_evidence',
     'runtime_execution_boundary',
     'commercial_saas_depth',

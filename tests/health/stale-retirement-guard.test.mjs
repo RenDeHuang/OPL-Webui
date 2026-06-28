@@ -195,7 +195,7 @@ test('active UI truth keeps Figma Make as the canonical visual source', () => {
   assert.equal(uiTruth?.source?.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(uiTruth?.source?.fileName, 'UI_UX for Commercial Launch');
   assert.equal(uiTruth?.source?.primaryAppSource, 'src/app/App.tsx');
-  assert.deepEqual(uiTruth?.source?.styleSourcesToRead, ['src/styles/theme.css', 'src/styles/globals.css']);
+  assert.deepEqual(uiTruth?.source?.styleSourcesToRead, ['src/styles/theme.css']);
   assert.equal(uiTruth?.implementationBoundary?.codexMaySelfDesignSurfaces, false);
   assert.equal(uiTruth?.implementationBoundary?.doNotVendorGeneratedApp, true);
   assert.equal(uiTruth?.implementationBoundary?.visualTruth, 'figma_make_source');

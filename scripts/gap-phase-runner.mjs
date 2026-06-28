@@ -168,6 +168,7 @@ function evaluateGap(gap, phase, context) {
 
   const specific = {
     ui_ux_product_depth: evaluateUiUxGap(context),
+    commercial_launch_ui_implementation: evaluateCommercialLaunchUiGap(gap, context),
     medopl_readonly_evidence: evaluateMedoplReadonlyGap(context),
     runtime_execution_boundary: evaluateRuntimeGap(context),
     commercial_saas_depth: evaluateCommercialGap(context),
@@ -220,6 +221,57 @@ function evaluateUiUxGap({ gui }) {
         : 'blocked',
       proves: ['human owner accepted the UI/UX production claim when present'],
       doesNotProve: ['production evidence', 'complete UI/UX design system', 'assistive technology conformance'],
+    }),
+  ];
+}
+
+function evaluateCommercialLaunchUiGap(gap, { product }) {
+  const uiTruth = product?.uiSourceTruth;
+  const phaseIds = gap.phases.map((phase) => phase.id);
+  const requiredPhaseIds = [
+    'figma_to_code_implementation_map',
+    'figma_public_landing_slice',
+    'figma_auth_surface_slice',
+    'figma_home_workbench_shell_slice',
+    'figma_dialog_sheet_projection_slice',
+  ];
+  const expectedUrl = 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0';
+  return [
+    evalResult({
+      id: 'commercial_launch_figma_source',
+      dimension: 'contract',
+      status: uiTruth?.source?.url === expectedUrl
+        && uiTruth?.source?.fileKey === '1MNO5l7PQYKZVNqQgw6DGS'
+        && uiTruth?.source?.primaryAppSource === 'src/app/App.tsx'
+        && uiTruth?.source?.styleSourcesToRead?.length === 1
+        && uiTruth.source.styleSourcesToRead.includes('src/styles/theme.css')
+        ? 'pass'
+        : 'fail',
+      proves: ['Commercial Launch UI phase queue is pinned to the canonical Figma Make source'],
+      doesNotProve: ['UI implementation', 'visual parity', 'production rollout'],
+    }),
+    evalResult({
+      id: 'commercial_launch_phase_queue',
+      dimension: 'contract',
+      status: gap.state === 'active'
+        && gap.currentPhaseId === 'figma_to_code_implementation_map'
+        && requiredPhaseIds.every((id, index) => phaseIds[index] === id)
+        ? 'pass'
+        : 'fail',
+      proves: ['Commercial Launch UI work advances through the existing gap phase registry'],
+      doesNotProve: ['phase implementation complete', 'browser behavior', 'owner visual acceptance'],
+    }),
+    evalResult({
+      id: 'commercial_launch_mock_truth_boundary',
+      dimension: 'repo_local',
+      status: uiTruth?.mockTruthPolicy?.figmaMockDataIsProductTruth === false
+        && uiTruth?.implementationBoundary?.doNotVendorGeneratedApp === true
+        && uiTruth?.implementationBoundary?.doNotImportFigmaMakeDependencies === true
+        && uiTruth?.doesNotApplyTo?.includes('minimal_admin_ops_layer')
+        ? 'pass'
+        : 'fail',
+      proves: ['Figma generated app, mock data, and Admin/Ops scope are barred from product truth'],
+      doesNotProve: ['mock copy has been removed from implemented UI', 'production readiness', 'runtime/storage ownership'],
     }),
   ];
 }

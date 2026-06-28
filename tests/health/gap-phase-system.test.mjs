@@ -46,6 +46,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
 
   assert.deepEqual(gapIds, [
     'ui_ux_product_depth',
+    'commercial_launch_ui_implementation',
     'medopl_readonly_evidence',
     'runtime_execution_boundary',
     'commercial_saas_depth',
@@ -101,7 +102,10 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.equal(typeof gap.currentStep.objective, 'string', `${gap.id} must report current step objective`);
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
-    assert.equal(!['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id), gap.readyToAdvance);
+    assert.equal(
+      !['commercial_launch_ui_implementation', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      gap.readyToAdvance,
+    );
   }
 });
 
@@ -125,6 +129,11 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'owner_receipt').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
+  assert.equal(byGap.commercial_launch_ui_implementation.status, 'not_started');
+  assert.equal(byGap.commercial_launch_ui_implementation.readyToAdvance, false);
+  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_figma_source').status, 'pass');
+  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_phase_queue').status, 'pass');
+  assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_mock_truth_boundary').status, 'pass');
   assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
@@ -170,8 +179,54 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
     done: 5,
     partial: 1,
     blocked: 2,
-    not_started: 0,
+    not_started: 1,
   });
+});
+
+test('Commercial Launch UI implementation queue is phase-driven and Figma-source bounded', () => {
+  const registry = readJson(registryPath);
+  const product = readJson('contracts/web-product-profile.json');
+  const gap = registry.gaps.find((item) => item.id === 'commercial_launch_ui_implementation');
+  const phaseIds = gap?.phases.map((phase) => phase.id);
+  const evalsByPhase = Object.fromEntries(gap?.phases.map((phase) => [
+    phase.id,
+    phase.requiredEvals.map((evalRef) => evalRef.id),
+  ]) ?? []);
+
+  assert.equal(product.uiSourceTruth.source.url, 'https://www.figma.com/make/1MNO5l7PQYKZVNqQgw6DGS/UI-UX-for-Commercial-Launch?p=f&t=yJdcYUdu4fOW4gIY-0');
+  assert.equal(product.uiSourceTruth.source.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
+  assert.equal(product.uiSourceTruth.source.fileName, 'UI_UX for Commercial Launch');
+  assert.equal(product.uiSourceTruth.source.primaryAppSource, 'src/app/App.tsx');
+  assert.deepEqual(product.uiSourceTruth.source.styleSourcesToRead, ['src/styles/theme.css']);
+
+  assert.equal(gap?.state, 'active');
+  assert.equal(gap?.ownerSurface, 'apps-web');
+  assert.equal(gap?.currentPhaseId, 'figma_to_code_implementation_map');
+  assert.equal(gap?.currentStatus, 'not_started');
+  assert.deepEqual(phaseIds, [
+    'figma_to_code_implementation_map',
+    'figma_public_landing_slice',
+    'figma_auth_surface_slice',
+    'figma_home_workbench_shell_slice',
+    'figma_dialog_sheet_projection_slice',
+  ]);
+  assert.deepEqual(evalsByPhase.figma_to_code_implementation_map, [
+    'verify_health',
+    'verify_contract',
+    'git_diff_check',
+  ]);
+  for (const phaseId of phaseIds.slice(1)) {
+    assert.deepEqual(evalsByPhase[phaseId], [
+      'verify_interaction',
+      'verify_browser',
+      'verify_current',
+      'git_diff_check',
+    ]);
+  }
+  assert.ok(gap.cannotClaim.includes('Figma UI implementation complete'));
+  assert.ok(gap.cannotClaim.includes('production rollout'));
+  assert.ok(gap.cannotClaim.includes('payment/runtime/storage/full SaaS capability'));
+  assert.ok(gap.cannotClaim.includes('Admin/Ops UI'));
 });
 
 test('gap phase runner refuses advancement when a done status lacks required eval evidence', async () => {
