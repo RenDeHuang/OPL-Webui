@@ -546,7 +546,7 @@ function openAnonymousAuth(mode = 'login', focusReturnSelector = '[data-public-s
 }
 
 function preserveInteractiveShellAfterBootstrap() {
-  return state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register' && window.location.pathname === '/login';
+  return state.view.accountState === 'anonymous' && state.shellState === 'auth_login_register';
 }
 
 async function authSubmit(event) {
@@ -719,6 +719,10 @@ function syncRouteFromLocation() {
   if (window.location.pathname === '/login' && state.view.accountState === 'anonymous') {
     state.shellState = 'auth_login_register';
     state.authTab = state.authTab === 'register' ? 'register' : 'login';
+    document.body.dataset.view = 'home';
+    return;
+  }
+  if (preserveInteractiveShellAfterBootstrap()) {
     document.body.dataset.view = 'home';
     return;
   }
