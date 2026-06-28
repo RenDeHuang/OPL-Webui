@@ -171,6 +171,7 @@ function evaluateGap(gap, phase, context) {
     commercial_launch_ui_implementation: evaluateCommercialLaunchUiGap(gap, context),
     commercial_launch_readiness_closeout: evaluateCommercialLaunchReadinessGap(gap, context),
     commercial_runtime_admission_alignment_v1: evaluateCommercialRuntimeAdmissionGap(gap, context),
+    commercial_product_maturity_gap_v1: evaluateCommercialProductMaturityGap(gap),
     medopl_readonly_evidence: evaluateMedoplReadonlyGap(context),
     runtime_execution_boundary: evaluateRuntimeGap(context),
     commercial_saas_depth: evaluateCommercialGap(context),
@@ -282,8 +283,10 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
   ];
 }
 
-function evaluateCommercialRuntimeAdmissionGap(gap, { runtime }) {
+function evaluateCommercialRuntimeAdmissionGap(gap, { runtime, release }) {
   const admission = runtime?.commercialRuntimeAdmission;
+  const currentPhase = gap.phases.find((phase) => phase.id === gap.currentPhaseId);
+  const latestProductionBrowserE2E = release?.productionBrowserE2EReadiness?.latestAttempt;
   const runner = existsSync('tests/browser/research-main-path-runner.mjs')
     ? readFileSync('tests/browser/research-main-path-runner.mjs', 'utf8')
     : '';
@@ -322,6 +325,60 @@ function evaluateCommercialRuntimeAdmissionGap(gap, { runtime }) {
       proves: ['dedicated MedOPL dogfood provisioning is explicitly owned by MedOPL when needed'],
       doesNotProve: ['safe dogfood provisioning exists', 'specialist ready account exists', 'payment readiness'],
     }),
+    evalResult({
+      id: 'aligned_production_browser_e2e',
+      dimension: 'production',
+      status: currentPhase?.status === 'done'
+        && latestProductionBrowserE2E?.status === 'success'
+        ? 'pass'
+        : 'blocked',
+      proves: ['production browser E2E passed after runtime admission alignment when folded back'],
+      doesNotProve: ['runtime execution completed', 'storage truth ownership', 'production-ready SaaS'],
+    }),
+  ];
+}
+
+function evaluateCommercialProductMaturityGap(gap) {
+  const classification = gap?.maturityClassification ?? {};
+  const mustIds = (classification.mustHaveInOplWebui ?? []).map((item) => item.id);
+  const medoplIds = (classification.medoplOwned ?? []).map((item) => item.id);
+  const notForWebIds = (classification.explicitlyNotForOplWebui ?? []).map((item) => item.id);
+  const phaseIds = (gap?.phases ?? []).map((phase) => phase.id);
+  return [
+    evalResult({
+      id: 'maturity_classification_contract',
+      dimension: 'contract',
+      status: mustIds.includes('env_example')
+        && mustIds.includes('config_example_yaml')
+        && medoplIds.includes('postgresql_redis_canonical_truth')
+        && notForWebIds.includes('production_mutation_installer')
+        ? 'pass'
+        : 'fail',
+      proves: ['commercial maturity items are classified by owner in the existing gap registry'],
+      doesNotProve: ['feature implementation', 'production readiness', 'payment/runtime/storage ownership'],
+    }),
+    evalResult({
+      id: 'webui_owner_boundary',
+      dimension: 'contract',
+      status: gap?.cannotClaim?.includes('Web-owned runtime/storage/payment/artifact truth')
+        && gap?.cannotClaim?.includes('PostgreSQL/Redis canonical business truth')
+        && classification.onePersonLabOwned?.some((item) => item.id === 'framework_execution_semantics')
+        ? 'pass'
+        : 'fail',
+      proves: ['Webui maturity work preserves MedOPL and one-person-lab authority boundaries'],
+      doesNotProve: ['MedOPL readiness', 'OPL runtime execution', 'payment readiness'],
+    }),
+    evalResult({
+      id: 'maturity_implementation_queue',
+      dimension: 'repo_local',
+      status: phaseIds.includes('webui_config_deploy_baseline')
+        && phaseIds.includes('release_security_ci_hardening')
+        && phaseIds.includes('ops_diagnostics_and_troubleshooting')
+        ? 'blocked'
+        : 'fail',
+      proves: ['future Webui-owned maturity implementation phases are registered and pending'],
+      doesNotProve: ['those phases are implemented', 'production mutation installer', 'full SaaS'],
+    }),
   ];
 }
 
@@ -344,9 +401,9 @@ function allowedCommercialLaunchCurrentPhase(currentPhaseId, implementationMap) 
   ].includes(currentPhaseId);
 }
 
-function evaluateCommercialLaunchReadinessGap(gap, { product, registry }) {
+function evaluateCommercialLaunchReadinessGap(gap, { product, registry, release }) {
   const phase = (id) => gap.phases.find((item) => item.id === id);
-  const currentCommitReady = product?.commercialLaunchReadiness?.localMain?.state === 'ready_not_pushed';
+  const currentCommitReady = ['ready_not_pushed', 'pushed_ci_image_rollout_foldback_done'].includes(product?.commercialLaunchReadiness?.localMain?.state);
   const completedLocalPrep = gap.dynamicRetirement?.completedLocalPrepPhases ?? [];
   const hasRequiredSurfaces = [
     '/',
@@ -379,7 +436,7 @@ function evaluateCommercialLaunchReadinessGap(gap, { product, registry }) {
       status: phase('remote_sync_pr_readiness')?.status === 'done'
         && completedLocalPrep.includes('remote_sync_pr_readiness')
         && currentCommitReady
-        && product?.commercialLaunchReadiness?.remoteSync?.localMainAheadOrigin === true
+        && (product?.commercialLaunchReadiness?.remoteSync?.localMainAheadOrigin === true || product?.commercialLaunchReadiness?.remoteSync?.ciStatus === 'passed')
         && remotePolicy.pushRequiresOwnerAuthorization === true
         && remotePolicy.prRequiresOwnerAuthorization === true
         ? 'pass'
@@ -414,6 +471,16 @@ function evaluateCommercialLaunchReadinessGap(gap, { product, registry }) {
       status: phase('post_release_closeout')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
       proves: ['owner authorized release evidence foldback when present'],
       doesNotProve: ['owner visual acceptance', 'production-ready SaaS'],
+    }),
+    evalResult({
+      id: 'post_release_closeout',
+      dimension: 'production',
+      status: phase('post_release_closeout')?.status === 'done'
+        && release?.latestMainEvidence?.state === `folded_success_run_${release?.latestMainEvidence?.runId}`
+        ? 'pass'
+        : 'blocked',
+      proves: ['sanitized release evidence foldback is present for the latest controlled rollout'],
+      doesNotProve: ['owner visual acceptance', 'production-ready SaaS', 'full SaaS'],
     }),
     evalResult({
       id: 'commercial_launch_queue_cleanup_policy',
@@ -854,14 +921,7 @@ function evaluateOplAutoUpdateGap({ release }) {
 }
 
 function evalResult({ id, dimension, status, proves, doesNotProve, evidenceSource }) {
-  return {
-    id,
-    dimension,
-    status,
-    ...(evidenceSource ? { evidenceSource } : {}),
-    proves,
-    doesNotProve,
-  };
+  return { id, dimension, status, ...(evidenceSource ? { evidenceSource } : {}), proves, doesNotProve };
 }
 
 function assertRuntimeRoot(root) {

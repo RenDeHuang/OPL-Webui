@@ -281,9 +281,9 @@
     {
       "id": "commercial_launch_readiness_closeout",
       "ownerSurface": "release-evidence",
-      "state": "active",
-      "currentPhaseId": "ci_observation_after_push",
-      "currentStatus": "blocked",
+      "state": "closed",
+      "currentPhaseId": "post_release_closeout",
+      "currentStatus": "done",
       "cannotClaim": ["owner visual acceptance", "push/PR completed", "GitHub CI passed for local main", "production rollout", "release evidence foldback", "production-ready claim"],
       "dependsOn": ["commercial_launch_ui_implementation"],
       "dynamicRetirement": {
@@ -335,7 +335,7 @@
           "blockerTypes": ["missing_owner_receipt"],
           "acceptance": ["push/PR authorization is explicit", "CI observation is recorded only after remote mutation", "CI evidence does not change product identity or release evidence"],
           "nextStepOpeners": ["Open production_release_readiness only after owner authorizes rollout", "Do not execute release evidence foldback from CI alone"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_push_or_pr"},
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_push_and_ci_observation"},
           "requiredEvals": [
             {"id": "push_or_pr_owner_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["owner authorized remote mutation when present"], "doesNotProve": ["CI passed", "production rollout", "owner visual acceptance"], "failureBlocks": ["push", "PR"]},
             {"id": "ci_observation_after_push", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["GitHub CI passed for the pushed commit when present"], "doesNotProve": ["production rollout", "release evidence foldback", "production-ready claim"], "failureBlocks": ["production release readiness"]}
@@ -350,7 +350,7 @@
           "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
           "acceptance": ["rollout authorization is explicit", "production release readiness evidence is collected only through release lane", "production evidence remains separate from product identity"],
           "nextStepOpeners": ["Open post_release_closeout only after rollout succeeds", "Do not claim production-ready SaaS from controlled launch evidence"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_rollout"},
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_controlled_launch_rollout"},
           "requiredEvals": [
             {"id": "production_release_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/production_release_readiness", "proves": ["owner authorized rollout when present"], "doesNotProve": ["rollout succeeded", "release evidence folded back", "production-ready claim"], "failureBlocks": ["Cloud Rollout"]},
             {"id": "production_release_readiness", "contract": "contracts/web-release-profile.json#/controlledLaunchReadiness", "proves": ["production release lane succeeded when folded evidence exists"], "doesNotProve": ["full SaaS", "payment/runtime/storage ownership", "production-ready SaaS"], "failureBlocks": ["release foldback"]}
@@ -365,7 +365,8 @@
           "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
           "acceptance": ["release foldback is sanitized and limited to web-release-profile/status/baton", "temporary artifacts are ignored or cleaned", "can/cannot claim boundaries are updated without expanding product identity"],
           "nextStepOpeners": ["Open production owner visual acceptance only with explicit human receipt", "Open further product capability phases only with owner, consumer, contract, and registered tests"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_release_evidence_foldback"},
+          "status": "done",
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_release_evidence_foldback"},
           "requiredEvals": [
             {"id": "post_release_closeout_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/post_release_closeout", "proves": ["owner authorized release evidence foldback when present"], "doesNotProve": ["owner visual acceptance", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]},
             {"id": "post_release_closeout", "contract": "contracts/web-release-profile.json", "proves": ["sanitized release evidence and stale queue closeout are folded back when present"], "doesNotProve": ["payment/runtime/storage/full SaaS capability", "owner visual acceptance"], "failureBlocks": ["production closeout"]}
@@ -443,9 +444,9 @@
     {
       "id": "commercial_runtime_admission_alignment_v1",
       "ownerSurface": "runtime-gate",
-      "state": "active",
+      "state": "closed",
       "currentPhaseId": "production_e2e_rerun_after_alignment",
-      "currentStatus": "blocked",
+      "currentStatus": "done",
       "launchBlocking": true,
       "cannotClaim": ["runtime execution completed", "artifact body authority", "storage truth ownership", "payment readiness", "production-ready SaaS"],
       "dependsOn": ["commercial_launch_readiness_closeout", "runtime_execution_boundary"],
@@ -481,11 +482,28 @@
           "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
           "acceptance": ["production E2E result is classified as ordinary, blocked, ready, or onboarding", "release evidence stays in web-release-profile only"],
           "nextStepOpeners": ["Fold back release evidence after successful rollout and production validation", "Open MedOPL dedicated dogfood provisioning if scenario coverage is incomplete"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_aligned_runtime_admission_rollout"},
+          "status": "done",
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "accepted", "acceptedAt": "2026-06-28", "acceptedClaim": "owner_authorized_aligned_runtime_admission_rollout"},
           "requiredEvals": [
             {"id": "aligned_production_browser_e2e", "contract": "contracts/web-release-profile.json#/productionBrowserE2EReadiness", "proves": ["production browser E2E passed with aligned runtime admission scenario when folded back"], "doesNotProve": ["runtime execution completed", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]}
           ]
         }
+      ]
+    },
+    {
+      "id": "commercial_product_maturity_gap_v1",
+      "ownerSurface": "product-boundary",
+      "state": "active",
+      "currentPhaseId": "maturity_gap_queue_registration",
+      "currentStatus": "partial",
+      "cannotClaim": ["Web-owned runtime/storage/payment/artifact truth", "PostgreSQL/Redis canonical business truth", "production mutation installer", "full SaaS"],
+      "maturityClassification": {"mustHaveInOplWebui":[{"id":"frontend_backend_boundary","owner":"one-person-lab-web","objective":"keep Web UI and Go control-plane responsibilities explicit without forced directory migration"},{"id":"deploy_directory","owner":"one-person-lab-web-release","objective":"keep deploy artifacts and runbook owned by Webui release"},{"id":"env_example","owner":"one-person-lab-web-config","objective":"provide sanitized environment example"},{"id":"config_example_yaml","owner":"one-person-lab-web-config","objective":"provide example config without production secrets"},{"id":"release_workflow_maturity","owner":"one-person-lab-web-release","objective":"mature CI/image/rollout evidence boundaries"},{"id":"backend_ci","owner":"control-plane-go","objective":"strengthen Go control-plane CI without MedOPL real integration in current lane"},{"id":"security_scan","owner":"one-person-lab-web-security","objective":"add dependency/container/secret scan lane"},{"id":"troubleshooting","owner":"one-person-lab-web-docs","objective":"document common local, config, deploy, and projection failures"}],"shouldHaveInOplWebui":[{"id":"docker_compose_examples","owner":"one-person-lab-web-devex","objective":"local/standalone/prod examples only, not production cloud replacement"},{"id":"local_standalone_deploy_scripts","owner":"one-person-lab-web-devex","objective":"config check and local/standalone start only, no production mutation"},{"id":"admin_payment_projection_docs","owner":"one-person-lab-web-docs","objective":"MedOPL API plus readonly projection/deeplink boundary docs"},{"id":"backup_migration_owner_split","owner":"one-person-lab-web-release","objective":"backup/migration docs split Web state from MedOPL runtime/storage/artifacts"},{"id":"minimal_ops_diagnostics","owner":"minimal-admin-ops","objective":"minimal /_ops diagnostics only, no MedOPL resource admin"}],"later":[{"id":"setup_wizard","owner":"one-person-lab-web-devex","objective":"config/readiness wizard later, no runtime opening"}],"medoplOwned":[{"id":"migrations_canonical_business_runtime","owner":"MedOPL","objective":"canonical business/runtime/billing/resource migrations"},{"id":"postgresql_redis_canonical_truth","owner":"MedOPL","objective":"canonical PostgreSQL/Redis business/runtime/billing/resource truth"},{"id":"payment_docs","owner":"MedOPL","objective":"payment lifecycle docs and authority"},{"id":"runtime_resource_billing_storage","owner":"MedOPL","objective":"runtime/resource/billing/storage authority"}],"onePersonLabOwned":[{"id":"framework_execution_semantics","owner":"one-person-lab","objective":"framework execution semantics and OPL runtime behavior"}],"explicitlyNotForOplWebui":[{"id":"generic_product_installer","owner":"none","objective":"do not build generic install/upgrade/uninstall product installer"},{"id":"production_mutation_installer","owner":"none","objective":"do not create one-click production mutation installer"},{"id":"complete_data_management_sidecar","owner":"none","objective":"do not build full data management sidecar in Webui"},{"id":"web_owned_runtime_storage_payment_artifact_truth","owner":"none","objective":"never move runtime/storage/payment/artifact authority into Webui"}]},
+      "dynamicRetirement": {"markDoneWhen":"all current Webui-owned maturity phases are done or moved to owner-specific queues","noLongTermOrdinaryUiBlocker":true,"foldback":"long-term facts fold into contracts/docs/deploy/scripts/tests; obsolete notes go to history/provenance","cleanupRule":"temporary worktree/branch/checklist artifacts are cleaned after phase closeout"},
+      "phases": [
+        {"id":"maturity_gap_queue_registration","status":"done","objective":"Register the commercial maturity classification and owner split in the existing gap registry without implementing features.","entryCriteria":["latest controlled launch evidence is folded back","product identity remains Web interaction platform"],"exitCriteria":["all requested maturity items are classified","Webui, MedOPL, one-person-lab, later, and not-for-Webui ownership is explicit","no second truth document is created"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["classification is machine-readable","runtime/storage/payment/artifact ownership stays external","ordinary UI development is not blocked long-term"],"nextStepOpeners":["open webui_config_deploy_baseline for .env/config/compose/local script docs","open release_security_ci_hardening for CI/security maturity"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"classification only"},"requiredEvals":[{"id":"maturity_classification_contract","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1","proves":["commercial maturity items are classified by owner"],"doesNotProve":["feature implementation","production readiness","payment/runtime/storage ownership"],"failureBlocks":["maturity queue closeout"]}]},
+        {"id":"webui_config_deploy_baseline","objective":"Add Webui-owned .env.example, config.example.yaml, compose examples, and local/standalone/config-check scripts without production mutation.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["sanitized examples exist","production cloud rollout remains authoritative","no PostgreSQL/Redis canonical truth is introduced"],"evidenceSources":["repo_local"],"blockerTypes":["missing_eval"],"acceptance":["config/devex baseline is useful but not production mutating","MedOPL canonical data ownership remains external"],"nextStepOpeners":["open release_security_ci_hardening after config baseline tests pass"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"repo-local devex baseline"},"requiredEvals":[{"id":"webui_config_deploy_baseline_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/webui_config_deploy_baseline","proves":["config/deploy examples are present when implemented"],"doesNotProve":["production rollout","runtime/storage ownership"],"failureBlocks":["config baseline claim"]}]},
+        {"id":"release_security_ci_hardening","objective":"Harden release workflow, backend CI, and security scan lanes without moving release/deploy evidence into current.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["security scan and backend CI are registered in correct lanes","release evidence remains release lane only"],"evidenceSources":["repo_local"],"blockerTypes":["missing_eval"],"acceptance":["CI/security maturity is lane-owned","ordinary UI development stays decoupled from heavy release gates"],"nextStepOpeners":["open ops_diagnostics_and_troubleshooting after CI/security lane evidence passes"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"repo-local CI/security baseline"},"requiredEvals":[{"id":"release_security_ci_hardening_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/release_security_ci_hardening","proves":["release/security CI hardening is registered when implemented"],"doesNotProve":["rollout success","production-ready SaaS"],"failureBlocks":["release/security maturity claim"]}]},
+        {"id":"ops_diagnostics_and_troubleshooting","objective":"Add troubleshooting, backup/migration owner split, and minimal /_ops diagnostics plan without MedOPL resource admin.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["troubleshooting docs and owner split are present","/_ops scope stays diagnostics only","data sidecar remains projection/audit only"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["operator diagnostics stay minimal","Webui does not backup MedOPL runtime/storage/artifacts","data management sidecar is not introduced"],"nextStepOpeners":["close maturity queue or move remaining items to owner-specific queues"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"docs/diagnostics plan only"},"requiredEvals":[{"id":"ops_diagnostics_and_troubleshooting_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/ops_diagnostics_and_troubleshooting","proves":["ops diagnostics and troubleshooting boundaries are registered when implemented"],"doesNotProve":["MedOPL resource admin","production-ready SaaS"],"failureBlocks":["ops diagnostics maturity claim"]}]}
       ]
     },
     {
