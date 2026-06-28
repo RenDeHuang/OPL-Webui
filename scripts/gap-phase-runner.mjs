@@ -169,6 +169,7 @@ function evaluateGap(gap, phase, context) {
   const specific = {
     ui_ux_product_depth: evaluateUiUxGap(context),
     commercial_launch_ui_implementation: evaluateCommercialLaunchUiGap(gap, context),
+    commercial_launch_readiness_closeout: evaluateCommercialLaunchReadinessGap(gap, context),
     medopl_readonly_evidence: evaluateMedoplReadonlyGap(context),
     runtime_execution_boundary: evaluateRuntimeGap(context),
     commercial_saas_depth: evaluateCommercialGap(context),
@@ -297,6 +298,91 @@ function allowedCommercialLaunchCurrentPhase(currentPhaseId, implementationMap) 
     'figma_home_workbench_shell_slice',
     'figma_dialog_sheet_projection_slice',
   ].includes(currentPhaseId);
+}
+
+function evaluateCommercialLaunchReadinessGap(gap, { product, registry }) {
+  const phase = (id) => gap.phases.find((item) => item.id === id);
+  const currentCommitReady = product?.commercialLaunchReadiness?.localMain?.state === 'ready_not_pushed';
+  const completedLocalPrep = gap.dynamicRetirement?.completedLocalPrepPhases ?? [];
+  const hasRequiredSurfaces = [
+    '/',
+    '/login',
+    '/home',
+    'sidebar',
+    'search_sheet',
+    'account_popover',
+    'api_key_dialog',
+    'inspector_sheet',
+    'responsive_mobile',
+  ].every((surface) => product?.commercialLaunchReadiness?.ownerVisualAcceptancePrep?.surfaces?.includes(surface));
+  const remotePolicy = product?.commercialLaunchReadiness?.remoteSync?.policy ?? {};
+  return [
+    evalResult({
+      id: 'owner_visual_acceptance_prep',
+      dimension: 'repo_local',
+      status: phase('commercial_launch_acceptance_prep')?.status === 'done'
+        && completedLocalPrep.includes('commercial_launch_acceptance_prep')
+        && hasRequiredSurfaces
+        && product?.commercialLaunchReadiness?.ownerVisualAcceptancePrep?.ownerAccepted === false
+        ? 'pass'
+        : 'fail',
+      proves: ['owner visual acceptance checklist is prepared without claiming owner acceptance'],
+      doesNotProve: ['owner visual acceptance', 'production rollout', 'production-ready claim'],
+    }),
+    evalResult({
+      id: 'remote_sync_pr_readiness',
+      dimension: 'repo_local',
+      status: phase('remote_sync_pr_readiness')?.status === 'done'
+        && completedLocalPrep.includes('remote_sync_pr_readiness')
+        && currentCommitReady
+        && product?.commercialLaunchReadiness?.remoteSync?.localMainAheadOrigin === true
+        && remotePolicy.pushRequiresOwnerAuthorization === true
+        && remotePolicy.prRequiresOwnerAuthorization === true
+        ? 'pass'
+        : 'fail',
+      proves: ['remote sync readiness is prepared without pushing or opening a PR'],
+      doesNotProve: ['GitHub main updated', 'GitHub CI passed', 'production rollout'],
+    }),
+    evalResult({
+      id: 'push_or_pr_owner_authorization',
+      dimension: 'owner',
+      status: phase('ci_observation_after_push')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
+      proves: ['owner authorized push or PR when present'],
+      doesNotProve: ['GitHub CI passed', 'production rollout', 'owner visual acceptance'],
+    }),
+    evalResult({
+      id: 'ci_observation_after_push',
+      dimension: 'production',
+      status: product?.commercialLaunchReadiness?.remoteSync?.ciStatus === 'passed' ? 'pass' : 'blocked',
+      proves: ['GitHub CI passed for the pushed commit when present'],
+      doesNotProve: ['production rollout', 'release evidence foldback', 'production-ready claim'],
+    }),
+    evalResult({
+      id: 'production_release_authorization',
+      dimension: 'owner',
+      status: phase('production_release_readiness')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
+      proves: ['owner authorized rollout when present'],
+      doesNotProve: ['rollout succeeded', 'release evidence folded back', 'production-ready claim'],
+    }),
+    evalResult({
+      id: 'post_release_closeout_authorization',
+      dimension: 'owner',
+      status: phase('post_release_closeout')?.ownerReceipt?.status === 'accepted' ? 'pass' : 'blocked',
+      proves: ['owner authorized release evidence foldback when present'],
+      doesNotProve: ['owner visual acceptance', 'production-ready SaaS'],
+    }),
+    evalResult({
+      id: 'commercial_launch_queue_cleanup_policy',
+      dimension: 'cleanup',
+      status: registry?.runtimeArtifactPolicy?.rawLogs === 'forbidden_in_git'
+        && gap.dynamicRetirement?.releaseEvidenceOnlyInReleaseProfile === true
+        && gap.dynamicRetirement?.ownerAcceptanceIsEvidenceNotUiTruth === true
+        ? 'pass'
+        : 'fail',
+      proves: ['commercial launch queue keeps raw artifacts out of git and separates release evidence from UI truth'],
+      doesNotProve: ['release evidence exists', 'owner visual acceptance', 'production rollout'],
+    }),
+  ];
 }
 
 function evaluateMedoplReadonlyGap({ release }) {

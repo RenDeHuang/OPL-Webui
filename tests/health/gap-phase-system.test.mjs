@@ -47,6 +47,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
   assert.deepEqual(gapIds, [
     'ui_ux_product_depth',
     'commercial_launch_ui_implementation',
+    'commercial_launch_readiness_closeout',
     'medopl_readonly_evidence',
     'runtime_execution_boundary',
     'commercial_saas_depth',
@@ -103,7 +104,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(
-      !['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      !['commercial_launch_readiness_closeout', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
       gap.readyToAdvance,
     );
   }
@@ -135,6 +136,15 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_figma_source').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_phase_queue').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_mock_truth_boundary').status, 'pass');
+  assert.equal(byGap.commercial_launch_readiness_closeout.status, 'blocked');
+  assert.equal(byGap.commercial_launch_readiness_closeout.currentPhaseId, 'ci_observation_after_push');
+  assert.equal(byGap.commercial_launch_readiness_closeout.readyToAdvance, false);
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'owner_visual_acceptance_prep').status, 'pass');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'remote_sync_pr_readiness').status, 'pass');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'push_or_pr_owner_authorization').status, 'blocked');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'ci_observation_after_push').status, 'blocked');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'production_release_authorization').status, 'blocked');
+  assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'post_release_closeout_authorization').status, 'blocked');
   assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
@@ -179,7 +189,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.deepEqual(report.summary, {
     done: 6,
     partial: 1,
-    blocked: 2,
+    blocked: 3,
     not_started: 0,
   });
 });
@@ -232,6 +242,33 @@ test('Commercial Launch UI implementation queue is phase-driven and Figma-source
   assert.ok(gap.cannotClaim.includes('production rollout'));
   assert.ok(gap.cannotClaim.includes('payment/runtime/storage/full SaaS capability'));
   assert.ok(gap.cannotClaim.includes('Admin/Ops UI'));
+});
+
+test('Commercial Launch readiness closeout queue stops at owner-authorized remote actions', () => {
+  const registry = readJson(registryPath);
+  const gap = registry.gaps.find((item) => item.id === 'commercial_launch_readiness_closeout');
+  const phaseIds = gap?.phases.map((phase) => phase.id);
+
+  assert.equal(gap?.state, 'active');
+  assert.equal(gap?.ownerSurface, 'release-evidence');
+  assert.equal(gap?.currentPhaseId, 'ci_observation_after_push');
+  assert.equal(gap?.currentStatus, 'blocked');
+  assert.deepEqual(phaseIds, [
+    'commercial_launch_acceptance_prep',
+    'remote_sync_pr_readiness',
+    'ci_observation_after_push',
+    'production_release_readiness',
+    'post_release_closeout',
+  ]);
+  assert.equal(gap?.phases.find((phase) => phase.id === 'commercial_launch_acceptance_prep')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'remote_sync_pr_readiness')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'ci_observation_after_push')?.ownerReceipt.required, true);
+  assert.equal(gap?.phases.find((phase) => phase.id === 'production_release_readiness')?.ownerReceipt.required, true);
+  assert.equal(gap?.phases.find((phase) => phase.id === 'post_release_closeout')?.ownerReceipt.required, true);
+  assert.ok(gap?.cannotClaim.includes('owner visual acceptance'));
+  assert.ok(gap?.cannotClaim.includes('production-ready claim'));
+  assert.ok(gap?.dynamicRetirement.closeCompletedLocalPrep, 'local prep phases must close after completion');
+  assert.equal(gap?.dynamicRetirement.releaseEvidenceOnlyInReleaseProfile, true);
 });
 
 test('gap phase runner refuses advancement when a done status lacks required eval evidence', async () => {

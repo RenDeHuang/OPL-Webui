@@ -279,6 +279,101 @@
       ]
     },
     {
+      "id": "commercial_launch_readiness_closeout",
+      "ownerSurface": "release-evidence",
+      "state": "active",
+      "currentPhaseId": "ci_observation_after_push",
+      "currentStatus": "blocked",
+      "cannotClaim": ["owner visual acceptance", "push/PR completed", "GitHub CI passed for local main", "production rollout", "release evidence foldback", "production-ready claim"],
+      "dependsOn": ["commercial_launch_ui_implementation"],
+      "dynamicRetirement": {
+        "closeCompletedLocalPrep": true,
+        "completedLocalPrepPhases": ["commercial_launch_acceptance_prep", "remote_sync_pr_readiness"],
+        "blockRemotePhasesUntilOwnerAuthorization": true,
+        "releaseEvidenceOnlyInReleaseProfile": true,
+        "ownerAcceptanceIsEvidenceNotUiTruth": true,
+        "temporaryArtifacts": [".runtime/browser-visual/*", ".runtime/phase-runs/*", "screenshots", "raw CI output", "release raw logs"],
+        "cleanupRule": "local prep phases stay closed; remote/deploy/foldback phases remain blocked until explicit owner authorization and sanitized evidence"
+      },
+      "phases": [
+        {
+          "id": "commercial_launch_acceptance_prep",
+          "status": "done",
+          "objective": "Prepare the owner visual acceptance checklist for Commercial Launch UI surfaces without claiming owner acceptance.",
+          "entryCriteria": ["Commercial Launch UI implementation queue is closed at repo-local scope", "verify/browser/integration/release/gate hygiene passed on local main"],
+          "exitCriteria": ["checklist covers `/`, `/login`, `/home`, sidebar, search sheet, account popover, API key dialog, inspector sheet, and responsive/mobile", "checklist states owner acceptance is pending and cannot be inferred from tests", "no screenshots or raw artifacts are committed"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_eval"],
+          "acceptance": ["owner visual review checklist is represented in this phase queue", "surfaces and responsive scope are explicit", "owner visual acceptance remains cannot-claim"],
+          "nextStepOpeners": ["Open owner visual review only after remote sync or production URL review is authorized", "Do not treat local browser evidence as owner acceptance"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase prepares a checklist only"},
+          "requiredEvals": [
+            {"id": "owner_visual_acceptance_prep", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout", "proves": ["owner visual acceptance checklist exists for all required surfaces"], "doesNotProve": ["owner visual acceptance", "production rollout", "production-ready claim"], "failureBlocks": ["owner visual review"]}
+          ]
+        },
+        {
+          "id": "remote_sync_pr_readiness",
+          "status": "done",
+          "objective": "Summarize the local main ahead commits, changed surfaces, risks, and verification evidence so owner can authorize push or PR.",
+          "entryCriteria": ["commercial_launch_acceptance_prep is done", "local main is ahead of origin/main and clean"],
+          "exitCriteria": ["ahead commits are summarized", "changed surfaces and risks are explicit", "fresh repo-local verification evidence is listed", "push/PR is prepared but not executed"],
+          "evidenceSources": ["repo_local"],
+          "blockerTypes": ["missing_eval"],
+          "acceptance": ["remote sync readiness is represented in this phase queue", "push/PR remains owner-authorized only", "release evidence latest run is not modified"],
+          "nextStepOpeners": ["Wait for owner authorization before push, PR, or remote merge", "After owner authorization, run ci_observation_after_push"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase prepares remote sync decision context only"},
+          "requiredEvals": [
+            {"id": "remote_sync_pr_readiness", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout", "proves": ["push/PR readiness summary exists without executing remote mutation"], "doesNotProve": ["GitHub main updated", "GitHub CI passed", "production rollout"], "failureBlocks": ["push/PR authorization"]}
+          ]
+        },
+        {
+          "id": "ci_observation_after_push",
+          "objective": "After owner authorizes push or PR, observe GitHub CI for the pushed commit and confirm no unintended deploy or release trigger occurred.",
+          "entryCriteria": ["owner explicitly authorizes push or PR", "remote_sync_pr_readiness is done"],
+          "exitCriteria": ["GitHub main or PR commit matches the pushed local commit", "GitHub CI passes", "no unexpected deploy/release workflow was triggered"],
+          "evidenceSources": ["external_owner"],
+          "blockerTypes": ["missing_owner_receipt"],
+          "acceptance": ["push/PR authorization is explicit", "CI observation is recorded only after remote mutation", "CI evidence does not change product identity or release evidence"],
+          "nextStepOpeners": ["Open production_release_readiness only after owner authorizes rollout", "Do not execute release evidence foldback from CI alone"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_push_or_pr"},
+          "requiredEvals": [
+            {"id": "push_or_pr_owner_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["owner authorized remote mutation when present"], "doesNotProve": ["CI passed", "production rollout", "owner visual acceptance"], "failureBlocks": ["push", "PR"]},
+            {"id": "ci_observation_after_push", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/ci_observation_after_push", "proves": ["GitHub CI passed for the pushed commit when present"], "doesNotProve": ["production rollout", "release evidence foldback", "production-ready claim"], "failureBlocks": ["production release readiness"]}
+          ]
+        },
+        {
+          "id": "production_release_readiness",
+          "objective": "After owner authorizes rollout, run release lane, production browser, dogfood, availability, and release evidence consistency checks.",
+          "entryCriteria": ["ci_observation_after_push is done", "owner explicitly authorizes rollout"],
+          "exitCriteria": ["latest image exists for latest main", "Cloud Rollout covers dry run, image preflight, apply, availability probe, authenticated dogfood, and production browser e2e", "failures are root-caused without skipped or lowered assertions"],
+          "evidenceSources": ["production_secret_gated", "external_owner"],
+          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
+          "acceptance": ["rollout authorization is explicit", "production release readiness evidence is collected only through release lane", "production evidence remains separate from product identity"],
+          "nextStepOpeners": ["Open post_release_closeout only after rollout succeeds", "Do not claim production-ready SaaS from controlled launch evidence"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_rollout"},
+          "requiredEvals": [
+            {"id": "production_release_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/production_release_readiness", "proves": ["owner authorized rollout when present"], "doesNotProve": ["rollout succeeded", "release evidence folded back", "production-ready claim"], "failureBlocks": ["Cloud Rollout"]},
+            {"id": "production_release_readiness", "contract": "contracts/web-release-profile.json#/controlledLaunchReadiness", "proves": ["production release lane succeeded when folded evidence exists"], "doesNotProve": ["full SaaS", "payment/runtime/storage ownership", "production-ready SaaS"], "failureBlocks": ["release foldback"]}
+          ]
+        },
+        {
+          "id": "post_release_closeout",
+          "objective": "After successful rollout and owner authorization, fold back sanitized release evidence, close stale queue state, and update can/cannot claim.",
+          "entryCriteria": ["production_release_readiness is done", "owner authorizes release evidence foldback"],
+          "exitCriteria": ["release evidence is folded back through npm run release:evidence", "stale queue state is retired", "repo bloat, gap phase, gate review, and diff check pass", "owner acceptance remains evidence/status, not a second UI truth"],
+          "evidenceSources": ["production_secret_gated", "human_owner_receipt"],
+          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
+          "acceptance": ["release foldback is sanitized and limited to web-release-profile/status/baton", "temporary artifacts are ignored or cleaned", "can/cannot claim boundaries are updated without expanding product identity"],
+          "nextStepOpeners": ["Open production owner visual acceptance only with explicit human receipt", "Open further product capability phases only with owner, consumer, contract, and registered tests"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_release_evidence_foldback"},
+          "requiredEvals": [
+            {"id": "post_release_closeout_authorization", "contract": "contracts/web-gap-phase-registry.json#/gaps/commercial_launch_readiness_closeout/phases/post_release_closeout", "proves": ["owner authorized release evidence foldback when present"], "doesNotProve": ["owner visual acceptance", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]},
+            {"id": "post_release_closeout", "contract": "contracts/web-release-profile.json", "proves": ["sanitized release evidence and stale queue closeout are folded back when present"], "doesNotProve": ["payment/runtime/storage/full SaaS capability", "owner visual acceptance"], "failureBlocks": ["production closeout"]}
+          ]
+        }
+      ]
+    },
+    {
       "id": "medopl_readonly_evidence",
       "ownerSurface": "release-evidence",
       "state": "closed",

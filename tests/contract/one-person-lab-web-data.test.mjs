@@ -42,13 +42,13 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assert.equal(product.ownedSurfaces.includes('multi_tenant_saas_product'), false);
   assert.equal(product.ownedSurfaces.includes('commercial_account_lifecycle_projection'), true);
   assert.equal(product.ownedSurfaces.includes('ordinary_chat_entry'), false);
-  assert.equal(product.publicUi.primarySurface, 'ai_native_research_homepage');
-  assert.deepEqual(product.publicUi.visibleRoutes, ['home', 'skills', 'workflows', 'projects', 'more']);
+  assert.deepEqual([product.publicUi.primarySurface, product.publicUi.visibleRoutes], ['ai_native_research_homepage', ['home', 'skills', 'workflows', 'projects', 'more']]);
   assert.equal(product.visionGaps.state, 'active_gap_acceptance');
   assert.deepEqual(product.visionGaps.haPolicy, { state: 'paused', reason: 'single-node launch safety' });
-  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'commercial_launch_ui_implementation', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
+  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'commercial_launch_ui_implementation', 'commercial_launch_readiness_closeout', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
   const visionGap = (id) => product.visionGaps.items.find((gap) => gap.id === id);
   assert.deepEqual(visionGap('ui_ux_product_depth').evidenceRequired, ['figma_mcp_source_context', 'component_state_contract', 'responsive_shell_smoke', 'browser_interaction_e2e', 'desktop_tablet_mobile_compact_visual_qa_browser_evidence', 'human_owner_receipt_before_production_ui_claim', 'production_browser_e2e_or_screenshot_evidence', 'accessibility_closeout_boundary', 'sanitized_foldback']);
+  assert.deepEqual([visionGap('commercial_launch_readiness_closeout').disposition, product.commercialLaunchReadiness.remoteSync.policy.pushRequiresOwnerAuthorization], ['local_acceptance_and_remote_sync_prep_done_blocked_on_owner_authorized_push_ci_rollout_foldback', true]);
   assert.equal(visionGap('medopl_readonly_evidence').disposition, 'production_readonly_projection_dogfood_confirmed_run_28142197152');
   assert.equal(visionGap('runtime_execution_boundary').disposition, 'medopl_account_resource_state_driven_local_gate_run_bridge_refs_only_production_execution_unclaimed');
   assert.deepEqual([visionGap('ha_and_resilience').acceptanceContract, visionGap('concurrency_and_load').acceptanceContract, visionGap('opl_auto_update_from_github').acceptanceContract], ['contracts/web-release-profile.json#/productionHAReadiness', 'contracts/web-product-profile.json#/concurrencyAndLoad', 'contracts/web-release-profile.json#/oplAutoUpdateReadiness']);
