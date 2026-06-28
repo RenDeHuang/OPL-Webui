@@ -6,7 +6,6 @@ import http from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 const repoRoot = new URL('../../', import.meta.url).pathname;
-
 const state = { cleanup: [] }, mode = process.argv.includes('--production') ? 'production' : 'local';
 const productionChatResultTimeoutMs = 120000;
 const productionResearchAttemptLimit = 2, retryableProductionUpstreamKinds = new Set(['network', 'connect_error', 'dns_error', 'request_timeout', 'response_header_timeout']);
@@ -126,6 +125,7 @@ async function authenticate(cdp, config) {
     await activate(cdp, '[data-logout-button]');
     await waitForAuthState(cdp, 'anonymous', 'logout');
   }
+  await activate(cdp, '[data-auth-tab="login"]');
   await typeInto(cdp, '#auth-email', config.email);
   await typeInto(cdp, '#auth-password', config.password);
   await activate(cdp, '[data-login-button]');

@@ -166,6 +166,13 @@ test('production browser e2e accepts reusable dogfood accounts that are already 
   assert.match(runner, /authenticated_bound/);
 });
 
+test('production browser e2e returns from register to login for reusable dogfood accounts', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+  const loginSequence = runner.match(/const registered = await waitForAuthStateOrMessage[\s\S]*?await activate\(cdp, '\[data-login-button\]'\);/)?.[0] || '';
+
+  assert.match(loginSequence, /\[data-auth-tab="login"\][\s\S]*\[data-login-button\]/);
+});
+
 test('production accessibility closeout is idempotent when dogfood account is already key-bound', () => {
   const runner = readFileSync(runnerPath, 'utf8');
 
