@@ -175,7 +175,7 @@
       "id": "commercial_launch_ui_implementation",
       "ownerSurface": "apps-web",
       "state": "active",
-      "currentPhaseId": "figma_public_landing_slice",
+      "currentPhaseId": "figma_auth_surface_slice",
       "currentStatus": "not_started",
       "cannotClaim": ["Figma UI implementation complete", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
       "sourceTruth": {
@@ -206,6 +206,7 @@
         },
         {
           "id": "figma_public_landing_slice",
+          "status": "done",
           "objective": "Implement only `/` Public Landing with Figma shape, layout, typography, color, task pills, and interaction rhythm in the current OPL-Webui architecture.",
           "entryCriteria": ["figma_to_code_implementation_map is done", "route truth keeps `/` as Public Growth Landing", "pending task truth is contract-backed"],
           "exitCriteria": ["`/` visually and interactively follows the Figma Public Landing surface", "unauthenticated task entry preserves pending task intent", "no fake result, runtime, storage, payment, or release evidence claim is introduced"],

@@ -255,12 +255,7 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
       id: 'commercial_launch_phase_queue',
       dimension: 'contract',
       status: gap.state === 'active'
-        && (
-          gap.currentPhaseId === 'figma_to_code_implementation_map'
-          || (gap.currentPhaseId === 'figma_public_landing_slice'
-            && implementationMap?.phaseId === 'figma_to_code_implementation_map'
-            && implementationMap?.status === 'done')
-        )
+        && allowedCommercialLaunchCurrentPhase(gap.currentPhaseId, implementationMap)
         && requiredPhaseIds.every((id, index) => phaseIds[index] === id)
         ? 'pass'
         : 'fail',
@@ -284,6 +279,18 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
       doesNotProve: ['mock copy has been removed from implemented UI', 'production readiness', 'runtime/storage ownership'],
     }),
   ];
+}
+
+function allowedCommercialLaunchCurrentPhase(currentPhaseId, implementationMap) {
+  if (currentPhaseId === 'figma_to_code_implementation_map') return true;
+  if (implementationMap?.phaseId !== 'figma_to_code_implementation_map') return false;
+  if (implementationMap?.status !== 'done') return false;
+  return [
+    'figma_public_landing_slice',
+    'figma_auth_surface_slice',
+    'figma_home_workbench_shell_slice',
+    'figma_dialog_sheet_projection_slice',
+  ].includes(currentPhaseId);
 }
 
 function evaluateMedoplReadonlyGap({ release }) {

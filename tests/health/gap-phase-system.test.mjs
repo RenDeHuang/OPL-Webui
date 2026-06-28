@@ -130,6 +130,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'production_ui_evidence').status, 'pass');
   assert.equal(byGap.ui_ux_product_depth.evalResults.find((result) => result.id === 'figma_source_context').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.status, 'not_started');
+  assert.equal(byGap.commercial_launch_ui_implementation.currentPhaseId, 'figma_auth_surface_slice');
   assert.equal(byGap.commercial_launch_ui_implementation.readyToAdvance, false);
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_figma_source').status, 'pass');
   assert.equal(byGap.commercial_launch_ui_implementation.evalResults.find((result) => result.id === 'commercial_launch_phase_queue').status, 'pass');
@@ -201,8 +202,9 @@ test('Commercial Launch UI implementation queue is phase-driven and Figma-source
 
   assert.equal(gap?.state, 'active');
   assert.equal(gap?.ownerSurface, 'apps-web');
-  assert.equal(gap?.currentPhaseId, 'figma_public_landing_slice');
+  assert.equal(gap?.currentPhaseId, 'figma_auth_surface_slice');
   assert.equal(gap?.currentStatus, 'not_started');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'figma_public_landing_slice')?.status, 'done');
   assert.deepEqual(phaseIds, [
     'figma_to_code_implementation_map',
     'figma_public_landing_slice',
