@@ -61,6 +61,9 @@ func (server Server) HandleRuntimeGate(response http.ResponseWriter, request *ht
 	}
 	if blocker, blocked := server.runtimeTaskBlocker(runtimeContext.User.ID); blocked {
 		server.recordRuntimeAudit(runtimeContext.User.ID, "runtime_gate.blocked", runtimeContext.Task, blocker.Kind)
+		if blocker.Kind == "medopl_endpoint_required" {
+			server.recordRuntimeAudit(runtimeContext.User.ID, "runtime_admission.onboarding_required", runtimeContext.Task, blocker.Kind)
+		}
 		projection := localRuntimeBlocker(blocker)
 		server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)
 		writeJSON(response, http.StatusFailedDependency, projection)
@@ -104,6 +107,9 @@ func (server Server) HandleRuntimeRun(response http.ResponseWriter, request *htt
 	status := http.StatusOK
 	if projection["ok"] == false || upstreamStatus == http.StatusFailedDependency {
 		status = http.StatusFailedDependency
+	}
+	if projection["ok"] == true {
+		server.recordRuntimeAudit(runtimeContext.User.ID, "run_intent.accepted", runtimeContext.Task, "")
 	}
 	server.recordRuntimeAudit(runtimeContext.User.ID, auditKindForRunProjection(projection), runtimeContext.Task, "")
 	server.recordTaskProjection(runtimeContext.User, runtimeContext.Task, projection)

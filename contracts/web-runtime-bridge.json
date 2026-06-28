@@ -157,6 +157,62 @@
       "evidence_gap_not_access_policy_gap"
     ]
   },
+  "commercialRuntimeAdmission": {
+    "mode": "commercial_runtime_admission_alignment_v1",
+    "owner": "MedOPL",
+    "consumer": "OPL-Webui production browser E2E and commercial launch onboarding",
+    "ordinaryPath": {
+      "id": "ordinary_path",
+      "marker": "@科研",
+      "requiresRuntime": false,
+      "requiresStorage": false,
+      "expectedEvidence": ["chat.completed", "structured_research_result"],
+      "cannotClaim": ["runtime execution", "storage truth", "artifact body authority"]
+    },
+    "specialistNotReadyPath": {
+      "id": "specialist_not_ready_path",
+      "markers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
+      "gateState": "not_ready",
+      "expectedEvidence": ["runtime_gate.blocked", "typed_blocker_projection", "MedOPL deeplink", "task_history_blocked_projection"],
+      "cannotClaim": ["runtime execution", "storage truth", "artifact body authority", "payment readiness"]
+    },
+    "specialistReadyPath": {
+      "id": "specialist_ready_path",
+      "markers": ["@论文", "@基金", "@综述", "@文件", "@PPT", "@书"],
+      "gateState": "ready",
+      "expectedEvidence": ["runtime_gate.ready", "run_intent.accepted", "runtime_run.projected", "refs_progress_deliverables_projection"],
+      "cannotClaim": ["runtime execution completed", "artifact body authority", "storage truth ownership", "domain verdict authority"]
+    },
+    "onboardingPath": {
+      "id": "onboarding_path",
+      "mode": "OPL-Webui account to MedOPL account/resource onboarding",
+      "expectedEvidence": ["runtime_admission.onboarding_required", "MedOPL deeplink", "no auto run", "no fake result"],
+      "requiredMedOPLProjection": ["account_creation_or_sync_state", "runtime_resource_storage_binding_readiness", "plan_package_credit_state"],
+      "cannotClaim": ["MedOPL account ready", "runtime execution readiness", "payment readiness"]
+    },
+    "dogfoodAccountStrategy": {
+      "currentProductionDogfoodAccount": "must_be_classified_by_live_medopl_runtime_gate_projection",
+      "sharedDogfoodAccountMayBe": ["specialist_not_ready_path", "specialist_ready_path", "onboarding_path"],
+      "productionE2EDefault": "auto_resolve_from_runtime_gate_projection",
+      "dedicatedAccountsRequiredForStrictCommercialAcceptance": ["ordinary_path", "specialist_not_ready_path", "specialist_ready_path", "onboarding_path"],
+      "webuiMustNotAssume": ["always_blocked", "always_ready", "fake_ready", "fake_project_workspace_data"]
+    },
+    "productionE2ESplit": [
+      {"id": "ordinary_path", "entrypoint": "node tests/browser/research-main-path-runner.mjs --production", "asserts": ["@科研 succeeds through ordinary chat", "chat.completed audit exists"]},
+      {"id": "specialist_not_ready_path", "entrypoint": "node tests/browser/research-main-path-runner.mjs --production", "asserts": ["runtime_gate.blocked audit", "typed MedOPL blocker", "deeplink", "no fake result"]},
+      {"id": "specialist_ready_path", "entrypoint": "node tests/browser/research-main-path-runner.mjs --production", "asserts": ["runtime_gate.ready audit", "run_intent.accepted audit", "runtime_run.projected audit", "refs-only projection"]},
+      {"id": "onboarding_path", "entrypoint": "node tests/browser/research-main-path-runner.mjs --production", "asserts": ["runtime_admission.onboarding_required or typed not-ready gate", "MedOPL deeplink", "no auto run"]}
+    ],
+    "medoplRequiredWork": [
+      {
+        "id": "safe_dogfood_provisioning_flow",
+        "owner": "MedOPL",
+        "status": "required_for_dedicated_commercial_e2e_accounts",
+        "requiredProjection": ["dogfood_account_state", "plan_package_credit_state", "runtime_resource_storage_binding_state", "workspace_binding_state"],
+        "doesNotBelongToWebui": ["payment truth", "runtime truth", "storage truth"]
+      }
+    ]
+  },
   "capabilityGoal": {
     "mode": "medopl_authorized_capability_entry_and_refs_projection",
     "userCapabilities": [

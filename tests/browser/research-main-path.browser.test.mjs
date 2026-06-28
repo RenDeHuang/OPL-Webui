@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const runnerPath = 'tests/browser/research-main-path-runner.mjs';
+const runtimeAdmissionHelperPath = 'tests/browser/runtime-admission-helper.mjs';
 const cloudRolloutWorkflowPath = '.github/workflows/cloud-rollout.yml';
 
 test('research main path runs in a real browser and records page-state evidence', { timeout: 180000 }, () => {
@@ -21,11 +22,28 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.pageStates.authState, 'authenticated_bound');
   assert.equal(evidence.pageStates.chatState, 'runtime_required');
   assert.equal(evidence.pageStates.researchResultSections, 3);
-  assert.equal(evidence.pageStates.runtimeTaskMarker, '@基金');
+  assert.ok(
+    ['specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path'].includes(evidence.pageStates.runtimeAdmissionScenario),
+    `unexpected runtime admission scenario: ${evidence.pageStates.runtimeAdmissionScenario}`,
+  );
+  if (evidence.pageStates.runtimeAdmissionScenario === 'specialist_not_ready_path') {
+    assert.equal(evidence.pageStates.runtimeTaskMarker, '@基金');
+    assert.ok(evidence.auditKinds.includes('runtime_gate.blocked'));
+  } else if (evidence.pageStates.runtimeAdmissionScenario === 'specialist_ready_path') {
+    assert.equal(evidence.pageStates.runtimeTaskMarker, '@论文');
+    assert.ok(evidence.auditKinds.includes('runtime_gate.ready'));
+    assert.ok(evidence.auditKinds.includes('run_intent.accepted'));
+    assert.ok(evidence.auditKinds.includes('runtime_run.projected'));
+    assert.equal(evidence.pageStates.runtimeRunProjectionVisible, true);
+    assert.equal(evidence.pageStates.runtimeWebuiArtifactBody, 'forbidden');
+  } else {
+    assert.equal(evidence.pageStates.runtimeTaskMarker, '@论文');
+    assert.ok(evidence.auditKinds.includes('runtime_admission.onboarding_required'));
+  }
   assert.equal(evidence.pageStates.taskHistoryCount >= 2, true);
   assert.equal(evidence.pageStates.taskHistoryStatus, 'blocked');
   assert.match(evidence.pageStates.taskHistoryContinueHref, /^https:\/\/medopl\.medopl\.cn/);
-  assert.deepEqual(evidence.auditKinds.sort(), ['chat.completed', 'runtime_gate.blocked']);
+  assert.ok(evidence.auditKinds.includes('chat.completed'));
   assert.ok(evidence.upstreamRequests >= 1);
   assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');
   assert.deepEqual(evidence.visualQuality.figmaSource, {
@@ -190,14 +208,27 @@ test('production browser e2e waits for API key save completion on already-bound 
   assert.doesNotMatch(runner, /activate\(cdp, '\[data-save-key-button\]'\);\n\s*await waitForAuthState\(cdp, 'authenticated_bound', 'api key binding'\)/);
 });
 
-test('production browser e2e waits for runtime gate audit increments per run', () => {
+test('production browser e2e splits ordinary blocked ready and onboarding runtime admission paths', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const helper = readFileSync(runtimeAdmissionHelperPath, 'utf8');
+  const runtime = readFileSync('contracts/web-runtime-bridge.json', 'utf8');
 
-  assert.match(runner, /const runtimeGateBlockedCount = await auditKindCount\(cdp, 'runtime_gate\.blocked'\)/);
-  assert.match(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 1\)/);
-  assert.match(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 2\)/);
-  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', 1\)/);
-  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', 2\)/);
+  assert.match(runtime, /"commercialRuntimeAdmission"/);
+  assert.match(runtime, /"ordinary_path"/);
+  assert.match(runtime, /"specialist_not_ready_path"/);
+  assert.match(runtime, /"specialist_ready_path"/);
+  assert.match(runtime, /"onboarding_path"/);
+  assert.match(runtime, /"dogfoodAccountStrategy"/);
+  assert.match(runner, /runtime-admission-helper\.mjs/);
+  assert.match(runner, /resolveRuntimeAdmissionScenario/);
+  assert.match(helper, /exerciseSpecialistNotReadyPath/);
+  assert.match(helper, /exerciseSpecialistReadyPath/);
+  assert.match(helper, /exerciseOnboardingPath/);
+  assert.match(helper, /runtime_gate\.ready/);
+  assert.match(helper, /runtime_run\.projected/);
+  assert.match(helper, /runtime_admission\.onboarding_required/);
+  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 1\)/);
+  assert.doesNotMatch(runner, /waitForAuditKindCount\(cdp, 'runtime_gate\.blocked', runtimeGateBlockedCount \+ 2\)/);
 });
 
 test('production browser e2e waits for async research results and reports page evidence', () => {

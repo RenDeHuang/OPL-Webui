@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync 
 import http from 'node:http';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { assertRuntimeAdmissionAuditKinds, exerciseOnboardingPath, exerciseSpecialistNotReadyPath, exerciseSpecialistReadyPath, resolveRuntimeAdmissionScenario } from './runtime-admission-helper.mjs';
 const repoRoot = new URL('../../', import.meta.url).pathname;
 const state = { cleanup: [] }, mode = process.argv.includes('--production') ? 'production' : 'local';
 const productionChatResultTimeoutMs = 120000;
@@ -49,25 +50,23 @@ try {
   await openChatRoute(cdp); await submitResearchPromptWithRetry(cdp);
   await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;` });
 
-  const runtimeGateBlockedCount = await auditKindCount(cdp, 'runtime_gate.blocked');
-  await submitPrompt(cdp, '@论文 生成研究选题和证据计划');
-  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 1);
-  await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible")', 'paper runtime gate');
-  await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@论文"', 'paper runtime task card');
-
-  await submitPrompt(cdp, '@基金 帮我拆解标书结构');
-  await waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 2);
-  await assertPage(cdp, 'document.querySelector("[data-runtime-task-card]")?.dataset.runtimeTaskMarker === "@基金"', 'grant runtime task card');
+  const runtimeAdmission = await resolveRuntimeAdmissionScenario(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
+  if (runtimeAdmission.scenario === 'specialist_ready_path') {
+    await exerciseSpecialistReadyPath(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
+  } else if (runtimeAdmission.scenario === 'onboarding_path') {
+    await exerciseOnboardingPath(cdp, '@论文 生成研究选题和证据计划', runtimeAdmission, runtimeAdmissionTools());
+  } else {
+    await exerciseSpecialistNotReadyPath(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
+    await exerciseSpecialistNotReadyPath(cdp, '@基金 帮我拆解标书结构', runtimeAdmissionTools());
+  }
   await activate(cdp, '[data-shell-action="projects"]');
-  await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 2', () => describePageState(cdp, 'task history center missing recent tasks'));
+  await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 1', () => describePageState(cdp, 'task history center missing recent tasks'));
   await assertPage(cdp, 'document.querySelector("[data-task-history-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'task history continue deeplink');
   await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastTaskHistoryCount = document.querySelectorAll('[data-task-history-item]').length; document.body.dataset.lastTaskHistoryStatus = document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus || ''; document.body.dataset.lastTaskHistoryContinueHref = document.querySelector('[data-task-history-continue]')?.href || '';` });
   await activate(cdp, '[data-shell-action="home"]');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
-  if (!kinds.includes('runtime_gate.blocked')) {
-    throw new Error(`missing runtime_gate.blocked audit evidence: ${kinds.join(',')}`);
-  }
+  assertRuntimeAdmissionAuditKinds(runtimeAdmission.scenario, kinds);
   if (!kinds.includes('chat.completed')) {
     throw new Error(`missing chat.completed audit evidence: ${kinds.join(',')}`);
   }
@@ -79,21 +78,25 @@ try {
     runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
     researchResultSections: Number(document.body.dataset.lastResearchResultSections || document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length),
     runtimeTaskMarker: document.body.dataset.lastRuntimeTaskMarker || document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
+    runtimeAdmissionScenario: ${JSON.stringify(runtimeAdmission.scenario)},
+    runtimeProjectionStatus: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeProjectionStatus || '',
+    runtimeRunProjectionVisible: Boolean(document.querySelector('[data-runtime-run-projection]')),
+    runtimeProgressRefCount: document.querySelectorAll('[data-runtime-progress-refs] li').length,
+    runtimeDeliverableRefCount: document.querySelectorAll('[data-runtime-deliverable-refs] li').length,
+    runtimeWebuiArtifactBody: document.querySelector('[data-runtime-run-projection]')?.dataset.webuiArtifactBody || '',
     taskHistoryCount: Number(document.body.dataset.lastTaskHistoryCount || document.querySelectorAll('[data-task-history-item]').length),
     taskHistoryStatus: document.body.dataset.lastTaskHistoryStatus || document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus,
     taskHistoryContinueHref: document.body.dataset.lastTaskHistoryContinueHref || document.querySelector('[data-task-history-continue]')?.href,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
-  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked'].includes(kind));
+  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked', 'runtime_gate.ready', 'run_intent.accepted', 'runtime_run.projected', 'runtime_admission.onboarding_required'].includes(kind));
   const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
-  console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
+  console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), runtimeAdmission, pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
 } catch (error) {
   console.error(error?.stack || error);
   process.exitCode = 1;
 } finally {
-  for (const cleanup of state.cleanup.reverse()) {
-    await cleanup().catch?.(() => {});
-  }
+  for (const cleanup of state.cleanup.reverse()) await cleanup().catch?.(() => {});
 }
 
 function resolveRunConfig(runMode) {
@@ -144,11 +147,7 @@ async function openAccountPopover(cdp) {
 
 async function openChatRoute(cdp) {
   await activate(cdp, '[data-shell-action="home"]');
-  await waitFor(
-    cdp,
-    'document.body.dataset.view === "home" && document.querySelector("[data-research-task][data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null',
-    () => describePageState(cdp, 'chat route did not expose research launcher'),
-  );
+  await waitFor(cdp, 'document.body.dataset.view === "home" && document.querySelector("[data-research-task][data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null', () => describePageState(cdp, 'chat route did not expose research launcher'));
 }
 async function submitResearchPromptWithRetry(cdp) {
   for (let attempt = 1; attempt <= (mode === 'production' ? productionResearchAttemptLimit : 1); attempt += 1) {
@@ -524,11 +523,7 @@ async function keyPress(cdp, key) {
 }
 
 async function waitFor(cdp, expression, describeFailure, timeoutMs = 30000) {
-  await waitUntil(async () => Boolean((await cdp.send('Runtime.evaluate', {
-    expression,
-    returnByValue: true,
-    awaitPromise: true,
-  })).result?.value), timeoutMs, describeFailure);
+  await waitUntil(async () => Boolean((await cdp.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.value), timeoutMs, describeFailure);
 }
 
 async function assertPage(cdp, expression, label) {
@@ -558,6 +553,10 @@ async function waitForAuditKindCount(cdp, eventKind, count) {
 }
 
 async function auditKindCount(cdp, eventKind) { const audit = await readAuditEvents(cdp); return (audit.events ?? []).filter((event) => event.eventKind === eventKind).length; }
+
+function runtimeAdmissionTools() {
+  return { assertPage, auditKindCount, describePageState, evaluateJSON, submitPrompt, waitFor, waitForAuditKindCount };
+}
 
 async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -913,10 +912,7 @@ function summarizeVisualQualityRubric(viewports, closeout, artifactChecks) {
 }
 
 async function captureScreenshot(cdp, relativePath) {
-  const result = await cdp.send('Page.captureScreenshot', {
-    format: 'png',
-    captureBeyondViewport: true,
-  });
+  const result = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
   if (!result.data) throw new Error(`Page.captureScreenshot did not return data for ${relativePath}`);
   writeFileSync(join(repoRoot, relativePath), Buffer.from(result.data, 'base64'));
 }

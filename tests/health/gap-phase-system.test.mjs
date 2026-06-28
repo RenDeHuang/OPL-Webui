@@ -49,6 +49,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     'commercial_launch_ui_implementation',
     'commercial_launch_readiness_closeout',
     'medopl_readonly_evidence',
+    'commercial_runtime_admission_alignment_v1',
     'runtime_execution_boundary',
     'commercial_saas_depth',
     'operations_maturity',
@@ -104,7 +105,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(
-      !['commercial_launch_readiness_closeout', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      !['commercial_launch_readiness_closeout', 'commercial_runtime_admission_alignment_v1', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
       gap.readyToAdvance,
     );
   }
@@ -146,6 +147,12 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'production_release_authorization').status, 'blocked');
   assert.equal(byGap.commercial_launch_readiness_closeout.evalResults.find((result) => result.id === 'post_release_closeout_authorization').status, 'blocked');
   assert.equal(byGap.medopl_readonly_evidence.evalResults.find((result) => result.id === 'readonly_production_foldback').status, 'pass');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.status, 'blocked');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.currentPhaseId, 'production_e2e_rerun_after_alignment');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.readyToAdvance, false);
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'commercial_runtime_admission_contract').status, 'pass');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'production_browser_e2e_split').status, 'pass');
+  assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'medopl_dogfood_provisioning_gap').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_fail_closed').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_owner_receipt').status, 'pass');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'runtime_command_policy_eval').status, 'pass');
@@ -189,7 +196,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.deepEqual(report.summary, {
     done: 6,
     partial: 1,
-    blocked: 3,
+    blocked: 4,
     not_started: 0,
   });
 });
@@ -269,6 +276,35 @@ test('Commercial Launch readiness closeout queue stops at owner-authorized remot
   assert.ok(gap?.cannotClaim.includes('production-ready claim'));
   assert.ok(gap?.dynamicRetirement.closeCompletedLocalPrep, 'local prep phases must close after completion');
   assert.equal(gap?.dynamicRetirement.releaseEvidenceOnlyInReleaseProfile, true);
+});
+
+test('commercial runtime admission alignment queue splits E2E paths before rerun', async () => {
+  const registry = readJson(registryPath);
+  const gap = registry.gaps.find((item) => item.id === 'commercial_runtime_admission_alignment_v1');
+  const runtime = readJson('contracts/web-runtime-bridge.json');
+  const runnerSource = readFileSync('tests/browser/research-main-path-runner.mjs', 'utf8');
+
+  assert.equal(gap?.state, 'active');
+  assert.equal(gap?.ownerSurface, 'runtime-gate');
+  assert.equal(gap?.currentPhaseId, 'production_e2e_rerun_after_alignment');
+  assert.equal(gap?.currentStatus, 'blocked');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'truth_evidence_alignment')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'production_e2e_rerun_after_alignment')?.ownerReceipt.required, true);
+  assert.deepEqual(gap?.phases.map((phase) => phase.id), ['truth_evidence_alignment', 'production_e2e_rerun_after_alignment']);
+  assert.equal(gap?.dynamicRetirement.doNotTreatBlockedGateAsOnlyCommercialPath, true);
+  assert.equal(runtime.commercialRuntimeAdmission.mode, 'commercial_runtime_admission_alignment_v1');
+  assert.deepEqual(runtime.commercialRuntimeAdmission.productionE2ESplit.map((item) => item.id), ['ordinary_path', 'specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path']);
+  assert.equal(runtime.commercialRuntimeAdmission.dogfoodAccountStrategy.productionE2EDefault, 'auto_resolve_from_runtime_gate_projection');
+  assert.match(runnerSource, /resolveRuntimeAdmissionScenario/);
+  assert.match(runnerSource, /exerciseSpecialistReadyPath/);
+  assert.match(runnerSource, /exerciseOnboardingPath/);
+
+  const runner = await import('../../scripts/gap-phase-runner.mjs');
+  const report = runner.buildPhaseStatusReport(registry);
+  const gapReport = report.gaps.find((item) => item.id === 'commercial_runtime_admission_alignment_v1');
+  assert.equal(gapReport.status, 'blocked');
+  assert.equal(gapReport.readyToAdvance, false);
+  assert.deepEqual(gapReport.readyToAdvanceBlockedBy, []);
 });
 
 test('gap phase runner refuses advancement when a done status lacks required eval evidence', async () => {

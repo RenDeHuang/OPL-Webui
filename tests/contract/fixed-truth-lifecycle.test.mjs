@@ -565,7 +565,7 @@ test('active vision gaps are machine-owned and Figma-gated', () => {
   const { latest, short } = latestEvidence(readJson('contracts/web-release-profile.json'));
 
   assert.deepEqual([product.visionGaps.state, product.visionGaps.haPolicy.state], ['active_gap_acceptance', 'paused']);
-  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'commercial_launch_ui_implementation', 'commercial_launch_readiness_closeout', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
+  assert.deepEqual(product.visionGaps.items.map((gap) => gap.id), ['ui_ux_product_depth', 'commercial_launch_ui_implementation', 'commercial_launch_readiness_closeout', 'commercial_runtime_admission_alignment_v1', 'medopl_readonly_evidence', 'runtime_execution_boundary', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience', 'concurrency_and_load', 'opl_auto_update_from_github']);
   assert.deepEqual([product.commercialLaunchReadiness.ownerVisualAcceptancePrep.ownerAccepted, product.commercialLaunchReadiness.remoteSync.policy.pushRequiresOwnerAuthorization], [false, true]);
   assert.equal(gui.figmaSource.fileKey, '1MNO5l7PQYKZVNqQgw6DGS');
   assert.equal(gui.figmaSource.nodeId, '0:1');

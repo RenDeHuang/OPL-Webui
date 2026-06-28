@@ -16,6 +16,7 @@ import {
   runRuntimeTask,
   runtimeTaskCardForGate,
   runtimeTaskCardForPrompt,
+  runtimeTaskCardForRun,
   saveAPIKey,
   sendChatMessage,
   viewFromHash,
@@ -312,10 +313,11 @@ function renderBlockedView() {
         <small data-reliability-details>该能力需要在 MedOPL 开通后继续。</small>
       </div>
       <article class="runtime-card is-visible" data-runtime-gate>
-        <div data-runtime-task-card="${escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${escapeAttr(taskCard.marker || '')}">
+        <div data-runtime-task-card="${escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${escapeAttr(taskCard.marker || '')}" data-runtime-projection-status="${escapeAttr(taskCard.status || '')}" data-runtime-run-ref="${escapeAttr(taskCard.runRef || '')}">
           <span>runtime admission - 检查清单</span>
           <h2>${escapeHTML(taskCard.title || '需要 MedOPL 授权')}</h2>
           <p>${escapeHTML(taskCard.message || 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。')}</p>
+          ${renderRuntimeProjectionRefs(taskCard)}
           <a href="${escapeAttr(taskCard.deepLink || MEDOPL_DEEP_LINK)}">前往 MedOPL 处理</a>
         </div>
       </article>
@@ -326,6 +328,20 @@ function renderBlockedView() {
         <button type="submit" data-chat-submit aria-label="发送">↑</button>
       </form>
     </section>`;
+}
+
+function renderRuntimeProjectionRefs(taskCard = {}) {
+  const progress = Array.isArray(taskCard.progress) ? taskCard.progress : [];
+  const deliverables = Array.isArray(taskCard.deliverables) ? taskCard.deliverables : [];
+  const artifacts = Array.isArray(taskCard.artifacts) ? taskCard.artifacts : [];
+  if (progress.length === 0 && deliverables.length === 0 && artifacts.length === 0) return '';
+  return `
+    <div class="runtime-projection" data-runtime-run-projection data-webui-artifact-body="${escapeAttr(taskCard.webuiArtifactBody || 'forbidden')}" data-webui-storage-truth="${escapeAttr(taskCard.webuiStorageTruth || 'forbidden')}">
+      <span>refs projection only</span>
+      ${progress.length > 0 ? `<ul data-runtime-progress-refs>${progress.map((item) => `<li>${escapeHTML(item.stage || item.title || item.state || 'progress ref')}</li>`).join('')}</ul>` : ''}
+      ${deliverables.length > 0 ? `<ul data-runtime-deliverable-refs>${deliverables.map((item) => `<li>${escapeHTML(item.deliverableId || item.ref || item.title || item.kind || 'deliverable ref')}</li>`).join('')}</ul>` : ''}
+      ${artifacts.length > 0 ? `<ul data-runtime-artifact-refs>${artifacts.map((item) => `<li>${escapeHTML(item.artifactRef || item.title || item.kind || 'artifact ref')}</li>`).join('')}</ul>` : ''}
+    </div>`;
 }
 
 function renderQuotaView() {
@@ -638,6 +654,9 @@ async function handleRuntimePrompt(message) {
   if (gate.ok && gate.gateState?.ready) {
     const run = await runRuntimeTask(fetch, runtimeTaskFromPrompt(message));
     document.body.dataset.chatState = run.ok ? 'runtime_required' : chatStateForResult(run);
+    if (run.ok) {
+      state.lastRuntimeTaskCard = runtimeTaskCardForRun(message, run) || state.lastRuntimeTaskCard;
+    }
   }
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
   render();

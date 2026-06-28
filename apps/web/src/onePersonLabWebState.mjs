@@ -303,6 +303,26 @@ export function runtimeTaskCardForGate(prompt = '', gate = {}) {
   };
 }
 
+export function runtimeTaskCardForRun(prompt = '', run = {}) {
+  const base = runtimeTaskCardForPrompt(prompt);
+  if (!base) return null;
+  const status = String(run.status || 'projected');
+  const runRef = run.run?.runId || run.run?.runRef || run.artifactRef || '';
+  return {
+    ...base,
+    title: `${base.marker} MedOPL continuation ready`,
+    message: 'MedOPL 已接受运行意图；Web 只显示 refs、progress 和 deliverables projection。',
+    status,
+    runRef,
+    progress: Array.isArray(run.progress) ? run.progress : [],
+    deliverables: Array.isArray(run.deliverables) ? run.deliverables : [],
+    artifacts: Array.isArray(run.artifacts) ? run.artifacts : [],
+    deepLink: safeMedoplDeepLink(run.statusUrl),
+    webuiArtifactBody: 'forbidden',
+    webuiStorageTruth: 'forbidden',
+  };
+}
+
 export function createOnePersonLabViewModel(state) {
   const provider = state.provider?.ok ? state.provider : providerFallback();
   const session = state.session ?? { ok: false };

@@ -36,7 +36,9 @@ test('runtime gate fails closed with typed blocker when MedOPL endpoint is not c
     const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
       headers: { cookie: session.cookieHeader },
     });
-    assert.equal(audit.body.events.map((event) => event.eventKind).includes('runtime_gate.blocked'), true);
+    const auditKinds = audit.body.events.map((event) => event.eventKind);
+    assert.equal(auditKinds.includes('runtime_gate.blocked'), true);
+    assert.equal(auditKinds.includes('runtime_admission.onboarding_required'), true);
     assertNoSensitiveMaterial(gate.body);
   } finally {
     await stopGoServer(child);
@@ -426,6 +428,12 @@ test('runtime run bridge only returns refs progress deliverables and rejects art
     assert.equal(run.body.webuiDomainTruth, 'forbidden');
     assert.equal(medopl.requests.at(-1).path, '/api/opl/runs');
     assert.equal(medopl.requests.at(-1).body.taskIntent, 'paper_question');
+    const audit = await jsonFetch(`${baseUrl}/api/account/audit-events`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    const auditKinds = audit.body.events.map((event) => event.eventKind);
+    assert.equal(auditKinds.includes('run_intent.accepted'), true);
+    assert.equal(auditKinds.includes('runtime_run.projected'), true);
     assertNoSensitiveMaterial(run.body);
     assert.doesNotMatch(JSON.stringify(run.body), /"artifactBody"|"signedUrl"|"objectKey"|"domainVerdict"|must not be returned|object-store/i);
   } finally {

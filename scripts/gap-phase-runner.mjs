@@ -170,6 +170,7 @@ function evaluateGap(gap, phase, context) {
     ui_ux_product_depth: evaluateUiUxGap(context),
     commercial_launch_ui_implementation: evaluateCommercialLaunchUiGap(gap, context),
     commercial_launch_readiness_closeout: evaluateCommercialLaunchReadinessGap(gap, context),
+    commercial_runtime_admission_alignment_v1: evaluateCommercialRuntimeAdmissionGap(gap, context),
     medopl_readonly_evidence: evaluateMedoplReadonlyGap(context),
     runtime_execution_boundary: evaluateRuntimeGap(context),
     commercial_saas_depth: evaluateCommercialGap(context),
@@ -277,6 +278,49 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
         : 'fail',
       proves: ['Figma generated app, mock data, and Admin/Ops scope are barred from product truth'],
       doesNotProve: ['mock copy has been removed from implemented UI', 'production readiness', 'runtime/storage ownership'],
+    }),
+  ];
+}
+
+function evaluateCommercialRuntimeAdmissionGap(gap, { runtime }) {
+  const admission = runtime?.commercialRuntimeAdmission;
+  const runner = existsSync('tests/browser/research-main-path-runner.mjs')
+    ? readFileSync('tests/browser/research-main-path-runner.mjs', 'utf8')
+    : '';
+  const requiredPaths = ['ordinary_path', 'specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path'];
+  return [
+    evalResult({
+      id: 'commercial_runtime_admission_contract',
+      dimension: 'contract',
+      status: admission?.mode === 'commercial_runtime_admission_alignment_v1'
+        && requiredPaths.every((id) => JSON.stringify(admission).includes(id))
+        && admission?.dogfoodAccountStrategy?.productionE2EDefault === 'auto_resolve_from_runtime_gate_projection'
+        ? 'pass'
+        : 'fail',
+      proves: ['commercial runtime admission paths are split into ordinary, blocked, ready, and onboarding scenarios'],
+      doesNotProve: ['production rollout', 'MedOPL account readiness', 'runtime execution completed'],
+    }),
+    evalResult({
+      id: 'production_browser_e2e_split',
+      dimension: 'browser',
+      status: runner.includes('resolveRuntimeAdmissionScenario')
+        && runner.includes('exerciseSpecialistNotReadyPath')
+        && runner.includes('exerciseSpecialistReadyPath')
+        && runner.includes('exerciseOnboardingPath')
+        && !runner.includes("waitForAuditKindCount(cdp, 'runtime_gate.blocked', runtimeGateBlockedCount + 1)")
+        ? 'pass'
+        : 'fail',
+      proves: ['production browser E2E dispatches by MedOPL runtime gate projection instead of assuming blocked'],
+      doesNotProve: ['dedicated dogfood accounts exist', 'payment/runtime/storage ownership', 'production rollout'],
+    }),
+    evalResult({
+      id: 'medopl_dogfood_provisioning_gap',
+      dimension: 'production',
+      status: admission?.medoplRequiredWork?.some((item) => item.id === 'safe_dogfood_provisioning_flow')
+        ? 'pass'
+        : 'fail',
+      proves: ['dedicated MedOPL dogfood provisioning is explicitly owned by MedOPL when needed'],
+      doesNotProve: ['safe dogfood provisioning exists', 'specialist ready account exists', 'payment readiness'],
     }),
   ];
 }

@@ -441,6 +441,54 @@
       ]
     },
     {
+      "id": "commercial_runtime_admission_alignment_v1",
+      "ownerSurface": "runtime-gate",
+      "state": "active",
+      "currentPhaseId": "production_e2e_rerun_after_alignment",
+      "currentStatus": "blocked",
+      "launchBlocking": true,
+      "cannotClaim": ["runtime execution completed", "artifact body authority", "storage truth ownership", "payment readiness", "production-ready SaaS"],
+      "dependsOn": ["commercial_launch_readiness_closeout", "runtime_execution_boundary"],
+      "dynamicRetirement": {
+        "doNotTreatBlockedGateAsOnlyCommercialPath": true,
+        "releaseEvidenceOnlyInReleaseProfile": true,
+        "medoplReadinessSource": "contracts/web-runtime-bridge.json#/commercialRuntimeAdmission",
+        "temporaryArtifacts": [".runtime/browser-visual/*", ".runtime/phase-runs/*", "raw CI output", "release raw logs"]
+      },
+      "phases": [
+        {
+          "id": "truth_evidence_alignment",
+          "status": "done",
+          "objective": "Split commercial runtime admission into ordinary, specialist not-ready, specialist ready, and onboarding paths before rerunning production browser E2E.",
+          "entryCriteria": ["Production Browser E2E failed on hard-coded runtime_gate.blocked wait", "commercial paths require MedOPL readiness projection"],
+          "exitCriteria": ["commercialRuntimeAdmission contract defines ordinary, blocked, ready, and onboarding paths", "production browser runner classifies dogfood account by live MedOPL runtime gate projection", "ready path validates runtime_gate.ready, run_intent.accepted, runtime_run.projected, and refs-only projection", "not-ready and onboarding paths validate typed blockers/deeplinks without fake ready"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_contract", "missing_eval"],
+          "acceptance": ["runtime admission truth is separated from release evidence", "Production Browser E2E is split by scenario instead of hard-coded blocked audit", "MedOPL dogfood provisioning gap is explicit if dedicated accounts are missing"],
+          "nextStepOpeners": ["Rerun production E2E only after this alignment is merged and image is built", "Open MedOPL safe dogfood provisioning if dedicated ready/blocked/onboarding accounts are required"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "this phase aligns existing Web/MedOPL contract and test evidence only"},
+          "requiredEvals": [
+            {"id": "commercial_runtime_admission_contract", "contract": "contracts/web-runtime-bridge.json#/commercialRuntimeAdmission", "proves": ["ordinary blocked ready onboarding runtime admission paths are machine-readable"], "doesNotProve": ["production rollout", "MedOPL account is ready", "runtime execution completed"], "failureBlocks": ["production browser e2e rerun"]},
+            {"id": "production_browser_e2e_split", "contract": "tests/browser/research-main-path-runner.mjs", "proves": ["Production Browser E2E dispatches by MedOPL runtime gate projection"], "doesNotProve": ["all dedicated dogfood accounts exist", "payment/runtime/storage ownership"], "failureBlocks": ["production browser e2e rerun"]}
+          ]
+        },
+        {
+          "id": "production_e2e_rerun_after_alignment",
+          "objective": "After owner authorizes a new release cycle, rerun CI, image, Cloud Rollout, and production browser E2E with aligned runtime admission scenarios.",
+          "entryCriteria": ["truth_evidence_alignment is done", "owner authorizes push and rollout"],
+          "exitCriteria": ["Production Browser E2E passes under one of the contracted runtime admission scenarios", "failed scenario emits typed blocker and owner", "no release evidence foldback unless rollout and production validation pass"],
+          "evidenceSources": ["production_secret_gated", "external_owner"],
+          "blockerTypes": ["missing_owner_receipt", "missing_production_evidence"],
+          "acceptance": ["production E2E result is classified as ordinary, blocked, ready, or onboarding", "release evidence stays in web-release-profile only"],
+          "nextStepOpeners": ["Fold back release evidence after successful rollout and production validation", "Open MedOPL dedicated dogfood provisioning if scenario coverage is incomplete"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "requiredClaim": "owner_authorizes_aligned_runtime_admission_rollout"},
+          "requiredEvals": [
+            {"id": "aligned_production_browser_e2e", "contract": "contracts/web-release-profile.json#/productionBrowserE2EReadiness", "proves": ["production browser E2E passed with aligned runtime admission scenario when folded back"], "doesNotProve": ["runtime execution completed", "production-ready SaaS"], "failureBlocks": ["release evidence foldback"]}
+          ]
+        }
+      ]
+    },
+    {
       "id": "runtime_execution_boundary",
       "ownerSurface": "runtime-gate",
       "state": "closed",
