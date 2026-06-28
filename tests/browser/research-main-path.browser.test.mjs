@@ -175,6 +175,21 @@ test('production browser e2e prepares a browser without sudo and reports startup
   assert.match(runner, /chrome-linux/);
 });
 
+test('commercial cross-repo browser canary is separated from strict ordinary upstream browser e2e', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+  const workflow = readFileSync(cloudRolloutWorkflowPath, 'utf8');
+
+  assert.match(workflow, /commercial_cross_repo_browser_canary:/);
+  assert.match(workflow, /Commercial Cross-Repo Browser Canary/);
+  assert.match(workflow, /OPL_COMMERCIAL_CROSS_REPO_BROWSER_CANARY/);
+  assert.match(workflow, /--commercial-cross-repo-canary/);
+  assert.match(runner, /commercialCrossRepoCanary/);
+  assert.match(runner, /upstream_service_unavailable_fail_closed/);
+  assert.match(runner, /ordinary upstream failure must not show runtime gate/);
+  assert.match(runner, /ordinaryChatOutcome\.state === 'structured_result'/);
+  assert.match(runner, /chat\.upstream_failed/);
+});
+
 test('production browser e2e accepts reusable dogfood accounts that are already key-bound', () => {
   const runner = readFileSync(runnerPath, 'utf8');
 
@@ -233,12 +248,13 @@ test('production browser e2e splits ordinary blocked ready and onboarding runtim
 
 test('production browser e2e waits for async research results and reports page evidence', () => {
   const runner = readFileSync(runnerPath, 'utf8');
-  const markerExpression = '\'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"\'';
 
   assert.match(runner, /document\.fonts\.ready/);
   assert.match(runner, /describeResearchResultState/);
-  assert.doesNotMatch(runner, new RegExp(`assertPage\\(cdp,\\s*${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
-  assert.match(runner, new RegExp(`waitFor\\([\\s\\S]*?cdp,[\\s\\S]*?${markerExpression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?60000`));
+  assert.doesNotMatch(runner, /assertPage\(cdp,[\s\S]*?researchResultMarker === "@科研"/);
+  assert.match(runner, /waitForOrdinaryResearchOutcome/);
+  assert.match(runner, /state\.researchResultMarker === '@科研' && state\.researchResultSections === 3/);
+  assert.match(runner, /state: 'structured_result'/);
   assert.match(runner, /structured research result marker missing/);
   assert.match(runner, /chatLogText/);
   assert.match(runner, /researchResultMarker/);
@@ -273,8 +289,12 @@ test('production browser e2e retries only audited transient upstream failures', 
   assert.match(runner, /chat\.upstream_failed/);
   assert.match(runner, /network.*connect_error.*dns_error.*request_timeout.*response_header_timeout/s);
   assert.match(runner, /waitForAuditKind\(cdp, 'chat\.completed'\)/);
-  assert.match(runner, /structured research result sections missing/);
-  assert.doesNotMatch(runner, /service_unavailable[\s\S]{0,80}ok: true/);
+  assert.match(runner, /structured research result marker missing/);
+  assert.match(runner, /state\.researchResultMarker === '@科研' && state\.researchResultSections === 3/);
+  assert.match(runner, /ordinaryOutcome\.state === 'upstream_service_unavailable_fail_closed' && commercialCrossRepoCanary/);
+  assert.match(runner, /ordinaryOutcome\.state !== 'structured_result'/);
+  assert.match(runner, /throw new Error\(JSON\.stringify\(ordinaryOutcome\)\)/);
+  assert.doesNotMatch(runner, /state: 'upstream_service_unavailable_fail_closed'[\s\S]{0,240}ok: true/);
 });
 
 test('production browser e2e closes account overlays before clicking workbench task launchers', () => {

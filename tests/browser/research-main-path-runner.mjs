@@ -7,13 +7,14 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assertRuntimeAdmissionAuditKinds, exerciseOnboardingPath, exerciseSpecialistNotReadyPath, exerciseSpecialistReadyPath, resolveRuntimeAdmissionScenario } from './runtime-admission-helper.mjs';
 const repoRoot = new URL('../../', import.meta.url).pathname;
-const state = { cleanup: [] }, mode = process.argv.includes('--production') ? 'production' : 'local';
+const commercialCrossRepoCanary = process.argv.includes('--commercial-cross-repo-canary') || process.env.OPL_COMMERCIAL_CROSS_REPO_BROWSER_CANARY === '1';
+const state = { cleanup: [] }, mode = process.argv.includes('--production') || commercialCrossRepoCanary ? 'production' : 'local';
 const productionChatResultTimeoutMs = 120000;
 const productionResearchAttemptLimit = 2, retryableProductionUpstreamKinds = new Set(['network', 'connect_error', 'dns_error', 'request_timeout', 'response_header_timeout']);
 
 try {
-  if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1') {
-    console.log(JSON.stringify({ ok: true, skipped: true, mode, reason: 'OPL_PRODUCTION_BROWSER_E2E is not enabled' }));
+  if (mode === 'production' && process.env.OPL_PRODUCTION_BROWSER_E2E !== '1' && process.env.OPL_COMMERCIAL_CROSS_REPO_BROWSER_CANARY !== '1') {
+    console.log(JSON.stringify({ ok: true, skipped: true, mode, reason: 'production browser gates are not enabled' }));
     process.exit(0);
   }
   const config = resolveRunConfig(mode);
@@ -47,7 +48,8 @@ try {
   await activate(cdp, '[data-save-key-button]');
   await waitForAuditKindCount(cdp, 'api_key.saved', apiKeySaveCount + 1);
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
-  await openChatRoute(cdp); await submitResearchPromptWithRetry(cdp);
+  await openChatRoute(cdp);
+  const ordinaryChatOutcome = await submitResearchPromptWithRetry(cdp);
   await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;` });
 
   const runtimeAdmission = await resolveRuntimeAdmissionScenario(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
@@ -67,8 +69,11 @@ try {
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
   assertRuntimeAdmissionAuditKinds(runtimeAdmission.scenario, kinds);
-  if (!kinds.includes('chat.completed')) {
+  if (ordinaryChatOutcome.state === 'structured_result' && !kinds.includes('chat.completed')) {
     throw new Error(`missing chat.completed audit evidence: ${kinds.join(',')}`);
+  }
+  if (ordinaryChatOutcome.state === 'upstream_service_unavailable_fail_closed' && !kinds.includes('chat.upstream_failed')) {
+    throw new Error(`missing chat.upstream_failed audit evidence: ${kinds.join(',')}`);
   }
   const pageStates = await evaluateJSON(cdp, `({
     authState: document.body.dataset.authState,
@@ -89,9 +94,11 @@ try {
     taskHistoryContinueHref: document.body.dataset.lastTaskHistoryContinueHref || document.querySelector('[data-task-history-continue]')?.href,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
-  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'runtime_gate.blocked', 'runtime_gate.ready', 'run_intent.accepted', 'runtime_run.projected', 'runtime_admission.onboarding_required'].includes(kind));
-  const visualQuality = await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
-  console.log(JSON.stringify({ ok: true, mode, path: 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), runtimeAdmission, pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
+  const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'chat.upstream_failed', 'runtime_gate.blocked', 'runtime_gate.ready', 'run_intent.accepted', 'runtime_run.projected', 'runtime_admission.onboarding_required'].includes(kind));
+  const visualQuality = commercialCrossRepoCanary
+    ? { state: 'not_collected_for_commercial_cross_repo_canary', cannotClaim: ['production visual polish complete', 'strict production browser e2e'] }
+    : await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
+  console.log(JSON.stringify({ ok: true, mode, path: commercialCrossRepoCanary ? 'commercial-cross-repo-browser-canary' : 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), commercialCrossRepoCanary, ordinaryChatOutcome, runtimeAdmission, pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
 } catch (error) {
   console.error(error?.stack || error);
   process.exitCode = 1;
@@ -158,16 +165,35 @@ async function submitResearchPromptWithRetry(cdp) {
     await activate(cdp, '[data-chat-submit]');
     if (mode === 'local') await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
     try {
-      await waitFor(cdp, 'document.querySelector("[data-research-result]")?.dataset.researchResultMarker === "@科研"', () => describeResearchResultState(cdp, 'structured research result marker missing'), mode === 'production' ? productionChatResultTimeoutMs : 60000);
-      await waitFor(cdp, 'document.querySelector("[data-research-result]")?.querySelectorAll("[data-research-result-section]").length === 3', () => describeResearchResultState(cdp, 'structured research result sections missing'), mode === 'production' ? productionChatResultTimeoutMs : 60000);
+      const ordinaryOutcome = await waitForOrdinaryResearchOutcome(cdp);
+      if (ordinaryOutcome.state === 'upstream_service_unavailable_fail_closed' && commercialCrossRepoCanary) {
+        await assertPage(cdp, 'document.querySelector("[data-runtime-gate]")?.classList.contains("is-visible") !== true', 'ordinary upstream failure must not show runtime gate');
+        return ordinaryOutcome;
+      }
+      if (ordinaryOutcome.state !== 'structured_result') {
+        throw new Error(JSON.stringify(ordinaryOutcome));
+      }
       await waitForAuditKind(cdp, 'chat.completed');
-      return;
+      return ordinaryOutcome;
     } catch (error) {
       if (attempt >= productionResearchAttemptLimit || !await retryableProductionUpstreamFailure(cdp)) throw error;
       await activate(cdp, '[data-shell-action="home"]');
       await waitFor(cdp, 'document.body.dataset.view === "home" && document.querySelector("[data-research-task][data-research-task-intent=\\"research_direction\\"]")?.offsetParent !== null');
     }
   }
+}
+
+async function waitForOrdinaryResearchOutcome(cdp) {
+  return waitUntil(async () => {
+    const state = await describeResearchResultState(cdp, 'ordinary research outcome probe').then(JSON.parse);
+    if (state.researchResultMarker === '@科研' && state.researchResultSections === 3) {
+      return { state: 'structured_result', researchResultMarker: state.researchResultMarker, researchResultSections: state.researchResultSections };
+    }
+    const failure = state.audit?.latestUpstreamFailure;
+    if (state.chatState === 'service_unavailable' && failure?.eventKind === 'chat.upstream_failed' && retryableProductionUpstreamKinds.has(failure.metadata?.upstreamKind || '')) return { state: 'upstream_service_unavailable_fail_closed', failureClass: 'chat.upstream_failed', upstreamKind: failure.metadata?.upstreamKind || '', upstreamHost: failure.metadata?.upstreamHost || '', canClaim: ['ordinary path reached authenticated WebUI and failed closed without runtime/storage gate'], cannotClaim: ['ordinary chat completion', 'upstream provider availability'] };
+    if (state.runtimeGateVisible) return { state: 'ordinary_runtime_gate_violation', message: 'ordinary research path showed runtime gate' };
+    return false;
+  }, mode === 'production' && !commercialCrossRepoCanary ? productionChatResultTimeoutMs : 60000, () => describeResearchResultState(cdp, 'structured research result marker missing'));
 }
 async function closeBlockingOverlays(cdp) { for (const selector of ['[data-api-key-dialog-close]', '[data-account-popover-close]']) if (await evaluateJSON(cdp, `(() => { const element = document.querySelector(${JSON.stringify(selector)}); return Boolean(element && element.offsetParent !== null && !element.closest('[hidden]')); })()`)) await activate(cdp, selector); await waitFor(cdp, 'document.querySelector("[data-api-key-dialog]")?.hidden !== false && document.querySelector("[data-account-popover]") === null'); }
 async function retryableProductionUpstreamFailure(cdp) {
@@ -200,18 +226,11 @@ function spawnSyncStatus(command, args) {
 
 function findPlaywrightChromiumBinary() {
   const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH, join(homedir(), '.cache/ms-playwright')].filter(Boolean);
-
   for (const root of roots) {
     if (!existsSync(root)) continue;
-    const browserDirs = readdirSync(root)
-      .filter((entry) => entry.startsWith('chromium-'))
-      .sort()
-      .reverse();
-    for (const dir of browserDirs) {
-      for (const chromeDir of ['chrome-linux64', 'chrome-linux']) {
-        const binary = join(root, dir, chromeDir, 'chrome');
-        if (existsSync(binary)) return binary;
-      }
+    for (const dir of readdirSync(root).filter((entry) => entry.startsWith('chromium-')).sort().reverse()) for (const chromeDir of ['chrome-linux64', 'chrome-linux']) {
+      const binary = join(root, dir, chromeDir, 'chrome');
+      if (existsSync(binary)) return binary;
     }
   }
   return '';
@@ -225,17 +244,11 @@ async function startMockChatUpstream() {
     const body = raw ? JSON.parse(raw) : {};
     requests.push({ path: request.url, body });
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({
-      output_text: 'mock upstream response for research chat',
-    }));
+    response.end(JSON.stringify({ output_text: 'mock upstream response for research chat' }));
   });
   await listen(server);
   const { port } = server.address();
-  return {
-    baseUrl: `http://127.0.0.1:${port}`,
-    requests,
-    close: () => closeServer(server),
-  };
+  return { baseUrl: `http://127.0.0.1:${port}`, requests, close: () => closeServer(server) };
 }
 
 async function startControlPlane(upstreamBaseUrl, cleanup) {
@@ -243,15 +256,11 @@ async function startControlPlane(upstreamBaseUrl, cleanup) {
   const child = spawn('go', ['run', './services/control-plane-go/cmd/opl-webui-control-plane'], {
     cwd: repoRoot,
     env: {
-      ...process.env,
-      HOST: '127.0.0.1',
-      PORT: String(port),
-      OPL_WEBUI_ENV: 'development',
+      ...process.env, HOST: '127.0.0.1', PORT: String(port), OPL_WEBUI_ENV: 'development',
       OPL_SESSION_SECRET: 'browser-e2e-session-secret-32-bytes',
       OPL_API_KEY_ENCRYPTION_SECRET: 'browser-e2e-api-key-secret-32-bytes',
       OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstreamBaseUrl,
-      OPL_CHAT_MODEL: 'browser-e2e-model',
-      OPL_DATABASE_URL: '',
+      OPL_CHAT_MODEL: 'browser-e2e-model', OPL_DATABASE_URL: '',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
@@ -270,15 +279,9 @@ async function startControlPlane(upstreamBaseUrl, cleanup) {
 async function startBrowser(binary) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'opl-browser-e2e-'));
   const child = spawn(binary, [
-    '--headless=new',
-    '--disable-gpu',
-    '--no-sandbox',
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--disable-dev-shm-usage',
-    '--remote-debugging-port=0',
-    `--user-data-dir=${userDataDir}`,
-    'about:blank',
+    '--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run',
+    '--no-default-browser-check', '--disable-dev-shm-usage', '--remote-debugging-port=0',
+    `--user-data-dir=${userDataDir}`, 'about:blank',
   ], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   state.cleanup.push(() => closeChildProcess(child, () => rmSync(userDataDir, { recursive: true, force: true })));
 
@@ -303,14 +306,7 @@ async function startBrowser(binary) {
 }
 
 function browserStartupError(binary, child, output) {
-  return [
-    'browser exited before DevTools became available',
-    `binary: ${binary}`,
-    `exitCode: ${child.exitCode}`,
-    `signalCode: ${child.signalCode || ''}`,
-    `stderr: ${trimProcessOutput(output.stderr.join(''))}`,
-    `stdout: ${trimProcessOutput(output.stdout.join(''))}`,
-  ].join('\n');
+  return ['browser exited before DevTools became available', `binary: ${binary}`, `exitCode: ${child.exitCode}`, `signalCode: ${child.signalCode || ''}`, `stderr: ${trimProcessOutput(output.stderr.join(''))}`, `stdout: ${trimProcessOutput(output.stdout.join(''))}`].join('\n');
 }
 
 async function createPageTarget(devtoolsBaseUrl) {
