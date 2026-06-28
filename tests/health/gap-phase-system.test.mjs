@@ -156,7 +156,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'medopl_dogfood_provisioning_gap').status, 'pass');
   assert.equal(byGap.commercial_runtime_admission_alignment_v1.evalResults.find((result) => result.id === 'aligned_production_browser_e2e').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.status, 'partial');
-  assert.equal(byGap.commercial_product_maturity_gap_v1.currentPhaseId, 'release_security_ci_hardening');
+  assert.equal(byGap.commercial_product_maturity_gap_v1.currentPhaseId, 'ops_diagnostics_and_troubleshooting');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_classification_contract').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'webui_owner_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'blocked');
@@ -321,7 +321,7 @@ test('commercial product maturity gap queue classifies reference-project maturit
 
   assert.equal(gap?.state, 'active');
   assert.equal(gap?.ownerSurface, 'product-boundary');
-  assert.equal(gap?.currentPhaseId, 'release_security_ci_hardening');
+  assert.equal(gap?.currentPhaseId, 'ops_diagnostics_and_troubleshooting');
   assert.equal(gap?.currentStatus, 'partial');
   assert.deepEqual(gap?.phases.map((phase) => phase.id), [
     'maturity_gap_queue_registration',
@@ -330,6 +330,7 @@ test('commercial product maturity gap queue classifies reference-project maturit
     'ops_diagnostics_and_troubleshooting',
   ]);
   assert.equal(gap?.phases.find((phase) => phase.id === 'webui_config_deploy_baseline')?.status, 'done');
+  assert.equal(gap?.phases.find((phase) => phase.id === 'release_security_ci_hardening')?.status, 'done');
   for (const path of [
     'deploy/README.md',
     'deploy/.env.example',

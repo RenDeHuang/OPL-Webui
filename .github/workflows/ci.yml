@@ -29,6 +29,12 @@ jobs:
       - name: Run verify
         run: npm run verify
 
+      - name: Run backend control-plane verify
+        run: npm run verify:backend
+
+      - name: Run security scan
+        run: npm run verify:security
+
       - name: Install Chromium for browser e2e
         run: npx --yes playwright install chromium
 

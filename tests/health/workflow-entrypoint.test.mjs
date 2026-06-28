@@ -18,6 +18,8 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
   assert.equal(pkg.scripts['test:smoke'], 'node scripts/verify.mjs suite smoke');
   assert.equal(pkg.scripts['verify:interaction'], 'node scripts/verify.mjs suite interaction');
+  assert.equal(pkg.scripts['verify:backend'], 'node scripts/verify.mjs suite backend');
+  assert.equal(pkg.scripts['verify:security'], 'node scripts/security-scan.mjs');
   assert.equal(pkg.scripts['verify:go'], 'node scripts/verify.mjs suite go');
   assert.equal(pkg.scripts['verify:browser'], 'node scripts/verify.mjs suite browser');
   assert.equal(pkg.scripts['verify:integration'], 'node scripts/verify.mjs suite integration');
@@ -26,6 +28,8 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['verify:real-medopl'], 'node scripts/verify.mjs suite real-medopl');
   assert.equal(pkg.scripts['verify:full'], 'node scripts/verify.mjs full');
   assert.equal(pkg.scripts['test:interaction'], 'node scripts/verify.mjs suite interaction');
+  assert.equal(pkg.scripts['test:backend'], 'node scripts/verify.mjs suite backend');
+  assert.equal(pkg.scripts['test:security'], 'node scripts/security-scan.mjs');
   assert.equal(pkg.scripts['test:go'], 'node scripts/verify.mjs suite go');
   assert.equal(pkg.scripts['test:browser'], 'node scripts/verify.mjs suite browser');
   assert.equal(pkg.scripts['test:integration'], 'node scripts/verify.mjs suite integration');
@@ -53,6 +57,8 @@ test('github ci workflow runs local gates only', () => {
   assert.match(workflow, /actions\/setup-node/);
   assert.match(workflow, /actions\/setup-go/);
   assert.match(workflow, /npm run verify/);
+  assert.match(workflow, /npm run verify:backend/);
+  assert.match(workflow, /npm run verify:security/);
   assert.match(workflow, /npx --yes playwright install chromium/);
   assert.match(workflow, /npm run verify:browser/);
   assert.match(workflow, /npm run gate:review/);
@@ -62,6 +68,21 @@ test('github ci workflow runs local gates only', () => {
   assert.doesNotMatch(workflow, /cloud-rollout\.mjs/i);
   assert.doesNotMatch(workflow, /docker\s+(?:build|push)/i);
   assert.doesNotMatch(workflow, /KUBECONFIG|TCR_PASSWORD|TCR_USERNAME|secrets\./i);
+});
+
+test('security scan baseline is repo-local and does not require production secrets', () => {
+  assert.equal(existsSync('scripts/security-scan.mjs'), true, 'missing security scan script');
+
+  const script = readFileSync('scripts/security-scan.mjs', 'utf8');
+  assert.match(script, /raw secret/i);
+  assert.match(script, /production mutation/i);
+  assert.match(script, /default PostgreSQL\/Redis/i);
+  assert.doesNotMatch(script, /kubectl\s+apply|docker\s+push|helm\s+upgrade|terraform\s+apply/i);
+
+  const stdout = execFileSync(process.execPath, ['scripts/security-scan.mjs'], {
+    encoding: 'utf8',
+  });
+  assert.match(stdout, /security scan passed/i);
 });
 
 test('github production canary workflow is no-secret availability only', () => {

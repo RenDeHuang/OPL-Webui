@@ -99,6 +99,7 @@ test('verify suites separate daily current from explicit heavy lanes', () => {
   assert.deepEqual(VERIFY_SUITES.contract, ['contract', 'interaction']);
   assert.deepEqual(VERIFY_SUITES.interaction, ['interaction', 'interaction-browser']);
   assert.deepEqual(VERIFY_SUITES.health, ['health-light', 'health']);
+  assert.deepEqual(VERIFY_SUITES.backend, ['go-light']);
   assert.deepEqual(VERIFY_SUITES.go, ['go-light']);
   assert.deepEqual(VERIFY_SUITES.integration, ['integration']);
   assert.deepEqual(VERIFY_SUITES.release, ['release']);
