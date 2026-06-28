@@ -227,6 +227,7 @@ function evaluateUiUxGap({ gui }) {
 
 function evaluateCommercialLaunchUiGap(gap, { product }) {
   const uiTruth = product?.uiSourceTruth;
+  const implementationMap = uiTruth?.implementationMap;
   const phaseIds = gap.phases.map((phase) => phase.id);
   const requiredPhaseIds = [
     'figma_to_code_implementation_map',
@@ -254,7 +255,12 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
       id: 'commercial_launch_phase_queue',
       dimension: 'contract',
       status: gap.state === 'active'
-        && gap.currentPhaseId === 'figma_to_code_implementation_map'
+        && (
+          gap.currentPhaseId === 'figma_to_code_implementation_map'
+          || (gap.currentPhaseId === 'figma_public_landing_slice'
+            && implementationMap?.phaseId === 'figma_to_code_implementation_map'
+            && implementationMap?.status === 'done')
+        )
         && requiredPhaseIds.every((id, index) => phaseIds[index] === id)
         ? 'pass'
         : 'fail',
@@ -268,6 +274,10 @@ function evaluateCommercialLaunchUiGap(gap, { product }) {
         && uiTruth?.implementationBoundary?.doNotVendorGeneratedApp === true
         && uiTruth?.implementationBoundary?.doNotImportFigmaMakeDependencies === true
         && uiTruth?.doesNotApplyTo?.includes('minimal_admin_ops_layer')
+        && (implementationMap?.status !== 'done'
+          || (implementationMap.mockTruthRetirement?.includes('initProjects')
+            && implementationMap.mockTruthRetirement?.includes('mockResult')
+            && implementationMap.forbiddenImplementation?.includes('vendor Figma generated app')))
         ? 'pass'
         : 'fail',
       proves: ['Figma generated app, mock data, and Admin/Ops scope are barred from product truth'],

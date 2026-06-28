@@ -201,7 +201,7 @@ test('Commercial Launch UI implementation queue is phase-driven and Figma-source
 
   assert.equal(gap?.state, 'active');
   assert.equal(gap?.ownerSurface, 'apps-web');
-  assert.equal(gap?.currentPhaseId, 'figma_to_code_implementation_map');
+  assert.equal(gap?.currentPhaseId, 'figma_public_landing_slice');
   assert.equal(gap?.currentStatus, 'not_started');
   assert.deepEqual(phaseIds, [
     'figma_to_code_implementation_map',

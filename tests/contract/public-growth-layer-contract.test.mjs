@@ -104,6 +104,20 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assertIncludesAll(uiTruth.mockTruthPolicy.staticProjectCopyForbiddenAsTruth, ['New project', 'opl', 'medopl', '空项目', '新建项目'], 'Figma mock static copy');
   assertIncludesAll(uiTruth.mockTruthPolicy.mockRuntimeStoragePaymentCopyForbiddenAsTruth, ['runtime completed', 'storage ready', 'artifact body', 'payment status', 'Pro', 'credit', 'recharge'], 'Figma mock capability copy');
   assert.equal(uiTruth.contractProofBoundary.contractTestsReplaceFigmaVisualTruth, false);
+  assert.equal(uiTruth.implementationMap.phaseId, 'figma_to_code_implementation_map');
+  assert.equal(uiTruth.implementationMap.status, 'done');
+  assert.deepEqual(uiTruth.implementationMap.sourceFilesRead, ['src/app/App.tsx', 'src/styles/theme.css']);
+  assertIncludesAll(
+    uiTruth.implementationMap.surfaces.map((surface) => surface.id),
+    ['public_landing', 'auth_surface', 'authenticated_workbench_shell', 'task_launcher_runtime_blocker', 'results_refs_deliverables', 'task_history_continuation', 'dialog_sheet_projection'],
+    'Figma implementation map surface',
+  );
+  assertIncludesAll(
+    uiTruth.implementationMap.mockTruthRetirement,
+    ['initProjects', 'fileItems', 'mockResult', 'quota recharge copy', 'runtime completed copy', 'storage ready copy'],
+    'Figma mock truth retirement',
+  );
+  assert.deepEqual(uiTruth.implementationMap.nextImplementationSlices, ['figma_public_landing_slice', 'figma_auth_surface_slice', 'figma_home_workbench_shell_slice', 'figma_dialog_sheet_projection_slice']);
   assert.equal(gui.uiUxReferenceCandidate, undefined);
   assert.equal(target.id, 'figma_make_ui_ux_for_commercial_launch');
   assert.equal(target.state, 'deployed_replacement_candidate');

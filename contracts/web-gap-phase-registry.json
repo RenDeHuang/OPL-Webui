@@ -175,7 +175,7 @@
       "id": "commercial_launch_ui_implementation",
       "ownerSurface": "apps-web",
       "state": "active",
-      "currentPhaseId": "figma_to_code_implementation_map",
+      "currentPhaseId": "figma_public_landing_slice",
       "currentStatus": "not_started",
       "cannotClaim": ["Figma UI implementation complete", "production rollout", "payment/runtime/storage/full SaaS capability", "Admin/Ops UI", "release evidence changed"],
       "sourceTruth": {
@@ -190,6 +190,7 @@
         {
           "id": "figma_to_code_implementation_map",
           "objective": "Create the Figma-to-code implementation map only; do not implement UI.",
+          "status": "done",
           "entryCriteria": ["Figma Commercial Launch UI source truth is pinned in web-product-profile", "product identity truth remains Web interaction platform / browser entry", "current production UI is not changed by this phase"],
           "exitCriteria": ["Figma section to OPL-Webui route, component, and test mapping is complete", "Figma shape, layout, visual hierarchy, spacing, copy, and interaction rhythm are preserved as implementation requirements", "mock task/runtime/storage/payment truth is explicitly retired or mapped to real Go control plane projection", "implementation slices are explicit and bounded", "Figma generated app is not vendored"],
           "evidenceSources": ["repo_local"],
