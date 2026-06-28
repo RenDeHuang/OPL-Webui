@@ -43,11 +43,11 @@
     "state": "deployed_replacement_candidate",
     "role": "figma_parity_ui_replacement_target",
     "productionEvidence": {
-      "state": "folded_success_run_28310892323",
-      "commit": "807b46ad14ee0f569be6ed19c6d49f5f197e4903",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:807b46a",
-      "runId": 28310892323,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28310892323"
+      "state": "folded_success_run_28311385076",
+      "commit": "b53851a154776cf45a2fbeab843e41ecec4c6d72",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:b53851a",
+      "runId": 28311385076,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28311385076"
     },
     "source": {
       "kind": "figma_make_code_bundle",
@@ -130,7 +130,7 @@
       "zipPrototypeImport": "forbidden",
       "largeDependencyImport": "forbidden",
       "adminOpsImplementation": "forbidden",
-      "releaseEvidenceChange": "folded_after_successful_controlled_launch_run_28310892323",
+      "releaseEvidenceChange": "folded_after_successful_controlled_launch_run_28311385076",
       "allowedNextSlice": "owner_visual_review_or_targeted_ui_hardening",
       "requiresBeforeImplementation": ["wording_rewrite", "page_state_alignment", "registered_contract_or_browser_tests", "repo_bloat_check"]
     }
