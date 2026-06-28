@@ -16,11 +16,36 @@ const {
 } = testClassification;
 
 test('registry covers the current lane model', () => {
-  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression', 'real-medopl']) {
+  for (const lane of [
+    'smoke',
+    'contract',
+    'interaction',
+    'interaction-browser',
+    'health-light',
+    'health',
+    'go-light',
+    'browser',
+    'integration',
+    'release',
+    'regression',
+    'real-medopl',
+  ]) {
     assert.ok(TEST_LANE_REGISTRY[lane], `missing ${lane} lane`);
   }
 
-  for (const lane of ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'real-medopl']) {
+  for (const lane of [
+    'smoke',
+    'contract',
+    'interaction',
+    'interaction-browser',
+    'health-light',
+    'health',
+    'go-light',
+    'browser',
+    'integration',
+    'release',
+    'real-medopl',
+  ]) {
     assert.ok(TEST_LANE_REGISTRY[lane].tests.length > 0, `${lane} lane has no tests`);
   }
 });
@@ -70,9 +95,51 @@ test('registry points only at existing test files', () => {
 });
 
 test('verify suites separate daily current from explicit heavy lanes', () => {
-  assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'contract', 'health', 'go']);
-  assert.deepEqual(VERIFY_SUITES.full, ['smoke', 'contract', 'health', 'go', 'browser', 'deploy', 'regression']);
+  assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'interaction', 'health-light', 'go-light']);
+  assert.deepEqual(VERIFY_SUITES.contract, ['contract', 'interaction']);
+  assert.deepEqual(VERIFY_SUITES.interaction, ['interaction', 'interaction-browser']);
+  assert.deepEqual(VERIFY_SUITES.health, ['health-light', 'health']);
+  assert.deepEqual(VERIFY_SUITES.go, ['go-light']);
+  assert.deepEqual(VERIFY_SUITES.integration, ['integration']);
+  assert.deepEqual(VERIFY_SUITES.release, ['release']);
+  assert.deepEqual(VERIFY_SUITES.deploy, ['release']);
+  assert.deepEqual(VERIFY_SUITES.full, [
+    'smoke',
+    'contract',
+    'interaction',
+    'interaction-browser',
+    'health-light',
+    'health',
+    'go-light',
+    'browser',
+    'integration',
+    'release',
+    'regression',
+  ]);
   assert.deepEqual(VERIFY_SUITES['real-medopl'], ['real-medopl']);
+});
+
+test('current suite excludes runtime release browser and heavy sidecar gates', () => {
+  const forbiddenProofLevels = new Set(['browser', 'production']);
+  const forbiddenRiskTriggers = new Set([
+    'browser-e2e',
+    'cloud-rollout',
+    'deploy',
+    'medopl-real-integration',
+    'runtime-gate',
+    'opl-bridge',
+  ]);
+  const forbiddenLanes = new Set(['browser', 'interaction-browser', 'integration', 'release', 'real-medopl']);
+
+  for (const laneName of VERIFY_SUITES.current) {
+    assert.equal(forbiddenLanes.has(laneName), false, `${laneName} must not run in current`);
+    for (const entry of TEST_LANE_REGISTRY[laneName].tests) {
+      assert.equal(forbiddenProofLevels.has(entry.proofLevel), false, `${entry.file} must not be current proof ${entry.proofLevel}`);
+      for (const risk of entry.riskTriggers) {
+        assert.equal(forbiddenRiskTriggers.has(risk), false, `${entry.file} must not run ${risk} risk in current`);
+      }
+    }
+  }
 });
 
 test('registry publishes the supported taxonomy values', () => {
@@ -142,14 +209,22 @@ test('integration and expensive tests enter current only by explicit reason', ()
 });
 
 test('every current-suite test points back to the current suite', () => {
+  const currentLanes = new Set(VERIFY_SUITES.current);
   for (const laneName of VERIFY_SUITES.current) {
     for (const entry of TEST_LANE_REGISTRY[laneName].tests) {
       assert.ok(entry.verifySuites.includes('current'), `${entry.file} must be in current`);
     }
   }
+
+  for (const [laneName, lane] of Object.entries(TEST_LANE_REGISTRY)) {
+    for (const entry of lane.tests) {
+      if (!entry.verifySuites.includes('current')) continue;
+      assert.equal(currentLanes.has(laneName), true, `${entry.file} declares current but lane ${laneName} is not in current`);
+    }
+  }
 });
 
-test('browser and deploy tests are first-class lanes, not health spillover', () => {
+test('interaction integration release and browser sidecars are first-class lanes, not current spillover', () => {
   const laneFiles = Object.fromEntries(
     Object.entries(TEST_LANE_REGISTRY).map(([laneName, lane]) => [
       laneName,
@@ -157,13 +232,29 @@ test('browser and deploy tests are first-class lanes, not health spillover', () 
     ]),
   );
 
+  assert.ok(laneFiles.interaction.includes('tests/contract/interaction-truth-contract.test.mjs'));
+  assert.ok(laneFiles.interaction.includes('tests/contract/public-growth-layer-contract.test.mjs'));
+  assert.ok(laneFiles['interaction-browser'].includes('tests/browser/public-growth-login-return.browser.test.mjs'));
+  assert.ok(laneFiles['interaction-browser'].includes('tests/browser/interaction-truth.browser.test.mjs'));
   assert.ok(laneFiles.browser.includes('tests/browser/research-main-path.browser.test.mjs'));
-  assert.ok(laneFiles.deploy.includes('tests/deploy/container-readiness.test.mjs'));
-  assert.ok(laneFiles.deploy.includes('tests/contract/web-cloud-deploy-shape.test.mjs'));
-  assert.ok(laneFiles.deploy.includes('tests/contract/cloud-rollout-helper.test.mjs'));
+  assert.ok(laneFiles.integration.includes('tests/contract/medopl-runtime-bridge-contract.test.mjs'));
+  assert.ok(laneFiles.integration.includes('tests/contract/opl-readonly-bridge.test.mjs'));
+  assert.ok(laneFiles.integration.includes('tests/contract/web-runtime-state.test.mjs'));
+  assert.ok(laneFiles.integration.includes('services/control-plane-go/internal/oplbridge/snapshot_test.go'));
+  assert.ok(laneFiles.integration.includes('services/control-plane-go/internal/runtimegate/gate_test.go'));
+  assert.ok(laneFiles.release.includes('tests/deploy/container-readiness.test.mjs'));
+  assert.ok(laneFiles.release.includes('tests/contract/web-cloud-deploy-shape.test.mjs'));
+  assert.ok(laneFiles.release.includes('tests/contract/cloud-rollout-helper.test.mjs'));
+  assert.ok(laneFiles.release.includes('tests/health/workflow-entrypoint.test.mjs'));
+  assert.ok(laneFiles.release.includes('tests/health/ai-development-gate.test.mjs'));
   assert.ok(laneFiles['real-medopl'].includes('tests/real-medopl/real-medopl-business-flow.e2e.test.mjs'));
-  assert.ok(laneFiles.go.includes('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
+  assert.ok(laneFiles['go-light'].includes('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
 
+  const currentFiles = VERIFY_SUITES.current.flatMap((laneName) => laneFiles[laneName]);
+  assert.equal(currentFiles.includes('tests/health/workflow-entrypoint.test.mjs'), false);
+  assert.equal(currentFiles.includes('tests/health/ai-development-gate.test.mjs'), false);
+  assert.equal(currentFiles.includes('tests/contract/medopl-runtime-bridge-contract.test.mjs'), false);
+  assert.equal(currentFiles.includes('services/control-plane-go/internal/runtimegate/gate_test.go'), false);
   assert.equal(laneFiles.health.some((file) => file.startsWith('tests/browser/')), false);
   assert.equal(laneFiles.health.some((file) => file.startsWith('tests/real-medopl/')), false);
   assert.equal(laneFiles.health.includes('tests/deploy/container-readiness.test.mjs'), false);

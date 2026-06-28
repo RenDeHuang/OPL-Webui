@@ -2,7 +2,18 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const TARGET_ORDER = Object.freeze(['smoke', 'contract', 'go', 'browser', 'deploy', 'real-medopl', 'health', 'full']);
+const TARGET_ORDER = Object.freeze([
+  'smoke',
+  'interaction',
+  'contract',
+  'go',
+  'browser',
+  'integration',
+  'real-medopl',
+  'health',
+  'release',
+  'full',
+]);
 
 const RULES = Object.freeze([
   Object.freeze({
@@ -10,25 +21,33 @@ const RULES = Object.freeze([
     matches: (file) => file.startsWith('services/control-plane-go/internal/oplbridge/')
       || file.startsWith('services/control-plane-go/internal/runtimegate/')
       || file === 'contracts/web-runtime-bridge.json',
-    targets: Object.freeze(['contract', 'go', 'full']),
+    targets: Object.freeze(['integration']),
+  }),
+  Object.freeze({
+    name: 'interaction contract',
+    matches: (file) => file === 'contracts/web-interaction-contract.json'
+      || file === 'contracts/web-gui-product-contract.json',
+    targets: Object.freeze(['interaction', 'contract']),
   }),
   Object.freeze({
     name: 'page state contract',
     matches: (file) => file === 'contracts/web-page-state-matrix.json',
-    targets: Object.freeze(['contract', 'browser']),
+    targets: Object.freeze(['interaction', 'contract', 'browser']),
   }),
   Object.freeze({
     name: 'web shell',
     matches: (file) => file.startsWith('apps/web/'),
-    targets: Object.freeze(['smoke', 'browser']),
+    targets: Object.freeze(['smoke', 'interaction', 'browser']),
   }),
   Object.freeze({
     name: 'go control plane',
-    matches: (file) => file.startsWith('services/control-plane-go/'),
+    matches: (file) => file.startsWith('services/control-plane-go/')
+      && !file.startsWith('services/control-plane-go/internal/oplbridge/')
+      && !file.startsWith('services/control-plane-go/internal/runtimegate/'),
     targets: Object.freeze(['contract', 'go']),
   }),
   Object.freeze({
-    name: 'deploy surface',
+    name: 'release surface',
     matches: (file) => file.startsWith('deploy/')
       || file.startsWith('.github/workflows/')
       || file === 'scripts/cloud-rollout.mjs'
@@ -38,11 +57,18 @@ const RULES = Object.freeze([
       || file === '.dockerignore'
       || file === '.dockerignore.cloud'
       || file === 'contracts/web-release-profile.json',
-    targets: Object.freeze(['deploy', 'health']),
+    targets: Object.freeze(['release']),
   }),
   Object.freeze({
     name: 'public contract',
-    matches: (file) => file.startsWith('contracts/') || file.startsWith('tests/contract/'),
+    matches: (file) => (file.startsWith('contracts/') || file.startsWith('tests/contract/'))
+      && file !== 'contracts/web-release-profile.json'
+      && file !== 'contracts/web-runtime-bridge.json'
+      && file !== 'contracts/web-interaction-contract.json'
+      && file !== 'contracts/web-gui-product-contract.json'
+      && file !== 'contracts/web-page-state-matrix.json'
+      && file !== 'contracts/web-development-profile.json'
+      && file !== 'contracts/web-surface-inventory.json',
     targets: Object.freeze(['contract']),
   }),
   Object.freeze({
@@ -53,15 +79,29 @@ const RULES = Object.freeze([
       || file === 'scripts/workflow-gate.mjs'
       || file === 'scripts/lane-advisory.mjs'
       || file === 'scripts/lane-check.mjs'
-      || file === 'scripts/ai-development-gate.mjs'
       || file === 'contracts/web-development-profile.json'
       || file === 'contracts/web-surface-inventory.json'
-      || file.startsWith('tests/health/'),
+      || (file.startsWith('tests/health/') && file !== 'tests/health/ai-development-gate.test.mjs' && file !== 'tests/health/workflow-entrypoint.test.mjs'),
     targets: Object.freeze(['health']),
   }),
   Object.freeze({
+    name: 'release workflow',
+    matches: (file) => file === 'scripts/ai-development-gate.mjs'
+      || file === 'tests/health/ai-development-gate.test.mjs'
+      || file === 'tests/health/workflow-entrypoint.test.mjs',
+    targets: Object.freeze(['release']),
+  }),
+  Object.freeze({
+    name: 'interaction browser test',
+    matches: (file) => file === 'tests/browser/public-growth-login-return.browser.test.mjs'
+      || file === 'tests/browser/interaction-truth.browser.test.mjs',
+    targets: Object.freeze(['interaction', 'browser']),
+  }),
+  Object.freeze({
     name: 'browser test',
-    matches: (file) => file.startsWith('tests/browser/'),
+    matches: (file) => file.startsWith('tests/browser/')
+      && file !== 'tests/browser/public-growth-login-return.browser.test.mjs'
+      && file !== 'tests/browser/interaction-truth.browser.test.mjs',
     targets: Object.freeze(['browser']),
   }),
   Object.freeze({
@@ -76,7 +116,9 @@ const RULES = Object.freeze([
   }),
   Object.freeze({
     name: 'go test',
-    matches: (file) => file.endsWith('_test.go'),
+    matches: (file) => file.endsWith('_test.go')
+      && !file.startsWith('services/control-plane-go/internal/oplbridge/')
+      && !file.startsWith('services/control-plane-go/internal/runtimegate/'),
     targets: Object.freeze(['go']),
   }),
 ]);

@@ -9,11 +9,11 @@ import {
 test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'apps/web/src/onePersonLabWeb.mjs',
-  ]), ['smoke', 'browser']);
+  ]), ['smoke', 'interaction', 'browser']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'contracts/web-page-state-matrix.json',
-  ]), ['contract', 'browser']);
+  ]), ['interaction', 'contract', 'browser']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'services/control-plane-go/internal/webapp/handlers.go',
@@ -22,25 +22,25 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     '.github/workflows/cloud-rollout.yml',
     'scripts/cloud-rollout.mjs',
-  ]), ['deploy', 'health']);
+  ]), ['release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'services/control-plane-go/internal/oplbridge/snapshot.go',
-  ]), ['contract', 'go', 'full']);
+  ]), ['integration']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'contracts/web-development-profile.json',
     'scripts/ai-development-gate.mjs',
-  ]), ['contract', 'health']);
+  ]), ['health', 'release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'contracts/web-surface-inventory.json',
-  ]), ['contract', 'health']);
+  ]), ['health']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'scripts/release-evidence-sync.mjs',
     'contracts/web-release-profile.json',
-  ]), ['contract', 'deploy', 'health']);
+  ]), ['release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'tests/real-medopl/real-medopl-business-flow.e2e.test.mjs',
@@ -56,5 +56,5 @@ test('lane advisory CLI reports suggestions without failing the gate', () => {
 
   assert.match(stdout, /\[lane-advisory\]/);
   assert.match(stdout, /npm run verify:browser/);
-  assert.match(stdout, /npm run verify:deploy/);
+  assert.match(stdout, /npm run verify:release/);
 });
