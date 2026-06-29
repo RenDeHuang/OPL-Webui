@@ -55,7 +55,7 @@ try {
   await waitFor(cdp, `document.querySelector("[data-app-shell]")?.offsetParent !== null
     && document.body.dataset.researchTaskIntent === "grant_plan"
     && document.querySelector("#chat-input")?.value?.startsWith("@基金") === true
-    && document.querySelector("[data-side-navigation]")?.textContent.includes("项目 / 窗口")`);
+    && document.querySelector("[data-side-navigation]")?.textContent.includes("项目")`);
   const workbenchEvidence = await workbenchState(cdp);
   const afterAuthBase = await pageState(cdp, {
     ...workbenchEvidence,
@@ -111,17 +111,23 @@ async function commercialProductControlsState(cdp) {
   })()`);
   await activate(cdp, '[data-model-option="auto"]');
 
-  await activate(cdp, '[data-plus-menu-trigger]');
-  await waitFor(cdp, visibleSelectorExpression('[data-plus-menu]'));
-  const plusMenu = await evaluateJSON(cdp, `(() => {
-    const actions = Array.from(document.querySelectorAll('[data-plus-action]')).map((node) => node.dataset.plusAction);
+  const plusFileAttachTriggerVisible = await isVisible(cdp, '[data-plus-file-trigger]');
+  await activate(cdp, '[data-plus-file-trigger]');
+  await waitFor(cdp, 'document.body.dataset.shellState === "blocked_turn" && document.querySelector("[data-runtime-task-marker]")?.dataset.runtimeTaskMarker === "@文件"');
+  const plusFileAttach = await evaluateJSON(cdp, `(() => {
     return {
-      open: Boolean(document.querySelector('[data-plus-menu]') && !document.querySelector('[data-plus-menu]').hidden),
-      actions,
-      deadClick: actions.length === 0,
+      triggerVisible: ${JSON.stringify(plusFileAttachTriggerVisible)},
+      marker: document.querySelector('[data-runtime-task-marker]')?.dataset.runtimeTaskMarker || '',
+      runtimeHandoffVisible: Boolean(document.querySelector('[data-runtime-gate]')),
+      forbiddenMixedActionsVisible: Boolean(document.querySelector('[data-plus-action="import_skill"], [data-plus-action="bind_api_key"], [data-plus-action="select_model"], [data-plus-action="new_window"], [data-plus-menu]')),
+      deadClick: !document.querySelector('[data-runtime-gate]'),
     };
   })()`);
-  await activate(cdp, '[data-plus-action="import_skill"]');
+  await activate(cdp, '[data-shell-action="home"]');
+  await waitFor(cdp, 'document.body.dataset.shellState === "home_default"');
+  await activate(cdp, '[data-shell-action="skills"]');
+  await waitFor(cdp, 'document.body.dataset.shellState === "skill_plaza"');
+  await activate(cdp, '[data-skill-import-open]');
   await waitFor(cdp, 'document.body.dataset.skillImportState === "select"');
 
   await activate(cdp, '[data-skill-import-trigger]');
@@ -135,7 +141,7 @@ async function commercialProductControlsState(cdp) {
   return {
     commercialProductControls: {
       modelSelector,
-      plusMenu,
+      plusFileAttach,
       skillImport,
     },
   };

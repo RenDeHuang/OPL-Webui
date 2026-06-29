@@ -71,6 +71,15 @@
   justify-content: space-between;
   padding: 9px 12px 5px;
 }
+.tree-heading-action {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  width: 100%;
+}
+.tree-heading-action:hover {
+  background: var(--sidebar-accent);
+}
 .tree-heading span {
   color: var(--muted-foreground);
   font-family: "Geist Mono", monospace;

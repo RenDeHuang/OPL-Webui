@@ -153,6 +153,8 @@ test('model provider binding stores user API key without returning raw secret', 
     assert.equal(saved.response.status, 200);
     assert.equal(saved.body.provider, 'gflabtoken');
     assert.equal(saved.body.baseUrl, 'https://gflabtoken.cn/v1');
+    assert.equal(saved.body.model, 'gpt-5.5');
+    assert.equal(saved.body.modelConfigSource, 'OPL_CHAT_MODEL');
     assert.equal(saved.body.apiKeyConfigured, true);
     assert.match(saved.body.maskedKey, /^sk-\*\*\*/);
     assertNoSensitiveMaterial(saved.body);
@@ -162,6 +164,8 @@ test('model provider binding stores user API key without returning raw secret', 
     });
     assert.equal(loaded.response.status, 200);
     assert.equal(loaded.body.baseUrl, 'https://gflabtoken.cn/v1');
+    assert.equal(loaded.body.model, 'gpt-5.5');
+    assert.equal(loaded.body.modelConfigSource, 'OPL_CHAT_MODEL');
     assert.equal(loaded.body.maskedKey, saved.body.maskedKey);
     assertNoSensitiveMaterial(loaded.body);
   } finally {

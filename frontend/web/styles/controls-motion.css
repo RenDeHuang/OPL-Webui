@@ -18,8 +18,16 @@
   background: var(--card);
   border: 1px solid var(--border);
 }
+.static-chip {
+  color: rgba(28, 26, 23, 0.68);
+  cursor: default;
+  user-select: none;
+}
 .secondary-button:hover, .icon-button:hover, .file-library header button:hover, .plaza-view header button:hover {
   background: var(--muted);
+}
+.static-chip:hover {
+  background: var(--card);
 }
 .text-button {
   background: transparent;

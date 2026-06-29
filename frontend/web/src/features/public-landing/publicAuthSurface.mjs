@@ -59,6 +59,7 @@ function renderAuthPage(state, { escapeAttr }) {
             <button type="button" data-auth-tab="register" aria-selected="${String(isRegister)}">注册</button>
           </div>
           <form class="auth-form" data-auth-form>
+            <p class="form-message auth-start-message" data-auth-start-message>请先注册或登录后继续</p>
             <label for="auth-email">邮箱</label>
             <div class="field-with-icon"><span aria-hidden="true">@</span><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="researcher@lab.edu" value="${escapeAttr(state.authForm.email)}"></div>
             <label for="auth-password">密码</label>

@@ -9,7 +9,7 @@ export function renderProjectWindowCenter(view, helpers) {
       <header><h1>项目 / 窗口</h1><button type="button" data-shell-action="home">新建窗口</button></header>
       <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
       <div class="file-list" data-project-window-list>
-        ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map((task) => renderProjectWindowCard(task, helpers)).join('')}
+        ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。开始一次任务后会显示可继续的窗口。</p>' : tasks.map((task) => renderProjectWindowCard(task, helpers)).join('')}
       </div>
     </section>`;
 }
@@ -52,7 +52,7 @@ export function renderInspector(state, helpers) {
   const snapshot = activeInspectorSnapshot(state);
   return `
     <aside class="inspector-sheet" data-inspector-sheet data-inspector-state="${helpers.escapeAttr(state.inspectorTab)}" data-responsive-placement="bottom_sheet" data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>Inspector</span><button type="button" data-inspector-close aria-label="关闭检查器">x</button></header>
+      <header><span>文件 / 上下文</span><button type="button" data-inspector-close aria-label="关闭文件面板">x</button></header>
       <div class="inspector-tabs" role="tablist">
         ${INSPECTOR_TABS.map((tab) => `<button type="button" data-inspector-tab="${tab}" aria-selected="${String(state.inspectorTab === tab)}">${tabLabel(tab)}</button>`).join('')}
       </div>
@@ -83,8 +83,9 @@ export function renderInspector(state, helpers) {
 }
 
 export function renderModelMenu(state, helpers) {
+  const configuredModel = state.view?.modelSelector?.model || 'gpt-5.5';
   const profiles = [
-    ['auto', '自动', '根据任务和账号能力选择可用模型'],
+    ['auto', `当前配置：${configuredModel}`, '由 config.toml / OPL_CHAT_MODEL 决定'],
     ['fast', '快速', '适合轻量问答和草稿'],
     ['deep', '深度', '适合复杂科研推理，实际可用性由账号能力决定'],
   ];
@@ -94,27 +95,6 @@ export function renderModelMenu(state, helpers) {
       <div class="plaza-grid" role="listbox" aria-label="选择模型配置">
         ${profiles.map(([id, label, description]) => `
           <button type="button" class="secondary-button full" role="option" data-model-option="${id}" aria-selected="${String(state.selectedModelProfile === id)}">
-            ${helpers.escapeHTML(label)}<small>${helpers.escapeHTML(description)}</small>
-          </button>
-        `).join('')}
-      </div>
-    </aside>`;
-}
-
-export function renderPlusMenu(helpers) {
-  const actions = [
-    ['new_window', '新窗口', '创建新的本地对话窗口'],
-    ['attach_file', '上传/文件', '需要 MedOPL 资源路径'],
-    ['import_skill', '导入 Skill', '校验 OPL 或个人 Skill manifest'],
-    ['bind_api_key', 'API Key', '打开账号能力绑定'],
-    ['select_model', '选择模型', '切换可用模型配置'],
-  ];
-  return `
-    <aside class="account-popover" data-plus-menu data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>添加</span><button type="button" data-plus-menu-close aria-label="关闭添加菜单">x</button></header>
-      <div class="plaza-grid">
-        ${actions.map(([id, label, description]) => `
-          <button type="button" class="secondary-button full" data-plus-action="${id}">
             ${helpers.escapeHTML(label)}<small>${helpers.escapeHTML(description)}</small>
           </button>
         `).join('')}
@@ -194,9 +174,15 @@ export function projectWindowTitle(task = {}) {
   return `${task.marker || ''} ${task.taskType || task.taskIntent || '窗口'}`.trim();
 }
 
-export function modelProfileLabel(selectedModelProfile) {
-  const labels = { auto: '模型：自动', fast: '模型：快速', deep: '模型：深度' };
-  return labels[selectedModelProfile] || labels.auto;
+export function modelProfileLabel(stateOrProfile) {
+  const selected = typeof stateOrProfile === 'string' ? stateOrProfile : stateOrProfile?.selectedModelProfile;
+  const configuredModel = typeof stateOrProfile === 'object' ? stateOrProfile.view?.modelSelector?.model : '';
+  const labels = {
+    auto: `模型：${configuredModel || 'gpt-5.5'}`,
+    fast: '模型：快速配置',
+    deep: '模型：深度配置',
+  };
+  return labels[selected] || labels.auto;
 }
 
 function tabLabel(tab) {
