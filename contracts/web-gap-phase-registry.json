@@ -383,15 +383,13 @@
       "id": "commercial_product_user_journey_depth_v1",
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
-      "currentPhaseId": "product_acceptance_browser_e2e",
+      "currentPhaseId": "skill_model_plus_toolbar_slice",
       "currentStatus": "partial",
       "launchBlocking": false,
       "cannotClaim": [
         "commercial product journey complete",
         "dedicated project/window persistence API",
         "token streaming implemented",
-        "Skill import implemented",
-        "model selection implemented",
         "production-ready SaaS"
       ],
       "dynamicRetirement": {
@@ -521,7 +519,7 @@
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_projection", "missing_browser_e2e"],
           "acceptance": ["continuation is clear", "refs-only boundary remains", "no artifact body is returned"],
-          "nextStepOpeners": ["open product_acceptance_browser_e2e after returning continuation evidence passes"],
+          "nextStepOpeners": ["open skill_model_plus_toolbar_slice after returning continuation evidence passes"],
           "ownerReceipt": {"required": false, "source": "repo_local", "reason": "projection and browser evidence first"},
           "requiredEvals": [
             {
@@ -533,6 +531,7 @@
             }
           ]
         },
+        {"id":"skill_model_plus_toolbar_slice","status":"done","objective":"Make model selector, plus menu, and Skill import real typed Webui controls without claiming model inventory, runtime upload, or Skill execution.","entryCriteria":["task_continuation_history evidence exists"],"exitCriteria":["model selector opens and hides base_url/fake model identity","plus menu exposes typed actions and no dead click","Skill import exposes select/validate/error states without fake success"],"evidenceSources":["repo_local","browser"],"blockerTypes":["missing_browser_e2e"],"acceptance":["model selector is selectable profile only","plus menu actions are typed","Skill import failure is explicit and does not fake imported state","runtime/file actions hand off instead of Web-owned execution"],"nextStepOpeners":["open streaming_chat_turns before final product acceptance","open product_acceptance_browser_e2e after all Web-owned journey gaps close"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"typed controls and browser evidence only; owner visual copy review remains external"},"requiredEvals":[{"id":"skill_model_plus_browser_e2e","contract":"tests/browser/interaction-truth.browser.test.mjs","proves":["model selector, plus menu, and Skill import typed states work in browser"],"doesNotProve":["real model inventory","Skill execution","runtime file upload","production-ready SaaS"],"failureBlocks":["skill/model/plus product control claim"]}]},
         {
           "id": "product_acceptance_browser_e2e",
           "status": "not_started",

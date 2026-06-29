@@ -743,17 +743,13 @@ async function setViewport(cdp, viewport) {
     deviceScaleFactor: viewport.deviceScaleFactor,
     mobile: viewport.mobile,
   });
-  await cdp.send('Runtime.evaluate', {
-    expression: 'window.scrollTo(0, 0)',
-    awaitPromise: true,
-  });
+  await cdp.send('Runtime.evaluate', { expression: 'window.scrollTo(0, 0)', awaitPromise: true });
   await delay(150);
 }
 
 async function readVisualLayout(cdp) {
   await focusElement(cdp, '#chat-input');
-  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
-  await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+  await focusToolbarSubmit(cdp);
   return evaluateJSON(cdp, `(async () => {
     const rectJSON = (element) => {
       if (!element) return null;
@@ -888,6 +884,13 @@ async function readVisualLayout(cdp) {
       },
     };
   })()`);
+}
+
+async function focusToolbarSubmit(cdp) {
+  for (let attempt = 0; attempt < 8 && !(await evaluateJSON(cdp, 'document.activeElement?.matches("[data-chat-submit]") === true')); attempt += 1) {
+    await keyPress(cdp, { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 });
+  }
+  if (!(await evaluateJSON(cdp, 'document.activeElement?.matches("[data-chat-submit]") === true'))) throw new Error(await describePageState(cdp, 'toolbar submit did not receive keyboard focus'));
 }
 
 function summarizeAccessibilityChecks(viewports, closeout) {

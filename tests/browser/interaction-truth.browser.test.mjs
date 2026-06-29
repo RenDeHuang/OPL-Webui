@@ -94,6 +94,29 @@ function collectViolations(evidence) {
         && evidence.afterAuth.workbench.searchTriggerVisible === true,
     },
     {
+      label: 'model selector must be a real Webui control without visible fake model identity',
+      pass: evidence.afterAuth.commercialProductControls.modelSelector.open === true
+        && evidence.afterAuth.commercialProductControls.modelSelector.selected === 'auto'
+        && evidence.afterAuth.commercialProductControls.modelSelector.baseUrlVisible === false
+        && !/5\.5\s*超高|gpt-?5/i.test(evidence.afterAuth.commercialProductControls.modelSelector.text),
+    },
+    {
+      label: 'plus menu must open typed actions instead of acting as a dead button',
+      pass: evidence.afterAuth.commercialProductControls.plusMenu.open === true
+        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('attach_file')
+        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('import_skill')
+        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('bind_api_key')
+        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('select_model')
+        && evidence.afterAuth.commercialProductControls.plusMenu.deadClick === false,
+    },
+    {
+      label: 'skill import must expose select validate error states without fake import success',
+      pass: evidence.afterAuth.commercialProductControls.skillImport.states.includes('select')
+        && evidence.afterAuth.commercialProductControls.skillImport.states.includes('validate')
+        && evidence.afterAuth.commercialProductControls.skillImport.states.includes('error')
+        && evidence.afterAuth.commercialProductControls.skillImport.fakeImported === false,
+    },
+    {
       label: 'search sheet must follow Figma projection slice and close with Escape',
       pass: evidence.afterAuth.dialogSheetProjection.searchOpen.slice === 'figma_dialog_sheet_projection_slice'
         && evidence.afterAuth.dialogSheetProjection.searchOpen.visible === true

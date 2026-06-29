@@ -64,9 +64,11 @@ try {
     projectWindowItems: await count(cdp, '[data-project-window-item]'),
   });
   const projectionEvidence = await dialogSheetProjectionState(cdp);
+  const controlsEvidence = await commercialProductControlsState(cdp);
   const afterAuth = {
     ...afterAuthBase,
     ...projectionEvidence,
+    ...controlsEvidence,
   };
 
   console.log(JSON.stringify({
@@ -93,6 +95,50 @@ try {
   for (const cleanup of state.cleanup.reverse()) {
     await cleanup().catch?.(() => {});
   }
+}
+
+async function commercialProductControlsState(cdp) {
+  await activate(cdp, '[data-model-selector]');
+  await waitFor(cdp, visibleSelectorExpression('[data-model-menu]'));
+  const modelSelector = await evaluateJSON(cdp, `(() => {
+    const menu = document.querySelector('[data-model-menu]');
+    return {
+      open: Boolean(menu && !menu.hidden),
+      selected: document.querySelector('[data-model-option][aria-selected="true"]')?.dataset.modelOption || '',
+      text: menu?.textContent || '',
+      baseUrlVisible: /base_url|gateway|gflabtoken|https?:\\/\\//i.test(menu?.textContent || ''),
+    };
+  })()`);
+  await activate(cdp, '[data-model-option="auto"]');
+
+  await activate(cdp, '[data-plus-menu-trigger]');
+  await waitFor(cdp, visibleSelectorExpression('[data-plus-menu]'));
+  const plusMenu = await evaluateJSON(cdp, `(() => {
+    const actions = Array.from(document.querySelectorAll('[data-plus-action]')).map((node) => node.dataset.plusAction);
+    return {
+      open: Boolean(document.querySelector('[data-plus-menu]') && !document.querySelector('[data-plus-menu]').hidden),
+      actions,
+      deadClick: actions.length === 0,
+    };
+  })()`);
+  await activate(cdp, '[data-plus-action="import_skill"]');
+  await waitFor(cdp, 'document.body.dataset.skillImportState === "select"');
+
+  await activate(cdp, '[data-skill-import-trigger]');
+  await waitFor(cdp, '["validate","error"].includes(document.body.dataset.skillImportState)');
+  const skillImport = await evaluateJSON(cdp, `(() => ({
+    states: (document.body.dataset.skillImportStates || '').split(',').filter(Boolean),
+    fakeImported: document.body.dataset.skillImportState === 'imported' && !document.querySelector('[data-skill-import-source]'),
+  }))()`);
+  await activate(cdp, '[data-skill-import-close]');
+
+  return {
+    commercialProductControls: {
+      modelSelector,
+      plusMenu,
+      skillImport,
+    },
+  };
 }
 
 async function pageState(cdp, extra = {}) {

@@ -173,7 +173,7 @@ test('commercial product user journey depth is admitted separately from interact
   const depth = product.commercialProductUserJourneyDepth;
 
   assert.equal(depth.state, 'active_gap_admitted');
-  assert.equal(depth.currentProductValueStatus, 'partial_returning_continuation_repo_browser_done');
+  assert.equal(depth.currentProductValueStatus, 'partial_skill_model_plus_repo_browser_done');
   assert.equal(depth.interactionCompleteDoesNotProveProductValueComplete, true);
   assert.deepEqual(depth.journeyOrder, [
     'visitor',
@@ -201,9 +201,14 @@ test('commercial product user journey depth is admitted separately from interact
   assertIncludesAll(depth.skillSurface.importStates, ['select', 'validate', 'imported', 'error'], 'skill import state');
   assertIncludesAll(depth.inspectorAutonomy.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'autonomy inspector signal');
   assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_menu'], 'toolbar control');
-  assertIncludesAll(depth.webOwnedGaps, ['streaming_chat_turns', 'skill_import', 'model_selector', 'plus_menu'], 'Web-owned product journey gap');
+  assert.equal(depth.modelAndPlusToolbar.status, 'repo_browser_done_v1');
+  assert.equal(depth.skillSurface.status, 'repo_browser_typed_import_error_v1');
+  assertIncludesAll(depth.webOwnedGaps, ['streaming_chat_turns', 'product_acceptance_browser_e2e'], 'Web-owned product journey gap');
+  assert.equal(depth.webOwnedGaps.includes('skill_import'), false);
+  assert.equal(depth.webOwnedGaps.includes('model_selector'), false);
+  assert.equal(depth.webOwnedGaps.includes('plus_menu'), false);
   assert.equal(depth.webOwnedGaps.includes('autonomy_inspector'), false);
   assertIncludesAll(depth.medoplOwned, ['runtime_readiness', 'storage_resource_binding', 'billing_payment_truth', 'file_runtime_processing'], 'MedOPL-owned product journey item');
   assertIncludesAll(depth.ownerVisualCopyReview, ['reduce_primary_surface_explanatory_copy', 'project_window_language', 'medopl_conversion_copy', 'inspector_information_density'], 'owner copy review item');
-  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'dedicated project/window persistence API', 'token streaming implemented', 'Skill import implemented', 'model selection implemented', 'production-ready SaaS'], 'product journey cannot claim');
+  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'dedicated project/window persistence API', 'token streaming implemented', 'production-ready SaaS'], 'product journey cannot claim');
 });

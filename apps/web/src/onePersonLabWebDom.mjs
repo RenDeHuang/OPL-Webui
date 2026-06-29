@@ -23,10 +23,14 @@ import {
 } from './onePersonLabWebState.mjs';
 import {
   INSPECTOR_TABS,
+  modelProfileLabel,
   projectWindowTitle,
   renderInspector,
+  renderModelMenu,
+  renderPlusMenu,
   renderProjectWindowCenter,
   renderSearchSheet,
+  renderSkillImportDialog,
 } from './onePersonLabWebContinuation.mjs';
 
 const app = typeof document === 'undefined' ? null : document.querySelector('#app');
@@ -39,7 +43,12 @@ const state = {
   showSearch: false,
   showBilling: false,
   showInspector: false,
+  showModelMenu: false,
+  showPlusMenu: false,
+  showSkillImport: false,
   inspectorTab: 'autonomy',
+  selectedModelProfile: 'auto',
+  skillImportState: 'idle',
   activeConversationId: '',
   activeConversationMeta: null,
   messages: [],
@@ -178,6 +187,7 @@ function renderAuthenticated() {
       </div>
       ${state.showSearch ? renderSearchSheet(state.view, domHelpers()) : ''}
       ${state.showBilling ? renderBillingSummary() : ''}
+      ${state.showSkillImport ? renderSkillImportDialog(state, domHelpers()) : ''}
       ${renderAPIKeyDialog()}
       <button class="auth-account-toggle-sentinel" type="button" data-logout-button data-authenticated-logout-sentinel tabindex="-1" aria-hidden="true" aria-label="退出登录"></button>
     </div>`;
@@ -238,9 +248,11 @@ function renderHomeComposer() {
         <input id="chat-input" class="composer-input" placeholder="随心输入" aria-label="选择一个任务入口或直接输入问题">
       </form>
       <div class="composer-toolbar" data-composer-toolbar>
-        <button type="button" class="icon-button" aria-label="添加" tabindex="-1">+</button>
+        <button type="button" class="icon-button" aria-label="添加" data-plus-menu-trigger aria-expanded="${String(state.showPlusMenu)}">+</button>
+        ${state.showPlusMenu ? renderPlusMenu(domHelpers()) : ''}
         <button type="button" class="secondary-button" tabindex="-1">完全访问</button>
-        <button type="button" class="secondary-button model-selector" data-model-selector tabindex="-1">5.5 超高</button>
+        <button type="button" class="secondary-button model-selector" data-model-selector aria-expanded="${String(state.showModelMenu)}">${escapeHTML(modelProfileLabel(state.selectedModelProfile))}</button>
+        ${state.showModelMenu ? renderModelMenu(state, domHelpers()) : ''}
         <button type="button" class="secondary-button" data-inspector-open="autonomy">Inspector</button>
         <button type="submit" form="composer-form" class="round-send" data-chat-submit aria-label="发送">↑</button>
       </div>
@@ -381,8 +393,8 @@ function renderQuotaView() {
 function renderSkillPlaza() {
   return `
     <section class="plaza-view" data-shell-state="skill_plaza">
-      <header><h1>Skill Plaza</h1><button type="button">导入 Skill</button></header>
-      <div class="drop-zone">拖拽 .json / .yaml / .zip 到此处导入，或点击选择文件</div>
+      <header><h1>Skill Plaza</h1><button type="button" data-skill-import-open>导入 Skill</button></header>
+      <div class="drop-zone" data-skill-import-state="${escapeAttr(state.skillImportState)}">选择 OPL Skill 或个人 Skill manifest；未校验前不会显示导入成功。</div>
       <div class="plaza-grid">
         ${['PubMed 文献检索', '引文网络分析', '实验方案生成', '统计方法推荐', '基金摘要优化', '图表解读'].map((name) => `<article><strong>${name}</strong><small>只作为任务入口；执行权威留在 MedOPL/OPL。</small></article>`).join('')}
       </div>
@@ -485,6 +497,15 @@ function bindClicks() {
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
   app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
   app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
+  app?.querySelector('[data-model-selector]')?.addEventListener('click', () => { state.showModelMenu = !state.showModelMenu; state.showPlusMenu = false; render(); });
+  app?.querySelector('[data-model-menu-close]')?.addEventListener('click', () => { state.showModelMenu = false; focusAfterRender('[data-model-selector]'); render(); });
+  app?.querySelectorAll('[data-model-option]').forEach((button) => button.addEventListener('click', () => { state.selectedModelProfile = button.dataset.modelOption || 'auto'; state.showModelMenu = false; focusAfterRender('[data-model-selector]'); render(); }));
+  app?.querySelector('[data-plus-menu-trigger]')?.addEventListener('click', () => { state.showPlusMenu = !state.showPlusMenu; state.showModelMenu = false; render(); });
+  app?.querySelector('[data-plus-menu-close]')?.addEventListener('click', () => { state.showPlusMenu = false; focusAfterRender('[data-plus-menu-trigger]'); render(); });
+  app?.querySelectorAll('[data-plus-action]').forEach((button) => button.addEventListener('click', () => runPlusAction(button.dataset.plusAction || '')));
+  app?.querySelector('[data-skill-import-open]')?.addEventListener('click', () => openSkillImport());
+  app?.querySelector('[data-skill-import-trigger]')?.addEventListener('click', () => validateSkillImport());
+  app?.querySelector('[data-skill-import-close]')?.addEventListener('click', () => { state.showSkillImport = false; focusAfterRender('[data-plus-action="import_skill"], [data-skill-import-open]'); render(); });
   app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'autonomy', '[data-inspector-open]')));
   app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
   app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab, state.focusReturnSelector || '[data-inspector-open]')));
@@ -709,6 +730,41 @@ function runShellAction(action) {
   render();
 }
 
+function runPlusAction(action) {
+  state.showPlusMenu = false;
+  if (action === 'new_window') {
+    runShellAction('home');
+  } else if (action === 'attach_file') {
+    state.lastRuntimeTaskCard = runtimeTaskCardForPrompt('@文件 处理资料输入');
+    state.shellState = 'blocked_turn';
+    render();
+  } else if (action === 'import_skill') {
+    openSkillImport();
+  } else if (action === 'bind_api_key') {
+    state.showAccount = true;
+    render();
+    document.querySelector('#api-key')?.focus({ preventScroll: true });
+  } else if (action === 'select_model') {
+    state.showModelMenu = true;
+    render();
+  } else {
+    render();
+  }
+}
+
+function openSkillImport() {
+  state.skillImportState = 'select';
+  state.showSkillImport = true;
+  render();
+}
+
+function validateSkillImport() {
+  state.skillImportState = 'validate';
+  syncDocumentState();
+  state.skillImportState = 'error';
+  render();
+}
+
 async function logoutAndRefresh() {
   await logoutAccount(fetch);
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
@@ -748,6 +804,8 @@ function syncDocumentState() {
   document.body.dataset.authState = state.view.accountState || 'anonymous';
   document.body.dataset.shellState = state.shellState;
   document.body.dataset.inspectorState = state.showInspector ? state.inspectorTab : 'hidden';
+  document.body.dataset.skillImportState = state.skillImportState;
+  document.body.dataset.skillImportStates = 'select,validate,error';
   document.body.dataset.apiKeyDialogState = document.body.dataset.apiKeyDialogState || 'closed';
 }
 

@@ -82,6 +82,66 @@ export function renderInspector(state, helpers) {
     </aside>`;
 }
 
+export function renderModelMenu(state, helpers) {
+  const profiles = [
+    ['auto', '自动', '根据任务和账号能力选择可用模型'],
+    ['fast', '快速', '适合轻量问答和草稿'],
+    ['deep', '深度', '适合复杂科研推理，实际可用性由账号能力决定'],
+  ];
+  return `
+    <aside class="account-popover" data-model-menu data-figma-slice="figma_dialog_sheet_projection_slice">
+      <header><span>模型</span><button type="button" data-model-menu-close aria-label="关闭模型选择">x</button></header>
+      <div class="plaza-grid" role="listbox" aria-label="选择模型配置">
+        ${profiles.map(([id, label, description]) => `
+          <button type="button" class="secondary-button full" role="option" data-model-option="${id}" aria-selected="${String(state.selectedModelProfile === id)}">
+            ${helpers.escapeHTML(label)}<small>${helpers.escapeHTML(description)}</small>
+          </button>
+        `).join('')}
+      </div>
+    </aside>`;
+}
+
+export function renderPlusMenu(helpers) {
+  const actions = [
+    ['new_window', '新窗口', '创建新的本地对话窗口'],
+    ['attach_file', '上传/文件', '需要 MedOPL 资源路径'],
+    ['import_skill', '导入 Skill', '校验 OPL 或个人 Skill manifest'],
+    ['bind_api_key', 'API Key', '打开账号能力绑定'],
+    ['select_model', '选择模型', '切换可用模型配置'],
+  ];
+  return `
+    <aside class="account-popover" data-plus-menu data-figma-slice="figma_dialog_sheet_projection_slice">
+      <header><span>添加</span><button type="button" data-plus-menu-close aria-label="关闭添加菜单">x</button></header>
+      <div class="plaza-grid">
+        ${actions.map(([id, label, description]) => `
+          <button type="button" class="secondary-button full" data-plus-action="${id}">
+            ${helpers.escapeHTML(label)}<small>${helpers.escapeHTML(description)}</small>
+          </button>
+        `).join('')}
+      </div>
+    </aside>`;
+}
+
+export function renderSkillImportDialog(state, helpers) {
+  const messageByState = {
+    select: '选择 OPL Skill 或个人 Skill manifest。',
+    validate: '正在校验 manifest 边界。',
+    error: '导入失败：缺少有效 Skill manifest。没有写入假成功。',
+    imported: '已导入。',
+  };
+  return `
+    <aside class="api-key-dialog" data-skill-import-dialog data-figma-slice="figma_dialog_sheet_projection_slice" role="dialog" aria-modal="true">
+      <div class="api-key-dialog-panel">
+        <span>Skill import</span>
+        <h2>导入 Skill</h2>
+        <p data-skill-import-source>支持 OPL Skill reference 或个人 Skill manifest；当前不执行 runtime、不上传到 MedOPL storage。</p>
+        <p data-skill-import-message role="status">${helpers.escapeHTML(messageByState[state.skillImportState] || messageByState.select)}</p>
+        <button class="primary-button full" type="button" data-skill-import-trigger>校验并导入</button>
+        <button class="text-button full" type="button" data-skill-import-close>关闭</button>
+      </div>
+    </aside>`;
+}
+
 function renderRefs(refs, attr, helpers, emptyLabel) {
   if (!refs.length) return `<p ${attr}>${helpers.escapeHTML(emptyLabel)}</p>`;
   return `<ul ${attr}>${refs.map((ref) => `<li>${helpers.escapeHTML(ref.label || ref.ref || ref.kind || 'ref')}</li>`).join('')}</ul>`;
@@ -132,6 +192,11 @@ function continuationSnapshot(task = {}) {
 
 export function projectWindowTitle(task = {}) {
   return `${task.marker || ''} ${task.taskType || task.taskIntent || '窗口'}`.trim();
+}
+
+export function modelProfileLabel(selectedModelProfile) {
+  const labels = { auto: '模型：自动', fast: '模型：快速', deep: '模型：深度' };
+  return labels[selectedModelProfile] || labels.auto;
 }
 
 function tabLabel(tab) {
