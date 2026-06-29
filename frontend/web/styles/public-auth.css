@@ -12,6 +12,7 @@
   padding: 20px 32px;
 }
 .brand-text { color: var(--foreground); font-size: 17px; font-weight: 600; }
+.brand-text, .auth-brand span, .public-hero h1 { font-family: "Lora", Georgia, serif; }
 .nav-actions, .hero-actions, .composer-toolbar, .result-topbar, .file-library header, .plaza-view header {
   align-items: center;
   display: flex;

@@ -1,6 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+export const WEB_CSS_ENTRY = 'frontend/web/styles.css';
+export const WEB_CSS_SOURCE_FILES = Object.freeze([
+  WEB_CSS_ENTRY,
+  ...collectFiles('frontend/web/styles', (path) => path.endsWith('.css')),
+]);
+
 export const WEB_SOURCE_FILES = Object.freeze([
   'frontend/web/src/app/main.mjs',
   'frontend/web/src/app/shellController.mjs',
@@ -25,7 +31,11 @@ export function readWebRenderSource() {
 }
 
 export function readFrontendCss() {
-  return readCssWithImports('frontend/web/styles.css', new Set());
+  return readCssWithImports(WEB_CSS_ENTRY, new Set());
+}
+
+export function readCssSource(path) {
+  return readFileSync(path, 'utf8');
 }
 
 function readCssWithImports(path, seen) {

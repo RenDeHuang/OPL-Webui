@@ -4,6 +4,9 @@
   padding: 32px;
   width: 100%;
 }
+.file-library h1, .plaza-view h1 {
+  font-family: "Lora", Georgia, serif;
+}
 .file-library header, .plaza-view header {
   justify-content: space-between;
   margin: 0 auto 24px;

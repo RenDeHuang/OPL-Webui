@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-import { WEB_SOURCE_FILES, readWebSource } from './helpers/web-source-reader.mjs';
+import {
+  WEB_CSS_ENTRY,
+  WEB_CSS_SOURCE_FILES,
+  WEB_SOURCE_FILES,
+  readCssSource,
+  readWebSource,
+} from './helpers/web-source-reader.mjs';
 
 test('web source is split into backend control plane and frontend shell boundaries', () => {
   const shell = JSON.parse(readFileSync('contracts/web-shell-adapter.json', 'utf8'));
@@ -49,4 +55,51 @@ test('product entry stays thin while implementation surfaces own rendering detai
   assert.equal(existsSync('frontend/web/src/onePersonLabWebState.mjs'), false, 'retire old aggregate state module');
   assert.equal(existsSync('frontend/web/src/onePersonLabWebDom.mjs'), false, 'retire old aggregate DOM module');
   assert.equal(existsSync('frontend/web/src/onePersonLabWebContinuation.mjs'), false, 'retire old aggregate continuation module');
+});
+
+test('css entry and surface styles keep product styling boundaries explicit', () => {
+  const cssEntry = readCssSource(WEB_CSS_ENTRY).trim();
+  const cssImports = cssEntry.split('\n').filter(Boolean);
+
+  assert.deepEqual(cssImports, [
+    '@import "./styles/tokens-base.css";',
+    '@import "./styles/public-auth.css";',
+    '@import "./styles/workbench.css";',
+    '@import "./styles/results-runtime.css";',
+    '@import "./styles/project-dialogs.css";',
+    '@import "./styles/controls-motion.css";',
+    '@import "./styles/responsive.css";',
+  ]);
+
+  for (const path of WEB_CSS_SOURCE_FILES) {
+    assert.equal(existsSync(path), true, `missing frontend css source: ${path}`);
+  }
+
+  const tokensBase = readCssSource('frontend/web/styles/tokens-base.css');
+  const publicAuth = readCssSource('frontend/web/styles/public-auth.css');
+  const workbench = readCssSource('frontend/web/styles/workbench.css');
+  const resultsRuntime = readCssSource('frontend/web/styles/results-runtime.css');
+  const projectDialogs = readCssSource('frontend/web/styles/project-dialogs.css');
+  const controlsMotion = readCssSource('frontend/web/styles/controls-motion.css');
+  const responsive = readCssSource('frontend/web/styles/responsive.css');
+
+  assert.match(tokensBase, /:root/);
+  assert.match(tokensBase, /--primary:\s*#2f6b4f/);
+  assert.doesNotMatch(tokensBase, /\.public-|\.auth-|\.app-shell|\.sidebar|\.home-composer|\.result-|\.file-|\.plaza-|\.account-|\.search-|\.billing-|\.inspector-/);
+
+  assert.match(publicAuth, /\.public-landing/);
+  assert.match(publicAuth, /\.auth-page/);
+  assert.match(workbench, /\.app-shell/);
+  assert.match(workbench, /\.sidebar/);
+  assert.match(workbench, /\.home-composer/);
+  assert.match(resultsRuntime, /\.result-view/);
+  assert.match(projectDialogs, /\.account-popover/);
+  assert.match(projectDialogs, /\.search-sheet/);
+  assert.match(projectDialogs, /\.billing-panel/);
+  assert.match(projectDialogs, /\.inspector-sheet/);
+  assert.match(controlsMotion, /prefers-reduced-motion/);
+  assert.match(responsive, /@media \(max-width:\s*760px\)/);
+
+  assert.equal(existsSync('frontend/web/v3.css'), false, 'retire old v3 css shell');
+  assert.equal(existsSync('frontend/web/app.css'), false, 'do not keep parallel app css shell');
 });

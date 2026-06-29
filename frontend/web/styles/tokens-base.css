@@ -41,7 +41,3 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   outline: 3px solid var(--ring);
   outline-offset: 3px;
 }
-
-.brand-text, .sidebar-brand, .auth-brand span, .public-hero h1, .home-composer h1, .file-library h1, .plaza-view h1 {
-  font-family: "Lora", Georgia, serif;
-}
