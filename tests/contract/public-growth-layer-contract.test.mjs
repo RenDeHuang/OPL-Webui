@@ -106,20 +106,30 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assertIncludesAll(uiTruth.mockTruthPolicy.staticProjectCopyForbiddenAsTruth, ['New project', 'opl', 'medopl', '空项目', '新建项目'], 'Figma mock static copy');
   assertIncludesAll(uiTruth.mockTruthPolicy.mockRuntimeStoragePaymentCopyForbiddenAsTruth, ['runtime completed', 'storage ready', 'artifact body', 'payment status', 'Pro', 'credit', 'recharge'], 'Figma mock capability copy');
   assert.equal(uiTruth.contractProofBoundary.contractTestsReplaceFigmaVisualTruth, false);
-  assert.equal(uiTruth.implementationMap.phaseId, 'figma_to_code_implementation_map');
-  assert.equal(uiTruth.implementationMap.status, 'done');
-  assert.deepEqual(uiTruth.implementationMap.sourceFilesRead, ['src/app/App.tsx', 'src/styles/theme.css']);
+  assert.equal(uiTruth.implementationMap, undefined);
+  assert.equal(uiTruth.implementationSummary.status, 'closed_repo_local_implementation_complete');
+  assert.deepEqual(uiTruth.implementationSummary.sourceFilesRead, ['src/app/App.tsx', 'src/styles/theme.css']);
   assertIncludesAll(
-    uiTruth.implementationMap.surfaces.map((surface) => surface.id),
-    ['public_landing', 'auth_surface', 'authenticated_workbench_shell', 'task_launcher_runtime_blocker', 'results_refs_deliverables', 'project_window_continuation', 'dialog_sheet_projection'],
-    'Figma implementation map surface',
+    uiTruth.implementationSummary.closedPhaseIds,
+    ['figma_to_code_implementation_map', 'figma_public_landing_slice', 'figma_auth_surface_slice', 'figma_home_workbench_shell_slice', 'figma_dialog_sheet_projection_slice'],
+    'closed Figma phase',
   );
   assertIncludesAll(
-    uiTruth.implementationMap.mockTruthRetirement,
+    uiTruth.implementationSummary.surfaceIds,
+    ['public_landing', 'auth_surface', 'authenticated_workbench_shell', 'task_launcher_runtime_blocker', 'results_refs_deliverables', 'project_window_continuation', 'dialog_sheet_projection'],
+    'Figma implementation summary surface',
+  );
+  assertIncludesAll(
+    uiTruth.implementationSummary.stableContractRefs,
+    ['contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget', 'contracts/web-page-state-matrix.json', 'contracts/web-interaction-contract.json', 'contracts/web-gap-phase-registry.json#/gaps/commercial_launch_ui_implementation/closedSummary'],
+    'Figma implementation stable contract ref',
+  );
+  assertIncludesAll(
+    uiTruth.implementationSummary.mockTruthRetirement,
     ['initProjects', 'fileItems', 'mockResult', 'quota recharge copy', 'runtime completed copy', 'storage ready copy'],
     'Figma mock truth retirement',
   );
-  assert.deepEqual(uiTruth.implementationMap.nextImplementationSlices, ['figma_public_landing_slice', 'figma_auth_surface_slice', 'figma_home_workbench_shell_slice', 'figma_dialog_sheet_projection_slice']);
+  assert.equal(uiTruth.implementationSummary.replacementPolicy.includes('instead of restoring detailed implementation maps'), true);
   assert.equal(gui.uiUxReferenceCandidate, undefined);
   assert.equal(target.id, 'figma_make_ui_ux_for_commercial_launch');
   assert.equal(target.state, 'deployed_replacement_candidate');
