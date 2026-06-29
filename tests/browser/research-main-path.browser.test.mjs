@@ -8,6 +8,7 @@ import { readWebSource } from '../contract/helpers/web-source-reader.mjs';
 const runnerPath = 'tests/browser/research-main-path-runner.mjs';
 const browserHelperPath = 'tests/browser/helpers/browser-cdp-helper.mjs';
 const runtimeAdmissionHelperPath = 'tests/browser/runtime-admission-helper.mjs';
+const visualQualityHelperPath = 'tests/browser/visual-quality-helper.mjs';
 const cloudRolloutWorkflowPath = '.github/workflows/cloud-rollout.yml';
 
 test('research main path runs in a real browser and records page-state evidence', { timeout: 180000 }, () => {
@@ -123,7 +124,8 @@ test('research main path runs in a real browser and records page-state evidence'
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {
   const runner = readFileSync(runnerPath, 'utf8');
   const browserHelper = readFileSync(browserHelperPath, 'utf8');
-  const runnerSource = `${runner}\n${browserHelper}`;
+  const visualQualityHelper = readFileSync(visualQualityHelperPath, 'utf8');
+  const runnerSource = `${runner}\n${browserHelper}\n${visualQualityHelper}`;
   const domSource = readWebSource();
 
   for (const required of [
@@ -169,6 +171,29 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
   assert.doesNotMatch(accountPopoverHelper, /#auth-email|#api-key/);
   assert.doesNotMatch(runner, /KUBECONFIG|kubectl|postgres:\/\//i);
   assert.doesNotMatch(runner, /console\.log[^\n]*(OPL_DOGFOOD_API_KEY|OPL_DOGFOOD_PASSWORD|config\.apiKey|config\.password)/);
+});
+
+test('browser runner delegates visual quality evidence to a focused helper', () => {
+  const runner = readFileSync(runnerPath, 'utf8');
+  const visualQualityHelper = readFileSync(visualQualityHelperPath, 'utf8');
+  const inventory = JSON.parse(readFileSync('contracts/web-surface-inventory.json', 'utf8'));
+  const inventoryPaths = new Set(inventory.surfaces.map((surface) => surface.path));
+
+  assert.match(runner, /visual-quality-helper\.mjs/);
+  assert.match(runner, /captureAccessibilityCloseout/);
+  assert.match(runner, /captureVisualQualityEvidence/);
+  assert.doesNotMatch(runner, /async function captureVisualQualityEvidence/);
+  assert.doesNotMatch(runner, /async function captureAccessibilityCloseout/);
+  assert.doesNotMatch(runner, /async function readVisualLayout/);
+  assert.doesNotMatch(runner, /function summarizeVisualQualityRubric/);
+  assert.doesNotMatch(runner, /Emulation\.setDeviceMetricsOverride/);
+  assert.doesNotMatch(runner, /Page\.captureScreenshot/);
+  assert.match(visualQualityHelper, /export async function captureAccessibilityCloseout/);
+  assert.match(visualQualityHelper, /export async function captureVisualQualityEvidence/);
+  assert.match(visualQualityHelper, /Emulation\.setDeviceMetricsOverride/);
+  assert.match(visualQualityHelper, /captureScreenshot/);
+  assert.match(visualQualityHelper, /repo_local_visual_baseline_captured/);
+  assert.equal(inventoryPaths.has(visualQualityHelperPath), true, 'visual quality browser helper must be registered as a long-lived test surface');
 });
 
 test('production browser e2e prepares a browser without sudo and reports startup diagnostics', () => {
@@ -229,12 +254,12 @@ test('production browser e2e returns from register to login for reusable dogfood
 });
 
 test('production accessibility closeout is idempotent when dogfood account is already key-bound', () => {
-  const runner = readFileSync(runnerPath, 'utf8');
+  const visualQualityHelper = readFileSync(visualQualityHelperPath, 'utf8');
 
-  assert.match(runner, /isAlreadyKeyBound/);
-  assert.match(runner, /api_key_modal_skipped_already_bound/);
-  assert.match(runner, /repo_local_unbound_browser_e2e/);
-  assert.match(runner, /document\.body\.dataset\.authState === "authenticated_bound"/);
+  assert.match(visualQualityHelper, /isAlreadyKeyBound/);
+  assert.match(visualQualityHelper, /api_key_modal_skipped_already_bound/);
+  assert.match(visualQualityHelper, /repo_local_unbound_browser_e2e/);
+  assert.match(visualQualityHelper, /document\.body\.dataset\.authState === "authenticated_bound"/);
 });
 
 test('production browser e2e waits for API key save completion on already-bound accounts', () => {
@@ -270,8 +295,9 @@ test('production browser e2e splits ordinary blocked ready and onboarding runtim
 
 test('production browser e2e waits for async research results and reports page evidence', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const visualQualityHelper = readFileSync(visualQualityHelperPath, 'utf8');
 
-  assert.match(runner, /document\.fonts\.ready/);
+  assert.match(visualQualityHelper, /document\.fonts\.ready/);
   assert.match(runner, /describeResearchResultState/);
   assert.doesNotMatch(runner, /assertPage\(cdp,[\s\S]*?researchResultMarker === "@科研"/);
   assert.match(runner, /waitForOrdinaryResearchOutcome/);
