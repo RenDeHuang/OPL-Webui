@@ -49,7 +49,9 @@ test('formal launch interaction truth fixes top-level route auth pending task si
   assert.equal(interaction.pendingTaskTruth.mustNotFabricateResult, true);
 
   assert.equal(interaction.sidebarTruth.scope, 'account_based_user_product_layer_only');
-  assert.equal(interaction.sidebarTruth.projectsSurfaceBusinessName, '任务历史 / 交付接续');
+  assert.equal(interaction.sidebarTruth.projectsSurfaceBusinessName, '项目 / 窗口');
+  assert.equal(interaction.sidebarTruth.legacyTaskHistoryBusinessNameRetired, true);
+  assert.equal(interaction.sidebarTruth.projectWindowSource, 'GET /api/tasks projection until project/window persistence exists');
   assert.equal(interaction.sidebarTruth.taskHistorySource, 'GET /api/tasks');
   assert.equal(interaction.sidebarTruth.taskHistoryProjection, 'refs_status_metadata_only');
   assertIncludesAll(interaction.sidebarTruth.forbiddenStaticCopy, ['v20文件夹', 'New project', 'opl', 'medopl', '空项目', '新建项目'], 'forbidden static sidebar copy');
@@ -78,8 +80,12 @@ test('current Web UI must not satisfy formal launch until interaction truth is i
       pass: !/v20文件夹|New project|name: 'opl'|name: 'medopl'|空项目|新建项目/.test(domSource),
     },
     {
-      label: 'task history sidebar must be backed by the Go control plane projection or empty state',
-      pass: /GET \/api\/tasks|taskHistory\.tasks|data-task-history-empty/.test(domSource),
+      label: 'project/window sidebar must be backed by the Go control plane projection or empty state',
+      pass: /GET \/api\/tasks|taskHistory\.tasks|data-project-window-empty/.test(domSource),
+    },
+    {
+      label: 'retired task-history wording must not be the primary UI business name',
+      pass: !/任务历史 \/ 交付接续|当前没有任务历史|data-task-history-center/.test(domSource),
     },
   ]);
 
@@ -96,7 +102,7 @@ test('interaction truth separates current green route guard from product journey
   assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
   assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
   assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'interaction product-depth open gap');
-  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'first value optimized', 'project/window implementation complete'], 'interaction product-depth doesNotProve');
+  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'first value optimized', 'dedicated project/window persistence API'], 'interaction product-depth doesNotProve');
 
   assert.equal(pageState.commercialProductUserJourneyDepth?.state, 'active_gap_admitted');
   assert.equal(pageState.commercialProductUserJourneyDepth?.defaultProjectModel, 'project_with_many_conversation_windows');

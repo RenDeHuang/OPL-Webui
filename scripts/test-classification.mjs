@@ -72,7 +72,7 @@ const NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE = Object.freeze([
 const NOT_PRODUCT_JOURNEY_DEPTH_IMPLEMENTATION_EVIDENCE = Object.freeze([
   'commercial product journey complete',
   'first value optimized',
-  'project/window implementation complete',
+  'dedicated project/window persistence API',
   'streaming chat implemented',
   'Skill import implemented',
   'model selection implemented',

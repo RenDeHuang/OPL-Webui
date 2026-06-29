@@ -96,8 +96,8 @@
     {
       "id": "projects",
       "hash": "#projects",
-      "surface": "task_history_deliverable_continuation_center",
-      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "task_history_empty", "task_history_list", "task_history_blocked", "task_history_continue"]
+      "surface": "project_window_continuation_center",
+      "states": ["anonymous", "authenticated_unbound", "authenticated_bound", "project_window_empty", "project_window_list", "project_window_blocked", "project_window_continue"]
     },
     {
       "id": "more",
@@ -136,19 +136,22 @@
   "taskHistoryContinuationCenter": {
     "slice": "task_history_deliverable_continuation_center_v0",
     "route": "projects",
-    "surface": "task_history_deliverable_continuation_center",
+    "surface": "project_window_continuation_center_projection",
+    "visibleBusinessName": "项目 / 窗口",
+    "legacyBusinessName": "任务历史 / 交付接续",
+    "legacyBusinessNameRetiredFromPrimaryUi": true,
     "owner": "account_based_user_product_layer",
     "consumer": "authenticated_research_user",
     "entrySelectors": [
       "[data-nav-item=\"projects\"]",
-      "[data-task-history-center]"
+      "[data-project-window-center]"
     ],
     "requiredStates": [
-      "task_history_empty",
-      "task_history_list",
-      "task_history_detail",
-      "task_history_blocked",
-      "task_history_continue"
+      "project_window_empty",
+      "project_window_list",
+      "project_window_detail",
+      "project_window_blocked",
+      "project_window_continue"
     ],
     "requiredFields": [
       "taskType",
@@ -162,7 +165,7 @@
       "allowedNextActions",
       "deeplink"
     ],
-    "emptyState": "从科研/论文/基金/综述/文件/PPT/写书入口开始",
+    "emptyState": "从科研/论文/基金/综述/文件/PPT/写书入口开始创建窗口",
     "forbiddenProjection": [
       "artifact_body",
       "artifactBody",
@@ -349,7 +352,7 @@
       "public_landing",
       "auth_login_register",
       "home_default",
-      "task_history_deliverable_continuation_center",
+      "project_window_continuation_center",
       "search_sheet_open",
       "inspector_files",
       "inspector_progress",
@@ -378,7 +381,7 @@
         "openTrigger": "side_nav_search",
         "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
         "focusReturn": "side_nav_search",
-        "emptyState": "conversation_history_empty",
+        "emptyState": "project_window_search_empty",
         "forbiddenContent": ["skills", "workflows", "prompts", "provider_settings"]
       },
       "more": {
@@ -418,11 +421,11 @@
         },
         {
           "id": "projects",
-          "label": "任务历史",
+          "label": "项目 / 窗口",
           "kind": "route",
           "targetView": "projects",
           "localOnly": true,
-          "consumer": "task_history_deliverable_continuation_center",
+          "consumer": "project_window_continuation_center",
           "forbiddenApis": []
         },
         {
@@ -449,7 +452,7 @@
           "kind": "sheet",
           "targetView": "home",
           "localOnly": true,
-          "consumer": "conversation_history_search",
+          "consumer": "project_window_search",
           "forbiddenApis": ["/api/search"]
         },
         {
@@ -467,13 +470,13 @@
       "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
-      "projects": ["task_history_deliverable_continuation_center"],
+      "projects": ["project_window_continuation_center"],
       "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
       "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
       "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
-      "projects": { "scopes": ["my_task_history"], "actions": ["continue_task"], "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"], "projection": "refs_status_metadata_only" }
+      "projects": { "scopes": ["my_project_windows"], "actions": ["continue_window"], "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"], "projection": "project_window_refs_status_metadata_only", "doesNotProve": ["dedicated project/window persistence API"] }
     },
     "inspector": {
       "defaultState": "hidden",
@@ -639,17 +642,17 @@
       "[data-login-button]",
       "[data-provider-form]",
       "[data-more-overflow]",
-      "[data-task-history-center]",
+      "[data-project-window-center]",
       "[data-search-sheet]",
-      "[data-conversation-search]",
-      "[data-conversation-history]",
-      "[data-conversation-empty]",
+      "[data-window-search]",
+      "[data-project-window-search-results]",
+      "[data-project-window-search-empty]",
       "[data-model-selector]",
       "[data-overlay-close]",
       "[data-runtime-gate]",
       "[data-research-launcher]",
-      "[data-task-history-list]",
-      "[data-task-history-empty]",
+      "[data-project-window-list]",
+      "[data-project-window-empty]",
       "[data-research-task]",
       "[data-capability-marker]",
       "[data-capability-mode]",
@@ -780,7 +783,7 @@
         "evidence": "tests/contract/one-person-lab-chat-upstream.test.mjs"
       },
       {
-        "id": "conversation_history_search_visible",
+        "id": "project_window_search_visible",
         "route": "home",
         "expectedState": "idle",
         "evidence": "tests/smoke/web-shell.test.mjs"

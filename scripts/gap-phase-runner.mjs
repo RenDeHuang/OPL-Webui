@@ -355,7 +355,7 @@ function evaluateCommercialProductUserJourneyDepth({ product }) {
     evalResult({
       id: 'webui_medopl_product_owner_split',
       dimension: 'contract',
-      status: webGaps.includes('project_window_continuation')
+      status: depth?.projectWindowModel?.status === 'implemented_projection_backed_v1'
         && webGaps.includes('streaming_chat_turns')
         && medoplOwned.includes('runtime_readiness')
         && medoplOwned.includes('storage_resource_binding')

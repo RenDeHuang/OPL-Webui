@@ -34,7 +34,7 @@ function collectViolations(evidence) {
       pass: evidence.afterTaskClick.pendingPublicTaskIntent === 'grant_plan'
         && evidence.afterTaskClick.authSurfaceVisible
         && evidence.afterTaskClick.chatState === 'grant_entry_selected'
-        && evidence.afterTaskClick.taskHistoryItemCount === 0,
+        && evidence.afterTaskClick.retiredTaskHistorySelectorCount === 0,
     },
     {
       label: 'login tab must not show register submit simultaneously',
@@ -45,11 +45,18 @@ function collectViolations(evidence) {
       pass: evidence.afterAuth.authState === 'authenticated_unbound'
         && evidence.afterAuth.researchTaskIntent === 'grant_plan'
         && evidence.afterAuth.prompt.startsWith('@基金')
-        && evidence.afterAuth.taskHistoryItemCount === 0,
+        && evidence.afterAuth.retiredTaskHistorySelectorCount === 0,
     },
     {
-      label: 'sidebar must use task history / deliverable continuation naming',
-      pass: /任务历史|交付接续/.test(evidence.afterAuth.sidebarText),
+      label: 'sidebar must use project/window business naming',
+      pass: /项目\s*\/\s*窗口/.test(evidence.afterAuth.sidebarText)
+        && !/任务历史\s*\/\s*交付接续/.test(evidence.afterAuth.sidebarText),
+    },
+    {
+      label: 'sidebar empty state must be project/window projection backed',
+      pass: evidence.afterAuth.projectWindowEmptyVisible === true
+        && evidence.afterAuth.retiredTaskHistorySelectorCount === 0
+        && evidence.afterAuth.projectWindowItems === 0,
     },
     {
       label: 'sidebar must not contain static Figma project copy',
@@ -74,7 +81,12 @@ function collectViolations(evidence) {
       label: 'authenticated workbench task launchers and pending prompt must stay real-state backed',
       pass: evidence.afterAuth.workbench.taskLauncherCount === 7
         && evidence.afterAuth.workbench.promptRestored === true
-        && evidence.afterAuth.workbench.taskHistoryProjectionOnly === true,
+        && evidence.afterAuth.workbench.projectWindowProjectionOnly === true,
+    },
+    {
+      label: 'search sheet must search project windows, not one-off task history copy',
+      pass: evidence.afterAuth.dialogSheetProjection.searchOpen.scope === 'project_windows'
+        && evidence.afterAuth.dialogSheetProjection.searchOpen.projectionOnly === true,
     },
     {
       label: 'authenticated workbench search and account triggers must remain available',

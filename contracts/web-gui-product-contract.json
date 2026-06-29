@@ -35,7 +35,7 @@
     "appShell": "side_nav_command_home",
     "gensparkInfluence": "homepage_structure_reference",
     "codexInfluence": "contract_first_surface_builder",
-    "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "task_history_continuation_center_as_secondary_surface", "inspector_on_user_request", "conversation_history_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
+    "mustShow": ["side_navigation_new_chat_projects_skill_workflow_search_more", "centered_brand_title", "primary_research_composer", "starter_chips", "project_window_continuation_center_as_secondary_surface", "inspector_on_user_request", "project_window_search_sheet", "empty_more_overflow_surface", "optional_model_selector_without_visible_base_url", "bottom_avatar_account_entry", "api_key_required_before_chat_send_when_missing", "structured_research_artifact_result_stream", "desktop_inspector_stable_work_panel", "lightweight_mobile_inspector_sheet"],
     "mustNotShow": ["dashboard_first_app_home", "explanatory_landing_inside_app_shell", "left_rail_primary_navigation", "workspace_sidebar_primary_shell", "raw_trace_console", "runtime_truth_panel", "billing_source_of_truth", "node_pool_console", "artifact_body_authority", "multi_column_sidebar_sprawl", "duplicated_files_progress_panels", "raw_upstream_transcript_for_structured_research_result", "floating_desktop_inspector_overlay", "heavy_mobile_inspector_sheet", "visible_fixed_base_url_in_user_shell", "model_gateway_url_pill", "settings_status_dump_in_more", "test_evidence_copy_in_inspector", "fake_input_progress_output_refs", "account_glyph_text_person"]
   },
   "figmaParityUiReplacementTarget": {
@@ -69,8 +69,8 @@
       },
       "accountBasedUserProductLayerUIReference": {
         "layer": "account_based_user_product_layer",
-        "purpose": "authenticated_workbench_task_entry_task_history_refs_blocker_next_step_deeplink",
-        "acceptedSurfaces": ["authenticated_workbench", "task_entry", "task_history", "refs", "blocker_next_step", "medopl_opl_deeplink"]
+        "purpose": "authenticated_workbench_task_entry_project_window_refs_blocker_next_step_deeplink",
+        "acceptedSurfaces": ["authenticated_workbench", "task_entry", "project_window_continuation", "refs", "blocker_next_step", "medopl_opl_deeplink"]
       }
     },
     "acceptedVisualDirection": {
@@ -80,9 +80,9 @@
       "layoutSignals": ["public_landing", "auth_card", "side_navigation", "center_composer", "right_or_bottom_inspector", "refs_only_result_artifact"],
       "componentSignals": ["task_pills", "login_register_card", "account_popover", "readonly_projection_panel", "runtime_gate_panel", "inspector_tabs"]
     },
-    "acceptedVisualPatterns": ["public_product_intro", "task_scenario_gallery", "output_refs_showcase", "start_path_card", "authenticated_research_workbench", "task_history_continuation_center", "refs_first_result_panel", "blocker_next_step_panel", "external_handoff_panel"],
-    "acceptedInteractionPatterns": ["start_path_after_auth_return", "task_entry_to_composer", "task_history_continue", "refs_inspection", "blocker_next_step_handoff", "medopl_opl_deeplink", "readonly_projection_expand"],
-    "acceptedUserProductSurfaces": ["public_landing", "public_product_intro", "public_task_scenarios", "public_output_showcase", "public_start_path", "login_register", "byok_binding", "authenticated_workbench", "task_entry_composer", "research_mode_pills", "ordinary_research_result", "refs_only_result", "progress_refs", "deliverable_refs", "task_history_continuation", "blocker_next_step", "runtime_gate_projection", "medopl_deeplink", "readonly_commercial_projection"],
+    "acceptedVisualPatterns": ["public_product_intro", "task_scenario_gallery", "output_refs_showcase", "start_path_card", "authenticated_research_workbench", "project_window_continuation_center", "refs_first_result_panel", "blocker_next_step_panel", "external_handoff_panel"],
+    "acceptedInteractionPatterns": ["start_path_after_auth_return", "task_entry_to_composer", "project_window_continue", "refs_inspection", "blocker_next_step_handoff", "medopl_opl_deeplink", "readonly_projection_expand"],
+    "acceptedUserProductSurfaces": ["public_landing", "public_product_intro", "public_task_scenarios", "public_output_showcase", "public_start_path", "login_register", "byok_binding", "authenticated_workbench", "task_entry_composer", "research_mode_pills", "ordinary_research_result", "refs_only_result", "progress_refs", "deliverable_refs", "project_window_continuation", "blocker_next_step", "runtime_gate_projection", "medopl_deeplink", "readonly_commercial_projection"],
     "claimSemantics": {
       "currentCannotClaimMeaning": "current_stage_evidence_boundary_not_permanent_product_vision_denial",
       "futurePossibleCapabilityMeaning": "may_be_introduced_by_future_contract_evidence_owner_receipt_and_registered_tests",
@@ -151,13 +151,13 @@
     "publicShell": ["side_navigation", "first_view", "secondary_surfaces", "overlay_layer"],
     "appShell": ["side_navigation", "home_command_canvas", "secondary_surfaces", "right_inspector_layer", "modal_layer"],
     "sideNavigation": ["home", "projects", "skills", "workflows", "search", "more"],
-    "sideNavigationLabels": ["新建对话", "任务历史", "Skill", "工作流", "搜索", "More"],
+    "sideNavigationLabels": ["新建对话", "项目 / 窗口", "Skill", "工作流", "搜索", "More"],
     "sideNavigationTaskOwnership": {
       "home": "compose_or_start_research_task",
-      "projects": "browse_task_history_refs_and_continue",
+      "projects": "browse_project_windows_and_continue",
       "skills": "browse_or_import_skill_entries",
       "workflows": "browse_create_or_import_agentic_research_workflows",
-      "search": "open_conversation_history_search",
+      "search": "open_project_window_search",
       "more": "route_empty_overflow_surface"
     },
     "accountEntry": "bottom_avatar_popover",
@@ -173,7 +173,7 @@
         "action": "route_projects_page",
         "targetView": "projects",
         "ownerSurface": "browser_shell",
-        "consumer": "task_history_deliverable_continuation_center"
+        "consumer": "project_window_continuation_center"
       },
       "skills": {
         "action": "route_skills_page",
@@ -191,7 +191,7 @@
         "action": "open_search_sheet",
         "targetView": "home",
         "ownerSurface": "browser_shell",
-        "consumer": "conversation_history_search"
+        "consumer": "project_window_search"
       },
       "more": {
         "action": "route_more_overflow_surface",
@@ -204,7 +204,7 @@
       "home": ["side_navigation", "first_view", "turn_state", "chat_canvas", "runtime_gate"],
       "skills": ["skill_library"],
       "workflows": ["workflow_library"],
-      "projects": ["task_history_deliverable_continuation_center"],
+      "projects": ["project_window_continuation_center"],
       "more": ["empty_overflow_menu"]
     },
     "librarySurfaces": {
@@ -217,10 +217,11 @@
         "actions": ["create_workflow", "import_workflow"]
       },
       "projects": {
-        "scopes": ["my_task_history"],
-        "actions": ["continue_task"],
+        "scopes": ["my_project_windows"],
+        "actions": ["continue_window"],
         "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"],
-        "projection": "refs_status_metadata_only"
+        "projection": "project_window_refs_status_metadata_only",
+        "doesNotProve": ["dedicated project/window persistence API"]
       }
     },
     "inspector": ["files", "progress", "output"],
@@ -366,7 +367,7 @@
       "mobile": ["side_nav_icon_strip", "composer_first", "starter_chips_before_history", "lightweight_inspector_bottom_sheet", "account_popover_for_auth_and_api_key"],
       "compact": ["brand_composer_first", "single_column", "nonessential_status_collapsed"]
     },
-    "layoutRules": ["Home must use a centered AI-native composer-first composition.", "Side navigation hosts New Chat, 任务历史, Skill, 工作流, Search, and More; each primary item owns exactly one task class.", "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.", "任务历史 is a route-scoped refs-only continuation center backed by /api/tasks; it must not store artifact bodies or storage truth.", "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.", "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.", "Search opens a conversation history sheet, not a static Skill, workflow, or prompt directory.", "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.", "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.", "The first viewport must not show summary strips, settings forms, chat history, or card grids.", "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.", "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."]
+    "layoutRules": ["Home must use a centered AI-native composer-first composition.", "Side navigation hosts New Chat, 项目 / 窗口, Skill, 工作流, Search, and More; each primary item owns exactly one task class.", "Research, paper, grant, review, and file capabilities are invoked from the composer, starter chips, Skill, 工作流, or result follow-up actions rather than primary navigation.", "项目 / 窗口 is a route-scoped refs-only continuation center backed by /api/tasks projection or contract-backed empty state; it must not store artifact bodies or storage truth.", "Files, progress, and output belong to the right inspector utility rail and resizable inspector panel; desktop inspector must reserve main layout instead of floating over results, and they must not appear as primary navigation items.", "Structured @科研 success renders one research artifact card as the primary result; raw upstream assistant transcript text must not be duplicated beside that artifact.", "Search opens a project/window search sheet, not a static Skill, workflow, prompt directory, or one-off task-history search.", "More routes to an empty/light overflow surface; account, auth, API Key, lifecycle, quota, audit, and provider status must not be dumped into More.", "The composer may expose an optional model selector, but the user shell must not display the fixed provider base_url or gateway URL.", "The first viewport must not show summary strips, settings forms, chat history, or card grids.", "Bento/card grids are allowed only on secondary surfaces and must stay within surfaceBudget.", "The ai_native_research_home_v1 shell may use side navigation but must not revive the retired left rail, workspace sidebar, or clean_workbench_v1 structure."]
   },
   "visualIdentity": {
     "subject": "ai_native_research_composer",
@@ -448,7 +449,7 @@
     },
     "layout": {
       "longTerm": true,
-      "required": ["composer_first_home", "first_view_budget", "secondary_surfaces_hidden_until_triggered", "empty_more_overflow", "history_search_sheet"]
+      "required": ["composer_first_home", "first_view_budget", "secondary_surfaces_hidden_until_triggered", "empty_more_overflow", "project_window_search_sheet"]
     },
     "typography": {
       "longTerm": true,
@@ -464,7 +465,7 @@
     },
     "navigation": {
       "longTerm": true,
-      "required": ["side_nav_primary_tasks_only", "search_is_conversation_history", "more_is_empty_overflow", "bottom_avatar_account_entry", "optional_model_selector"]
+      "required": ["side_nav_primary_tasks_only", "search_is_project_window_search", "more_is_empty_overflow", "bottom_avatar_account_entry", "optional_model_selector"]
     }
   },
   "interactionContract": {
@@ -480,7 +481,7 @@
       "openTrigger": "search_button_or_more_shortcut",
       "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
       "focusReturn": "search_button_or_more_shortcut",
-      "emptyState": "no_conversation_history",
+      "emptyState": "project_window_search_empty",
       "errorState": "local_only_no_backend_error",
       "loadingState": "not_applicable_local_only"
     },
@@ -529,7 +530,7 @@
       "forbiddenFor": ["ordinary_close", "non_destructive_navigation"]
     },
     "Sheet": {
-      "allowedFor": ["mobile_inspector", "conversation_history_search"],
+      "allowedFor": ["mobile_inspector", "project_window_search"],
       "forbiddenFor": ["desktop_primary_work_panel", "account_settings_dump"]
     },
     "Card": {
@@ -591,7 +592,7 @@
     },
     {
       "id": "SearchPanel",
-      "role": "conversation_history_search",
+      "role": "project_window_search",
       "placement": "secondary_sheet"
     },
     {
@@ -664,12 +665,12 @@
       "actions": ["create_workflow", "import_workflow"]
     },
     {
-      "id": "TaskHistoryCenter",
-      "role": "task_history_refs_secondary_route",
+      "id": "ProjectWindowCenter",
+      "role": "project_window_refs_secondary_route",
       "defaultState": "secondary_route",
-      "actions": ["continue_task"],
+      "actions": ["continue_window"],
       "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"],
-      "projection": "refs_status_metadata_only"
+      "projection": "project_window_refs_status_metadata_only"
     }
   ],
   "componentTokens": {

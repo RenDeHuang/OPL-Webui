@@ -55,13 +55,13 @@ try {
   await waitFor(cdp, `document.querySelector("[data-app-shell]")?.offsetParent !== null
     && document.body.dataset.researchTaskIntent === "grant_plan"
     && document.querySelector("#chat-input")?.value?.startsWith("@基金") === true
-    && document.querySelector("[data-side-navigation]")?.textContent.includes("任务历史")`);
+    && document.querySelector("[data-side-navigation]")?.textContent.includes("项目 / 窗口")`);
   const workbenchEvidence = await workbenchState(cdp);
   const afterAuthBase = await pageState(cdp, {
     ...workbenchEvidence,
     sidebarText: await textContent(cdp, '[data-side-navigation]'),
-    taskHistoryEmptyVisible: await isVisible(cdp, '[data-task-history-empty]'),
-    taskHistoryItems: await count(cdp, '[data-task-history-item]'),
+    projectWindowEmptyVisible: await isVisible(cdp, '[data-project-window-empty]'),
+    projectWindowItems: await count(cdp, '[data-project-window-item]'),
   });
   const projectionEvidence = await dialogSheetProjectionState(cdp);
   const afterAuth = {
@@ -113,8 +113,9 @@ async function pageState(cdp, extra = {}) {
     publicLandingVisible: visible('[data-public-landing-surface]'),
     authSurfaceVisible: visible('[data-auth-surface]'),
     workbenchVisible: visible('[data-app-shell]'),
-    taskHistoryEmptyVisible: visible('[data-task-history-empty]'),
-    taskHistoryItemCount: document.querySelectorAll('[data-task-history-item]').length,
+    projectWindowEmptyVisible: visible('[data-project-window-empty]'),
+    projectWindowItemCount: document.querySelectorAll('[data-project-window-item]').length,
+    retiredTaskHistorySelectorCount: document.querySelectorAll('[data-task-history-empty], [data-task-history-item], [data-task-history-center]').length,
     prompt: document.querySelector('#chat-input')?.value || '',
     ${Object.entries(extra).map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`).join(',\n    ')}
     };
@@ -193,8 +194,9 @@ async function overlayState(cdp, kind) {
       slice: element?.getAttribute('data-figma-slice') || '',
       visible: isVisible(element),
       hasClose: Boolean(element?.querySelector('button[aria-label*="关闭"], [data-overlay-close], [data-api-key-dialog-close], [data-inspector-close], [data-account-popover-close]')),
-      hasEmptyState: Boolean(element?.querySelector('[data-conversation-empty], [data-settings-message], [data-inspector-panel], [data-api-key-dialog-primary]')),
+      hasEmptyState: Boolean(element?.querySelector('[data-project-window-search-empty], [data-settings-message], [data-inspector-panel], [data-api-key-dialog-primary]')),
       projectionOnly: !/artifact body|runtime completed|storage ready|payment status|Pro 套餐|积分余额|充值/.test(text),
+      scope: element?.querySelector('[data-window-search]')?.dataset.windowSearchScope || '',
     };
     function isVisible(node) {
       if (!node || node.hidden) return false;
@@ -229,7 +231,7 @@ async function workbenchState(cdp) {
         toolbarVisible: Boolean(toolbar && toolbar.offsetParent !== null),
         taskLauncherCount: document.querySelectorAll('[data-research-task]').length,
         promptRestored: input?.value?.startsWith('@基金') === true,
-        taskHistoryProjectionOnly: Boolean(document.querySelector('[data-task-history-list]') && document.querySelector('[data-task-history-empty]')),
+        projectWindowProjectionOnly: Boolean(document.querySelector('[data-project-window-list]') && document.querySelector('[data-project-window-empty]')),
         accountTriggerVisible: Boolean(document.querySelector('[data-account-toggle]')?.offsetParent !== null),
         searchTriggerVisible: Boolean(document.querySelector('[data-search-trigger]')?.offsetParent !== null),
       },

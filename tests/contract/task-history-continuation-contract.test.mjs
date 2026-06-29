@@ -36,9 +36,11 @@ test('task history contract fixes refs-only continuation shape and cannot-claim 
   ]);
 
   assert.equal(pageState.taskHistoryContinuationCenter.route, 'projects');
-  assert.equal(pageState.taskHistoryContinuationCenter.surface, 'task_history_deliverable_continuation_center');
+  assert.equal(pageState.taskHistoryContinuationCenter.surface, 'project_window_continuation_center_projection');
+  assert.equal(pageState.taskHistoryContinuationCenter.visibleBusinessName, '项目 / 窗口');
+  assert.equal(pageState.taskHistoryContinuationCenter.legacyBusinessNameRetiredFromPrimaryUi, true);
   assert.equal(pageState.taskHistoryContinuationCenter.disabledUserPolicy, 'deny_with_USER_DISABLED');
-  assert.ok(pageState.taskHistoryContinuationCenter.requiredStates.includes('task_history_continue'));
+  assert.ok(pageState.taskHistoryContinuationCenter.requiredStates.includes('project_window_continue'));
   assert.ok(pageState.taskHistoryContinuationCenter.requiredFields.includes('deliverableRefs'));
 
   assert.deepEqual(responseCodes(api, '/api/tasks', 'get'), ['200', '401', '405', '423']);

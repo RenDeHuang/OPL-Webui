@@ -334,7 +334,7 @@ export function createOnePersonLabViewModel(state) {
     shell: { sideNavigation: true, accountDock: true, promptCommandCenter: true },
     navItems: [
       { id: 'home', label: '新建对话', href: '#home' },
-      { id: 'projects', label: '任务历史', href: '#projects' },
+      { id: 'projects', label: '项目 / 窗口', href: '#projects' },
       { id: 'skills', label: 'Skill', href: '#skills' },
       { id: 'workflows', label: '工作流', href: '#workflows' },
       { id: 'search', label: '搜索', href: '#home' },

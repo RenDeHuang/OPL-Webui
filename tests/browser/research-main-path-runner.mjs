@@ -62,9 +62,9 @@ try {
     await exerciseSpecialistNotReadyPath(cdp, '@基金 帮我拆解标书结构', runtimeAdmissionTools());
   }
   await activate(cdp, '[data-shell-action="projects"]');
-  await waitFor(cdp, 'document.querySelectorAll("[data-task-history-item]").length >= 1', () => describePageState(cdp, 'task history center missing recent tasks'));
-  await assertPage(cdp, 'document.querySelector("[data-task-history-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'task history continue deeplink');
-  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastTaskHistoryCount = document.querySelectorAll('[data-task-history-item]').length; document.body.dataset.lastTaskHistoryStatus = document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus || ''; document.body.dataset.lastTaskHistoryContinueHref = document.querySelector('[data-task-history-continue]')?.href || '';` });
+  await waitFor(cdp, 'document.querySelectorAll("[data-project-window-item]").length >= 1', () => describePageState(cdp, 'project/window center missing recent windows'));
+  await assertPage(cdp, 'document.querySelector("[data-project-window-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'project/window continue deeplink');
+  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastProjectWindowCount = document.querySelectorAll('[data-project-window-item]').length; document.body.dataset.lastProjectWindowStatus = document.querySelector('[data-project-window-item]')?.dataset.projectWindowStatus || ''; document.body.dataset.lastProjectWindowContinueHref = document.querySelector('[data-project-window-continue]')?.href || '';` });
   await activate(cdp, '[data-shell-action="home"]');
   const audit = await readAuditEvents(cdp);
   const kinds = (audit.events ?? []).map((event) => event.eventKind);
@@ -89,9 +89,9 @@ try {
     runtimeProgressRefCount: document.querySelectorAll('[data-runtime-progress-refs] li').length,
     runtimeDeliverableRefCount: document.querySelectorAll('[data-runtime-deliverable-refs] li').length,
     runtimeWebuiArtifactBody: document.querySelector('[data-runtime-run-projection]')?.dataset.webuiArtifactBody || '',
-    taskHistoryCount: Number(document.body.dataset.lastTaskHistoryCount || document.querySelectorAll('[data-task-history-item]').length),
-    taskHistoryStatus: document.body.dataset.lastTaskHistoryStatus || document.querySelector('[data-task-history-item]')?.dataset.taskHistoryStatus,
-    taskHistoryContinueHref: document.body.dataset.lastTaskHistoryContinueHref || document.querySelector('[data-task-history-continue]')?.href,
+    projectWindowCount: Number(document.body.dataset.lastProjectWindowCount || document.querySelectorAll('[data-project-window-item]').length),
+    projectWindowStatus: document.body.dataset.lastProjectWindowStatus || document.querySelector('[data-project-window-item]')?.dataset.projectWindowStatus,
+    projectWindowContinueHref: document.body.dataset.lastProjectWindowContinueHref || document.querySelector('[data-project-window-continue]')?.href,
     chatLogText: document.querySelector('[data-chat-log]')?.textContent,
   })`);
   const relevantAuditKinds = [...new Set(kinds)].filter((kind) => ['chat.completed', 'chat.upstream_failed', 'runtime_gate.blocked', 'runtime_gate.ready', 'run_intent.accepted', 'runtime_run.projected', 'runtime_admission.onboarding_required'].includes(kind));

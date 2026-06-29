@@ -109,7 +109,7 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assert.deepEqual(uiTruth.implementationMap.sourceFilesRead, ['src/app/App.tsx', 'src/styles/theme.css']);
   assertIncludesAll(
     uiTruth.implementationMap.surfaces.map((surface) => surface.id),
-    ['public_landing', 'auth_surface', 'authenticated_workbench_shell', 'task_launcher_runtime_blocker', 'results_refs_deliverables', 'task_history_continuation', 'dialog_sheet_projection'],
+    ['public_landing', 'auth_surface', 'authenticated_workbench_shell', 'task_launcher_runtime_blocker', 'results_refs_deliverables', 'project_window_continuation', 'dialog_sheet_projection'],
     'Figma implementation map surface',
   );
   assertIncludesAll(
@@ -135,10 +135,10 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assertIncludesAll(target.notApplicableToProductLayers, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'replacement product layer exclusion');
   assert.equal(target.claimSemantics.currentCannotClaimMeaning, 'current_stage_evidence_boundary_not_permanent_product_vision_denial');
   assert.equal(target.references.publicGrowthLayerUIReference.purpose, 'product_introduction_task_scenarios_output_showcase_start_path');
-  assert.equal(target.references.accountBasedUserProductLayerUIReference.purpose, 'authenticated_workbench_task_entry_task_history_refs_blocker_next_step_deeplink');
-  assertIncludesAll(target.acceptedVisualPatterns, ['public_product_intro', 'task_scenario_gallery', 'output_refs_showcase', 'authenticated_research_workbench', 'task_history_continuation_center'], 'target visual pattern');
-  assertIncludesAll(target.acceptedInteractionPatterns, ['start_path_after_auth_return', 'task_entry_to_composer', 'task_history_continue', 'blocker_next_step_handoff', 'medopl_opl_deeplink'], 'target interaction pattern');
-  assertIncludesAll(target.acceptedUserProductSurfaces, ['public_landing', 'login_register', 'byok_binding', 'task_entry_composer', 'refs_only_result', 'task_history_continuation', 'runtime_gate_projection'], 'target user surface');
+  assert.equal(target.references.accountBasedUserProductLayerUIReference.purpose, 'authenticated_workbench_task_entry_project_window_refs_blocker_next_step_deeplink');
+  assertIncludesAll(target.acceptedVisualPatterns, ['public_product_intro', 'task_scenario_gallery', 'output_refs_showcase', 'authenticated_research_workbench', 'project_window_continuation_center'], 'target visual pattern');
+  assertIncludesAll(target.acceptedInteractionPatterns, ['start_path_after_auth_return', 'task_entry_to_composer', 'project_window_continue', 'blocker_next_step_handoff', 'medopl_opl_deeplink'], 'target interaction pattern');
+  assertIncludesAll(target.acceptedUserProductSurfaces, ['public_landing', 'login_register', 'byok_binding', 'task_entry_composer', 'refs_only_result', 'project_window_continuation', 'runtime_gate_projection'], 'target user surface');
   assert.deepEqual(target.canonicalCopyGrammar['Commercial Launch'], ['Controlled Knowledge Delivery', 'One Person Lab Web']);
   assertIncludesAll(target.canonicalCopyGrammar['Pro/credit/recharge'], ['account capability', 'API key', 'quota projection', 'external capability handoff'], 'target commercial copy grammar');
   assert.equal(target.canonicalCopyGrammar['runtime completed'], 'MedOPL continuation ready / refs available');
@@ -188,7 +188,7 @@ test('commercial product user journey depth is admitted separately from interact
   assert.equal(depth.firstValueMoment.target, 'ordinary_research_chat_first_value_in_project_window');
   assert.equal(depth.projectWindowModel.businessName, '项目 / 窗口');
   assert.equal(depth.projectWindowModel.windowSearchScope, 'project_windows');
-  assert.equal(depth.projectWindowModel.status, 'contract_admitted_pending_implementation');
+  assert.equal(depth.projectWindowModel.status, 'implemented_projection_backed_v1');
   assert.equal(depth.chatInteractionModel.requiredFeel, 'streaming_or_progressive_chat_turns');
   assert.equal(depth.medoplHandoff.productRole, 'specialist_conversion_handoff_not_error');
   assertIncludesAll(depth.medoplHandoff.triggers, ['run_specialist_task', 'upload_file', 'runtime_required', 'storage_or_resource_binding_required'], 'MedOPL handoff trigger');
@@ -196,8 +196,8 @@ test('commercial product user journey depth is admitted separately from interact
   assertIncludesAll(depth.skillSurface.importStates, ['select', 'validate', 'imported', 'error'], 'skill import state');
   assertIncludesAll(depth.inspectorAutonomy.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'autonomy inspector signal');
   assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_menu'], 'toolbar control');
-  assertIncludesAll(depth.webOwnedGaps, ['first_value_optimization', 'project_window_continuation', 'window_search', 'streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'Web-owned product journey gap');
+  assertIncludesAll(depth.webOwnedGaps, ['first_value_optimization', 'streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'Web-owned product journey gap');
   assertIncludesAll(depth.medoplOwned, ['runtime_readiness', 'storage_resource_binding', 'billing_payment_truth', 'file_runtime_processing'], 'MedOPL-owned product journey item');
   assertIncludesAll(depth.ownerVisualCopyReview, ['reduce_primary_surface_explanatory_copy', 'project_window_language', 'medopl_conversion_copy', 'inspector_information_density'], 'owner copy review item');
-  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'project/window implementation complete', 'streaming chat implemented', 'Skill import implemented', 'model selection implemented', 'production-ready SaaS'], 'product journey cannot claim');
+  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'dedicated project/window persistence API', 'streaming chat implemented', 'Skill import implemented', 'model selection implemented', 'production-ready SaaS'], 'product journey cannot claim');
 });

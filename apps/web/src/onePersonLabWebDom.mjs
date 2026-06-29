@@ -182,18 +182,18 @@ function renderSidebar() {
       <div class="sidebar-brand">One Person Lab</div>
       <nav class="top-nav">
         <button type="button" data-shell-action="home"><span aria-hidden="true">+</span><span class="nav-label">新对话</span></button>
-        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">任务历史 / 交付接续</span></button>
+        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">项目 / 窗口</span></button>
         <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">Skill</span></button>
         <button type="button" data-shell-action="workflows"><span aria-hidden="true">⌘</span><span class="nav-label">工作流</span></button>
         <button type="button" data-search-trigger><span aria-hidden="true">?</span><span class="nav-label">搜索</span></button>
       </nav>
       <div class="sidebar-divider"></div>
-      <div class="project-tree" data-task-history-route>
-        <div class="tree-heading"><span>任务历史 / 交付接续</span></div>
-        <div class="conversation-list" data-task-history-list>
-          ${tasks.length === 0 ? '<p data-task-history-empty>当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map((task) => `
-            <button type="button" data-conversation-entry data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
-              <span>${escapeHTML(sidebarTaskTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
+      <div class="project-tree" data-project-window-route data-projection-source="GET /api/tasks">
+        <div class="tree-heading"><span>项目 / 窗口</span></div>
+        <div class="project-window-list" data-project-window-list>
+          ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map((task) => `
+            <button type="button" data-project-window-entry data-project-window-item="${escapeAttr(task.taskId)}" data-project-window-status="${escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
+              <span>${escapeHTML(projectWindowTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
             </button>
           `).join('')}
         </div>
@@ -215,7 +215,7 @@ function renderMainSurface() {
   if (state.shellState === 'running_turn') return renderResultView();
   if (state.shellState === 'blocked_turn') return renderBlockedView();
   if (state.shellState === 'quota_exceeded') return renderQuotaView();
-  if (state.shellState === 'files') return renderTaskHistoryCenter();
+  if (state.shellState === 'files') return renderProjectWindowCenter();
   if (state.shellState === 'skill_plaza') return renderSkillPlaza();
   if (state.shellState === 'workflow_plaza') return renderWorkflowPlaza();
   if (state.shellState === 'more') return renderMoreSurface();
@@ -357,26 +357,26 @@ function renderQuotaView() {
     </section>`;
 }
 
-function renderTaskHistoryCenter() {
+function renderProjectWindowCenter() {
   const tasks = state.view.taskHistory?.tasks || [];
   return `
-    <section class="file-library" data-shell-state="task_history_deliverable_continuation_center" data-task-history-center>
-      <header><h1>任务历史 / 交付接续</h1><button type="button" data-shell-action="home">新对话</button></header>
+    <section class="file-library" data-shell-state="project_window_continuation_center" data-project-window-center data-projection-source="GET /api/tasks">
+      <header><h1>项目 / 窗口</h1><button type="button" data-shell-action="home">新建窗口</button></header>
       <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
-      <div class="file-list" data-task-history-list>
-        ${tasks.length === 0 ? '<p data-task-history-empty>当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map(renderTaskHistoryCard).join('')}
+      <div class="file-list" data-project-window-list>
+        ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map(renderProjectWindowCard).join('')}
       </div>
     </section>`;
 }
 
-function renderTaskHistoryCard(task) {
-  const title = sidebarTaskTitle(task);
+function renderProjectWindowCard(task) {
+  const title = projectWindowTitle(task);
   const refsCount = (task.progressRefs?.length || 0) + (task.deliverableRefs?.length || 0) + (task.materialRefs?.length || 0);
   return `
-    <article data-task-history-item="${escapeAttr(task.taskId)}" data-task-history-status="${escapeAttr(task.status)}">
+    <article data-project-window-item="${escapeAttr(task.taskId)}" data-project-window-status="${escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
       <strong>${escapeHTML(title || '未命名任务')}</strong>
       <small>${escapeHTML(task.status || 'projection')} · ${escapeHTML(formatShortDate(task.updatedAt))} · ${refsCount} refs</small>
-      <a data-task-history-continue href="${escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续到 MedOPL</a>
+      <a data-project-window-continue href="${escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续到 MedOPL</a>
     </article>`;
 }
 
@@ -414,12 +414,12 @@ function renderSearchSheet() {
   return `
     <div class="sheet-backdrop" data-overlay-close="search"></div>
     <aside class="search-sheet" data-search-sheet data-overlay-state="open" data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>Search</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
-      <input id="conversation-search" type="search" data-conversation-search placeholder="搜索对话历史..." aria-label="搜索对话历史">
-      <div class="conversation-history" data-conversation-history>
-        ${conversations.length === 0 ? '' : conversations.map((conversation) => `<button type="button" data-conversation-entry><strong>${escapeHTML(conversation.title || '未命名对话')}</strong><small>${escapeHTML(formatShortDate(conversation.updatedAt))}</small></button>`).join('')}
+      <header><span>搜索窗口</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
+      <input id="project-window-search" type="search" data-window-search data-window-search-scope="project_windows" placeholder="搜索项目窗口..." aria-label="搜索项目窗口">
+      <div class="project-window-search-results" data-project-window-search-results>
+        ${conversations.length === 0 ? '' : conversations.map((conversation) => `<button type="button" data-project-window-search-result><strong>${escapeHTML(conversation.title || '未命名窗口')}</strong><small>${escapeHTML(formatShortDate(conversation.updatedAt))}</small></button>`).join('')}
       </div>
-      <p class="empty-state" data-conversation-empty ${conversations.length > 0 ? 'hidden' : ''}>暂无历史对话</p>
+      <p class="empty-state" data-project-window-search-empty ${conversations.length > 0 ? 'hidden' : ''}>暂无窗口</p>
     </aside>`;
 }
 
@@ -467,7 +467,7 @@ function renderInspector() {
       <section data-inspector-panel="files" ${state.inspectorTab === 'files' ? '' : 'hidden'}>
         <h3>deliverable refs</h3>
         <p>deliverable refs 由 MedOPL 投影；此处仅显示引用路径。</p>
-        <dl><div><dt>progress refs</dt><dd>来自 Go control plane task history projection</dd></div><div><dt>materials refs</dt><dd>等待材料引用</dd></div></dl>
+        <dl><div><dt>progress refs</dt><dd>来自 Go control plane project/window projection</dd></div><div><dt>materials refs</dt><dd>等待材料引用</dd></div></dl>
       </section>
       <section data-inspector-panel="progress" ${state.inspectorTab === 'progress' ? '' : 'hidden'}>
         <h3>Progress</h3>
@@ -540,15 +540,15 @@ function bindForms() {
 }
 
 function bindSearch() {
-  app?.querySelector('[data-conversation-search]')?.addEventListener('input', (event) => {
+  app?.querySelector('[data-window-search]')?.addEventListener('input', (event) => {
     const value = event.currentTarget.value.trim().toLowerCase();
     let visible = 0;
-    app.querySelectorAll('[data-conversation-entry]').forEach((entry) => {
+    app.querySelectorAll('[data-project-window-search-result]').forEach((entry) => {
       const show = !value || entry.textContent.toLowerCase().includes(value);
       entry.hidden = !show;
       if (show) visible += 1;
     });
-    const empty = app.querySelector('[data-conversation-empty]');
+    const empty = app.querySelector('[data-project-window-search-empty]');
     if (empty) empty.hidden = visible > 0;
   });
 }
@@ -856,8 +856,8 @@ function runtimeTaskFromPrompt(prompt = '') {
   return { taskIntent: intentByMarker[marker] || 'runtime_required_task', marker, prompt };
 }
 
-function sidebarTaskTitle(task) {
-  return `${task.marker || ''} ${task.taskType || task.taskIntent || '任务'}`.trim();
+function projectWindowTitle(task) {
+  return `${task.marker || ''} ${task.taskType || task.taskIntent || '窗口'}`.trim();
 }
 
 function shortTaskLabel(label) {

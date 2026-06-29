@@ -34,7 +34,7 @@
         "audience": "authenticated_research_user",
         "anonymousPolicy": "must_not_show_fake_workbench",
         "anonymousAllowedOutcomes": ["public_growth_landing", "auth_required_start_path"],
-        "mustRenderWhenAuthenticated": ["workbench_shell", "task_composer", "task_history_continuation_navigation"]
+        "mustRenderWhenAuthenticated": ["workbench_shell", "task_composer", "project_window_navigation"]
       }
     ],
     "hashRoutes": {
@@ -79,13 +79,16 @@
   "sidebarTruth": {
     "scope": "account_based_user_product_layer_only",
     "surface": "authenticated_workbench_navigation",
-    "projectsSurfaceBusinessName": "任务历史 / 交付接续",
-    "genericProjectLanguagePolicy": "forbidden_until_real_project_contract_exists",
+    "projectsSurfaceBusinessName": "项目 / 窗口",
+    "legacyTaskHistoryBusinessNameRetired": true,
+    "genericProjectLanguagePolicy": "allowed_only_as_project_window_surface_backed_by_projection_or_empty_state",
+    "projectWindowSource": "GET /api/tasks projection until project/window persistence exists",
+    "projectWindowProjection": "project_window_refs_status_metadata_only",
     "taskHistorySource": "GET /api/tasks",
     "taskHistoryProjection": "refs_status_metadata_only",
     "emptyState": {
-      "id": "task_history_empty",
-      "copy": "当前没有任务历史。选择一个任务入口后，真实 Go control plane projection 会出现在这里。",
+      "id": "project_window_empty",
+      "copy": "还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。",
       "mustBeShownWhen": "GET /api/tasks returns empty tasks array"
     },
     "forbiddenStaticCopy": ["v20文件夹", "New project", "opl", "medopl", "空项目", "新建项目"],
@@ -99,7 +102,7 @@
     "projectsSurfaceBusinessName": "项目 / 窗口",
     "searchTruth": "search_project_windows",
     "openGaps": ["streaming_chat_turns", "skill_import", "autonomy_inspector", "model_selector", "plus_menu"],
-    "doesNotProve": ["commercial product journey complete", "first value optimized", "project/window implementation complete"]
+    "doesNotProve": ["commercial product journey complete", "first value optimized", "dedicated project/window persistence API"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "dialogSheetTruth": {
@@ -116,8 +119,8 @@
       "closeTrigger": "close_button_or_escape",
       "escapeBehavior": "close_and_return_focus_to_search_nav_action",
       "focusReturn": "search_nav_action",
-      "emptyState": "no_conversation_history",
-      "errorState": "sanitized_conversation_load_error"
+      "emptyState": "project_window_search_empty",
+      "errorState": "sanitized_project_window_search_error"
     },
     "apiKeyDialog": {
       "openTrigger": "send_without_bound_api_key",

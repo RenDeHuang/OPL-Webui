@@ -40,9 +40,9 @@ test('research main path runs in a real browser and records page-state evidence'
     assert.equal(evidence.pageStates.runtimeTaskMarker, '@论文');
     assert.ok(evidence.auditKinds.includes('runtime_admission.onboarding_required'));
   }
-  assert.equal(evidence.pageStates.taskHistoryCount >= 2, true);
-  assert.equal(evidence.pageStates.taskHistoryStatus, 'blocked');
-  assert.match(evidence.pageStates.taskHistoryContinueHref, /^https:\/\/medopl\.medopl\.cn/);
+  assert.equal(evidence.pageStates.projectWindowCount >= 2, true);
+  assert.equal(evidence.pageStates.projectWindowStatus, 'blocked');
+  assert.match(evidence.pageStates.projectWindowContinueHref, /^https:\/\/medopl\.medopl\.cn/);
   assert.ok(evidence.auditKinds.includes('chat.completed'));
   assert.ok(evidence.upstreamRequests >= 1);
   assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');

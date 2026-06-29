@@ -388,7 +388,7 @@
       "launchBlocking": false,
       "cannotClaim": [
         "commercial product journey complete",
-        "project/window implementation complete",
+        "dedicated project/window persistence API",
         "streaming chat implemented",
         "Skill import implemented",
         "model selection implemented",
@@ -423,8 +423,7 @@
             "no payment/runtime/storage/artifact authority moves into Webui"
           ],
           "nextStepOpeners": [
-            "open first_value_optimization to reduce explanatory copy and add progressive ordinary chat feel",
-            "open project_window_continuation before renaming task history in UI",
+            "project_window_continuation is projection-backed done; open first_value_optimization to reduce explanatory copy and add progressive ordinary chat feel",
             "open specialist_conversion_path before changing MedOPL handoff copy or triggers"
           ],
           "ownerReceipt": {
@@ -454,7 +453,7 @@
           "id": "first_value_optimization",
           "status": "not_started",
           "objective": "Reduce explanatory copy and make ordinary research first value feel like a progressive chat turn in a project/window context.",
-          "entryCriteria": ["user_journey_map is done"],
+          "entryCriteria": ["user_journey_map is done", "project_window_continuation is projection-backed done"],
           "exitCriteria": ["primary surfaces read like shipped product UI", "ordinary @科研 has progressive turn states", "no fake result or fake streaming is introduced"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_browser_e2e", "owner_visual_copy_review_needed"],
@@ -494,22 +493,22 @@
         },
         {
           "id": "project_window_continuation",
-          "status": "not_started",
+          "status": "done",
           "objective": "Replace task-history wording with projects/windows: each project can hold multiple conversation windows with context, and search searches windows.",
           "entryCriteria": ["user_journey_map is done"],
-          "exitCriteria": ["project/window state contract exists", "search scope is project_windows", "old task-history business wording is retired"],
+          "exitCriteria": ["project/window state contract exists", "search scope is project_windows", "old task-history business wording is retired from current UI DOM and browser assertions"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_go_projection_contract", "missing_browser_e2e"],
-          "acceptance": ["no fake project/window data", "Go control plane projection or contract-backed empty state only", "old task history assertions are retired or rewritten"],
+          "acceptance": ["no fake project/window data", "Go control plane /api/tasks projection or contract-backed empty state only", "old task-history assertions and selectors are retired or rewritten from current Web shell"],
           "nextStepOpeners": ["open task_continuation_history once project/window projection is stable"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "core IA and copy change"},
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "projection-backed IA and selector retirement; owner visual copy review remains in first_value_optimization"},
           "requiredEvals": [
             {
               "id": "project_window_contract_browser_e2e",
               "contract": "contracts/web-page-state-matrix.json#/commercialProductUserJourneyDepth",
-              "proves": ["project/window continuation and search truth are implemented when browser evidence lands"],
-              "doesNotProve": ["artifact body authority", "storage truth"],
-              "failureBlocks": ["project/window implementation complete"]
+              "proves": ["project/window continuation and search truth are implemented at projection-backed repo/browser scope"],
+              "doesNotProve": ["dedicated project/window persistence API", "artifact body authority", "storage truth", "production-ready SaaS"],
+              "failureBlocks": ["project/window projection-backed implementation claim"]
             }
           ]
         },

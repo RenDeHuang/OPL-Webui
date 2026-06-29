@@ -37,7 +37,7 @@ test('web shell mounts the Figma Make direct-copy replacement target', () => {
   assert.match(dom, /data-chat-form/);
   assert.match(dom, /data-research-task-intent/);
   assert.match(dom, /data-results-surface/);
-  assert.match(dom, /data-task-history-list/);
+  assert.match(dom, /data-project-window-list/);
   assert.match(dom, /data-inspector-sheet/);
   assert.match(dom, /data-inspector-open="files"/);
   assert.match(dom, /data-api-key-dialog/);
