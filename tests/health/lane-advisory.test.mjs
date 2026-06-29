@@ -8,7 +8,7 @@ import {
 
 test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
-    'frontend/web/src/onePersonLabWeb.mjs',
+    'frontend/web/src/app/main.mjs',
   ]), ['ui', 'smoke', 'interaction', 'browser:golden']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([

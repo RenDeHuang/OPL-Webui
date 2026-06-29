@@ -16,10 +16,10 @@ import {
   saveAPIKey,
   sendChatMessage,
   viewFromHash,
-} from './onePersonLabWebState.mjs';
-import { INSPECTOR_TABS } from './onePersonLabWebContinuation.mjs';
-import { renderAnonymousSurface } from './surfaces/publicAuthSurface.mjs';
-import { renderAuthenticatedSurface } from './surfaces/workbenchSurface.mjs';
+} from '../product/publicContract.mjs';
+import { INSPECTOR_TABS } from '../features/continuation/continuationSurface.mjs';
+import { renderAnonymousSurface } from '../features/public-landing/publicAuthSurface.mjs';
+import { renderAuthenticatedSurface } from '../features/workbench/workbenchSurface.mjs';
 
 const app = typeof document === 'undefined' ? null : document.querySelector('#app');
 const state = {

@@ -1,4 +1,4 @@
-import { RESEARCH_TASK_INTENTS } from '../onePersonLabWebState.mjs';
+import { RESEARCH_TASK_INTENTS } from '../../product/catalog.mjs';
 
 export function renderAnonymousSurface(state, helpers) {
   if (state.shellState === 'auth_login_register') return renderAuthPage(state, helpers);

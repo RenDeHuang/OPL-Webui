@@ -12,7 +12,7 @@ import {
 
 test('lane check fails when required lanes have no matching verification evidence', () => {
   const result = evaluateLaneEvidence({
-    changedFiles: ['frontend/web/src/onePersonLabWeb.mjs'],
+    changedFiles: ['frontend/web/src/app/main.mjs'],
     evidence: { runs: [] },
     diffFingerprint: 'current-diff',
   });
@@ -24,7 +24,7 @@ test('lane check fails when required lanes have no matching verification evidenc
 
 test('lane check accepts targeted lane evidence for the same diff fingerprint', () => {
   const result = evaluateLaneEvidence({
-    changedFiles: ['frontend/web/src/onePersonLabWeb.mjs'],
+    changedFiles: ['frontend/web/src/app/main.mjs'],
     evidence: {
       runs: [
         { status: 'passed', target: 'fast', lanes: ['fast', 'ui', 'api', 'health-light', 'go-light'], diffFingerprint: 'current-diff' },

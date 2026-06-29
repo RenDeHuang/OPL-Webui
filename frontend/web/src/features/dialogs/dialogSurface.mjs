@@ -1,4 +1,4 @@
-import { MEDOPL_DEEP_LINK } from '../onePersonLabWebState.mjs';
+import { MEDOPL_DEEP_LINK } from '../../product/catalog.mjs';
 
 export function renderAccountPopover(state, { escapeHTML }) {
   const providerStatus = state.view.provider.apiKeyConfigured ? `已绑定：${state.view.provider.maskedKey}` : '未绑定';

@@ -2,17 +2,18 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const WEB_SOURCE_FILES = Object.freeze([
-  'frontend/web/src/onePersonLabWeb.mjs',
-  'frontend/web/src/onePersonLabWebState.mjs',
-  'frontend/web/src/onePersonLabWebDom.mjs',
-  'frontend/web/src/onePersonLabWebContinuation.mjs',
-  ...collectFiles('frontend/web/src/surfaces', (path) => path.endsWith('.mjs')),
+  'frontend/web/src/app/main.mjs',
+  'frontend/web/src/app/shellController.mjs',
+  'frontend/web/src/api/controlPlaneClient.mjs',
+  'frontend/web/src/product/catalog.mjs',
+  'frontend/web/src/product/publicContract.mjs',
+  'frontend/web/src/state/viewModel.mjs',
+  ...collectFiles('frontend/web/src/features', (path) => path.endsWith('.mjs')),
 ]);
 
 export const WEB_RENDER_SOURCE_FILES = Object.freeze([
-  'frontend/web/src/onePersonLabWebDom.mjs',
-  'frontend/web/src/onePersonLabWebContinuation.mjs',
-  ...collectFiles('frontend/web/src/surfaces', (path) => path.endsWith('.mjs')),
+  'frontend/web/src/app/shellController.mjs',
+  ...collectFiles('frontend/web/src/features', (path) => path.endsWith('.mjs')),
 ]);
 
 export function readWebSource() {

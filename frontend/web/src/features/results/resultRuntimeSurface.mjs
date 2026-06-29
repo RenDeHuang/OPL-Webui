@@ -1,7 +1,9 @@
 import {
   MEDOPL_DEEP_LINK,
+} from '../../product/catalog.mjs';
+import {
   runtimeTaskCardForPrompt,
-} from '../onePersonLabWebState.mjs';
+} from '../../state/viewModel.mjs';
 
 export function renderResultView(state, helpers) {
   const result = state.lastResult;

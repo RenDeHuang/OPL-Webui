@@ -15,20 +15,21 @@ function visibleTextFromHTML(html) {
 
 test('web shell mounts the Figma Make direct-copy replacement target', () => {
   const html = readFileSync('frontend/web/index.html', 'utf8');
-  const dom = readFileSync('frontend/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const controller = readFileSync('frontend/web/src/app/shellController.mjs', 'utf8');
   const shellSource = readWebSource();
-  const state = readFileSync('frontend/web/src/onePersonLabWebState.mjs', 'utf8');
+  const catalog = readFileSync('frontend/web/src/product/catalog.mjs', 'utf8');
   const visibleText = visibleTextFromHTML(html);
 
   assert.match(html, /<div\s+id="app"/);
   assert.match(html, /data-replacement-target="figma_make_ui_ux_for_commercial_launch"/);
   assert.match(html, /data-figma-source="1MNO5l7PQYKZVNqQgw6DGS"/);
-  assert.match(state, /FIGMA_MAKE_SOURCE = '1MNO5l7PQYKZVNqQgw6DGS'/);
-  assert.match(dom, /public_landing/);
-  assert.match(dom, /auth_login_register/);
-  assert.match(dom, /home_default/);
-  assert.match(dom, /running_turn/);
-  assert.match(dom, /blocked_turn/);
+  assert.match(html, /src\/app\/main\.mjs/);
+  assert.match(catalog, /FIGMA_MAKE_SOURCE = '1MNO5l7PQYKZVNqQgw6DGS'/);
+  assert.match(controller, /public_landing/);
+  assert.match(controller, /auth_login_register/);
+  assert.match(controller, /home_default/);
+  assert.match(controller, /running_turn/);
+  assert.match(controller, /blocked_turn/);
   assert.match(shellSource, /quota_exceeded/);
   assert.match(shellSource, /side_navigation_new_chat_projects_skill_workflow_search_more/);
   assert.match(shellSource, /data-shell-action="home"/);

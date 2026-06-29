@@ -1,4 +1,4 @@
-import { MEDOPL_DEEP_LINK } from './onePersonLabWebState.mjs';
+import { MEDOPL_DEEP_LINK } from '../../product/catalog.mjs';
 
 export const INSPECTOR_TABS = Object.freeze(['autonomy', 'inputs', 'outputs', 'why_next']);
 

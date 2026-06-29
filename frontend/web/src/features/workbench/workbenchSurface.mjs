@@ -1,6 +1,6 @@
 import {
   RESEARCH_TASK_INTENTS,
-} from '../onePersonLabWebState.mjs';
+} from '../../product/catalog.mjs';
 import {
   modelProfileLabel,
   projectWindowTitle,
@@ -10,17 +10,17 @@ import {
   renderProjectWindowCenter,
   renderSearchSheet,
   renderSkillImportDialog,
-} from '../onePersonLabWebContinuation.mjs';
+} from '../continuation/continuationSurface.mjs';
 import {
   renderAPIKeyDialog,
   renderAccountPopover,
   renderBillingSummary,
-} from './dialogSurface.mjs';
+} from '../dialogs/dialogSurface.mjs';
 import {
   renderBlockedView,
   renderQuotaView,
   renderResultView,
-} from './resultRuntimeSurface.mjs';
+} from '../results/resultRuntimeSurface.mjs';
 
 export function renderAuthenticatedSurface(state, helpers) {
   return `

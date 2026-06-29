@@ -32,7 +32,7 @@ const requiredRecurringDocs = Object.freeze([
   'docs/history/tombstones/README.md',
 ]);
 const selectedOwnerSourceSurfaces = Object.freeze([
-  'frontend/web/src/onePersonLabWeb.mjs',
+  'frontend/web/src/app/main.mjs',
   'backend/control-plane-go/cmd/opl-webui-control-plane/main.go',
 ]);
 

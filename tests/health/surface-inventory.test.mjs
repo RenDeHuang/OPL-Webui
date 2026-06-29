@@ -84,7 +84,7 @@ test('surface inventory covers scripts, contracts, tests, recurring docs, workfl
     assert.ok(paths.has(path), `surface inventory missing long-lived path: ${path}`);
   }
 
-  assert.ok(paths.has('frontend/web/src/onePersonLabWeb.mjs'), 'inventory should include the Web app owner module');
+  assert.ok(paths.has('frontend/web/src/app/main.mjs'), 'inventory should include the Web app owner module');
   assert.ok(paths.has('backend/control-plane-go/cmd/opl-webui-control-plane/main.go'), 'inventory should include the Go control-plane owner module');
   assert.equal(paths.has('backend/control-plane-go/internal/webapp/postgres_chat.go'), false, 'inventory must not mirror ordinary implementation files');
 });

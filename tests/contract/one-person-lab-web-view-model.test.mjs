@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
-import * as web from '../../frontend/web/src/onePersonLabWeb.mjs';
+import * as web from '../../frontend/web/src/product/publicContract.mjs';
 import { readWebSource, WEB_SOURCE_FILES } from './helpers/web-source-reader.mjs';
 
 function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')); }
@@ -569,10 +569,10 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
 });
 
 test('web product entry delegates state DOM and surface ownership to focused modules', () => {
-  const entry = readFileSync('frontend/web/src/onePersonLabWeb.mjs', 'utf8');
-  for (const path of ['frontend/web/src/onePersonLabWebState.mjs', 'frontend/web/src/onePersonLabWebDom.mjs', ...WEB_SOURCE_FILES.filter((path) => path.includes('/surfaces/'))]) assert.equal(existsSync(path), true, `missing owner module: ${path}`);
-  assert.match(entry, /onePersonLabWebState\.mjs/);
-  assert.match(entry, /onePersonLabWebDom\.mjs/);
+  const entry = readFileSync('frontend/web/src/app/main.mjs', 'utf8');
+  for (const path of WEB_SOURCE_FILES) assert.equal(existsSync(path), true, `missing owner module: ${path}`);
+  assert.match(entry, /shellController\.mjs/);
   assert.doesNotMatch(entry, /querySelector|addEventListener|appendMessage|writeJSON|readJSON|providerFallback/);
   assert.ok(entry.split('\n').length <= 80, 'product entry should stay thin');
+  assert.equal(existsSync('frontend/web/src/onePersonLabWeb.mjs'), false, 'old aggregate product entry must be retired');
 });

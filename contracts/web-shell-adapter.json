@@ -9,7 +9,7 @@
     "id": "opl_web_static_esm_shell",
     "sourceRoot": "frontend/web",
     "entryHtml": "frontend/web/index.html",
-    "entryModule": "frontend/web/src/onePersonLabWeb.mjs",
+    "entryModule": "frontend/web/src/app/main.mjs",
     "styleEntry": "frontend/web/styles.css",
     "runtime": "static_html_css_esm",
     "framework": "none",
