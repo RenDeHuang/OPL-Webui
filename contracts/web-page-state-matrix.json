@@ -124,6 +124,7 @@
     ],
     "evidence": [
       "tests/contract/one-person-lab-web-data.test.mjs",
+      "tests/contract/one-person-lab-web-view-model.test.mjs",
       "tests/browser/research-main-path.browser.test.mjs"
     ],
     "cannotClaim": [
@@ -512,7 +513,7 @@
     "evidence": {
       "contract": "contracts/web-gui-product-contract.json",
       "shellAdapter": "contracts/web-shell-adapter.json",
-      "test": "tests/contract/one-person-lab-web-data.test.mjs"
+      "test": "tests/contract/one-person-lab-web-view-model.test.mjs"
     }
   },
   "researchTaskIntents": [
@@ -699,7 +700,7 @@
         "route": "home",
         "requiredApi": "/api/session/current",
         "expectedState": "authenticated_bound",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "evidence": "tests/contract/one-person-lab-web-view-model.test.mjs"
       },
       {
         "id": "api_key_binding",
@@ -730,19 +731,19 @@
         "id": "view_progress_refs",
         "route": "home",
         "expectedState": "progress_refs_readonly",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "evidence": "tests/contract/one-person-lab-web-view-model.test.mjs"
       },
       {
         "id": "view_deliverable_refs",
         "route": "home",
         "expectedState": "deliverable_refs_readonly",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "evidence": "tests/contract/one-person-lab-web-view-model.test.mjs"
       },
       {
         "id": "view_blocker_next_step",
         "route": "home",
         "expectedState": "service_unavailable",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "evidence": "tests/contract/one-person-lab-web-view-model.test.mjs"
       },
       {
         "id": "continue_via_deeplink",
@@ -800,7 +801,7 @@
         "id": "reliability_status_visible",
         "route": "home",
         "expectedState": "upstream_failed",
-        "evidence": "tests/contract/one-person-lab-web-data.test.mjs"
+        "evidence": "tests/contract/one-person-lab-web-view-model.test.mjs"
       },
       {
         "id": "sanitized_audit",

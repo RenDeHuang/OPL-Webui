@@ -26,8 +26,14 @@ jobs:
         with:
           go-version-file: backend/control-plane-go/go.mod
 
-      - name: Run verify
-        run: npm run verify
+      - name: Run fast verify
+        run: npm run verify:fast
+
+      - name: Run API verify
+        run: npm run verify:api
+
+      - name: Run UI verify
+        run: npm run verify:ui
 
       - name: Run backend control-plane verify
         run: npm run verify:backend
@@ -38,8 +44,8 @@ jobs:
       - name: Install Chromium for browser e2e
         run: npx --yes playwright install chromium
 
-      - name: Run browser e2e release gate
-        run: npm run verify:browser
+      - name: Run browser golden path
+        run: npm run verify:browser:golden
 
       - name: Run review gate
         run: npm run gate:review

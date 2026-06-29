@@ -9,15 +9,15 @@ import {
 test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'frontend/web/src/onePersonLabWeb.mjs',
-  ]), ['smoke', 'interaction', 'browser']);
+  ]), ['ui', 'smoke', 'interaction', 'browser:golden']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'contracts/web-page-state-matrix.json',
-  ]), ['interaction', 'contract', 'browser']);
+  ]), ['interaction', 'contract', 'browser:golden']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'backend/control-plane-go/internal/webapp/handlers.go',
-  ]), ['contract', 'go']);
+  ]), ['api', 'go']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     '.github/workflows/cloud-rollout.yml',
@@ -55,6 +55,6 @@ test('lane advisory CLI reports suggestions without failing the gate', () => {
   );
 
   assert.match(stdout, /\[lane-advisory\]/);
-  assert.match(stdout, /npm run verify:browser/);
+  assert.match(stdout, /npm run verify:browser:golden/);
   assert.match(stdout, /npm run verify:release/);
 });

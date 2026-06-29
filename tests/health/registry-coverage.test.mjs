@@ -17,8 +17,11 @@ const {
 
 test('registry covers the current lane model', () => {
   for (const lane of [
+    'fast',
     'smoke',
+    'ui',
     'contract',
+    'api',
     'interaction',
     'interaction-browser',
     'health-light',
@@ -34,8 +37,11 @@ test('registry covers the current lane model', () => {
   }
 
   for (const lane of [
+    'fast',
     'smoke',
+    'ui',
     'contract',
+    'api',
     'interaction',
     'interaction-browser',
     'health-light',
@@ -95,7 +101,11 @@ test('registry points only at existing test files', () => {
 });
 
 test('verify suites separate daily current from explicit heavy lanes', () => {
-  assert.deepEqual(VERIFY_SUITES.current, ['smoke', 'interaction', 'health-light', 'go-light']);
+  assert.deepEqual(VERIFY_SUITES.fast, ['fast', 'ui', 'api', 'health-light', 'go-light']);
+  assert.deepEqual(VERIFY_SUITES.current, VERIFY_SUITES.fast);
+  assert.deepEqual(VERIFY_SUITES.ui, ['ui', 'interaction']);
+  assert.deepEqual(VERIFY_SUITES.api, ['api', 'go-light']);
+  assert.deepEqual(VERIFY_SUITES['browser:golden'], ['browser']);
   assert.deepEqual(VERIFY_SUITES.contract, ['contract', 'interaction']);
   assert.deepEqual(VERIFY_SUITES.interaction, ['interaction', 'interaction-browser']);
   assert.deepEqual(VERIFY_SUITES.health, ['health-light', 'health']);
@@ -139,6 +149,21 @@ test('current suite excludes runtime release browser and heavy sidecar gates', (
       for (const risk of entry.riskTriggers) {
         assert.equal(forbiddenRiskTriggers.has(risk), false, `${entry.file} must not run ${risk} risk in current`);
       }
+    }
+  }
+});
+
+test('fast suite is the default local product engineering feedback lane', () => {
+  const fastLanes = new Set(VERIFY_SUITES.fast);
+  assert.deepEqual([...fastLanes], ['fast', 'ui', 'api', 'health-light', 'go-light']);
+
+  const forbiddenProofLevels = new Set(['browser', 'production']);
+  const forbiddenLanes = new Set(['browser', 'interaction-browser', 'integration', 'release', 'real-medopl']);
+  for (const laneName of VERIFY_SUITES.fast) {
+    assert.equal(forbiddenLanes.has(laneName), false, `${laneName} must not run in fast`);
+    for (const entry of TEST_LANE_REGISTRY[laneName].tests) {
+      assert.equal(forbiddenProofLevels.has(entry.proofLevel), false, `${entry.file} must not be fast proof ${entry.proofLevel}`);
+      assert.equal(['heavy', 'soak', 'golden'].includes(entry.cost), false, `${entry.file} must not be expensive in fast`);
     }
   }
 });
@@ -234,6 +259,8 @@ test('interaction integration release and browser sidecars are first-class lanes
   );
 
   assert.ok(laneFiles.interaction.includes('tests/contract/interaction-truth-contract.test.mjs'));
+  assert.ok(laneFiles.ui.includes('tests/contract/web-source-boundary-contract.test.mjs'));
+  assert.ok(laneFiles.api.includes('tests/contract/go-control-plane-http.test.mjs'));
   assert.ok(laneFiles.interaction.includes('tests/contract/public-growth-layer-contract.test.mjs'));
   assert.ok(laneFiles['interaction-browser'].includes('tests/browser/public-growth-login-return.browser.test.mjs'));
   assert.ok(laneFiles['interaction-browser'].includes('tests/browser/interaction-truth.browser.test.mjs'));

@@ -10,7 +10,10 @@ export const LIFECYCLE_ROLES = Object.freeze([
 ]);
 export const VERIFY_SUITE_NAMES = Object.freeze([
   'current',
+  'fast',
   'smoke',
+  'ui',
+  'api',
   'contract',
   'interaction',
   'health-light',
@@ -18,6 +21,7 @@ export const VERIFY_SUITE_NAMES = Object.freeze([
   'backend',
   'go-light',
   'go',
+  'browser:golden',
   'browser',
   'integration',
   'release',
@@ -361,7 +365,7 @@ const TEST_ENTRIES = Object.freeze([
   testEntry({
     file: 'tests/contract/go-control-plane-http.test.mjs',
     runner: 'node',
-    lane: 'contract',
+    lane: 'api',
     ownerSurface: 'control-plane-go',
     lifecycleRole: 'current-owner',
     testKind: 'contract',
@@ -371,7 +375,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['local Go control plane HTTP API satisfies auth, session, account, readonly projection, and chat contract behavior'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE],
     riskTriggers: ['public-api', 'control-plane-go'],
-    verifySuites: ['contract'],
+    verifySuites: ['fast', 'current', 'api', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/admin-ops-v0-contract.test.mjs',
@@ -519,16 +523,31 @@ const TEST_ENTRIES = Object.freeze([
     testKind: 'contract',
     proofLevel: 'unit',
     claimScope: 'repo',
-    contracts: ['frontend/web/src/onePersonLabWeb.mjs', 'backend/control-plane-go/cmd/opl-webui-control-plane/main.go', 'contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-api.openapi.json', 'contracts/web-runtime-bridge.json', 'contracts/web-release-profile.json'],
-    proves: ['Web data model and product contracts align on account-based Web App main path, three-layer product truth, page state, runtime gate, provider, commercial lifecycle, and release evidence boundaries'],
+    contracts: ['contracts/web-product-profile.json', 'contracts/web-page-state-matrix.json', 'contracts/web-api.openapi.json', 'contracts/web-runtime-bridge.json', 'contracts/web-release-profile.json', 'contracts/web-shell-adapter.json'],
+    proves: ['Web product contracts align on account-based Web App main path, three-layer product truth, page state, runtime gate, provider, commercial lifecycle, and release evidence boundaries'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE],
-    riskTriggers: ['apps-web', 'page-state', 'public-api'],
+    riskTriggers: ['page-state', 'public-api'],
     verifySuites: ['contract'],
+  }),
+  testEntry({
+    file: 'tests/contract/one-person-lab-web-view-model.test.mjs',
+    runner: 'node',
+    lane: 'ui',
+    ownerSurface: 'apps-web',
+    lifecycleRole: 'current-owner',
+    testKind: 'contract',
+    proofLevel: 'unit',
+    claimScope: 'repo',
+    contracts: ['frontend/web/src/onePersonLabWeb.mjs', 'frontend/web/src/onePersonLabWebState.mjs', 'frontend/web/src/onePersonLabWebDom.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-runtime-bridge.json'],
+    proves: ['Web view model, browser bootstrap, API client wrappers, sanitized reliability state, runtime gate card, and source delegation behavior stay stable for UI product development'],
+    doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE],
+    riskTriggers: ['apps-web', 'page-state'],
+    verifySuites: ['fast', 'current', 'ui', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/web-source-boundary-contract.test.mjs',
     runner: 'node',
-    lane: 'contract',
+    lane: 'ui',
     ownerSurface: 'apps-web',
     lifecycleRole: 'current-owner',
     testKind: 'contract',
@@ -538,7 +557,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['frontend/backend source boundary is explicit and the Web product entry delegates render implementation to focused frontend surface modules'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, 'new UI behavior', 'production rollout'],
     riskTriggers: ['apps-web', 'contract'],
-    verifySuites: ['contract'],
+    verifySuites: ['fast', 'current', 'ui', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/web-runtime-state.test.mjs',
@@ -568,7 +587,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['public growth layer product/page-state/API/release contract is done v1 as an unauthenticated education and start-path surface', 'Figma Make commercial launch bundle is registered as a Figma parity UI replacement target for public and account-based user product layers with old surface retirement policy', 'commercial product journey depth is admitted as a separate active gap'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE, ...NOT_FIGMA_PARITY_REPLACEMENT_IMPLEMENTATION_EVIDENCE, ...NOT_PRODUCT_JOURNEY_DEPTH_IMPLEMENTATION_EVIDENCE],
     riskTriggers: ['apps-web', 'docs-truth', 'page-state'],
-    verifySuites: ['current', 'interaction'],
+    verifySuites: ['interaction'],
   }),
   testEntry({
     file: 'tests/contract/commercial-product-primitives-contract.test.mjs',
@@ -583,7 +602,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['commercial product primitives define durable Project, Window, Turn, Skill, ModelProfile, ComposerAction, InspectorSnapshot, and MedOPLHandoff boundaries without implementing UI'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PRODUCT_JOURNEY_DEPTH_IMPLEMENTATION_EVIDENCE, 'UI implementation complete', 'MedOPL runtime/storage/payment readiness'],
     riskTriggers: ['apps-web', 'page-state', 'contract', 'product-depth'],
-    verifySuites: ['current', 'contract', 'interaction'],
+    verifySuites: ['contract', 'interaction'],
   }),
   testEntry({
     file: 'tests/contract/interaction-truth-contract.test.mjs',
@@ -598,12 +617,12 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['formal launch interaction truth fixes top-level route, auth, pending task, sidebar, dialog/sheet, fake project data, and cannot-claim boundaries', 'interaction truth now separates green route/auth guard from commercial product journey depth gaps'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE, ...NOT_PRODUCT_JOURNEY_DEPTH_IMPLEMENTATION_EVIDENCE],
     riskTriggers: ['apps-web', 'page-state', 'contract', 'ui-ux'],
-    verifySuites: ['current', 'interaction'],
+    verifySuites: ['interaction'],
   }),
   testEntry({
     file: 'tests/smoke/foundation.test.mjs',
     runner: 'node',
-    lane: 'smoke',
+    lane: 'fast',
     ownerSurface: 'foundation',
     lifecycleRole: 'current-owner',
     testKind: 'governance',
@@ -613,7 +632,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['foundation manifest, scripts, and test registry exist'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['foundation'],
-    verifySuites: ['current', 'smoke'],
+    verifySuites: ['fast', 'current', 'smoke'],
   }),
   testEntry({
     file: 'tests/smoke/web-shell.test.mjs',
@@ -628,7 +647,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['static Web shell exposes the public growth layer, AI-native research homepage, OPL green polish guard, artifact-first result stream contract, responsive inspector states, and hidden internal workspace concepts'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_PUBLIC_GROWTH_EVIDENCE, 'interactive browser behavior'],
     riskTriggers: ['apps-web'],
-    verifySuites: ['current', 'smoke'],
+    verifySuites: ['smoke'],
   }),
   testEntry({
     file: 'backend/control-plane-go/cmd/opl-webui-control-plane/main_test.go',
@@ -645,7 +664,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['Go control plane command package compiles and preserves command-level behavior'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['control-plane-go'],
-    verifySuites: ['current', 'go'],
+    verifySuites: ['fast', 'current', 'go'],
   }),
   testEntry({
     file: 'backend/control-plane-go/internal/webapp/chat_test.go',
@@ -666,7 +685,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['Go webapp chat package preserves upstream chat and guardrail behavior'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE],
     riskTriggers: ['control-plane-go', 'byok', 'public-api'],
-    verifySuites: ['current', 'go'],
+    verifySuites: ['fast', 'current', 'go'],
   }),
   testEntry({
     file: 'backend/control-plane-go/internal/oplbridge/snapshot_test.go',
@@ -751,7 +770,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['CI/local Chromium account-based Web App business main path works with user-like login, API key binding, ordinary @科研 first value through a request-lifecycle progressive turn, commercial runtime admission split for blocked/ready/onboarding specialist paths, refs/deeplink continuity, project/window continuation, sanitized evidence, artifact-first research results, stable desktop inspector, lightweight mobile sheet, responsive visual QA, repo-local keyboard path, modal focus trap, contrast closeout checks, and repo/browser product journey acceptance'],
     doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution completed', 'artifact body authority', 'storage truth', 'payment readiness', 'token streaming implemented', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality', 'owner visual/copy acceptance'],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux', 'runtime-gate'],
-    verifySuites: ['browser', 'full'],
+    verifySuites: ['browser:golden', 'browser', 'full'],
   }),
   testEntry({
     file: 'tests/deploy/container-readiness.test.mjs',
@@ -809,7 +828,10 @@ function lane(name, description) {
 }
 
 export const TEST_LANE_REGISTRY = Object.freeze({
+  fast: lane('fast', 'Development fast lane alias for cheap local product engineering checks.'),
   smoke: lane('smoke', 'Minimal foundation and static Web shell smoke checks.'),
+  ui: lane('ui', 'Static UI source boundary and component-surface checks for ordinary product development.'),
+  api: lane('api', 'Local Go HTTP/API contract checks for ordinary product development.'),
   contract: lane('contract', 'Explicit Web product, API, BYOK, tenant isolation, and admin/user product contract checks.'),
   interaction: lane('interaction', 'Lightweight route, auth, pending task, sidebar, dialog, public growth, and UI source truth static checks.'),
   'interaction-browser': lane('interaction-browser', 'Browser-level interaction truth flows for login/register, pending task restore, and sidebar/dialog behavior.'),
@@ -828,12 +850,16 @@ export const TEST_LANE_REGISTRY = Object.freeze({
 });
 
 export const VERIFY_SUITES = Object.freeze({
-  current: Object.freeze(['smoke', 'interaction', 'health-light', 'go-light']),
+  fast: Object.freeze(['fast', 'ui', 'api', 'health-light', 'go-light']),
+  current: Object.freeze(['fast', 'ui', 'api', 'health-light', 'go-light']),
+  ui: Object.freeze(['ui', 'interaction']),
+  api: Object.freeze(['api', 'go-light']),
   contract: Object.freeze(['contract', 'interaction']),
   interaction: Object.freeze(['interaction', 'interaction-browser']),
   health: Object.freeze(['health-light', 'health']),
   backend: Object.freeze(['go-light']),
   go: Object.freeze(['go-light']),
+  'browser:golden': Object.freeze(['browser']),
   integration: Object.freeze(['integration']),
   release: Object.freeze(['release']),
   deploy: Object.freeze(['release']),

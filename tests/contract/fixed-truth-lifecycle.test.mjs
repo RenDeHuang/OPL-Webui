@@ -99,7 +99,7 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(status, /three-layer product modules plus explicit gap slices/);
   assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work moves one slice at a time/);
-  assert.match(status, /current = smoke \+ contract \+ health \+ go/);
+  assert.match(status, /fast = fast \+ ui \+ api \+ health-light \+ go-light/);
   assert.match(status, /scripts\/lane-advisory\.mjs/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(decisions, /File count is report-only/);
@@ -530,7 +530,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
   assert.match(status, /run `27877811961` failed only at `Production Browser E2E`/);
   assert.match(status, /`response_header_timeout` from `gflabtoken\.cn` on model `gpt-5\.5`/);
   assert.match(status, /Real local Chromium browser e2e executed successfully/);
-  assert.match(status, /Browser e2e is now a CI release gate/);
+  assert.match(status, /Browser golden e2e is now a CI release gate/);
   assert.match(status, /Latest-main production availability probe executed successfully/);
   assert.match(status, new RegExp(`Production observability baseline v1 is folded back to latest-main run \`${latest.runId}\``));
   assert.match(status, /A no-secret scheduled availability canary first succeeded in GitHub Actions run `27874732529`/);

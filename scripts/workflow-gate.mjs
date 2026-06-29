@@ -24,9 +24,9 @@ export const REVIEW_GATE_STEPS = Object.freeze([
     args: Object.freeze(['scripts/lane-check.mjs']),
   }),
   Object.freeze({
-    label: 'current verify',
+    label: 'fast verify',
     command: process.execPath,
-    args: Object.freeze(['scripts/verify.mjs', 'current']),
+    args: Object.freeze(['scripts/verify.mjs', 'fast']),
   }),
 ]);
 

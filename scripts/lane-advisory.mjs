@@ -3,10 +3,14 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const TARGET_ORDER = Object.freeze([
+  'fast',
+  'ui',
   'smoke',
+  'api',
   'interaction',
   'contract',
   'go',
+  'browser:golden',
   'browser',
   'integration',
   'real-medopl',
@@ -32,19 +36,19 @@ const RULES = Object.freeze([
   Object.freeze({
     name: 'page state contract',
     matches: (file) => file === 'contracts/web-page-state-matrix.json',
-    targets: Object.freeze(['interaction', 'contract', 'browser']),
+    targets: Object.freeze(['interaction', 'contract', 'browser:golden']),
   }),
   Object.freeze({
     name: 'web shell',
     matches: (file) => file.startsWith('frontend/web/'),
-    targets: Object.freeze(['smoke', 'interaction', 'browser']),
+    targets: Object.freeze(['ui', 'smoke', 'interaction', 'browser:golden']),
   }),
   Object.freeze({
     name: 'go control plane',
     matches: (file) => file.startsWith('backend/control-plane-go/')
       && !file.startsWith('backend/control-plane-go/internal/oplbridge/')
       && !file.startsWith('backend/control-plane-go/internal/runtimegate/'),
-    targets: Object.freeze(['contract', 'go']),
+    targets: Object.freeze(['api', 'go']),
   }),
   Object.freeze({
     name: 'release surface',
@@ -95,14 +99,14 @@ const RULES = Object.freeze([
     name: 'interaction browser test',
     matches: (file) => file === 'tests/browser/public-growth-login-return.browser.test.mjs'
       || file === 'tests/browser/interaction-truth.browser.test.mjs',
-    targets: Object.freeze(['interaction', 'browser']),
+    targets: Object.freeze(['interaction', 'browser:golden']),
   }),
   Object.freeze({
     name: 'browser test',
     matches: (file) => file.startsWith('tests/browser/')
       && file !== 'tests/browser/public-growth-login-return.browser.test.mjs'
       && file !== 'tests/browser/interaction-truth.browser.test.mjs',
-    targets: Object.freeze(['browser']),
+    targets: Object.freeze(['browser:golden', 'browser']),
   }),
   Object.freeze({
     name: 'real medopl e2e',

@@ -13,7 +13,11 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['line:budget'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
   assert.equal(pkg.scripts.start, 'go run ./backend/control-plane-go/cmd/opl-webui-control-plane');
-  assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');
+  assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs fast');
+  assert.equal(pkg.scripts['verify:fast'], 'node scripts/verify.mjs suite fast');
+  assert.equal(pkg.scripts['verify:ui'], 'node scripts/verify.mjs suite ui');
+  assert.equal(pkg.scripts['verify:api'], 'node scripts/verify.mjs suite api');
+  assert.equal(pkg.scripts['verify:browser:golden'], 'node scripts/verify.mjs suite browser:golden');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
   assert.equal(pkg.scripts['test:smoke'], 'node scripts/verify.mjs suite smoke');
@@ -32,6 +36,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['test:security'], 'node scripts/security-scan.mjs');
   assert.equal(pkg.scripts['test:go'], 'node scripts/verify.mjs suite go');
   assert.equal(pkg.scripts['test:browser'], 'node scripts/verify.mjs suite browser');
+  assert.equal(pkg.scripts['test:browser:golden'], 'node scripts/verify.mjs suite browser:golden');
   assert.equal(pkg.scripts['test:integration'], 'node scripts/verify.mjs suite integration');
   assert.equal(pkg.scripts['test:release'], 'node scripts/verify.mjs suite release');
   assert.equal(pkg.scripts['test:deploy'], 'node scripts/verify.mjs suite deploy');
@@ -56,11 +61,13 @@ test('github ci workflow runs local gates only', () => {
   assert.match(workflow, /actions\/checkout/);
   assert.match(workflow, /actions\/setup-node/);
   assert.match(workflow, /actions\/setup-go/);
-  assert.match(workflow, /npm run verify/);
+  assert.match(workflow, /npm run verify:fast/);
+  assert.match(workflow, /npm run verify:api/);
+  assert.match(workflow, /npm run verify:ui/);
   assert.match(workflow, /npm run verify:backend/);
   assert.match(workflow, /npm run verify:security/);
   assert.match(workflow, /npx --yes playwright install chromium/);
-  assert.match(workflow, /npm run verify:browser/);
+  assert.match(workflow, /npm run verify:browser:golden/);
   assert.match(workflow, /npm run gate:review/);
   assert.match(workflow, /contents:\s*read/);
 
@@ -68,6 +75,8 @@ test('github ci workflow runs local gates only', () => {
   assert.doesNotMatch(workflow, /cloud-rollout\.mjs/i);
   assert.doesNotMatch(workflow, /docker\s+(?:build|push)/i);
   assert.doesNotMatch(workflow, /KUBECONFIG|TCR_PASSWORD|TCR_USERNAME|secrets\./i);
+  assert.doesNotMatch(workflow, /npm run verify:browser\n/);
+  assert.doesNotMatch(workflow, /npm run verify:release/);
 });
 
 test('security scan baseline is repo-local and does not require production secrets', () => {
@@ -324,14 +333,14 @@ test('current frontend engineering stays static until browser/product evidence r
   assert.doesNotMatch(workflow, /npm run build/);
 });
 
-test('review gate includes diff hygiene, bloat, hard lane check, and current verify', async () => {
+test('review gate includes diff hygiene, bloat, hard lane check, and fast verify', async () => {
   const { REVIEW_GATE_STEPS } = await import('../../scripts/workflow-gate.mjs');
   assert.deepEqual(REVIEW_GATE_STEPS.map((step) => step.label), [
     'diff hygiene',
     'repo bloat audit',
     'ai development gate',
     'required lane evidence check',
-    'current verify',
+    'fast verify',
   ]);
   assert.deepEqual(REVIEW_GATE_STEPS.find((step) => step.label === 'required lane evidence check').args, ['scripts/lane-check.mjs']);
 });

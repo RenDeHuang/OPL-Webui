@@ -18,8 +18,8 @@ test('lane check fails when required lanes have no matching verification evidenc
   });
 
   assert.equal(result.ok, false);
-  assert.deepEqual(result.requiredTargets, ['smoke', 'interaction', 'browser']);
-  assert.deepEqual(result.missingTargets, ['smoke', 'interaction', 'browser']);
+  assert.deepEqual(result.requiredTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
+  assert.deepEqual(result.missingTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
 });
 
 test('lane check accepts targeted lane evidence for the same diff fingerprint', () => {
@@ -27,16 +27,17 @@ test('lane check accepts targeted lane evidence for the same diff fingerprint', 
     changedFiles: ['frontend/web/src/onePersonLabWeb.mjs'],
     evidence: {
       runs: [
-        { status: 'passed', target: 'current', lanes: ['smoke', 'interaction', 'health-light', 'go-light'], diffFingerprint: 'current-diff' },
+        { status: 'passed', target: 'fast', lanes: ['fast', 'ui', 'api', 'health-light', 'go-light'], diffFingerprint: 'current-diff' },
+        { status: 'passed', target: 'smoke', lanes: ['smoke'], diffFingerprint: 'current-diff' },
         { status: 'passed', target: 'interaction', lanes: ['interaction', 'interaction-browser'], diffFingerprint: 'current-diff' },
-        { status: 'passed', target: 'browser', lanes: ['browser'], diffFingerprint: 'current-diff' },
+        { status: 'passed', target: 'browser:golden', lanes: ['browser'], diffFingerprint: 'current-diff' },
       ],
     },
     diffFingerprint: 'current-diff',
   });
 
   assert.equal(result.ok, true);
-  assert.deepEqual(result.requiredTargets, ['smoke', 'interaction', 'browser']);
+  assert.deepEqual(result.requiredTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
   assert.deepEqual(result.missingTargets, []);
 });
 
@@ -46,15 +47,15 @@ test('lane check rejects stale verification evidence from an older diff fingerpr
     evidence: {
       runs: [
         { status: 'passed', target: 'contract', lanes: ['contract'], diffFingerprint: 'old-diff' },
-        { status: 'passed', target: 'browser', lanes: ['browser'], diffFingerprint: 'old-diff' },
+        { status: 'passed', target: 'browser:golden', lanes: ['browser'], diffFingerprint: 'old-diff' },
       ],
     },
     diffFingerprint: 'current-diff',
   });
 
   assert.equal(result.ok, false);
-  assert.deepEqual(result.requiredTargets, ['interaction', 'contract', 'browser']);
-  assert.deepEqual(result.missingTargets, ['interaction', 'contract', 'browser']);
+  assert.deepEqual(result.requiredTargets, ['interaction', 'contract', 'browser:golden']);
+  assert.deepEqual(result.missingTargets, ['interaction', 'contract', 'browser:golden']);
 });
 
 test('lane check can read verify evidence from disk', () => {
