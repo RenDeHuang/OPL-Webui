@@ -45,6 +45,16 @@ test('web shell mounts the Figma Make direct-copy replacement target', () => {
   assert.match(shellSource, /data-inspector-sheet/);
   assert.match(shellSource, /data-inspector-open="autonomy"/);
   assert.match(shellSource, /data-api-key-dialog/);
+  assert.match(shellSource, /今天要完成什么/);
+  assert.match(shellSource, /data-auth-start-message>请先注册或登录后继续/);
+  assert.match(shellSource, /data-plus-file-trigger/);
+  assert.match(shellSource, /完全访问权限/);
+  assert.match(shellSource, /自定义（config\.toml）/);
+  assert.match(shellSource, /搜索聊天/);
+  assert.match(shellSource, /文件库/);
+  assert.match(shellSource, /聊天历史/);
+  assert.doesNotMatch(shellSource, />Inspector</);
+  assert.doesNotMatch(shellSource, /account capability|zitadel-admin|zitadel\.localhost|localhost/);
   assert.doesNotMatch(html, /figma-parity-shell|landing-panel|workbench-panel|result-panel|history-panel|runtime-gate/);
   assert.doesNotMatch(visibleText, /Public Growth Layer|Account-based User Product Layer|Minimal Admin\/Ops Layer|operator controls/);
 });

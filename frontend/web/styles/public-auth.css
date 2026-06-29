@@ -18,6 +18,9 @@
   display: flex;
   gap: 12px;
 }
+.hero-actions {
+  justify-content: center;
+}
 .public-hero {
   align-items: center;
   display: flex;
@@ -153,7 +156,7 @@
 .auth-submit-row {
   display: grid;
   gap: 10px;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 .auth-form label, .account-popover label, dt {
   color: var(--muted-foreground);

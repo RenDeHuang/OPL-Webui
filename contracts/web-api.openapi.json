@@ -269,7 +269,7 @@
         "summary": "Return fixed provider state without raw API key.",
         "responses": {
           "200": {
-            "description": "Provider state with fixed baseUrl and masked key."
+            "description": "Provider state with fixed baseUrl, readonly configured model projection, and masked key."
           },
           "401": {
             "description": "Authentication required."
@@ -286,7 +286,7 @@
         "summary": "Save user API key for the fixed provider.",
         "responses": {
           "200": {
-            "description": "Provider key saved without returning raw key."
+            "description": "Provider key saved without returning raw key; response includes readonly configured model projection."
           },
           "400": {
             "description": "Invalid JSON or API key."

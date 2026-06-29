@@ -32,7 +32,6 @@ const state = {
   showBilling: false,
   showInspector: false,
   showModelMenu: false,
-  showPlusMenu: false,
   showSkillImport: false,
   inspectorTab: 'autonomy',
   selectedModelProfile: 'auto',
@@ -113,15 +112,13 @@ function bindClicks() {
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
   app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
   app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
-  app?.querySelector('[data-model-selector]')?.addEventListener('click', () => { state.showModelMenu = !state.showModelMenu; state.showPlusMenu = false; render(); });
+  app?.querySelector('[data-model-selector]')?.addEventListener('click', () => { state.showModelMenu = !state.showModelMenu; render(); });
   app?.querySelector('[data-model-menu-close]')?.addEventListener('click', () => { state.showModelMenu = false; focusAfterRender('[data-model-selector]'); render(); });
   app?.querySelectorAll('[data-model-option]').forEach((button) => button.addEventListener('click', () => { state.selectedModelProfile = button.dataset.modelOption || 'auto'; state.showModelMenu = false; focusAfterRender('[data-model-selector]'); render(); }));
-  app?.querySelector('[data-plus-menu-trigger]')?.addEventListener('click', () => { state.showPlusMenu = !state.showPlusMenu; state.showModelMenu = false; render(); });
-  app?.querySelector('[data-plus-menu-close]')?.addEventListener('click', () => { state.showPlusMenu = false; focusAfterRender('[data-plus-menu-trigger]'); render(); });
-  app?.querySelectorAll('[data-plus-action]').forEach((button) => button.addEventListener('click', () => runPlusAction(button.dataset.plusAction || '')));
+  app?.querySelectorAll('[data-plus-file-trigger]').forEach((button) => button.addEventListener('click', () => runPlusAction('attach_file')));
   app?.querySelector('[data-skill-import-open]')?.addEventListener('click', () => openSkillImport());
   app?.querySelector('[data-skill-import-trigger]')?.addEventListener('click', () => validateSkillImport());
-  app?.querySelector('[data-skill-import-close]')?.addEventListener('click', () => { state.showSkillImport = false; focusAfterRender('[data-plus-action="import_skill"], [data-skill-import-open]'); render(); });
+  app?.querySelector('[data-skill-import-close]')?.addEventListener('click', () => { state.showSkillImport = false; focusAfterRender('[data-skill-import-open]'); render(); });
   app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'autonomy', '[data-inspector-open]')));
   app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
   app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab, state.focusReturnSelector || '[data-inspector-open]')));
@@ -354,21 +351,9 @@ function runShellAction(action) {
 }
 
 function runPlusAction(action) {
-  state.showPlusMenu = false;
-  if (action === 'new_window') {
-    runShellAction('home');
-  } else if (action === 'attach_file') {
+  if (action === 'attach_file') {
     state.lastRuntimeTaskCard = runtimeTaskCardForPrompt('@文件 处理资料输入');
     state.shellState = 'blocked_turn';
-    render();
-  } else if (action === 'import_skill') {
-    openSkillImport();
-  } else if (action === 'bind_api_key') {
-    state.showAccount = true;
-    render();
-    document.querySelector('#api-key')?.focus({ preventScroll: true });
-  } else if (action === 'select_model') {
-    state.showModelMenu = true;
     render();
   } else {
     render();

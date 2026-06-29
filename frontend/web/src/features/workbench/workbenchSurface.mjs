@@ -6,7 +6,6 @@ import {
   projectWindowTitle,
   renderInspector,
   renderModelMenu,
-  renderPlusMenu,
   renderProjectWindowCenter,
   renderSearchSheet,
   renderSkillImportDialog,
@@ -46,17 +45,21 @@ function renderSidebar(state, { escapeAttr, escapeHTML, formatShortDate }) {
     <aside class="sidebar" data-side-navigation aria-label="One Person Lab navigation">
       <div class="sidebar-brand">One Person Lab</div>
       <nav class="top-nav">
-        <button type="button" data-shell-action="home"><span aria-hidden="true">+</span><span class="nav-label">新对话</span></button>
-        <button type="button" data-shell-action="projects"><span aria-hidden="true">□</span><span class="nav-label">项目 / 窗口</span></button>
-        <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">Skill</span></button>
-        <button type="button" data-shell-action="workflows"><span aria-hidden="true">⌘</span><span class="nav-label">工作流</span></button>
-        <button type="button" data-search-trigger><span aria-hidden="true">?</span><span class="nav-label">搜索</span></button>
+        <button type="button" data-shell-action="home"><span aria-hidden="true">+</span><span class="nav-label">新聊天</span></button>
+        <button type="button" data-search-trigger><span aria-hidden="true">⌕</span><span class="nav-label">搜索聊天</span></button>
+        <button type="button" data-plus-file-trigger><span aria-hidden="true">↑</span><span class="nav-label">文件库</span></button>
+        <button type="button" data-shell-action="workflows"><span aria-hidden="true">◷</span><span class="nav-label">已安排/任务</span></button>
+        <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">应用 / Skills</span></button>
       </nav>
       <div class="sidebar-divider"></div>
       <div class="project-tree" data-project-window-route data-projection-source="GET /api/tasks">
-        <div class="tree-heading"><span>项目 / 窗口</span></div>
+        <div class="tree-heading"><span>置顶</span></div>
+        <p class="project-window-empty">暂无置顶</p>
+        <button type="button" class="tree-heading tree-heading-action" data-shell-action="projects"><span>项目</span></button>
+        <p class="project-window-empty">从任务入口创建项目窗口</p>
+        <div class="tree-heading"><span>聊天历史</span></div>
         <div class="project-window-list" data-project-window-list>
-          ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map((task) => `
+          ${tasks.length === 0 ? '<p data-project-window-empty>还没有聊天。开始 @科研 或专业任务后会显示真实窗口投影。</p>' : tasks.map((task) => `
             <button type="button" data-project-window-entry data-project-window-item="${escapeAttr(task.taskId)}" data-project-window-status="${escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
               <span>${escapeHTML(projectWindowTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
             </button>
@@ -68,7 +71,7 @@ function renderSidebar(state, { escapeAttr, escapeHTML, formatShortDate }) {
         <div class="account-anchor">
           <button type="button" data-account-toggle aria-expanded="${String(state.showAccount)}" aria-controls="account-popover">
             <span class="account-avatar" aria-hidden="true">研</span>
-            <span><strong data-session-label>${escapeHTML(state.view.session.email || 'Researcher')}</strong><small>account capability</small></span>
+            <span><strong data-session-label>${escapeHTML(state.view.session.email || 'Researcher')}</strong><small>个人账号</small></span>
           </button>
           ${state.showAccount ? renderAccountPopover(state, { escapeHTML }) : ''}
         </div>
@@ -90,17 +93,17 @@ function renderMainSurface(state, helpers) {
 function renderHomeComposer(state, helpers) {
   return `
     <section class="home-composer" data-shell-state="home_default" data-workbench-surface data-first-view>
-      <h1>What should we get done?</h1>
+      <h1>今天要完成什么？</h1>
       <form id="composer-form" class="composer-box" data-chat-form data-composer-box>
-        <input id="chat-input" class="composer-input" placeholder="随心输入" aria-label="选择一个任务入口或直接输入问题">
+        <input id="chat-input" class="composer-input" placeholder="描述科研任务，或上传材料" aria-label="选择一个任务入口或直接输入问题">
       </form>
       <div class="composer-toolbar" data-composer-toolbar>
-        <button type="button" class="icon-button" aria-label="添加" data-plus-menu-trigger aria-expanded="${String(state.showPlusMenu)}">+</button>
-        ${state.showPlusMenu ? renderPlusMenu(helpers) : ''}
-        <button type="button" class="secondary-button" tabindex="-1">完全访问</button>
-        <button type="button" class="secondary-button model-selector" data-model-selector aria-expanded="${String(state.showModelMenu)}">${helpers.escapeHTML(modelProfileLabel(state.selectedModelProfile))}</button>
+        <button type="button" class="icon-button" aria-label="上传文件" data-plus-file-trigger>+</button>
+        <span class="secondary-button static-chip" aria-label="权限：完全访问权限">完全访问权限</span>
+        <span class="secondary-button static-chip" aria-label="权限配置：自定义 config.toml">自定义（config.toml）</span>
+        <button type="button" class="secondary-button model-selector" data-model-selector aria-expanded="${String(state.showModelMenu)}">${helpers.escapeHTML(modelProfileLabel(state))}</button>
         ${state.showModelMenu ? renderModelMenu(state, helpers) : ''}
-        <button type="button" class="secondary-button" data-inspector-open="autonomy">Inspector</button>
+        <button type="button" class="secondary-button" data-inspector-open="autonomy">文件</button>
         <button type="submit" form="composer-form" class="round-send" data-chat-submit aria-label="发送">↑</button>
       </div>
       <div class="mode-grid" data-research-launcher data-starter-chips>
@@ -123,7 +126,7 @@ function renderModeButton(task, { escapeAttr, escapeHTML }) {
 function renderSkillPlaza(state, { escapeAttr }) {
   return `
     <section class="plaza-view" data-shell-state="skill_plaza">
-      <header><h1>Skill Plaza</h1><button type="button" data-skill-import-open>导入 Skill</button></header>
+      <header><h1>应用 / Skills</h1><button type="button" data-skill-import-open>导入 Skill</button></header>
       <div class="drop-zone" data-skill-import-state="${escapeAttr(state.skillImportState)}">选择 OPL Skill 或个人 Skill manifest；未校验前不会显示导入成功。</div>
       <div class="plaza-grid">
         ${['PubMed 文献检索', '引文网络分析', '实验方案生成', '统计方法推荐', '基金摘要优化', '图表解读'].map((name) => `<article><strong>${name}</strong><small>只作为任务入口；执行权威留在 MedOPL/OPL。</small></article>`).join('')}
@@ -136,7 +139,7 @@ function renderWorkflowPlaza() {
     <section class="plaza-view" data-shell-state="workflow_plaza">
       <div class="empty-workflow">
         <span>工作流 · 即将上线</span>
-        <p>Agentic 研究工作流作为未来 capability placeholder，当前不新增 runtime sync。</p>
+        <p>计划、排期和任务模板会在这里显示；当前不会自动创建运行资源。</p>
       </div>
     </section>`;
 }
@@ -145,7 +148,7 @@ function renderMoreSurface() {
   return `
     <section class="more-view" data-more-overflow>
       <h1>暂时没有更多入口</h1>
-      <p data-more-empty>More 作为轻量 overflow 保留；账号、登录和 API Key 从左下角头像进入。</p>
+      <p data-more-empty>账号和 API Key 从左下角头像进入；这里暂不放置额外入口。</p>
     </section>`;
 }
 

@@ -48,8 +48,9 @@ function collectViolations(evidence) {
         && evidence.afterAuth.retiredTaskHistorySelectorCount === 0,
     },
     {
-      label: 'sidebar must use project/window business naming',
-      pass: /项目\s*\/\s*窗口/.test(evidence.afterAuth.sidebarText)
+      label: 'sidebar must expose project and chat history sections without retired task-history naming',
+      pass: /项目/.test(evidence.afterAuth.sidebarText)
+        && /聊天历史/.test(evidence.afterAuth.sidebarText)
         && !/任务历史\s*\/\s*交付接续/.test(evidence.afterAuth.sidebarText),
     },
     {
@@ -98,16 +99,16 @@ function collectViolations(evidence) {
       pass: evidence.afterAuth.commercialProductControls.modelSelector.open === true
         && evidence.afterAuth.commercialProductControls.modelSelector.selected === 'auto'
         && evidence.afterAuth.commercialProductControls.modelSelector.baseUrlVisible === false
-        && !/5\.5\s*超高|gpt-?5/i.test(evidence.afterAuth.commercialProductControls.modelSelector.text),
+        && /config\.toml|OPL_CHAT_MODEL/.test(evidence.afterAuth.commercialProductControls.modelSelector.text)
+        && !/5\.5\s*超高/i.test(evidence.afterAuth.commercialProductControls.modelSelector.text),
     },
     {
-      label: 'plus menu must open typed actions instead of acting as a dead button',
-      pass: evidence.afterAuth.commercialProductControls.plusMenu.open === true
-        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('attach_file')
-        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('import_skill')
-        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('bind_api_key')
-        && evidence.afterAuth.commercialProductControls.plusMenu.actions.includes('select_model')
-        && evidence.afterAuth.commercialProductControls.plusMenu.deadClick === false,
+      label: 'plus control must be a file attach handoff only, not a mixed command menu',
+      pass: evidence.afterAuth.commercialProductControls.plusFileAttach.triggerVisible === true
+        && evidence.afterAuth.commercialProductControls.plusFileAttach.marker === '@文件'
+        && evidence.afterAuth.commercialProductControls.plusFileAttach.runtimeHandoffVisible === true
+        && evidence.afterAuth.commercialProductControls.plusFileAttach.forbiddenMixedActionsVisible === false
+        && evidence.afterAuth.commercialProductControls.plusFileAttach.deadClick === false,
     },
     {
       label: 'skill import must expose select validate error states without fake import success',

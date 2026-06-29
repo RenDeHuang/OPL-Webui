@@ -216,7 +216,7 @@ test('commercial product user journey depth is admitted separately from interact
   assert.deepEqual(depth.skillSurface.scopes, ['opl_skills', 'my_skills']);
   assertIncludesAll(depth.skillSurface.importStates, ['select', 'validate', 'imported', 'error'], 'skill import state');
   assertIncludesAll(depth.inspectorAutonomy.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'autonomy inspector signal');
-  assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_menu'], 'toolbar control');
+  assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_file_attach'], 'toolbar control');
   assert.equal(depth.modelAndPlusToolbar.status, 'repo_browser_done_v1');
   assert.equal(depth.skillSurface.status, 'repo_browser_typed_import_error_v1');
   assert.equal(depth.productAcceptance.repoBrowserStatus, 'done_v1');

@@ -46,7 +46,7 @@ export async function logoutAccount(fetchRef) {
 }
 
 export async function saveAPIKey(fetchRef, apiKey, session = { ok: true }) {
-  if (!session?.ok) return { ok: false, errorCode: 'AUTH_REQUIRED', message: '请先登录后再绑定 API Key。' };
+  if (!session?.ok) return { ok: false, errorCode: 'AUTH_REQUIRED', message: '请先注册或登录后再绑定 API Key。' };
   return writeJSON(fetchRef, '/api/settings/model-provider', { apiKey }, 'PUT');
 }
 
@@ -127,7 +127,7 @@ function normalizeReliabilityErrorCode(errorCode, status = 0) {
 
 function messageForReliabilityError(errorCode, message = '') {
   const byCode = {
-    AUTH_REQUIRED: '请先登录后继续。',
+    AUTH_REQUIRED: '请先注册或登录后继续。',
     API_KEY_REQUIRED: '请先绑定 API Key 后继续。',
     CHAT_QUOTA_EXCEEDED: '当前额度已用完。',
     RUNTIME_REQUIRED: '该能力需要在 MedOPL 开通后继续。',

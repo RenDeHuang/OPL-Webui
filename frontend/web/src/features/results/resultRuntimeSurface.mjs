@@ -14,7 +14,7 @@ export function renderResultView(state, helpers) {
       <header class="result-topbar">
         <button type="button" data-shell-action="home">‹ 新对话</button>
         <span>${helpers.escapeHTML(state.activeConversationMeta?.title || result?.prompt || '@科研')}</span>
-        <button type="button" data-inspector-open="autonomy">Inspector</button>
+        <button type="button" data-inspector-open="autonomy">文件</button>
         <button type="button" data-inspector-open="why_next">Why / next</button>
       </header>
       <div class="result-scroll" data-chat-log>
@@ -23,7 +23,7 @@ export function renderResultView(state, helpers) {
         ${research ? renderResearchResult(research, helpers) : ''}
       </div>
       <form class="pill-input" data-chat-form>
-        <button type="button" aria-label="添加">+</button>
+        <button type="button" aria-label="上传文件" data-plus-file-trigger>+</button>
         <input id="chat-input" name="message" placeholder="有问题，尽管问">
         <button type="button">API key</button>
         <button type="submit" data-chat-submit aria-label="发送">▮▮▮</button>
@@ -93,7 +93,7 @@ export function renderBlockedView(state, helpers) {
       </article>
       <button type="button" data-shell-action="home">返回主界面</button>
       <form class="pill-input" data-chat-form>
-        <button type="button" aria-label="添加">+</button>
+        <button type="button" aria-label="上传文件" data-plus-file-trigger>+</button>
         <input id="chat-input" name="message" placeholder="继续输入任务">
         <button type="submit" data-chat-submit aria-label="发送">↑</button>
       </form>

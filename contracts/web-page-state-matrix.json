@@ -194,7 +194,7 @@
     "chatTurnLifecycle": {"requiredSelectors":["[data-turn-stage]","[data-turn-stage=\"submitted\"]","[data-turn-stage=\"progressive\"]","[data-turn-stage=\"waiting_upstream\"]"],"completeOrErrorSelector":"[data-turn-stage=\"complete\"], [data-turn-stage=\"error\"]","sourceOfTruth":"request lifecycle state from Webui fetch and Go control plane response","fakeStreamingAllowed":false,"cannotClaim":["token streaming implemented","upstream provider streaming support"]},
     "skillImportStates": ["select", "validate", "imported", "error"],
     "inspectorTabsTarget": ["autonomy", "inputs", "outputs", "why_next"],
-    "toolbarTargets": ["model_selector", "plus_menu"],
+    "toolbarTargets": ["model_selector", "plus_file_attach"],
     "cannotClaim": ["fake project/window data", "Web-owned runtime/storage/payment truth", "artifact body authority"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
@@ -415,7 +415,7 @@
       "actions": [
         {
           "id": "home",
-          "label": "新建对话",
+          "label": "新聊天",
           "kind": "route",
           "targetView": "home",
           "localOnly": true,
@@ -423,35 +423,8 @@
           "forbiddenApis": []
         },
         {
-          "id": "projects",
-          "label": "项目 / 窗口",
-          "kind": "route",
-          "targetView": "projects",
-          "localOnly": true,
-          "consumer": "project_window_continuation_center",
-          "forbiddenApis": []
-        },
-        {
-          "id": "skills",
-          "label": "Skill",
-          "kind": "route",
-          "targetView": "skills",
-          "localOnly": true,
-          "consumer": "skill_library",
-          "forbiddenApis": []
-        },
-        {
-          "id": "workflows",
-          "label": "工作流",
-          "kind": "route",
-          "targetView": "workflows",
-          "localOnly": true,
-          "consumer": "workflow_library",
-          "forbiddenApis": []
-        },
-        {
           "id": "search",
-          "label": "搜索",
+          "label": "搜索聊天",
           "kind": "sheet",
           "targetView": "home",
           "localOnly": true,
@@ -459,8 +432,35 @@
           "forbiddenApis": ["/api/search"]
         },
         {
+          "id": "files",
+          "label": "文件库",
+          "kind": "local_handoff",
+          "targetView": "home",
+          "localOnly": true,
+          "consumer": "file_material_handoff_to_medopl",
+          "forbiddenApis": []
+        },
+        {
+          "id": "workflows",
+          "label": "已安排/任务",
+          "kind": "route",
+          "targetView": "workflows",
+          "localOnly": true,
+          "consumer": "scheduled_tasks_and_workflow_library",
+          "forbiddenApis": []
+        },
+        {
+          "id": "skills",
+          "label": "应用 / Skills",
+          "kind": "route",
+          "targetView": "skills",
+          "localOnly": true,
+          "consumer": "skill_library",
+          "forbiddenApis": []
+        },
+        {
           "id": "more",
-          "label": "More",
+          "label": "更多",
           "kind": "route",
           "targetView": "more",
           "localOnly": true,

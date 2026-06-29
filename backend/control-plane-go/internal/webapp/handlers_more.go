@@ -268,6 +268,7 @@ func (server Server) writeSession(response http.ResponseWriter, status int, user
 func (server Server) writeProvider(response http.ResponseWriter, userID string) {
 	body := map[string]any{
 		"ok": true, "provider": ProviderName, "baseUrl": FixedBaseURL,
+		"model": modelName(), "modelConfigSource": "OPL_CHAT_MODEL",
 		"apiKeyConfigured": false, "maskedKey": "",
 	}
 	if binding, ok := server.Store.GetAPIKeyBinding(userID); ok {

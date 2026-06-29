@@ -82,7 +82,14 @@ test('turn skill model composer inspector and MedOPL handoff primitives keep Web
   assert.equal(primitives.ModelProfile.mustNotHardcodeVisibleModel, '5.5 超高');
   assert.equal(primitives.ModelProfile.assistantIdentityPolicy, 'do_not_self_claim_model_identity_from_tests');
 
-  assertIncludesAll(primitives.ComposerAction.plusMenuActions, ['attach_file', 'import_skill', 'bind_api_key', 'select_model'], 'plus menu action');
+  assert.deepEqual(primitives.ComposerAction.plusControlActions, ['attach_file']);
+  assert.deepEqual(primitives.ComposerAction.forbiddenPlusActions, ['new_window', 'import_skill', 'bind_api_key', 'select_model']);
+  assert.deepEqual(primitives.ComposerAction.separateSurfaceActions, {
+    import_skill: 'skill_surface',
+    bind_api_key: 'account_popover_or_api_key_dialog',
+    select_model: 'model_selector',
+    new_window: 'new_chat_sidebar_action',
+  });
   assert.equal(primitives.ComposerAction.unimplementedActionPolicy, 'disabled_or_typed_placeholder_not_dead_click');
 
   assert.deepEqual(primitives.InspectorSnapshot.tabs, ['autonomy', 'inputs', 'outputs', 'why_next']);

@@ -178,12 +178,12 @@ export function createOnePersonLabViewModel(state) {
     figmaMakeSource: FIGMA_MAKE_SOURCE,
     shell: { sideNavigation: true, accountDock: true, promptCommandCenter: true },
     navItems: [
-      { id: 'home', label: '新建对话', href: '#home' },
-      { id: 'projects', label: '项目 / 窗口', href: '#projects' },
-      { id: 'skills', label: 'Skill', href: '#skills' },
-      { id: 'workflows', label: '工作流', href: '#workflows' },
-      { id: 'search', label: '搜索', href: '#home' },
-      { id: 'more', label: 'More', href: '#more' },
+      { id: 'home', label: '新聊天', href: '#home' },
+      { id: 'search', label: '搜索聊天', href: '#home' },
+      { id: 'files', label: '文件库', href: '#home' },
+      { id: 'workflows', label: '已安排/任务', href: '#workflows' },
+      { id: 'skills', label: '应用 / Skills', href: '#skills' },
+      { id: 'more', label: '更多', href: '#more' },
     ],
     accountEntry: 'bottom_avatar_popover',
     session,
@@ -195,10 +195,12 @@ export function createOnePersonLabViewModel(state) {
       maskedKey: provider.maskedKey ?? '',
     },
     modelSelector: {
-      label: '模型：自动',
+      label: `模型：${modelDisplayName(provider)}`,
       value: 'auto',
       optional: true,
       baseUrlVisible: false,
+      configSource: 'config.toml / OPL_CHAT_MODEL',
+      model: modelDisplayName(provider),
     },
     conversations: state.conversations?.conversations ?? [],
     taskHistory: taskHistoryFallback(state.taskHistory),
@@ -360,7 +362,11 @@ function capitalize(value) {
 }
 
 function providerFallback() {
-  return { ok: false, provider: 'gflabtoken', baseUrl: FIXED_BASE_URL, apiKeyConfigured: false, maskedKey: '' };
+  return { ok: false, provider: 'gflabtoken', baseUrl: FIXED_BASE_URL, apiKeyConfigured: false, maskedKey: '', model: 'gpt-5.5', modelConfigSource: 'OPL_CHAT_MODEL' };
+}
+
+function modelDisplayName(provider = {}) {
+  return String(provider.model || 'gpt-5.5').trim() || 'gpt-5.5';
 }
 
 function runtimeStatusFallback(status = {}) {

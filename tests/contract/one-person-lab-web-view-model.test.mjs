@@ -542,13 +542,13 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.equal(view.shell.sideNavigation, true);
   assert.equal(view.shell.accountDock, true);
   assert.equal(view.shell.promptCommandCenter, true);
-  assert.deepEqual(view.navItems.map(({ id, label, href }) => [id, label, href]), [['home', '新建对话', '#home'], ['projects', '项目 / 窗口', '#projects'], ['skills', 'Skill', '#skills'], ['workflows', '工作流', '#workflows'], ['search', '搜索', '#home'], ['more', 'More', '#more']]);
+  assert.deepEqual(view.navItems.map(({ id, label, href }) => [id, label, href]), [['home', '新聊天', '#home'], ['search', '搜索聊天', '#home'], ['files', '文件库', '#home'], ['workflows', '已安排/任务', '#workflows'], ['skills', '应用 / Skills', '#skills'], ['more', '更多', '#more']]);
   assert.equal(view.primaryCTA, '绑定 API Key');
   assert.equal(view.accountEntry, 'bottom_avatar_popover');
   assert.equal(view.navItems.some((item) => ['科研能力', '论文', '基金', '账号'].includes(item.label)), false);
   assert.equal(view.provider.baseUrl, undefined);
   assert.equal(view.provider.baseUrlEditable, false);
-  assert.deepEqual(view.modelSelector, { label: '模型：自动', value: 'auto', optional: true, baseUrlVisible: false });
+  assert.deepEqual(view.modelSelector, { label: '模型：gpt-5.5', value: 'auto', optional: true, baseUrlVisible: false, configSource: 'config.toml / OPL_CHAT_MODEL', model: 'gpt-5.5' });
   assert.equal(view.accountState, 'authenticated_unbound');
   assert.deepEqual(['anonymous', 'authenticated_unbound', 'authenticated_bound'].map((state) => web.createOnePersonLabViewModel({ session: { ok: state !== 'anonymous', email: 'user@example.com' }, provider: { ok: true, apiKeyConfigured: state === 'authenticated_bound', maskedKey: 'sk-***1234' }, conversations: { conversations: [] } }).primaryCTA), ['登录/注册', '绑定 API Key', '发送']);
   assert.equal(view.capabilitySource.syncMode, 'source_path_pinned_manifest');
