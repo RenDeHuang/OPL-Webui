@@ -83,7 +83,7 @@ func webRootDir() string {
 	workingDir, err := os.Getwd()
 	if err == nil {
 		for {
-			candidate := filepath.Join(workingDir, "apps", "web")
+			candidate := filepath.Join(workingDir, "frontend", "web")
 			if info, statErr := os.Stat(filepath.Join(candidate, "index.html")); statErr == nil && !info.IsDir() {
 				return candidate
 			}
@@ -94,7 +94,7 @@ func webRootDir() string {
 			workingDir = parent
 		}
 	}
-	return filepath.Join("apps", "web")
+	return filepath.Join("frontend", "web")
 }
 
 func runCLI(args []string, stdout io.Writer, stderr io.Writer) (bool, int) {
