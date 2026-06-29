@@ -93,3 +93,34 @@ test('turn skill model composer inspector and MedOPL handoff primitives keep Web
   assert.equal(primitives.MedOPLHandoff.fakeReadyAllowed, false);
   assertIncludesAll(product.commercialProductPrimitives.cannotClaim, ['Web-owned runtime execution', 'Web-owned storage truth', 'Web-owned payment truth', 'artifact body authority'], 'product primitive cannot claim');
 });
+
+test('returning continuation UI follows project window autonomy truth without reviving old inspector labels', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const pageState = readJson('contracts/web-page-state-matrix.json');
+  const dom = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const continuation = readFileSync('apps/web/src/onePersonLabWebContinuation.mjs', 'utf8');
+  const implementation = `${dom}\n${continuation}`;
+
+  const taskContinuation = product.commercialProductUserJourneyDepth.taskContinuationHistory;
+  assert.equal(taskContinuation.status, 'repo_browser_done_v1');
+  assert.equal(taskContinuation.sourceOfTruth, 'Go control plane /api/tasks projection or contract-backed empty state');
+  assertIncludesAll(taskContinuation.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'task continuation signal');
+  assertIncludesAll(taskContinuation.doesNotProve, ['dedicated project/window persistence API', 'token streaming implemented', 'artifact body authority', 'storage truth', 'runtime execution'], 'task continuation boundary');
+  assert.deepEqual(pageState.commercialProductUserJourneyDepth.inspectorTabsTarget, ['autonomy', 'inputs', 'outputs', 'why_next']);
+
+  assert.match(implementation, /data-inspector-open="autonomy"/);
+  assert.match(implementation, /data-inspector-tab="\$\{tab\}"/);
+  assert.match(implementation, /data-inspector-autonomy-current-objective/);
+  assert.match(implementation, /data-inspector-input-refs/);
+  assert.match(implementation, /data-inspector-output-refs/);
+  assert.match(implementation, /data-inspector-blocker-why/);
+  assert.match(implementation, /data-inspector-next-action/);
+  assert.match(implementation, /data-project-window-current-objective/);
+  assert.match(implementation, /data-project-window-input-refs/);
+  assert.match(implementation, /data-project-window-output-refs/);
+  assert.match(implementation, /data-project-window-blocker-why/);
+  assert.match(implementation, /data-project-window-next-action/);
+  assert.match(implementation, /data-window-search-source="GET \/api\/tasks"/);
+  assert.doesNotMatch(implementation, /\['files', 'progress', 'output'\]/);
+  assert.doesNotMatch(implementation, /data-inspector-open="files"/);
+});

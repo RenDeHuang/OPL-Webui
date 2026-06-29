@@ -60,7 +60,7 @@
         "state": ["empty"]
       },
       "InspectorSheet": {
-        "state": ["hidden", "files", "progress", "output"],
+        "state": ["hidden", "autonomy", "inputs", "outputs", "why_next"],
         "width": ["default", "narrow", "wide"],
         "placement": ["right_resizable_panel", "right_sheet", "bottom_sheet"]
       },
@@ -87,7 +87,7 @@
         "state": ["empty"]
       },
     "InspectorSheet": {
-      "state": ["hidden", "files", "progress", "output"],
+      "state": ["hidden", "autonomy", "inputs", "outputs", "why_next"],
       "resizable": true,
       "placement": ["right_resizable_panel", "right_sheet", "bottom_sheet"]
     },

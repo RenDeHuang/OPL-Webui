@@ -117,8 +117,8 @@
       { "id": "bind_key_or_account_capability", "route": "home", "requiredState": "authenticated_bound", "requiredSurface": "api_key_required_modal" },
       { "id": "choose_task", "route": "home", "requiredState": "research_entry_selected", "requiredSurface": "research_task_launcher" },
       { "id": "view_result_or_gate", "route": "home", "requiredState": "runtime_required", "requiredSurface": "turn_state" },
-      { "id": "view_progress_refs", "route": "home", "requiredState": "progress_refs_readonly", "requiredSurface": "inspector_progress" },
-      { "id": "view_deliverable_refs", "route": "home", "requiredState": "deliverable_refs_readonly", "requiredSurface": "inspector_output" },
+      { "id": "view_progress_refs", "route": "home", "requiredState": "progress_refs_readonly", "requiredSurface": "inspector_outputs" },
+      { "id": "view_deliverable_refs", "route": "home", "requiredState": "deliverable_refs_readonly", "requiredSurface": "inspector_outputs" },
       { "id": "view_blocker_next_step", "route": "home", "requiredState": "service_unavailable", "requiredSurface": "reliability_status" },
       { "id": "continue_via_deeplink", "route": "home", "requiredState": "medopl_authorized", "requiredSurface": "runtime_gate" }
     ],
@@ -354,9 +354,10 @@
       "home_default",
       "project_window_continuation_center",
       "search_sheet_open",
-      "inspector_files",
-      "inspector_progress",
-      "inspector_output",
+      "inspector_autonomy",
+      "inspector_inputs",
+      "inspector_outputs",
+      "inspector_why_next",
       "api_key_required_modal",
       "skill_plaza",
       "workflow_plaza",
@@ -480,7 +481,7 @@
     },
     "inspector": {
       "defaultState": "hidden",
-      "tabs": ["files", "progress", "output"],
+      "tabs": ["autonomy", "inputs", "outputs", "why_next"],
       "resize": {
         "enabled": true,
         "minWidth": 320,

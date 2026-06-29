@@ -143,9 +143,9 @@
     "ownershipRules": ["User owns task intents and continuation state.", "Task history stores refs, status, and metadata only.", "Session owns messages, input refs, output refs, and progress stages.", "Web shell may display refs-only task and audit projections but must not own execution truth or artifact bodies."]
   },
   "taskFlow": {
-    "primaryFlow": ["home", "compose_prompt_or_pick_starter_chip", "login_or_register_if_needed", "api_key_modal_if_needed", "attach_input_files_optional", "run_chat_or_runtime_gate", "inspect_progress_files_output", "export_or_continue"],
+    "primaryFlow": ["home", "compose_prompt_or_pick_starter_chip", "login_or_register_if_needed", "api_key_modal_if_needed", "attach_input_files_optional", "run_chat_or_runtime_gate", "inspect_autonomy_inputs_outputs_why_next", "export_or_continue"],
     "apiKeyFlow": ["api_key_optional_at_register", "app_shell_access_allowed_without_api_key", "chat_send_requires_api_key", "api_key_required_modal", "save_api_key", "return_to_composer"],
-    "fileFlow": ["open_inspector_files", "select_project", "select_session", "inspect_input_output_refs", "preview_or_export_output"]
+    "fileFlow": ["open_inspector_inputs", "select_project", "select_session", "inspect_input_output_refs", "preview_or_export_output"]
   },
   "informationArchitecture": {
     "publicShell": ["side_navigation", "first_view", "secondary_surfaces", "overlay_layer"],
@@ -224,10 +224,10 @@
         "doesNotProve": ["dedicated project/window persistence API"]
       }
     },
-    "inspector": ["files", "progress", "output"],
+    "inspector": ["autonomy", "inputs", "outputs", "why_next"],
     "rightInspector": {
       "launcher": "right_utility_rail",
-      "tabs": ["files", "progress", "output"],
+      "tabs": ["autonomy", "inputs", "outputs", "why_next"],
       "resize": {
         "enabled": true,
         "minWidth": 320,
@@ -494,7 +494,7 @@
       "loadingState": "saving_key"
     },
     "inspector_sheet": {
-      "openTrigger": "right_inspector_files_progress_output_button",
+      "openTrigger": "right_inspector_autonomy_inputs_outputs_why_next_button",
       "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
       "focusReturn": "inspector_open_button",
       "emptyState": "refs_not_available",
@@ -609,7 +609,7 @@
       "id": "InspectorSheet",
       "role": "secondary_context_surface",
       "defaultState": "hidden",
-      "tabs": ["files", "progress", "output"],
+      "tabs": ["autonomy", "inputs", "outputs", "why_next"],
       "resize": {
         "enabled": true,
         "minWidth": 320,
@@ -724,7 +724,7 @@
     "fileKey": "1MNO5l7PQYKZVNqQgw6DGS",
     "nodeId": "0:1",
     "requiredSourceFiles": ["src/app/App.tsx", "src/styles/theme.css"],
-    "adoptedPatterns": ["account_popover_status", "missing_api_key_resource_gate", "side_navigation_new_chat_projects_skill_workflow_search_more", "ai_native_center_composer", "starter_chips", "prompt_command_center", "research_skill_launcher", "agentic_workflow_cards", "inspector_sheet_tabs_files_progress_output", "running_blocked_turn_state"],
+    "adoptedPatterns": ["account_popover_status", "missing_api_key_resource_gate", "side_navigation_new_chat_projects_skill_workflow_search_more", "ai_native_center_composer", "starter_chips", "prompt_command_center", "research_skill_launcher", "agentic_workflow_cards", "inspector_sheet_tabs_autonomy_inputs_outputs_why_next", "running_blocked_turn_state"],
     "rejectedPatterns": ["drive_or_cloud_storage_ownership", "runtime_truth_ownership", "founder_plan_upsell", "unlimited_compute_claim", "dashboard_crm_primary_app", "generic_office_content_design_video_skills", "default_tech_blue_primary_palette", "dominant_purple_primary_palette", "purple_blue_gradient_primary_style", "heavy_glassmorphism_primary_style", "neumorphism_primary_style"]
   },
   "visualQualityGate": {

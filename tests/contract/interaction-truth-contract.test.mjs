@@ -98,10 +98,11 @@ test('interaction truth separates current green route guard from product journey
 
   assert.equal(interaction.productJourneyDepth?.state, 'admitted_product_gap');
   assert.equal(interaction.productJourneyDepth?.interactionTruthStatus, 'green');
-  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial');
+  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial_returning_continuation_repo_browser_done');
   assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
   assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
-  assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'interaction product-depth open gap');
+  assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'skill_import', 'model_selector', 'plus_menu'], 'interaction product-depth open gap');
+  assert.equal((interaction.productJourneyDepth?.openGaps ?? []).includes('autonomy_inspector'), false);
   assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'token streaming implemented', 'dedicated project/window persistence API'], 'interaction product-depth doesNotProve');
 
   assert.equal(pageState.commercialProductUserJourneyDepth?.state, 'active_gap_admitted');

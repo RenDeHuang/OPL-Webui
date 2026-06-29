@@ -148,7 +148,7 @@ async function dialogSheetProjectionState(cdp) {
   await waitFor(cdp, 'document.body.dataset.apiKeyDialogState === "closed"');
   const apiKeyClosed = await evaluateJSON(cdp, 'document.activeElement?.id === "chat-input"');
 
-  await activate(cdp, '[data-inspector-open="files"]');
+  await activate(cdp, '[data-inspector-open="autonomy"]');
   await waitFor(cdp, visibleSelectorExpression('[data-inspector-sheet]'));
   const inspectorOpen = await overlayState(cdp, 'inspector');
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 });

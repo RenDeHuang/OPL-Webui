@@ -14,6 +14,8 @@ function visibleTextFromHTML(html) {
 test('web shell mounts the Figma Make direct-copy replacement target', () => {
   const html = readFileSync('apps/web/index.html', 'utf8');
   const dom = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const continuation = readFileSync('apps/web/src/onePersonLabWebContinuation.mjs', 'utf8');
+  const shellSource = `${dom}\n${continuation}`;
   const state = readFileSync('apps/web/src/onePersonLabWebState.mjs', 'utf8');
   const visibleText = visibleTextFromHTML(html);
 
@@ -38,8 +40,8 @@ test('web shell mounts the Figma Make direct-copy replacement target', () => {
   assert.match(dom, /data-research-task-intent/);
   assert.match(dom, /data-results-surface/);
   assert.match(dom, /data-project-window-list/);
-  assert.match(dom, /data-inspector-sheet/);
-  assert.match(dom, /data-inspector-open="files"/);
+  assert.match(shellSource, /data-inspector-sheet/);
+  assert.match(shellSource, /data-inspector-open="autonomy"/);
   assert.match(dom, /data-api-key-dialog/);
   assert.doesNotMatch(html, /figma-parity-shell|landing-panel|workbench-panel|result-panel|history-panel|runtime-gate/);
   assert.doesNotMatch(visibleText, /Public Growth Layer|Account-based User Product Layer|Minimal Admin\/Ops Layer|operator controls/);

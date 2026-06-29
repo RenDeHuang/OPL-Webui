@@ -378,12 +378,12 @@
         {"id":"ops_diagnostics_and_troubleshooting","status":"done","objective":"Add troubleshooting, backup/migration owner split, and minimal /_ops diagnostics plan without MedOPL resource admin.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["troubleshooting docs and owner split are present","/_ops scope stays diagnostics only","data sidecar remains projection/audit only"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["operator diagnostics stay minimal","Webui does not backup MedOPL runtime/storage/artifacts","data management sidecar is not introduced"],"nextStepOpeners":["close maturity queue or move remaining items to owner-specific queues"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"docs/diagnostics plan only"},"requiredEvals":[{"id":"ops_diagnostics_and_troubleshooting_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/ops_diagnostics_and_troubleshooting","proves":["ops diagnostics and troubleshooting boundaries are registered when implemented"],"doesNotProve":["MedOPL resource admin","production-ready SaaS"],"failureBlocks":["ops diagnostics maturity claim"]}]}
       ]
     },
-    {"id":"commercial_product_contract_stabilization_v1","ownerSurface":"account-based-user-product-layer","state":"active","currentPhaseId":"product_primitives_baseline","currentStatus":"done","launchBlocking":false,"cannotClaim":["project/window implementation complete","streaming chat implemented","Skill import implemented","model selection implemented","MedOPL handoff implemented","autonomy inspector implemented","production-ready SaaS"],"dynamicRetirement":{"markDoneWhen":"product primitives baseline folds into product, interaction, page-state, registry, and registered tests","foldback":"durable facts stay in product, interaction, page-state, and registered tests","cleanupRule":"close this baseline slice after merge; implementation slices stay in commercial_product_user_journey_depth_v1"},"phases":[{"id":"product_primitives_baseline","status":"done","objective":"Fix durable commercial product primitives without implementing UI or freezing variable copy/model/pricing/MedOPL internals.","entryCriteria":["commercial product user journey depth is admitted"],"exitCriteria":["Project, Window, Turn, TaskIntent, Skill, ModelProfile, ComposerAction, InspectorSnapshot, and MedOPLHandoff are machine-readable","variable expression and non-Webui truth remain unfrozen","contract guard is registered"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["durable product primitives are explicit","task-history wording has a retirement target toward project/window","Webui remains decoupled from MedOPL runtime/storage/payment truth"],"nextStepOpeners":["open project_window_contract_slice before UI rename","open progressive_chat_contract_slice before chat behavior implementation","open specialist_handoff_contract_slice before MedOPL handoff UI changes","open skill_model_composer_contract_slice before Skill/model/+ toolbar implementation","open autonomy_inspector_contract_slice before inspector implementation"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"contract stabilization only; visible UI/copy acceptance is deferred"},"requiredEvals":[{"id":"commercial_product_primitives_contract","contract":"contracts/web-product-profile.json#/commercialProductPrimitives","proves":["durable product primitives and owner boundaries are fixed"],"doesNotProve":["UI implementation","production readiness","MedOPL runtime/storage/payment readiness"],"failureBlocks":["commercial product primitive baseline"]}]}]},
+    {"id":"commercial_product_contract_stabilization_v1","ownerSurface":"account-based-user-product-layer","state":"active","currentPhaseId":"product_primitives_baseline","currentStatus":"done","launchBlocking":false,"cannotClaim":["commercial product journey complete","streaming chat implemented","Skill import implemented","model selection implemented","production-ready SaaS"],"dynamicRetirement":{"markDoneWhen":"product primitives baseline folds into product, interaction, page-state, registry, and registered tests","foldback":"durable facts stay in product, interaction, page-state, and registered tests","cleanupRule":"close this baseline slice after merge; implementation slices stay in commercial_product_user_journey_depth_v1"},"phases":[{"id":"product_primitives_baseline","status":"done","objective":"Fix durable commercial product primitives without implementing UI or freezing variable copy/model/pricing/MedOPL internals.","entryCriteria":["commercial product user journey depth is admitted"],"exitCriteria":["Project, Window, Turn, TaskIntent, Skill, ModelProfile, ComposerAction, InspectorSnapshot, and MedOPLHandoff are machine-readable","variable expression and non-Webui truth remain unfrozen","contract guard is registered"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["durable product primitives are explicit","task-history wording has a retirement target toward project/window","Webui remains decoupled from MedOPL runtime/storage/payment truth"],"nextStepOpeners":["open progressive_chat_contract_slice before chat behavior implementation","open skill_model_composer_contract_slice before Skill/model/+ toolbar implementation"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"contract stabilization only; visible UI/copy acceptance is deferred"},"requiredEvals":[{"id":"commercial_product_primitives_contract","contract":"contracts/web-product-profile.json#/commercialProductPrimitives","proves":["durable product primitives and owner boundaries are fixed"],"doesNotProve":["UI implementation","production readiness","MedOPL runtime/storage/payment readiness"],"failureBlocks":["commercial product primitive baseline"]}]}]},
     {
       "id": "commercial_product_user_journey_depth_v1",
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
-      "currentPhaseId": "task_continuation_history",
+      "currentPhaseId": "product_acceptance_browser_e2e",
       "currentStatus": "partial",
       "launchBlocking": false,
       "cannotClaim": [
@@ -411,7 +411,7 @@
           "exitCriteria": [
             "commercial product journey depth is machine-readable",
             "interaction completion is separated from product value completion",
-            "project/window, streaming chat, Skill import, autonomy inspector, model selector, plus menu, and MedOPL handoff gaps are explicit",
+            "project/window, streaming chat, Skill import, model selector, plus menu, and MedOPL handoff gaps are explicit",
             "Webui-owned gaps are separated from MedOPL-owned runtime, storage, billing, and file processing truth"
           ],
           "evidenceSources": ["repo_local"],
@@ -514,14 +514,14 @@
         },
         {
           "id": "task_continuation_history",
-          "status": "not_started",
+          "status": "done",
           "objective": "Make returning-user continuation clear across project windows, refs, inputs, outputs, blockers, and next action.",
           "entryCriteria": ["project_window_continuation evidence exists"],
           "exitCriteria": ["returning user can find and continue a prior window", "inspector shows autonomous activity context without long explanatory prose"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_projection", "missing_browser_e2e"],
           "acceptance": ["continuation is clear", "refs-only boundary remains", "no artifact body is returned"],
-          "nextStepOpeners": ["open product_acceptance_browser_e2e after all journey surfaces are implemented"],
+          "nextStepOpeners": ["open product_acceptance_browser_e2e after returning continuation evidence passes"],
           "ownerReceipt": {"required": false, "source": "repo_local", "reason": "projection and browser evidence first"},
           "requiredEvals": [
             {

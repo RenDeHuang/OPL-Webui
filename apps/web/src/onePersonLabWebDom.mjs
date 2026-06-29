@@ -21,6 +21,13 @@ import {
   sendChatMessage,
   viewFromHash,
 } from './onePersonLabWebState.mjs';
+import {
+  INSPECTOR_TABS,
+  projectWindowTitle,
+  renderInspector,
+  renderProjectWindowCenter,
+  renderSearchSheet,
+} from './onePersonLabWebContinuation.mjs';
 
 const app = typeof document === 'undefined' ? null : document.querySelector('#app');
 const state = {
@@ -32,7 +39,7 @@ const state = {
   showSearch: false,
   showBilling: false,
   showInspector: false,
-  inspectorTab: 'progress',
+  inspectorTab: 'autonomy',
   activeConversationId: '',
   activeConversationMeta: null,
   messages: [],
@@ -167,9 +174,9 @@ function renderAuthenticated() {
         <main class="workspace-main main-stage">
           ${renderMainSurface()}
         </main>
-        ${state.showInspector ? renderInspector() : ''}
+        ${state.showInspector ? renderInspector(state, domHelpers()) : ''}
       </div>
-      ${state.showSearch ? renderSearchSheet() : ''}
+      ${state.showSearch ? renderSearchSheet(state.view, domHelpers()) : ''}
       ${state.showBilling ? renderBillingSummary() : ''}
       ${renderAPIKeyDialog()}
       <button class="auth-account-toggle-sentinel" type="button" data-logout-button data-authenticated-logout-sentinel tabindex="-1" aria-hidden="true" aria-label="退出登录"></button>
@@ -216,7 +223,7 @@ function renderMainSurface() {
   if (state.shellState === 'running_turn') return renderResultView();
   if (state.shellState === 'blocked_turn') return renderBlockedView();
   if (state.shellState === 'quota_exceeded') return renderQuotaView();
-  if (state.shellState === 'files') return renderProjectWindowCenter();
+  if (state.shellState === 'project_window_continuation_center') return renderProjectWindowCenter(state.view, domHelpers());
   if (state.shellState === 'skill_plaza') return renderSkillPlaza();
   if (state.shellState === 'workflow_plaza') return renderWorkflowPlaza();
   if (state.shellState === 'more') return renderMoreSurface();
@@ -234,7 +241,7 @@ function renderHomeComposer() {
         <button type="button" class="icon-button" aria-label="添加" tabindex="-1">+</button>
         <button type="button" class="secondary-button" tabindex="-1">完全访问</button>
         <button type="button" class="secondary-button model-selector" data-model-selector tabindex="-1">5.5 超高</button>
-        <button type="button" class="secondary-button" data-inspector-open="files">Refs</button>
+        <button type="button" class="secondary-button" data-inspector-open="autonomy">Inspector</button>
         <button type="submit" form="composer-form" class="round-send" data-chat-submit aria-label="发送">↑</button>
       </div>
       <div class="mode-grid" data-research-launcher data-starter-chips>
@@ -263,8 +270,8 @@ function renderResultView() {
       <header class="result-topbar">
         <button type="button" data-shell-action="home">‹ 新对话</button>
         <span>${escapeHTML(state.activeConversationMeta?.title || result?.prompt || '@科研')}</span>
-        <button type="button" data-inspector-open="files">Files</button>
-        <button type="button" data-inspector-open="progress">Inspector</button>
+        <button type="button" data-inspector-open="autonomy">Inspector</button>
+        <button type="button" data-inspector-open="why_next">Why / next</button>
       </header>
       <div class="result-scroll" data-chat-log>
         ${state.messages.map(renderMessage).join('')}
@@ -371,29 +378,6 @@ function renderQuotaView() {
     </section>`;
 }
 
-function renderProjectWindowCenter() {
-  const tasks = state.view.taskHistory?.tasks || [];
-  return `
-    <section class="file-library" data-shell-state="project_window_continuation_center" data-project-window-center data-projection-source="GET /api/tasks">
-      <header><h1>项目 / 窗口</h1><button type="button" data-shell-action="home">新建窗口</button></header>
-      <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
-      <div class="file-list" data-project-window-list>
-        ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。</p>' : tasks.map(renderProjectWindowCard).join('')}
-      </div>
-    </section>`;
-}
-
-function renderProjectWindowCard(task) {
-  const title = projectWindowTitle(task);
-  const refsCount = (task.progressRefs?.length || 0) + (task.deliverableRefs?.length || 0) + (task.materialRefs?.length || 0);
-  return `
-    <article data-project-window-item="${escapeAttr(task.taskId)}" data-project-window-status="${escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
-      <strong>${escapeHTML(title || '未命名任务')}</strong>
-      <small>${escapeHTML(task.status || 'projection')} · ${escapeHTML(formatShortDate(task.updatedAt))} · ${refsCount} refs</small>
-      <a data-project-window-continue href="${escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续到 MedOPL</a>
-    </article>`;
-}
-
 function renderSkillPlaza() {
   return `
     <section class="plaza-view" data-shell-state="skill_plaza">
@@ -421,20 +405,6 @@ function renderMoreSurface() {
       <h1>暂时没有更多入口</h1>
       <p data-more-empty>More 作为轻量 overflow 保留；账号、登录和 API Key 从左下角头像进入。</p>
     </section>`;
-}
-
-function renderSearchSheet() {
-  const conversations = state.view.conversations || [];
-  return `
-    <div class="sheet-backdrop" data-overlay-close="search"></div>
-    <aside class="search-sheet" data-search-sheet data-overlay-state="open" data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>搜索窗口</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
-      <input id="project-window-search" type="search" data-window-search data-window-search-scope="project_windows" placeholder="搜索项目窗口..." aria-label="搜索项目窗口">
-      <div class="project-window-search-results" data-project-window-search-results>
-        ${conversations.length === 0 ? '' : conversations.map((conversation) => `<button type="button" data-project-window-search-result><strong>${escapeHTML(conversation.title || '未命名窗口')}</strong><small>${escapeHTML(formatShortDate(conversation.updatedAt))}</small></button>`).join('')}
-      </div>
-      <p class="empty-state" data-project-window-search-empty ${conversations.length > 0 ? 'hidden' : ''}>暂无窗口</p>
-    </aside>`;
 }
 
 function renderAccountPopover() {
@@ -468,29 +438,6 @@ function renderBillingSummary() {
         <div><dt>API key / quota projection</dt><dd>${Number(quota.used || 0)} / ${Number(quota.limit || 0)}</dd></div>
         <div><dt>external capability handoff</dt><dd><a href="${MEDOPL_DEEP_LINK}/billing">MedOPL</a></dd></div>
       </dl>
-    </aside>`;
-}
-
-function renderInspector() {
-  return `
-    <aside class="inspector-sheet" data-inspector-sheet data-inspector-state="${escapeAttr(state.inspectorTab)}" data-responsive-placement="bottom_sheet" data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>Inspector</span><button type="button" data-inspector-close aria-label="关闭检查器">x</button></header>
-      <div class="inspector-tabs" role="tablist">
-        ${['files', 'progress', 'output'].map((tab) => `<button type="button" data-inspector-tab="${tab}" aria-selected="${String(state.inspectorTab === tab)}">${tabLabel(tab)}</button>`).join('')}
-      </div>
-      <section data-inspector-panel="files" ${state.inspectorTab === 'files' ? '' : 'hidden'}>
-        <h3>deliverable refs</h3>
-        <p>deliverable refs 由 MedOPL 投影；此处仅显示引用路径。</p>
-        <dl><div><dt>progress refs</dt><dd>来自 Go control plane project/window projection</dd></div><div><dt>materials refs</dt><dd>等待材料引用</dd></div></dl>
-      </section>
-      <section data-inspector-panel="progress" ${state.inspectorTab === 'progress' ? '' : 'hidden'}>
-        <h3>Progress</h3>
-        <ol><li>runtime gate checked</li><li>refs available</li><li>continuation ready</li></ol>
-      </section>
-      <section data-inspector-panel="output" ${state.inspectorTab === 'output' ? '' : 'hidden'}>
-        <h3>Output</h3>
-        <p>结果生成后仅显示 deliverable refs 和引用投影；Web 不持有产物正文权威。</p>
-      </section>
     </aside>`;
 }
 
@@ -538,7 +485,7 @@ function bindClicks() {
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
   app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
   app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
-  app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'progress', '[data-inspector-open]')));
+  app?.querySelectorAll('[data-inspector-open]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorOpen || 'autonomy', '[data-inspector-open]')));
   app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
   app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab, state.focusReturnSelector || '[data-inspector-open]')));
   app?.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
@@ -747,7 +694,7 @@ function runShellAction(action) {
     state.messages = [];
     setHashView('home');
   } else if (action === 'projects') {
-    state.shellState = 'files';
+    state.shellState = 'project_window_continuation_center';
     setHashView('projects');
   } else if (action === 'skills') {
     state.shellState = 'skill_plaza';
@@ -792,7 +739,7 @@ function syncRouteFromLocation() {
   document.body.dataset.view = view;
   if (view === 'skills') state.shellState = 'skill_plaza';
   else if (view === 'workflows') state.shellState = 'workflow_plaza';
-  else if (view === 'projects') state.shellState = 'files';
+  else if (view === 'projects') state.shellState = 'project_window_continuation_center';
   else if (view === 'more') state.shellState = 'more';
   else state.shellState = state.shellState === 'public_landing' ? 'home_default' : state.shellState;
 }
@@ -810,8 +757,8 @@ function setHashView(view) {
   document.body.dataset.view = view;
 }
 
-function openInspector(tab = 'progress', focusReturnSelector = '[data-inspector-open]') {
-  state.inspectorTab = ['files', 'progress', 'output'].includes(tab) ? tab : 'progress';
+function openInspector(tab = 'autonomy', focusReturnSelector = '[data-inspector-open]') {
+  state.inspectorTab = INSPECTOR_TABS.includes(tab) ? tab : 'autonomy';
   state.showInspector = true;
   state.focusReturnSelector = focusReturnSelector;
   render();
@@ -894,10 +841,6 @@ function runtimeTaskFromPrompt(prompt = '') {
   return { taskIntent: intentByMarker[marker] || 'runtime_required_task', marker, prompt };
 }
 
-function projectWindowTitle(task) {
-  return `${task.marker || ''} ${task.taskType || task.taskIntent || '窗口'}`.trim();
-}
-
 function shortTaskLabel(label) {
   return label.replace('开题/', '').replace('/长稿', '');
 }
@@ -938,10 +881,6 @@ function formatShortDate(value) {
   return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
 }
 
-function tabLabel(tab) {
-  return { files: '文件', progress: '进度', output: '输出' }[tab] || tab;
-}
-
 function escapeHTML(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -953,4 +892,8 @@ function escapeHTML(value) {
 
 function escapeAttr(value) {
   return escapeHTML(value).replaceAll('`', '&#96;');
+}
+
+function domHelpers() {
+  return { escapeHTML, escapeAttr, formatShortDate };
 }
