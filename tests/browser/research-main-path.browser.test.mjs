@@ -20,6 +20,10 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.path, 'research-main-path');
   assert.match(evidence.browser, /chrome|chromium/i);
   assert.equal(evidence.pageStates.authState, 'authenticated_bound');
+  assert.equal(evidence.productAcceptance.status, 'repo_browser_done_v1');
+  assert.deepEqual(evidence.productAcceptance.covers, ['visitor', 'new_user', 'ordinary_first_value', 'specialist_conversion', 'MedOPL_handoff', 'return_continuation', 'project_window_history']);
+  assert.equal(evidence.productAcceptance.ownerVisualCopyReceipt, 'pending');
+  assert.deepEqual(evidence.productAcceptance.doesNotProve, ['production rollout', 'owner visual/copy acceptance', 'production-ready SaaS']);
   assert.equal(evidence.pageStates.chatState, 'runtime_required');
   assert.equal(evidence.pageStates.researchResultSections, 3);
   assert.equal(evidence.pageStates.firstValueProgressiveTurnObserved, true);

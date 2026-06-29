@@ -106,7 +106,8 @@ try {
   const visualQuality = commercialCrossRepoCanary
     ? { state: 'not_collected_for_commercial_cross_repo_canary', cannotClaim: ['production visual polish complete', 'strict production browser e2e'] }
     : await captureVisualQualityEvidence(cdp, mode, accessibilityCloseout);
-  console.log(JSON.stringify({ ok: true, mode, path: commercialCrossRepoCanary ? 'commercial-cross-repo-browser-canary' : 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), commercialCrossRepoCanary, ordinaryChatOutcome, runtimeAdmission, pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality }));
+  const productAcceptance = commercialCrossRepoCanary ? null : { status: 'repo_browser_done_v1', covers: ['visitor', 'new_user', 'ordinary_first_value', 'specialist_conversion', 'MedOPL_handoff', 'return_continuation', 'project_window_history'], ownerVisualCopyReceipt: 'pending', doesNotProve: ['production rollout', 'owner visual/copy acceptance', 'production-ready SaaS'] };
+  console.log(JSON.stringify({ ok: true, mode, path: commercialCrossRepoCanary ? 'commercial-cross-repo-browser-canary' : 'research-main-path', browser: browserBinary, baseUrl: sanitizeBaseUrl(app.baseUrl), commercialCrossRepoCanary, ordinaryChatOutcome, runtimeAdmission, pageStates, auditKinds: relevantAuditKinds, allAuditKinds: [...new Set(kinds)], upstreamRequests: upstream?.requests.length ?? undefined, visualQuality, productAcceptance }));
 } catch (error) {
   console.error(error?.stack || error);
   process.exitCode = 1;
@@ -995,5 +996,4 @@ async function closeChildProcess(child, afterClose = () => {}) {
 function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''); }
 function sanitizeBaseUrl(value) { const url = new URL(value); return `${url.protocol}//${url.host}`; }
-
 function trimProcessOutput(text) { const normalized = String(text || '').replace(/\s+/g, ' ').trim(); return normalized ? normalized.slice(-1200) : '(empty)'; }

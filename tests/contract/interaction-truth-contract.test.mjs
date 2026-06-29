@@ -98,13 +98,13 @@ test('interaction truth separates current green route guard from product journey
 
   assert.equal(interaction.productJourneyDepth?.state, 'admitted_product_gap');
   assert.equal(interaction.productJourneyDepth?.interactionTruthStatus, 'green');
-  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial_streaming_chat_turns_repo_browser_done');
+  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'repo_browser_product_acceptance_done_owner_pending_v1');
   assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
   assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
   assert.deepEqual(interaction.productJourneyDepth?.chatTurnLifecycle?.requiredStages, ['submitted', 'progressive', 'waiting_upstream', 'complete', 'error']);
   assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.fakeTokenStreamingAllowed, false);
   assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.status, 'repo_browser_done_v1');
-  assert.deepEqual(interaction.productJourneyDepth?.openGaps, ['product_acceptance_browser_e2e']);
+  assert.deepEqual(interaction.productJourneyDepth?.openGaps, []);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('skill_import'), false);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('model_selector'), false);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('plus_menu'), false);

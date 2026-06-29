@@ -173,7 +173,7 @@ test('commercial product user journey depth is admitted separately from interact
   const depth = product.commercialProductUserJourneyDepth;
 
   assert.equal(depth.state, 'active_gap_admitted');
-  assert.equal(depth.currentProductValueStatus, 'partial_streaming_chat_turns_repo_browser_done');
+  assert.equal(depth.currentProductValueStatus, 'repo_browser_product_acceptance_done_owner_pending_v1');
   assert.equal(depth.interactionCompleteDoesNotProveProductValueComplete, true);
   assert.deepEqual(depth.journeyOrder, [
     'visitor',
@@ -207,7 +207,9 @@ test('commercial product user journey depth is admitted separately from interact
   assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_menu'], 'toolbar control');
   assert.equal(depth.modelAndPlusToolbar.status, 'repo_browser_done_v1');
   assert.equal(depth.skillSurface.status, 'repo_browser_typed_import_error_v1');
-  assert.deepEqual(depth.webOwnedGaps, ['product_acceptance_browser_e2e']);
+  assert.equal(depth.productAcceptance.repoBrowserStatus, 'done_v1');
+  assert.equal(depth.productAcceptance.ownerVisualCopyReceipt.status, 'pending');
+  assert.deepEqual(depth.webOwnedGaps, []);
   assert.equal(depth.webOwnedGaps.includes('skill_import'), false);
   assert.equal(depth.webOwnedGaps.includes('model_selector'), false);
   assert.equal(depth.webOwnedGaps.includes('plus_menu'), false);

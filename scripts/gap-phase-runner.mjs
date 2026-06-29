@@ -367,11 +367,22 @@ function evaluateCommercialProductUserJourneyDepth({ product }) {
       doesNotProve: ['MedOPL readiness', 'runtime execution', 'payment readiness'],
     }),
     evalResult({
-      id: 'product_depth_implementation_open',
-      dimension: 'repo_local',
-      status: depth?.currentProductValueStatus === 'done' ? 'pass' : 'blocked',
-      proves: ['commercial product journey implementation is complete when all product-depth slices close'],
-      doesNotProve: ['production rollout', 'MedOPL-owned runtime/storage/payment truth', 'artifact body authority'],
+      id: 'product_acceptance_browser_e2e',
+      dimension: 'browser',
+      status: depth?.productAcceptance?.repoBrowserStatus === 'done_v1'
+        && Array.isArray(depth?.webOwnedGaps)
+        && depth.webOwnedGaps.length === 0
+        ? 'pass'
+        : 'blocked',
+      proves: ['commercial product journey is accepted at repo/browser scope'],
+      doesNotProve: ['owner visual/copy acceptance', 'production rollout', 'production-ready SaaS'],
+    }),
+    evalResult({
+      id: 'owner_visual_copy_receipt',
+      dimension: 'owner',
+      status: depth?.productAcceptance?.ownerVisualCopyReceipt?.status === 'accepted' ? 'pass' : 'blocked',
+      proves: ['human owner accepted commercial product visual and copy quality when present'],
+      doesNotProve: ['browser e2e', 'production rollout', 'payment/runtime/storage ownership'],
     }),
   ];
 }

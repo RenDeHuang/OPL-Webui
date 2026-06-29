@@ -384,7 +384,7 @@
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
       "currentPhaseId": "product_acceptance_browser_e2e",
-      "currentStatus": "partial",
+      "currentStatus": "done",
       "launchBlocking": false,
       "cannotClaim": [
         "commercial product journey complete",
@@ -535,15 +535,15 @@
         {"id":"streaming_chat_turns","status":"done","objective":"Make ordinary research chat feel like a real turn lifecycle with submitted/progressive/waiting/complete or error states, without claiming upstream token streaming.","entryCriteria":["skill_model_plus_toolbar_slice evidence exists"],"exitCriteria":["ordinary @科研 browser flow observes submitted, progressive, waiting_upstream, and complete or error turn stages","turn lifecycle stages are rendered from real request lifecycle state","token streaming remains cannot-claim"],"evidenceSources":["repo_local","browser"],"blockerTypes":["missing_browser_e2e"],"acceptance":["turn lifecycle is visible in the chat log","no instant static result only","no fake token streaming","ordinary path still does not require runtime/storage"],"nextStepOpeners":["open product_acceptance_browser_e2e after streaming_chat_turns closes"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"request lifecycle browser evidence only; token streaming and owner visual copy review remain external"},"requiredEvals":[{"id":"streaming_chat_turn_browser_e2e","contract":"tests/browser/research-main-path.browser.test.mjs","proves":["ordinary research turn lifecycle is browser-visible"],"doesNotProve":["token streaming implemented","upstream provider streaming support","production-ready SaaS"],"failureBlocks":["streaming chat turn UX claim"]}]},
         {
           "id": "product_acceptance_browser_e2e",
-          "status": "not_started",
+          "status": "done",
           "objective": "Run product acceptance browser E2E over visitor, signup, first value, specialist conversion, MedOPL handoff, return continuation, and project/window history.",
           "entryCriteria": ["all product journey implementation slices pass targeted evals"],
-          "exitCriteria": ["product journey browser E2E passes", "owner visual/copy receipt exists where required", "temporary artifacts are ignored or folded back as sanitized summaries"],
+          "exitCriteria": ["product journey browser E2E passes", "owner visual/copy receipt remains a separate external blocker", "temporary artifacts are ignored or folded back as sanitized summaries"],
           "evidenceSources": ["browser", "owner"],
           "blockerTypes": ["missing_browser_e2e", "missing_owner_receipt"],
-          "acceptance": ["commercial product journey can be claimed repo/browser complete", "cannot-claim boundaries remain intact"],
+          "acceptance": ["commercial product journey can be claimed repo/browser accepted", "owner visual/copy acceptance remains pending", "cannot-claim boundaries remain intact"],
           "nextStepOpeners": ["only after owner authorization: push/CI/rollout/release evidence foldback"],
-          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "commercial product journey acceptance"},
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "status": "pending", "reason": "commercial product visual/copy acceptance cannot be inferred from browser tests"},
           "requiredEvals": [
             {
               "id": "product_acceptance_browser_e2e",

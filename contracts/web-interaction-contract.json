@@ -98,11 +98,11 @@
   "productJourneyDepth": {
     "state": "admitted_product_gap",
     "interactionTruthStatus": "green",
-    "productValueStatus": "partial_streaming_chat_turns_repo_browser_done",
+    "productValueStatus": "repo_browser_product_acceptance_done_owner_pending_v1",
     "projectsSurfaceBusinessName": "项目 / 窗口",
     "searchTruth": "search_project_windows",
     "chatTurnLifecycle": {"status":"repo_browser_done_v1","requiredStages":["submitted","progressive","waiting_upstream","complete","error"],"progressiveBoundary":"request_lifecycle_not_token_stream","fakeTokenStreamingAllowed":false,"sourceOfTruth":"Webui request lifecycle and Go control plane chat response"},
-    "openGaps": ["product_acceptance_browser_e2e"],
+    "openGaps": [],
     "doesNotProve": ["commercial product journey complete", "token streaming implemented", "dedicated project/window persistence API"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
