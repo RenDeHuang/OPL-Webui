@@ -61,7 +61,7 @@ try {
     await exerciseSpecialistNotReadyPath(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
     await exerciseSpecialistNotReadyPath(cdp, '@基金 帮我拆解标书结构', runtimeAdmissionTools());
   }
-  await activate(cdp, '[data-shell-action="projects"]');
+  await cdp.send('Runtime.evaluate', { expression: `const handoff = document.querySelector('[data-medopl-handoff]'); document.body.dataset.lastSpecialistHandoffVisible = String(Boolean(handoff)); document.body.dataset.lastSpecialistHandoffMode = handoff?.dataset.medoplHandoff || ''; document.body.dataset.lastSpecialistHandoffText = handoff?.textContent || '';` }); await activate(cdp, '[data-shell-action="projects"]');
   await waitFor(cdp, 'document.querySelectorAll("[data-project-window-item]").length >= 1', () => describePageState(cdp, 'project/window center missing recent windows'));
   await assertPage(cdp, 'document.querySelector("[data-project-window-continue]")?.href.startsWith("https://medopl.medopl.cn")', 'project/window continue deeplink');
   await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastProjectWindowCount = document.querySelectorAll('[data-project-window-item]').length; document.body.dataset.lastProjectWindowStatus = document.querySelector('[data-project-window-item]')?.dataset.projectWindowStatus || ''; document.body.dataset.lastProjectWindowContinueHref = document.querySelector('[data-project-window-continue]')?.href || '';` });
@@ -89,6 +89,9 @@ try {
     runtimeProgressRefCount: document.querySelectorAll('[data-runtime-progress-refs] li').length,
     runtimeDeliverableRefCount: document.querySelectorAll('[data-runtime-deliverable-refs] li').length,
     runtimeWebuiArtifactBody: document.querySelector('[data-runtime-run-projection]')?.dataset.webuiArtifactBody || '',
+    specialistHandoffVisible: document.body.dataset.lastSpecialistHandoffVisible === 'true' || Boolean(document.querySelector('[data-medopl-handoff]')),
+    specialistHandoffMode: document.body.dataset.lastSpecialistHandoffMode || document.querySelector('[data-medopl-handoff]')?.dataset.medoplHandoff || '',
+    specialistHandoffText: document.body.dataset.lastSpecialistHandoffText || document.querySelector('[data-medopl-handoff]')?.textContent || '',
     firstValueProgressiveTurnObserved: document.body.dataset.firstValueProgressiveTurnObserved === 'true',
     firstValueProgressiveTurnState: document.body.dataset.lastFirstValueTurnState || document.querySelector('[data-first-value-turn-state]')?.dataset.turnState || '',
     firstValueProgressiveBoundary: document.body.dataset.lastFirstValueProgressiveBoundary || document.querySelector('[data-first-value-turn-state]')?.dataset.progressiveBoundary || '',
@@ -990,8 +993,4 @@ function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''
 
 function sanitizeBaseUrl(value) { const url = new URL(value); return `${url.protocol}//${url.host}`; }
 
-function trimProcessOutput(text) {
-  const normalized = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!normalized) return '(empty)';
-  return normalized.slice(-1200);
-}
+function trimProcessOutput(text) { const normalized = String(text || '').replace(/\s+/g, ' ').trim(); return normalized ? normalized.slice(-1200) : '(empty)'; }

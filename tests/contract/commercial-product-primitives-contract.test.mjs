@@ -89,6 +89,7 @@ test('turn skill model composer inspector and MedOPL handoff primitives keep Web
 
   assertIncludesAll(primitives.MedOPLHandoff.triggers, ['specialist_run_intent', 'file_upload', 'runtime_required', 'storage_required'], 'MedOPL handoff trigger');
   assert.equal(primitives.MedOPLHandoff.webRole, 'readonly_projection_and_deeplink_consumer');
+  assert.deepEqual(primitives.MedOPLHandoff.requiredProjection, ['capabilityMarker', 'reason', 'nextAction', 'deepLink', 'returnContext']);
   assert.equal(primitives.MedOPLHandoff.fakeReadyAllowed, false);
   assertIncludesAll(product.commercialProductPrimitives.cannotClaim, ['Web-owned runtime execution', 'Web-owned storage truth', 'Web-owned payment truth', 'artifact body authority'], 'product primitive cannot claim');
 });

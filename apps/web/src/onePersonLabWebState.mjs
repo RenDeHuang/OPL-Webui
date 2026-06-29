@@ -282,8 +282,12 @@ export function runtimeTaskCardForPrompt(prompt = '') {
     kind: 'runtime_task_card',
     marker: semantic.marker,
     requiredCapability: semantic.workflow,
-    title: `${semantic.marker} 需要 MedOPL 授权`,
-    message: 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。',
+    title: `${semantic.marker} 进入 MedOPL 专业能力`,
+    message: '继续到 MedOPL 开通或确认运行资源；回到 Web 后保留当前窗口上下文和 refs 投影。',
+    handoffMode: 'conversion_handoff',
+    capabilityMarker: semantic.marker,
+    reason: 'specialist_capability_requires_medopl_runtime_or_resource_binding',
+    returnContext: 'current_project_window',
     deepLink: MEDOPL_DEEP_LINK,
     webuiRuntimeExecution: 'forbidden',
   };
@@ -300,6 +304,7 @@ export function runtimeTaskCardForGate(prompt = '', gate = {}) {
     deepLink: nextAction.deepLink || base.deepLink,
     blockers: Array.isArray(gateState.blockers) ? gateState.blockers.map(normalizeRuntimeBlocker) : [],
     nextAction,
+    reason: gateState.ready ? 'medopl_runtime_projection_ready' : base.reason,
   };
 }
 
@@ -318,6 +323,7 @@ export function runtimeTaskCardForRun(prompt = '', run = {}) {
     deliverables: Array.isArray(run.deliverables) ? run.deliverables : [],
     artifacts: Array.isArray(run.artifacts) ? run.artifacts : [],
     deepLink: safeMedoplDeepLink(run.statusUrl),
+    reason: 'medopl_run_intent_accepted',
     webuiArtifactBody: 'forbidden',
     webuiStorageTruth: 'forbidden',
   };

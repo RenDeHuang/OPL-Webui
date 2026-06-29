@@ -326,9 +326,9 @@ function renderBlockedView() {
         <span data-reliability-action>去 MedOPL</span>
         <small data-reliability-details>该能力需要在 MedOPL 开通后继续。</small>
       </div>
-      <article class="runtime-card is-visible" data-runtime-gate>
+      <article class="runtime-card is-visible" data-runtime-gate data-medopl-handoff="${escapeAttr(taskCard.handoffMode || 'conversion_handoff')}" data-handoff-return-context="${escapeAttr(taskCard.returnContext || 'current_project_window')}" data-handoff-next-action="${escapeAttr(taskCard.nextAction?.id || 'open_medopl')}">
         <div data-runtime-task-card="${escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${escapeAttr(taskCard.marker || '')}" data-runtime-projection-status="${escapeAttr(taskCard.status || '')}" data-runtime-run-ref="${escapeAttr(taskCard.runRef || '')}">
-          <span>runtime admission - 检查清单</span>
+          <span>${escapeHTML(taskCard.capabilityMarker || taskCard.marker || '@论文')} · MedOPL conversion handoff</span>
           <h2>${escapeHTML(taskCard.title || '需要 MedOPL 授权')}</h2>
           <p>${escapeHTML(taskCard.message || 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。')}</p>
           ${renderRuntimeProjectionRefs(taskCard)}

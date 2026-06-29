@@ -192,7 +192,11 @@ test('commercial product user journey depth is admitted separately from interact
   assert.equal(depth.projectWindowModel.status, 'implemented_projection_backed_v1');
   assert.equal(depth.chatInteractionModel.requiredFeel, 'request_lifecycle_progressive_turns');
   assert.equal(depth.medoplHandoff.productRole, 'specialist_conversion_handoff_not_error');
+  assert.equal(depth.medoplHandoff.status, 'repo_browser_productized_v1');
+  assert.equal(depth.medoplHandoff.visualMode, 'conversion_handoff_card');
   assertIncludesAll(depth.medoplHandoff.triggers, ['run_specialist_task', 'upload_file', 'runtime_required', 'storage_or_resource_binding_required'], 'MedOPL handoff trigger');
+  assertIncludesAll(depth.medoplHandoff.requiredSignals, ['capability_marker', 'reason', 'next_action', 'medopl_deeplink', 'return_context'], 'MedOPL handoff signal');
+  assertIncludesAll(depth.medoplHandoff.mustNotLookLike, ['generic_error_page', 'dead_link', 'web_runtime_admin'], 'MedOPL handoff forbidden mode');
   assert.deepEqual(depth.skillSurface.scopes, ['opl_skills', 'my_skills']);
   assertIncludesAll(depth.skillSurface.importStates, ['select', 'validate', 'imported', 'error'], 'skill import state');
   assertIncludesAll(depth.inspectorAutonomy.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'autonomy inspector signal');

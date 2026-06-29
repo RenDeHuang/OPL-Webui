@@ -46,6 +46,10 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.pageStates.projectWindowCount >= 2, true);
   assert.equal(evidence.pageStates.projectWindowStatus, 'blocked');
   assert.match(evidence.pageStates.projectWindowContinueHref, /^https:\/\/medopl\.medopl\.cn/);
+  assert.equal(evidence.pageStates.specialistHandoffVisible, true);
+  assert.equal(evidence.pageStates.specialistHandoffMode, 'conversion_handoff');
+  assert.match(evidence.pageStates.specialistHandoffText, /MedOPL/);
+  assert.doesNotMatch(evidence.pageStates.specialistHandoffText, /error|错误|WebUI owns|node pool|无限计算资源/i);
   assert.ok(evidence.auditKinds.includes('chat.completed'));
   assert.ok(evidence.upstreamRequests >= 1);
   assert.equal(evidence.visualQuality.state, 'repo_local_visual_baseline_captured');

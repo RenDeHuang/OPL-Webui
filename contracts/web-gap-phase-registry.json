@@ -383,7 +383,7 @@
       "id": "commercial_product_user_journey_depth_v1",
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
-      "currentPhaseId": "specialist_conversion_path",
+      "currentPhaseId": "task_continuation_history",
       "currentStatus": "partial",
       "launchBlocking": false,
       "cannotClaim": [
@@ -472,14 +472,14 @@
         },
         {
           "id": "specialist_conversion_path",
-          "status": "not_started",
+          "status": "done",
           "objective": "Make runtime/file/upload specialist handoff feel like a MedOPL conversion path while preserving MedOPL authority.",
           "entryCriteria": ["first_value_optimization evidence exists"],
           "exitCriteria": ["runtime, upload, and specialist task triggers preserve context and show MedOPL deeplink", "blocked/onboarding/ready states remain typed"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_medopl_projection", "missing_browser_e2e"],
           "acceptance": ["handoff is not error copy", "no fake MedOPL readiness", "no Web-owned runtime/storage/payment claim"],
-          "nextStepOpeners": ["open project_window_continuation after handoff states are productized"],
+          "nextStepOpeners": ["open task_continuation_history after handoff states are productized"],
           "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "conversion copy and visual acceptance"},
           "requiredEvals": [
             {
