@@ -85,3 +85,24 @@ test('current Web UI must not satisfy formal launch until interaction truth is i
 
   assertNoViolations(violations, 'current UI still violates interaction truth');
 });
+
+test('interaction truth separates current green route guard from product journey depth gaps', () => {
+  const interaction = readJson('contracts/web-interaction-contract.json');
+  const pageState = readJson('contracts/web-page-state-matrix.json');
+
+  assert.equal(interaction.productJourneyDepth?.state, 'admitted_product_gap');
+  assert.equal(interaction.productJourneyDepth?.interactionTruthStatus, 'green');
+  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial');
+  assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
+  assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
+  assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'interaction product-depth open gap');
+  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'first value optimized', 'project/window implementation complete'], 'interaction product-depth doesNotProve');
+
+  assert.equal(pageState.commercialProductUserJourneyDepth?.state, 'active_gap_admitted');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.defaultProjectModel, 'project_with_many_conversation_windows');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.searchSurface?.scope, 'project_windows');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.retireBusinessName, '任务历史 / 交付接续');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.replacementBusinessName, '项目 / 窗口');
+  assertIncludesAll(pageState.commercialProductUserJourneyDepth?.handoffTriggers ?? [], ['runtime_required', 'file_upload', 'specialist_run_intent'], 'page-state handoff trigger');
+  assertIncludesAll(pageState.commercialProductUserJourneyDepth?.cannotClaim ?? [], ['fake project/window data', 'Web-owned runtime/storage/payment truth', 'artifact body authority'], 'page-state product-depth cannot claim');
+});

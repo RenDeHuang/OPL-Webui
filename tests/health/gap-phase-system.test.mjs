@@ -73,6 +73,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     'medopl_readonly_evidence',
     'commercial_runtime_admission_alignment_v1',
     'commercial_product_maturity_gap_v1',
+    'commercial_product_user_journey_depth_v1',
     'runtime_execution_boundary',
     'commercial_saas_depth',
     'operations_maturity',
@@ -143,7 +144,7 @@ test('gap phase runner reports partial or blocked phases instead of complete cla
     assert.ok(gap.acceptance.length > 0, `${gap.id} must report acceptance gates`);
     assert.ok(gap.nextStepOpeners.length > 0, `${gap.id} must report next-step openers`);
     assert.equal(
-      !['commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
+      !['commercial_product_user_journey_depth_v1', 'commercial_saas_depth', 'operations_maturity', 'ha_and_resilience'].includes(gap.id),
       gap.readyToAdvance,
     );
   }
@@ -187,6 +188,11 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_classification_contract').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'webui_owner_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'pass');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.status, 'partial');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.currentPhaseId, 'first_value_optimization');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'commercial_product_journey_map').status, 'pass');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'webui_medopl_product_owner_split').status, 'pass');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'product_depth_implementation_open').status, 'blocked');
   assert.equal(byGap.runtime_execution_boundary.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_readonly_projection').status, 'pass');
   assert.equal(byGap.commercial_saas_depth.evalResults.find((result) => result.id === 'commercial_owner_receipt').status, 'pass');
@@ -224,7 +230,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(report.readyToAdvanceCount, 10);
   assert.deepEqual(report.summary, {
     done: 10,
-    partial: 1,
+    partial: 2,
     blocked: 2,
     not_started: 0,
   });

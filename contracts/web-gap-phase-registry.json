@@ -378,6 +378,184 @@
         {"id":"ops_diagnostics_and_troubleshooting","status":"done","objective":"Add troubleshooting, backup/migration owner split, and minimal /_ops diagnostics plan without MedOPL resource admin.","entryCriteria":["maturity_gap_queue_registration is done"],"exitCriteria":["troubleshooting docs and owner split are present","/_ops scope stays diagnostics only","data sidecar remains projection/audit only"],"evidenceSources":["repo_local"],"blockerTypes":["missing_contract"],"acceptance":["operator diagnostics stay minimal","Webui does not backup MedOPL runtime/storage/artifacts","data management sidecar is not introduced"],"nextStepOpeners":["close maturity queue or move remaining items to owner-specific queues"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"docs/diagnostics plan only"},"requiredEvals":[{"id":"ops_diagnostics_and_troubleshooting_eval","contract":"contracts/web-gap-phase-registry.json#/gaps/commercial_product_maturity_gap_v1/phases/ops_diagnostics_and_troubleshooting","proves":["ops diagnostics and troubleshooting boundaries are registered when implemented"],"doesNotProve":["MedOPL resource admin","production-ready SaaS"],"failureBlocks":["ops diagnostics maturity claim"]}]}
       ]
     },
+    {
+      "id": "commercial_product_user_journey_depth_v1",
+      "ownerSurface": "account-based-user-product-layer",
+      "state": "active",
+      "currentPhaseId": "first_value_optimization",
+      "currentStatus": "partial",
+      "launchBlocking": false,
+      "cannotClaim": [
+        "commercial product journey complete",
+        "project/window implementation complete",
+        "streaming chat implemented",
+        "Skill import implemented",
+        "model selection implemented",
+        "production-ready SaaS"
+      ],
+      "dynamicRetirement": {
+        "markDoneWhen": "product acceptance browser e2e closes and durable facts fold into contracts/page-state/tests",
+        "foldback": "long-term facts fold into product, interaction, page-state, browser tests, and status; obsolete task-history wording goes to provenance only",
+        "cleanupRule": "close per-slice worktrees/branches, remove temporary screenshots/raw logs, and compact closed phases when stable"
+      },
+      "phases": [
+        {
+          "id": "user_journey_map",
+          "status": "done",
+          "objective": "Admit the commercial product user journey depth gap and map visitor, signup, first value, specialist conversion, MedOPL handoff, return continuation, and project/window history without implementing UI.",
+          "entryCriteria": [
+            "UI/interaction/runtime admission and commercial consumer contracts exist",
+            "Figma source truth remains canonical for public and account user product surfaces"
+          ],
+          "exitCriteria": [
+            "commercial product journey depth is machine-readable",
+            "interaction completion is separated from product value completion",
+            "project/window, streaming chat, Skill import, autonomy inspector, model selector, plus menu, and MedOPL handoff gaps are explicit",
+            "Webui-owned gaps are separated from MedOPL-owned runtime, storage, billing, and file processing truth"
+          ],
+          "evidenceSources": ["repo_local"],
+          "blockerTypes": ["missing_contract", "missing_owner_visual_copy_review"],
+          "acceptance": [
+            "first value moment is defined but not claimed complete",
+            "任务历史 / 交付接续 is marked for retirement in favor of 项目 / 窗口",
+            "MedOPL handoff is a specialist conversion path, not an error jump",
+            "no payment/runtime/storage/artifact authority moves into Webui"
+          ],
+          "nextStepOpeners": [
+            "open first_value_optimization to reduce explanatory copy and add progressive ordinary chat feel",
+            "open project_window_continuation before renaming task history in UI",
+            "open specialist_conversion_path before changing MedOPL handoff copy or triggers"
+          ],
+          "ownerReceipt": {
+            "required": false,
+            "source": "repo_local",
+            "reason": "contract and product map only; UI/copy acceptance is deferred"
+          },
+          "requiredEvals": [
+            {
+              "id": "commercial_product_journey_map",
+              "contract": "contracts/web-product-profile.json#/commercialProductUserJourneyDepth",
+              "proves": [
+                "commercial product journey depth is admitted separately from interaction completion"
+              ],
+              "doesNotProve": [
+                "product journey implementation",
+                "owner visual acceptance",
+                "production readiness"
+              ],
+              "failureBlocks": [
+                "commercial product journey complete"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "first_value_optimization",
+          "status": "not_started",
+          "objective": "Reduce explanatory copy and make ordinary research first value feel like a progressive chat turn in a project/window context.",
+          "entryCriteria": ["user_journey_map is done"],
+          "exitCriteria": ["primary surfaces read like shipped product UI", "ordinary @科研 has progressive turn states", "no fake result or fake streaming is introduced"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_browser_e2e", "owner_visual_copy_review_needed"],
+          "acceptance": ["less explanatory production copy", "first value moment is visible", "ordinary path still does not require runtime/storage"],
+          "nextStepOpeners": ["open specialist_conversion_path after first value browser evidence passes"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "visible copy and product feel changes"},
+          "requiredEvals": [
+            {
+              "id": "first_value_browser_e2e",
+              "contract": "tests/browser/research-main-path.browser.test.mjs",
+              "proves": ["visitor/new user/ordinary user reaches first value in browser"],
+              "doesNotProve": ["runtime execution", "MedOPL readiness", "production-ready SaaS"],
+              "failureBlocks": ["first value optimized claim"]
+            }
+          ]
+        },
+        {
+          "id": "specialist_conversion_path",
+          "status": "not_started",
+          "objective": "Make runtime/file/upload specialist handoff feel like a MedOPL conversion path while preserving MedOPL authority.",
+          "entryCriteria": ["first_value_optimization evidence exists"],
+          "exitCriteria": ["runtime, upload, and specialist task triggers preserve context and show MedOPL deeplink", "blocked/onboarding/ready states remain typed"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_medopl_projection", "missing_browser_e2e"],
+          "acceptance": ["handoff is not error copy", "no fake MedOPL readiness", "no Web-owned runtime/storage/payment claim"],
+          "nextStepOpeners": ["open project_window_continuation after handoff states are productized"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "conversion copy and visual acceptance"},
+          "requiredEvals": [
+            {
+              "id": "specialist_conversion_browser_e2e",
+              "contract": "tests/browser/research-main-path.browser.test.mjs",
+              "proves": ["specialist not-ready/ready/onboarding path is productized in browser"],
+              "doesNotProve": ["MedOPL payment readiness", "runtime execution ownership"],
+              "failureBlocks": ["specialist conversion claim"]
+            }
+          ]
+        },
+        {
+          "id": "project_window_continuation",
+          "status": "not_started",
+          "objective": "Replace task-history wording with projects/windows: each project can hold multiple conversation windows with context, and search searches windows.",
+          "entryCriteria": ["user_journey_map is done"],
+          "exitCriteria": ["project/window state contract exists", "search scope is project_windows", "old task-history business wording is retired"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_go_projection_contract", "missing_browser_e2e"],
+          "acceptance": ["no fake project/window data", "Go control plane projection or contract-backed empty state only", "old task history assertions are retired or rewritten"],
+          "nextStepOpeners": ["open task_continuation_history once project/window projection is stable"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "core IA and copy change"},
+          "requiredEvals": [
+            {
+              "id": "project_window_contract_browser_e2e",
+              "contract": "contracts/web-page-state-matrix.json#/commercialProductUserJourneyDepth",
+              "proves": ["project/window continuation and search truth are implemented when browser evidence lands"],
+              "doesNotProve": ["artifact body authority", "storage truth"],
+              "failureBlocks": ["project/window implementation complete"]
+            }
+          ]
+        },
+        {
+          "id": "task_continuation_history",
+          "status": "not_started",
+          "objective": "Make returning-user continuation clear across project windows, refs, inputs, outputs, blockers, and next action.",
+          "entryCriteria": ["project_window_continuation evidence exists"],
+          "exitCriteria": ["returning user can find and continue a prior window", "inspector shows autonomous activity context without long explanatory prose"],
+          "evidenceSources": ["repo_local", "browser"],
+          "blockerTypes": ["missing_projection", "missing_browser_e2e"],
+          "acceptance": ["continuation is clear", "refs-only boundary remains", "no artifact body is returned"],
+          "nextStepOpeners": ["open product_acceptance_browser_e2e after all journey surfaces are implemented"],
+          "ownerReceipt": {"required": false, "source": "repo_local", "reason": "projection and browser evidence first"},
+          "requiredEvals": [
+            {
+              "id": "return_continuation_browser_e2e",
+              "contract": "tests/browser/research-main-path.browser.test.mjs",
+              "proves": ["returning user continuation works in browser"],
+              "doesNotProve": ["storage truth", "runtime execution"],
+              "failureBlocks": ["return continuation claim"]
+            }
+          ]
+        },
+        {
+          "id": "product_acceptance_browser_e2e",
+          "status": "not_started",
+          "objective": "Run product acceptance browser E2E over visitor, signup, first value, specialist conversion, MedOPL handoff, return continuation, and project/window history.",
+          "entryCriteria": ["all product journey implementation slices pass targeted evals"],
+          "exitCriteria": ["product journey browser E2E passes", "owner visual/copy receipt exists where required", "temporary artifacts are ignored or folded back as sanitized summaries"],
+          "evidenceSources": ["browser", "owner"],
+          "blockerTypes": ["missing_browser_e2e", "missing_owner_receipt"],
+          "acceptance": ["commercial product journey can be claimed repo/browser complete", "cannot-claim boundaries remain intact"],
+          "nextStepOpeners": ["only after owner authorization: push/CI/rollout/release evidence foldback"],
+          "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "commercial product journey acceptance"},
+          "requiredEvals": [
+            {
+              "id": "product_acceptance_browser_e2e",
+              "contract": "tests/browser/research-main-path.browser.test.mjs",
+              "proves": ["commercial product user journey is browser-accepted when implemented"],
+              "doesNotProve": ["production-ready SaaS", "payment/runtime/storage ownership", "production rollout"],
+              "failureBlocks": ["commercial product journey complete"]
+            }
+          ]
+        }
+      ]
+    },
         {
       "id": "runtime_execution_boundary",
       "ownerSurface": "runtime-gate",

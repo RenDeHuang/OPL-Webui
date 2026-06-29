@@ -157,6 +157,7 @@ function evaluateGap(gap, phase, context) {
     ...evaluateCommonGap(gap, phase, context),
     ...({
       ui_ux_product_depth: evaluateUiUxGap(context),
+      commercial_product_user_journey_depth_v1: evaluateCommercialProductUserJourneyDepth(context),
       commercial_product_maturity_gap_v1: evaluateCommercialProductMaturityGap(gap),
       commercial_saas_depth: evaluateCommercialGap(context),
       operations_maturity: evaluateOperationsGap(context),
@@ -297,6 +298,44 @@ function evaluateUiUxGap({ gui }) {
         : 'blocked',
       proves: ['human owner accepted the UI/UX production claim when present'],
       doesNotProve: ['production evidence', 'complete UI/UX design system', 'assistive technology conformance'],
+    }),
+  ];
+}
+
+function evaluateCommercialProductUserJourneyDepth({ product }) {
+  const depth = product?.commercialProductUserJourneyDepth;
+  const webGaps = depth?.webOwnedGaps ?? [];
+  const medoplOwned = depth?.medoplOwned ?? [];
+  return [
+    evalResult({
+      id: 'commercial_product_journey_map',
+      dimension: 'contract',
+      status: depth?.state === 'active_gap_admitted'
+        && depth?.interactionCompleteDoesNotProveProductValueComplete === true
+        && depth?.projectWindowModel?.businessName === '项目 / 窗口'
+        ? 'pass'
+        : 'fail',
+      proves: ['commercial product journey depth is admitted separately from interaction completion'],
+      doesNotProve: ['product journey implementation', 'owner visual acceptance', 'production readiness'],
+    }),
+    evalResult({
+      id: 'webui_medopl_product_owner_split',
+      dimension: 'contract',
+      status: webGaps.includes('project_window_continuation')
+        && webGaps.includes('streaming_chat_turns')
+        && medoplOwned.includes('runtime_readiness')
+        && medoplOwned.includes('storage_resource_binding')
+        ? 'pass'
+        : 'fail',
+      proves: ['Webui-owned product depth gaps are separated from MedOPL-owned runtime, storage, billing, and file processing truth'],
+      doesNotProve: ['MedOPL readiness', 'runtime execution', 'payment readiness'],
+    }),
+    evalResult({
+      id: 'product_depth_implementation_open',
+      dimension: 'repo_local',
+      status: depth?.currentProductValueStatus === 'done' ? 'pass' : 'blocked',
+      proves: ['commercial product journey implementation is complete when all product-depth slices close'],
+      doesNotProve: ['production rollout', 'MedOPL-owned runtime/storage/payment truth', 'artifact body authority'],
     }),
   ];
 }

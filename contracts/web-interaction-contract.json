@@ -92,6 +92,15 @@
     "forbiddenDataSources": ["figma_static_copy", "zip_mock_data", "hardcoded_project_tree", "workspace_placeholder"],
     "mustNotClaim": ["fake project/workspace data"]
   },
+  "productJourneyDepth": {
+    "state": "admitted_product_gap",
+    "interactionTruthStatus": "green",
+    "productValueStatus": "partial",
+    "projectsSurfaceBusinessName": "项目 / 窗口",
+    "searchTruth": "search_project_windows",
+    "openGaps": ["streaming_chat_turns", "skill_import", "autonomy_inspector", "model_selector", "plus_menu"],
+    "doesNotProve": ["commercial product journey complete", "first value optimized", "project/window implementation complete"]
+  },
   "dialogSheetTruth": {
     "accountPopover": {
       "openTrigger": "bottom_account_avatar",

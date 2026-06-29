@@ -283,6 +283,24 @@
       "production rollout"
     ]
   },
+  "commercialProductUserJourneyDepth": {
+    "state": "active_gap_admitted",
+    "currentProductValueStatus": "partial",
+    "interactionCompleteDoesNotProveProductValueComplete": true,
+    "journeyOrder": ["visitor", "new_user", "ordinary_user", "specialist_not_ready", "specialist_ready", "medopl_handoff", "returning_user"],
+    "personas": {"visitor":"understands value and starts","new_user":"signup to first prompt","ordinary_user":"gets lightweight research value without runtime/storage","specialist_not_ready":"sees conversion handoff for specialist capability","specialist_ready":"resumes run intent through MedOPL projection","returning_user":"continues through project/window history"},
+    "firstValueMoment": {"status":"not_productized","target":"ordinary_research_chat_first_value_in_project_window","mustFeelLike":"progressive_chat_not_static_result","doesNotRequire":["runtime","storage"]},
+    "projectWindowModel": {"status":"contract_admitted_pending_implementation","businessName":"项目 / 窗口","projectContains":"many_conversation_windows_with_context","windowSearchScope":"project_windows","retireLabels":["任务历史 / 交付接续"],"dataTruth":"Go control plane projection or contract-backed empty state"},
+    "chatInteractionModel": {"requiredFeel":"streaming_or_progressive_chat_turns","forbidden":["instant_static_result_only","fake_streaming","fake_result"]},
+    "medoplHandoff": {"productRole":"specialist_conversion_handoff_not_error","triggers":["run_specialist_task","upload_file","runtime_required","storage_or_resource_binding_required"],"webRole":["explain_next_action","preserve_return_context","render_deeplink"],"mustNotClaim":["runtime_execution","storage_truth","payment_truth"]},
+    "skillSurface": {"scopes":["opl_skills","my_skills"],"importStates":["select","validate","imported","error"],"status":"gap_pending_implementation"},
+    "inspectorAutonomy": {"purpose":"show_what_autonomous_opl_is_doing_and_why","requiredSignals":["current_objective","activity_timeline","input_refs","output_refs","blocker_why","next_action"],"copyPolicy":"dense_structured_not_explanatory_prose"},
+    "modelAndPlusToolbar": {"requiredControls":["model_selector","plus_menu"],"modelBoundary":"select_allowed_profile_without_base_url_editor","plusMenuPurpose":["new_window","attach_file_or_medopl_handoff","import_skill","add_context"]},
+    "webOwnedGaps": ["first_value_optimization", "project_window_continuation", "window_search", "streaming_chat_turns", "skill_import", "autonomy_inspector", "model_selector", "plus_menu"],
+    "medoplOwned": ["runtime_readiness", "storage_resource_binding", "billing_payment_truth", "file_runtime_processing"],
+    "ownerVisualCopyReview": ["reduce_primary_surface_explanatory_copy", "project_window_language", "medopl_conversion_copy", "inspector_information_density"],
+    "cannotClaim": ["commercial product journey complete", "project/window implementation complete", "streaming chat implemented", "Skill import implemented", "model selection implemented", "production-ready SaaS"]
+  },
   "webBusinessCapabilityV1": {
     "claim": "account_based_one_person_lab_web_app_business_capability_v1",
     "mainPathContract": "contracts/web-product-profile.json#/accountBasedWebAppMainPath",
@@ -428,6 +446,7 @@
       },
       {"id":"commercial_launch_readiness_closeout","ownerSurface":"release-evidence","acceptanceContract":"contracts/web-product-profile.json#/commercialLaunchReadiness","disposition":"local_acceptance_and_remote_sync_prep_done_blocked_on_owner_authorized_push_ci_rollout_foldback","evidenceRequired":["owner_visual_acceptance_checklist","remote_sync_pr_readiness","owner_authorized_push_or_pr","GitHub_CI_after_push","owner_authorized_rollout","release_evidence_foldback","owner_visual_receipt_optional"]},
       {"id":"commercial_runtime_admission_alignment_v1","ownerSurface":"runtime-gate","acceptanceContract":"contracts/web-runtime-bridge.json#/commercialRuntimeAdmission","disposition":"ordinary_blocked_ready_onboarding_paths_aligned_before_production_e2e_rerun","launchBlocking":true,"evidenceRequired":["ordinary_path_chat_completed","specialist_not_ready_runtime_gate_blocked","specialist_ready_runtime_gate_ready_run_intent_projected","onboarding_medopl_deeplink","MedOPL_safe_dogfood_provisioning_if_dedicated_accounts_required"]},
+      {"id":"commercial_product_user_journey_depth_v1","ownerSurface":"account-based-user-product-layer","acceptanceContract":"contracts/web-product-profile.json#/commercialProductUserJourneyDepth","disposition":"active_product_depth_gap_interaction_complete_value_partial","launchBlocking":false,"evidenceRequired":["first_value_optimization","project_window_continuation","streaming_chat_turns","specialist_conversion_handoff","skill_import","autonomy_inspector","model_selector","plus_menu","product_acceptance_browser_e2e"]},
       {
         "id": "medopl_readonly_evidence",
         "ownerSurface": "release-evidence",

@@ -167,3 +167,37 @@ test('Figma parity UI replacement target is scoped to public and user product UI
   assert.deepEqual(pageState.uiReplacementTarget.appliesToRoutes, ['home', 'projects', 'skills', 'workflows']);
   assertIncludesAll(pageState.uiReplacementTarget.doesNotApplyTo, ['minimal_admin_ops_layer', '/_ops', 'operator_controls'], 'page-state replacement exclusion');
 });
+
+test('commercial product user journey depth is admitted separately from interaction completion', () => {
+  const product = readJson('contracts/web-product-profile.json');
+  const depth = product.commercialProductUserJourneyDepth;
+
+  assert.equal(depth.state, 'active_gap_admitted');
+  assert.equal(depth.currentProductValueStatus, 'partial');
+  assert.equal(depth.interactionCompleteDoesNotProveProductValueComplete, true);
+  assert.deepEqual(depth.journeyOrder, [
+    'visitor',
+    'new_user',
+    'ordinary_user',
+    'specialist_not_ready',
+    'specialist_ready',
+    'medopl_handoff',
+    'returning_user',
+  ]);
+  assert.equal(depth.firstValueMoment.status, 'not_productized');
+  assert.equal(depth.firstValueMoment.target, 'ordinary_research_chat_first_value_in_project_window');
+  assert.equal(depth.projectWindowModel.businessName, '项目 / 窗口');
+  assert.equal(depth.projectWindowModel.windowSearchScope, 'project_windows');
+  assert.equal(depth.projectWindowModel.status, 'contract_admitted_pending_implementation');
+  assert.equal(depth.chatInteractionModel.requiredFeel, 'streaming_or_progressive_chat_turns');
+  assert.equal(depth.medoplHandoff.productRole, 'specialist_conversion_handoff_not_error');
+  assertIncludesAll(depth.medoplHandoff.triggers, ['run_specialist_task', 'upload_file', 'runtime_required', 'storage_or_resource_binding_required'], 'MedOPL handoff trigger');
+  assert.deepEqual(depth.skillSurface.scopes, ['opl_skills', 'my_skills']);
+  assertIncludesAll(depth.skillSurface.importStates, ['select', 'validate', 'imported', 'error'], 'skill import state');
+  assertIncludesAll(depth.inspectorAutonomy.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'autonomy inspector signal');
+  assertIncludesAll(depth.modelAndPlusToolbar.requiredControls, ['model_selector', 'plus_menu'], 'toolbar control');
+  assertIncludesAll(depth.webOwnedGaps, ['first_value_optimization', 'project_window_continuation', 'window_search', 'streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'Web-owned product journey gap');
+  assertIncludesAll(depth.medoplOwned, ['runtime_readiness', 'storage_resource_binding', 'billing_payment_truth', 'file_runtime_processing'], 'MedOPL-owned product journey item');
+  assertIncludesAll(depth.ownerVisualCopyReview, ['reduce_primary_surface_explanatory_copy', 'project_window_language', 'medopl_conversion_copy', 'inspector_information_density'], 'owner copy review item');
+  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'project/window implementation complete', 'streaming chat implemented', 'Skill import implemented', 'model selection implemented', 'production-ready SaaS'], 'product journey cannot claim');
+});
