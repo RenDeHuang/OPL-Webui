@@ -36,6 +36,7 @@ const state = {
   activeConversationId: '',
   activeConversationMeta: null,
   messages: [],
+  firstValueTurn: null,
   lastResult: null,
   lastRuntimeTaskCard: null,
   pendingPublicTask: null,
@@ -267,6 +268,7 @@ function renderResultView() {
       </header>
       <div class="result-scroll" data-chat-log>
         ${state.messages.map(renderMessage).join('')}
+        ${state.firstValueTurn ? renderFirstValueTurn(state.firstValueTurn) : ''}
         ${research ? renderResearchResult(research) : ''}
       </div>
       <form class="pill-input" data-chat-form>
@@ -300,6 +302,18 @@ function renderResearchResult(result) {
 
 function renderMessage(message) {
   return `<article class="message ${escapeAttr(message.role)}-message"><p>${escapeHTML(message.content)}</p></article>`;
+}
+
+function renderFirstValueTurn(turn) {
+  document.body.dataset.lastFirstValueTurnState = turn.state;
+  document.body.dataset.lastFirstValueProgressiveBoundary = turn.progressiveBoundary;
+  const text = turn.state === 'progressive'
+    ? '正在拆解研究问题、证据线索和下一步。'
+    : turn.message;
+  return `
+    <article class="message assistant-message" data-first-value-turn-state data-turn-state="${escapeAttr(turn.state)}" data-progressive-boundary="${escapeAttr(turn.progressiveBoundary)}">
+      <p>${escapeHTML(text)}</p>
+    </article>`;
 }
 
 function renderBlockedView() {
@@ -629,19 +643,40 @@ async function chatSubmit(event) {
   }
   state.shellState = 'running_turn';
   state.showInspector = shouldAutoOpenInspector();
+  state.lastResult = null;
+  state.firstValueTurn = firstValueTurnForPrompt(message, 'progressive');
   render();
+  await yieldRenderedTurn();
   const result = await sendChatMessage(fetch, message);
   document.body.dataset.chatState = chatStateForResult(result);
   if (!result.ok) {
+    state.firstValueTurn = firstValueTurnForPrompt(message, 'error', result.message || result.errorCode || '上游暂时不可用。');
     state.messages.push({ role: 'assistant', content: result.message || result.errorCode || '上游暂时不可用。' });
     render();
     return;
   }
   const researchResult = researchResultForChat({ ...result, prompt: message });
   state.lastResult = { prompt: message, researchResult };
+  state.firstValueTurn = firstValueTurnForPrompt(message, researchResult ? 'complete' : 'error');
   if (!researchResult) state.messages.push({ role: 'assistant', content: result.assistantMessage?.content || '已收到。' });
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
   render();
+}
+
+function firstValueTurnForPrompt(prompt, stateName, message = '已生成研究计划草案。') {
+  if (!String(prompt || '').includes('@科研')) return null;
+  return {
+    state: stateName,
+    progressiveBoundary: 'request_lifecycle_not_token_stream',
+    message,
+  };
+}
+
+function yieldRenderedTurn() {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 0);
+  });
 }
 
 async function handleRuntimePrompt(message) {
@@ -707,6 +742,9 @@ function runShellAction(action) {
   if (action === 'home') {
     state.shellState = 'home_default';
     state.showInspector = false;
+    state.firstValueTurn = null;
+    state.lastResult = null;
+    state.messages = [];
     setHashView('home');
   } else if (action === 'projects') {
     state.shellState = 'files';

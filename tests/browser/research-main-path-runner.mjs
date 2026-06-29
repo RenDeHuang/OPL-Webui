@@ -50,7 +50,7 @@ try {
   await waitForAuthState(cdp, 'authenticated_bound', 'api key binding');
   await openChatRoute(cdp);
   const ordinaryChatOutcome = await submitResearchPromptWithRetry(cdp);
-  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length;` });
+  await cdp.send('Runtime.evaluate', { expression: `document.body.dataset.lastResearchArtifactCardCount = document.querySelectorAll('[data-research-result]').length; document.body.dataset.lastResearchArtifactSectionCount = document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length || 0; document.body.dataset.lastRawAssistantTranscriptCount = Array.from(document.querySelectorAll('.assistant-message p')).filter((node) => node.textContent.includes('mock upstream response')).length; document.body.dataset.lastFirstValueTurnState = document.querySelector('[data-first-value-turn-state]')?.dataset.turnState || ''; document.body.dataset.lastFirstValueProgressiveBoundary = document.querySelector('[data-first-value-turn-state]')?.dataset.progressiveBoundary || '';` });
 
   const runtimeAdmission = await resolveRuntimeAdmissionScenario(cdp, '@论文 生成研究选题和证据计划', runtimeAdmissionTools());
   if (runtimeAdmission.scenario === 'specialist_ready_path') {
@@ -89,6 +89,9 @@ try {
     runtimeProgressRefCount: document.querySelectorAll('[data-runtime-progress-refs] li').length,
     runtimeDeliverableRefCount: document.querySelectorAll('[data-runtime-deliverable-refs] li').length,
     runtimeWebuiArtifactBody: document.querySelector('[data-runtime-run-projection]')?.dataset.webuiArtifactBody || '',
+    firstValueProgressiveTurnObserved: document.body.dataset.firstValueProgressiveTurnObserved === 'true',
+    firstValueProgressiveTurnState: document.body.dataset.lastFirstValueTurnState || document.querySelector('[data-first-value-turn-state]')?.dataset.turnState || '',
+    firstValueProgressiveBoundary: document.body.dataset.lastFirstValueProgressiveBoundary || document.querySelector('[data-first-value-turn-state]')?.dataset.progressiveBoundary || '',
     projectWindowCount: Number(document.body.dataset.lastProjectWindowCount || document.querySelectorAll('[data-project-window-item]').length),
     projectWindowStatus: document.body.dataset.lastProjectWindowStatus || document.querySelector('[data-project-window-item]')?.dataset.projectWindowStatus,
     projectWindowContinueHref: document.body.dataset.lastProjectWindowContinueHref || document.querySelector('[data-project-window-continue]')?.href,
@@ -162,7 +165,10 @@ async function submitResearchPromptWithRetry(cdp) {
     await userClick(cdp, '[data-research-task][data-research-task-intent="research_direction"]');
     await assertPage(cdp, 'document.body.dataset.chatState === "research_entry_selected"', 'research task template selected');
     await assertPage(cdp, 'document.querySelector("#chat-input")?.value.includes("@科研")', 'research task template prompt');
+    await cdp.send('Runtime.evaluate', { expression: `window.__firstValueProgressiveSeen = false; new MutationObserver(() => { const node = document.querySelector('[data-first-value-turn-state]'); if (node?.dataset.turnState === 'progressive' && node?.dataset.progressiveBoundary === 'request_lifecycle_not_token_stream') window.__firstValueProgressiveSeen = true; }).observe(document.body, { childList: true, subtree: true, attributes: true });` });
     await activate(cdp, '[data-chat-submit]');
+    await waitFor(cdp, 'window.__firstValueProgressiveSeen === true || (document.querySelector("[data-first-value-turn-state]")?.dataset.turnState === "progressive" && document.querySelector("[data-first-value-turn-state]")?.dataset.progressiveBoundary === "request_lifecycle_not_token_stream")');
+    await cdp.send('Runtime.evaluate', { expression: 'document.body.dataset.firstValueProgressiveTurnObserved = "true";' });
     if (mode === 'local') await waitFor(cdp, 'document.querySelector("[data-chat-log]")?.textContent.includes("mock upstream response")');
     try {
       const ordinaryOutcome = await waitForOrdinaryResearchOutcome(cdp);
@@ -455,9 +461,9 @@ async function waitForAuthStateOrMessage(cdp, authState, messagePattern, label) 
 async function describePageState(cdp, message) {
   const state = await evaluateJSON(cdp, `({
     message: ${JSON.stringify(message)},
-    authState: document.body.dataset.authState,
-    chatState: document.body.dataset.chatState,
-    settingsMessage: document.querySelector('[data-settings-message]')?.textContent,
+	    authState: document.body.dataset.authState,
+	    chatState: document.body.dataset.chatState,
+	    settingsMessage: document.querySelector('[data-settings-message]')?.textContent,
     sessionStatus: document.querySelector('[data-session-status]')?.textContent,
     providerStatus: document.querySelector('[data-provider-status]')?.textContent,
     emailLength: document.querySelector('#auth-email')?.value?.length,

@@ -71,9 +71,8 @@ const NOT_INTERACTION_TRUTH_IMPLEMENTATION_EVIDENCE = Object.freeze([
 ]);
 const NOT_PRODUCT_JOURNEY_DEPTH_IMPLEMENTATION_EVIDENCE = Object.freeze([
   'commercial product journey complete',
-  'first value optimized',
   'dedicated project/window persistence API',
-  'streaming chat implemented',
+  'token streaming implemented',
   'Skill import implemented',
   'model selection implemented',
   'owner visual acceptance',
@@ -734,8 +733,8 @@ const TEST_ENTRIES = Object.freeze([
     proofLevel: 'browser',
     claimScope: 'ci',
     contracts: ['tests/browser/research-main-path-runner.mjs', 'contracts/web-page-state-matrix.json', 'contracts/web-release-profile.json', 'contracts/web-gui-product-contract.json', 'contracts/web-product-profile.json', 'contracts/web-runtime-bridge.json'],
-    proves: ['CI/local Chromium account-based Web App business main path works with user-like login, API key binding, ordinary @科研 result, commercial runtime admission split for blocked/ready/onboarding specialist paths, refs/deeplink continuity, task history continuation center, sanitized evidence, artifact-first research results, stable desktop inspector, lightweight mobile sheet, responsive visual QA, and repo-local keyboard path, modal focus trap, and contrast closeout checks'],
-    doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution completed', 'artifact body authority', 'storage truth', 'payment readiness', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality'],
+    proves: ['CI/local Chromium account-based Web App business main path works with user-like login, API key binding, ordinary @科研 first value through a request-lifecycle progressive turn, commercial runtime admission split for blocked/ready/onboarding specialist paths, refs/deeplink continuity, project/window continuation, sanitized evidence, artifact-first research results, stable desktop inspector, lightweight mobile sheet, responsive visual QA, and repo-local keyboard path, modal focus trap, and contrast closeout checks'],
+    doesNotProve: ['production-ready SaaS', 'long-term production stability', 'MedOPL runtime execution completed', 'artifact body authority', 'storage truth', 'payment readiness', 'token streaming implemented', 'complete UI/UX design system', 'production visual polish complete', 'human owner accepted production UI quality'],
     riskTriggers: ['apps-web', 'page-state', 'browser-e2e', 'ui-ux', 'runtime-gate'],
     verifySuites: ['browser', 'full'],
   }),

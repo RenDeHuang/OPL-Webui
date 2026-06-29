@@ -383,13 +383,13 @@
       "id": "commercial_product_user_journey_depth_v1",
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
-      "currentPhaseId": "first_value_optimization",
+      "currentPhaseId": "specialist_conversion_path",
       "currentStatus": "partial",
       "launchBlocking": false,
       "cannotClaim": [
         "commercial product journey complete",
         "dedicated project/window persistence API",
-        "streaming chat implemented",
+        "token streaming implemented",
         "Skill import implemented",
         "model selection implemented",
         "production-ready SaaS"
@@ -451,13 +451,13 @@
         },
         {
           "id": "first_value_optimization",
-          "status": "not_started",
+          "status": "done",
           "objective": "Reduce explanatory copy and make ordinary research first value feel like a progressive chat turn in a project/window context.",
           "entryCriteria": ["user_journey_map is done", "project_window_continuation is projection-backed done"],
           "exitCriteria": ["primary surfaces read like shipped product UI", "ordinary @科研 has progressive turn states", "no fake result or fake streaming is introduced"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_browser_e2e", "owner_visual_copy_review_needed"],
-          "acceptance": ["less explanatory production copy", "first value moment is visible", "ordinary path still does not require runtime/storage"],
+          "acceptance": ["less explanatory production copy", "first value moment is visible", "ordinary path still does not require runtime/storage", "request lifecycle progressive turn is visible without claiming token streaming"],
           "nextStepOpeners": ["open specialist_conversion_path after first value browser evidence passes"],
           "ownerReceipt": {"required": true, "source": "human_owner_receipt", "reason": "visible copy and product feel changes"},
           "requiredEvals": [

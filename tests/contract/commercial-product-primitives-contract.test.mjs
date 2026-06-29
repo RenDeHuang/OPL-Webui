@@ -70,6 +70,7 @@ test('turn skill model composer inspector and MedOPL handoff primitives keep Web
   assertIncludesAll(primitives.Turn.states, ['composing', 'submitted', 'progressive', 'blocked', 'complete', 'error'], 'turn state');
   assert.equal(primitives.Turn.fakeStreamingAllowed, false);
   assert.equal(primitives.Turn.progressiveFeelRequired, true);
+  assert.equal(primitives.Turn.progressiveBoundary, 'request_lifecycle_not_token_stream');
 
   assert.deepEqual(primitives.Skill.kinds, ['opl_skill', 'user_skill']);
   assert.equal(primitives.Skill.importTruth, 'validated_user_skill_manifest_or_opl_skill_reference');

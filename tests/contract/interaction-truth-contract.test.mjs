@@ -102,7 +102,7 @@ test('interaction truth separates current green route guard from product journey
   assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
   assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
   assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'skill_import', 'autonomy_inspector', 'model_selector', 'plus_menu'], 'interaction product-depth open gap');
-  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'first value optimized', 'dedicated project/window persistence API'], 'interaction product-depth doesNotProve');
+  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'token streaming implemented', 'dedicated project/window persistence API'], 'interaction product-depth doesNotProve');
 
   assert.equal(pageState.commercialProductUserJourneyDepth?.state, 'active_gap_admitted');
   assert.equal(pageState.commercialProductUserJourneyDepth?.defaultProjectModel, 'project_with_many_conversation_windows');

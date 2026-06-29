@@ -102,7 +102,7 @@
     "projectsSurfaceBusinessName": "项目 / 窗口",
     "searchTruth": "search_project_windows",
     "openGaps": ["streaming_chat_turns", "skill_import", "autonomy_inspector", "model_selector", "plus_menu"],
-    "doesNotProve": ["commercial product journey complete", "first value optimized", "dedicated project/window persistence API"]
+    "doesNotProve": ["commercial product journey complete", "token streaming implemented", "dedicated project/window persistence API"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "dialogSheetTruth": {
