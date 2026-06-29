@@ -10,6 +10,12 @@
 - verified: `npm run verify:health`, `npm run verify:contract`, `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, `npm run line:budget`, `git diff --check`, `sentrux check .`。
 - cannot claim: 新产品能力、release evidence foldback、production rollout、Web-owned runtime/storage/payment/artifact truth、旧叙事可复活、active/paused gap 已关闭。
 
+## 2026-06-29 commercial-cross-repo-dynamic-current-truth-sync
+
+- summary: 将 MedOPL <-> OPL-Webui dynamic current truth sync 收敛到 `contracts/web-commercial-consumer-contract.json#/commercialCrossRepoDynamicCurrentTruthSync` 和 `contracts/web-release-profile.json#/commercialCrossRepoDynamicCurrentTruthSync`。该 closed gap 记录两仓 remote HEAD、latest closeout、next recommended goal、owner boundary、cannotClaim boundary、ordinary/specialist E2E state matrix、dynamic sync triggers 和 fail-closed rule；后续 public contract、current truth、can/cannot claim、payment/PSP/billing/runtime/storage/release boundary、projection/deeplink/runtime bridge、HA/rollback/production evidence、broader tenant canary 或 live E2E evidence 变化时重新运行 sync。
+- verified: `npm run verify:contract`, `npm run verify:health`, `npm run verify`。
+- cannot claim: live E2E executed、rollout executed、production complete、external PSP settlement、all users/all tenants、SLA/multi-region、Web-owned payment/billing/runtime/storage truth。
+
 ## 2026-06-14 foundation-to-task-store-baseline
 
 - summary: 合并归档早期 baseline：`foundation-loop-contracts`、`mvp-task-artifact-loop`、`web-demo-workspace-shell`、`cloud-mvp-service-slice`、`go-control-plane-replacement`、`post-go-cleanup`、`deploy-container-readiness`、`opl-readonly-bridge`、`opl-task-route-bridge`、`production-runtime-gate`、`task-store-boundary`。建立 repo governance、Go control plane、container health、OPL readonly snapshot、旧 `/api/mvp/task` bridge 和 task store 边界。

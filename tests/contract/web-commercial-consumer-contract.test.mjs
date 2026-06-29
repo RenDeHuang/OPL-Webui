@@ -225,3 +225,131 @@ test('OPL-Webui commercial launch matrix fixes cross-repo identity and handoff c
     'storage truth ownership by OPL-Webui',
   ], 'cannot-claim');
 });
+
+test('OPL-Webui records dynamic cross-repo current truth sync fail-closed matrix', () => {
+  const contract = readJson('contracts/web-commercial-consumer-contract.json');
+  const release = readJson('contracts/web-release-profile.json');
+  const sync = contract.commercialCrossRepoDynamicCurrentTruthSync;
+
+  assert.equal(sync.goalId, 'goal-commercial-cross-repo-dynamic-current-truth-sync');
+  assert.equal(sync.mode, 'contract_pointer_remote_head_current_truth_readout_validation_gate');
+  assert.equal(sync.state, 'fresh_sync_recorded_2026-06-29');
+  assert.equal(sync.rawEvidencePolicy.commitsRawEvidence, false);
+  assert.equal(sync.operationBoundary.cloudAllowed, false);
+  assert.equal(sync.operationBoundary.buildPushImageAllowed, false);
+  assert.equal(sync.operationBoundary.deployLiveTestAllowed, false);
+  assert.equal(sync.operationBoundary.secretReadAllowed, false);
+
+  assert.equal(sync.repoIdentity.medopl.branch, 'recovery/platform-v22-trunk');
+  assert.equal(sync.repoIdentity.medopl.remoteHead, 'e6d2e7ae54ee3bcb2fd86fd21d56c35492ac7b35');
+  assert.equal(sync.repoIdentity.medopl.latestCloseout.goalId, 'goal-commercial-current-truth-stale-pointer-cleanup');
+  assert.equal(sync.repoIdentity.medopl.nextRecommendedGoal, 'goal-commercial-release-metadata-rollback-maturity');
+  assert.equal(sync.repoIdentity.oplWebui.branch, 'main');
+  assert.equal(sync.repoIdentity.oplWebui.remoteHead, '94704dc55b9d689655d6e0a34625e8dd10d73b4a');
+  assert.equal(sync.repoIdentity.oplWebui.latestCloseout.goalId, 'gap-registry-compaction-v1');
+  assert.equal(sync.repoIdentity.oplWebui.nextRecommendedGoal, 'goal-commercial-webui-ha-resilience-error-budget-readiness');
+
+  assertIncludesAll(sync.readoutSources.medopl, [
+    'docs/active/README.md',
+    'tests/fixtures/v22/goal-current.json',
+    'contracts/medopl-api-contract.json',
+    'contracts/medopl-release-boundary.json',
+  ], 'MedOPL readout source');
+  assertIncludesAll(sync.readoutSources.oplWebui, [
+    'docs/status.md',
+    'docs/active/README.md',
+    'contracts/web-commercial-consumer-contract.json',
+    'contracts/web-gap-phase-registry.json',
+    'contracts/web-release-profile.json',
+    'contracts/web-runtime-bridge.json',
+  ], 'OPL-Webui readout source');
+
+  assertIncludesAll(sync.ownershipBoundary.medoplOwns, [
+    'account',
+    'plan',
+    'balance',
+    'quota',
+    'runtime',
+    'storage',
+    'billing_ledger',
+    'statement_reconciliation',
+    'release',
+    'destroy',
+    'stop_billing',
+    'future_payment_psp_truth',
+  ], 'MedOPL owner boundary');
+  assertIncludesAll(sync.ownershipBoundary.oplWebuiOwns, [
+    'ordinary_chat',
+    'research_interaction',
+    'task_experience',
+    'page_state',
+    'readonly_medopl_projection_rendering',
+    'deeplink_handoff',
+  ], 'OPL-Webui owner boundary');
+
+  assertIncludesAll(sync.cannotClaimBoundary.oplWebuiCannotClaim, [
+    'payment_truth',
+    'billing_truth',
+    'runtime_truth',
+    'storage_truth',
+    'artifact_body_authority',
+  ], 'OPL-Webui cannot-claim');
+  assertIncludesAll(sync.cannotClaimBoundary.medoplCannotClaim, [
+    'ordinary_chat_task_ux_ownership',
+    'opl_webui_page_state_ownership',
+    'external_psp_settlement',
+    'all_users_all_tenants',
+    'sla_multi_region_production_complete',
+  ], 'MedOPL cannot-claim');
+
+  const states = new Map(sync.e2eStateMatrix.map((state) => [state.id, state]));
+  assert.equal(states.get('ordinary_path').runtimeStorageRequired, false);
+  assert.equal(states.get('ordinary_path').owner, 'OPL-Webui');
+  assert.equal(states.get('specialist_blocked_onboarding').requiresMedoplProjection, true);
+  assert.equal(states.get('specialist_blocked_onboarding').requiresDeeplink, true);
+  assert.deepEqual(states.get('specialist_ready').readyRequires, [
+    'MedOPL approved account',
+    'MedOPL plan',
+    'MedOPL balance/quota',
+    'MedOPL runtime ready',
+    'MedOPL storage ready',
+  ]);
+
+  assertIncludesAll(sync.dynamicSyncTriggers, [
+    'public_contract_changed',
+    'current_truth_or_next_recommended_goal_changed',
+    'can_claim_or_cannot_claim_changed',
+    'payment_psp_billing_runtime_storage_release_boundary_changed',
+    'opl_webui_projection_deeplink_runtime_bridge_changed',
+    'ha_rollback_production_evidence_or_broader_tenant_canary_completed',
+    'live_e2e_evidence_added_or_expired',
+  ], 'dynamic sync trigger');
+
+  assert.equal(sync.failClosedRule.onMismatch, true);
+  assertIncludesAll(sync.failClosedRule.blockedActions, [
+    'live_e2e',
+    'rollout',
+    'production_complete_claim',
+  ], 'fail-closed blocked action');
+  assertIncludesAll(sync.failClosedRule.mismatchReportFields, [
+    'ownership_conflict',
+    'claim_inconsistency',
+    'head_mismatch',
+    'contract_field_missing',
+    'cannot_claim_upgraded',
+  ], 'mismatch report field');
+
+  assert.deepEqual(sync.nextLiveE2EPrerequisites, [
+    'MedOPL release metadata / rollback maturity',
+    'OPL-Webui HA / resilience / error-budget readiness',
+    'future PSP goal before payment-to-runtime E2E',
+  ]);
+  assert.equal(sync.retirement.closeoutAfterSync, true);
+  assert.equal(sync.retirement.longTermActiveBlocker, false);
+
+  assert.equal(
+    release.commercialCrossRepoDynamicCurrentTruthSync.contract,
+    'contracts/web-commercial-consumer-contract.json#/commercialCrossRepoDynamicCurrentTruthSync',
+  );
+  assert.deepEqual(release.commercialCrossRepoDynamicCurrentTruthSync.nextLiveE2EPrerequisites, sync.nextLiveE2EPrerequisites);
+});

@@ -79,6 +79,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     'ha_and_resilience',
     'concurrency_and_load',
     'opl_auto_update_from_github',
+    'commercial_cross_repo_dynamic_current_truth_sync',
   ]);
 
   for (const gap of registry.gaps) {
@@ -217,9 +218,12 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.opl_auto_update_from_github.status, 'done');
   assert.equal(byGap.opl_auto_update_from_github.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 9);
+  assert.equal(byGap.commercial_cross_repo_dynamic_current_truth_sync.status, 'done');
+  assert.equal(byGap.commercial_cross_repo_dynamic_current_truth_sync.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
+
+  assert.equal(report.readyToAdvanceCount, 10);
   assert.deepEqual(report.summary, {
-    done: 9,
+    done: 10,
     partial: 1,
     blocked: 2,
     not_started: 0,
@@ -236,6 +240,7 @@ test('compacted closed gaps keep stable contract provenance without full phase q
     ['runtime_execution_boundary', 'execution_admission', ['contracts/web-runtime-bridge.json#/executionAdmission']],
     ['concurrency_and_load', 'production_concurrency_load_evidence', ['contracts/web-product-profile.json#/concurrencyAndLoad']],
     ['opl_auto_update_from_github', 'runtime_sync_admission', ['contracts/web-release-profile.json#/oplAutoUpdateReadiness']],
+    ['commercial_cross_repo_dynamic_current_truth_sync', 'dynamic_current_truth_sync', ['contracts/web-commercial-consumer-contract.json#/commercialCrossRepoDynamicCurrentTruthSync', 'contracts/web-release-profile.json#/commercialCrossRepoDynamicCurrentTruthSync']],
   ];
 
   for (const [id, finalPhaseId, stableContracts] of compacted) {

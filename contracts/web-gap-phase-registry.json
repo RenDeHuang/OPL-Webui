@@ -705,7 +705,7 @@
         "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
       }
     },
-        {
+    {
       "id": "opl_auto_update_from_github",
       "ownerSurface": "deploy",
       "state": "closed",
@@ -737,6 +737,43 @@
         ],
         "retirementRule": "Runtime sync stays forbidden until a new owner-approved updater authority gap is opened.",
         "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-gap-registry-compaction-v1"
+      }
+    },
+    {
+      "id": "commercial_cross_repo_dynamic_current_truth_sync",
+      "ownerSurface": "opl-webui-commercial-consumer",
+      "state": "closed",
+      "currentPhaseId": "dynamic_current_truth_sync",
+      "currentStatus": "done",
+      "durableCannotClaim": true,
+      "cannotClaim": [
+        "live E2E executed",
+        "rollout executed",
+        "production complete",
+        "external PSP settlement",
+        "all users/all tenants",
+        "SLA/multi-region"
+      ],
+      "closedSummary": {
+        "finalPhaseId": "dynamic_current_truth_sync",
+        "summary": "Dynamic cross-repo current truth sync is folded into WebUI commercial consumer and release pointer contracts. It records remote HEADs, owner boundaries, cannot-claim boundaries, E2E state prerequisites, triggers, and fail-closed rules without becoming a long-term active blocker.",
+        "stableContracts": [
+          "contracts/web-commercial-consumer-contract.json#/commercialCrossRepoDynamicCurrentTruthSync",
+          "contracts/web-release-profile.json#/commercialCrossRepoDynamicCurrentTruthSync"
+        ],
+        "cannotClaimRetained": true,
+        "ownerSplit": {
+          "webui": "ordinary/task experience, page state, readonly projection rendering, deeplink handoff",
+          "medopl": "account, plan, balance, quota, runtime, storage, billing ledger, statement reconciliation, release/destroy/stop billing, future payment/PSP truth"
+        },
+        "retiredPhaseIds": [
+          "dynamic_current_truth_sync"
+        ],
+        "retiredEvalIds": [
+          "cross_repo_dynamic_current_truth_sync_guard"
+        ],
+        "retirementRule": "Rerun this sync goal or a follow-up sync when public contracts, current truth, can/cannot claim, runtime/storage/billing/release boundaries, HA/rollback/production evidence, broader tenant canary, or live E2E evidence changes.",
+        "tombstoneRef": "docs/history/process/closeouts.md#2026-06-29-commercial-cross-repo-dynamic-current-truth-sync"
       }
     }
   ]

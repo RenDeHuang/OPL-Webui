@@ -647,6 +647,23 @@
     "canClaim": ["minimum WebUI-side ops pointers exist for scoped commercial cross-repo canary follow-up","failed commercial handoff remains a MedOPL deeplink/projection incident boundary, not WebUI payment/runtime/storage ownership"],
     "cannotClaim": ["full SLA","multi-region HA","automatic rollback","ongoing authorization","enterprise compliance","external PSP settlement","all users/all tenants production readiness"]
   },
+  "commercialCrossRepoDynamicCurrentTruthSync": {
+    "mode": "dynamic_current_truth_sync_pointer",
+    "state": "fresh_sync_recorded_2026-06-29",
+    "owner": "opl-webui-commercial-consumer",
+    "consumer": "commercial_cross_repo_launch_review",
+    "contract": "contracts/web-commercial-consumer-contract.json#/commercialCrossRepoDynamicCurrentTruthSync",
+    "medoplRemoteHead": "e6d2e7ae54ee3bcb2fd86fd21d56c35492ac7b35",
+    "oplWebuiRemoteHead": "94704dc55b9d689655d6e0a34625e8dd10d73b4a",
+    "failClosedBefore": ["live_e2e","rollout","production_complete_claim"],
+    "nextLiveE2EPrerequisites": ["MedOPL release metadata / rollback maturity","OPL-Webui HA / resilience / error-budget readiness","future PSP goal before payment-to-runtime E2E"],
+    "rawLogPolicy": {
+      "storesRawLogs": false,
+      "storesSecretValues": false
+    },
+    "canClaim": ["dynamic current truth sync pointer exists for WebUI consumer side"],
+    "cannotClaim": ["live E2E executed","rollout executed","production complete","external PSP settlement","all users/all tenants","SLA/multi-region"]
+  },
   "productionLaunchCloseout": {
     "mode": "explicit_final_release_decision_receipt",
     "state": "contract_present_pending_final_release_decision",
