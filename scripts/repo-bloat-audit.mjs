@@ -32,8 +32,8 @@ const requiredRecurringDocs = Object.freeze([
   'docs/history/tombstones/README.md',
 ]);
 const selectedOwnerSourceSurfaces = Object.freeze([
-  'apps/web/src/onePersonLabWeb.mjs',
-  'services/control-plane-go/cmd/opl-webui-control-plane/main.go',
+  'frontend/web/src/onePersonLabWeb.mjs',
+  'backend/control-plane-go/cmd/opl-webui-control-plane/main.go',
 ]);
 
 function gitFiles(args) {
@@ -190,7 +190,7 @@ function isMonitoredSurface(path) {
   return (path.startsWith('scripts/') && path.endsWith('.mjs'))
     || (path.startsWith('contracts/') && path.endsWith('.json'))
     || path.startsWith('tests/')
-    || (path.startsWith('services/') && path.endsWith('_test.go'))
+    || (path.startsWith('backend/') && path.endsWith('_test.go'))
     || path.startsWith('.github/workflows/')
     || path.startsWith('deploy/web-cloud/')
     || requiredRecurringDocs.includes(path)

@@ -79,7 +79,7 @@
     "status": "present",
     "evidenceLevel": "real_local_medopl_process",
     "medoplSource": "/home/dev/projects/platform-v22/services/medopl-go-backend",
-    "webuiBridge": "services/control-plane-go/internal/webapp/medopl_bridge.go",
+    "webuiBridge": "backend/control-plane-go/internal/webapp/medopl_bridge.go",
     "verifiedFlow": [
       "runtime_required_task_to_medopl_runtime_gate",
       "typed_provider_or_package_blocker",

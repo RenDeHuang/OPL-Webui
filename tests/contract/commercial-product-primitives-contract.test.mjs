@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { readWebSource } from './helpers/web-source-reader.mjs';
+
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
@@ -97,9 +99,7 @@ test('turn skill model composer inspector and MedOPL handoff primitives keep Web
 test('returning continuation UI follows project window autonomy truth without reviving old inspector labels', () => {
   const product = readJson('contracts/web-product-profile.json');
   const pageState = readJson('contracts/web-page-state-matrix.json');
-  const dom = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
-  const continuation = readFileSync('apps/web/src/onePersonLabWebContinuation.mjs', 'utf8');
-  const implementation = `${dom}\n${continuation}`;
+  const implementation = readWebSource();
 
   const taskContinuation = product.commercialProductUserJourneyDepth.taskContinuationHistory;
   assert.equal(taskContinuation.status, 'repo_browser_done_v1');

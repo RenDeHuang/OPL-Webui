@@ -17,12 +17,12 @@ order = 0
 
 [[layers]]
 name = "web"
-paths = ["apps/web/*", "apps/web/**/*"]
+paths = ["frontend/web/*", "frontend/web/**/*"]
 order = 1
 
 [[layers]]
 name = "control_plane_go"
-paths = ["services/control-plane-go/*", "services/control-plane-go/**/*"]
+paths = ["backend/control-plane-go/*", "backend/control-plane-go/**/*"]
 order = 2
 
 [[layers]]
@@ -31,16 +31,16 @@ paths = ["packages/contracts/*", "packages/contracts/**/*"]
 order = 4
 
 [[boundaries]]
-from = "apps/web/**/*"
-to = "services/control-plane-go/**/*"
+from = "frontend/web/**/*"
+to = "backend/control-plane-go/**/*"
 reason = "Web UI talks to the Go control plane through HTTP contract, not source imports."
 
 [[boundaries]]
-from = "apps/web/**/*"
+from = "frontend/web/**/*"
 to = "packages/**/*"
 reason = "Web UI must not import backend packages directly."
 
 [[boundaries]]
-from = "services/control-plane-go/**/*"
-to = "apps/web/**/*"
+from = "backend/control-plane-go/**/*"
+to = "frontend/web/**/*"
 reason = "Go control plane serves static files by path and must not import UI implementation."

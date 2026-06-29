@@ -167,7 +167,7 @@ function findPlaywrightChromiumBinary() {
 
 async function startControlPlane(cleanup) {
   const port = await freePort();
-  const child = spawn('go', ['run', './services/control-plane-go/cmd/opl-webui-control-plane'], {
+  const child = spawn('go', ['run', './backend/control-plane-go/cmd/opl-webui-control-plane'], {
     cwd: repoRoot,
     env: {
       ...process.env,

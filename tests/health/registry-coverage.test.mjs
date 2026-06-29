@@ -61,7 +61,7 @@ test('registry points only at existing test files', () => {
         assert.match(entry.file, /^tests\/.+\.test\.mjs$/);
       }
       if (entry.runner === 'go') {
-        assert.match(entry.file, /^services\/.+_test\.go$/);
+        assert.match(entry.file, /^backend\/.+_test\.go$/);
         assert.equal(typeof entry.cwd, 'string');
         assert.ok(existsSync(entry.cwd), `${entry.file} references missing cwd: ${entry.cwd}`);
         assert.equal(typeof entry.goPackage, 'string');
@@ -241,21 +241,21 @@ test('interaction integration release and browser sidecars are first-class lanes
   assert.ok(laneFiles.integration.includes('tests/contract/medopl-runtime-bridge-contract.test.mjs'));
   assert.ok(laneFiles.integration.includes('tests/contract/opl-readonly-bridge.test.mjs'));
   assert.ok(laneFiles.integration.includes('tests/contract/web-runtime-state.test.mjs'));
-  assert.ok(laneFiles.integration.includes('services/control-plane-go/internal/oplbridge/snapshot_test.go'));
-  assert.ok(laneFiles.integration.includes('services/control-plane-go/internal/runtimegate/gate_test.go'));
+  assert.ok(laneFiles.integration.includes('backend/control-plane-go/internal/oplbridge/snapshot_test.go'));
+  assert.ok(laneFiles.integration.includes('backend/control-plane-go/internal/runtimegate/gate_test.go'));
   assert.ok(laneFiles.release.includes('tests/deploy/container-readiness.test.mjs'));
   assert.ok(laneFiles.release.includes('tests/contract/web-cloud-deploy-shape.test.mjs'));
   assert.ok(laneFiles.release.includes('tests/contract/cloud-rollout-helper.test.mjs'));
   assert.ok(laneFiles.release.includes('tests/health/workflow-entrypoint.test.mjs'));
   assert.ok(laneFiles.release.includes('tests/health/ai-development-gate.test.mjs'));
   assert.ok(laneFiles['real-medopl'].includes('tests/real-medopl/real-medopl-business-flow.e2e.test.mjs'));
-  assert.ok(laneFiles['go-light'].includes('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
+  assert.ok(laneFiles['go-light'].includes('backend/control-plane-go/cmd/opl-webui-control-plane/main_test.go'));
 
   const currentFiles = VERIFY_SUITES.current.flatMap((laneName) => laneFiles[laneName]);
   assert.equal(currentFiles.includes('tests/health/workflow-entrypoint.test.mjs'), false);
   assert.equal(currentFiles.includes('tests/health/ai-development-gate.test.mjs'), false);
   assert.equal(currentFiles.includes('tests/contract/medopl-runtime-bridge-contract.test.mjs'), false);
-  assert.equal(currentFiles.includes('services/control-plane-go/internal/runtimegate/gate_test.go'), false);
+  assert.equal(currentFiles.includes('backend/control-plane-go/internal/runtimegate/gate_test.go'), false);
   assert.equal(laneFiles.health.some((file) => file.startsWith('tests/browser/')), false);
   assert.equal(laneFiles.health.some((file) => file.startsWith('tests/real-medopl/')), false);
   assert.equal(laneFiles.health.includes('tests/deploy/container-readiness.test.mjs'), false);
@@ -277,7 +277,7 @@ function collectTestFiles(dir, predicate) {
 test('every current test file is explicitly registered', () => {
   const allTestFiles = [
     ...collectTestFiles('tests', (path) => path.endsWith('.test.mjs')),
-    ...collectTestFiles('services', (path) => path.endsWith('_test.go')),
+    ...collectTestFiles('backend', (path) => path.endsWith('_test.go')),
   ].sort();
   const registered = new Set(
     Object.values(TEST_LANE_REGISTRY).flatMap((lane) => lane.tests.map((entry) => entry.file)),

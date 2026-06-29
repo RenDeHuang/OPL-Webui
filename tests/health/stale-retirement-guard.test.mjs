@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import test from 'node:test';
 
 const scannedRoots = [
-  'apps/web',
-  'services/control-plane-go',
+  'frontend/web',
+  'backend/control-plane-go',
   'scripts',
   'contracts',
   'tests',
@@ -20,8 +20,8 @@ const allowedFiles = new Set([
 ]);
 
 const forbiddenPatterns = [
-  /services\/control-plane-go\/internal\/mvp/i,
-  /services\/control-plane-go\/internal\/controlplane/i,
+  /backend\/control-plane-go\/internal\/mvp/i,
+  /backend\/control-plane-go\/internal\/controlplane/i,
   /internal\/mvp/i,
   /internal\/controlplane/i,
   /package\s+mvp\b/i,
@@ -61,7 +61,7 @@ const productDebtAllowedPatterns = [
   /^tests\/contract\/go-control-plane-http\.test\.mjs$/,
   /^tests\/contract\/one-person-lab-web-data\.test\.mjs$/,
   /^tests\/smoke\/web-shell\.test\.mjs$/,
-  /^apps\/web\/styles\.css$/,
+  /^frontend\/web\/styles\.css$/,
   /^docs\/history\/process\/closeouts\.md$/,
 ];
 
@@ -152,8 +152,8 @@ test('active product surfaces do not present MVP transition naming', () => {
 
 test('retired Go task projection surfaces are deleted from active source', () => {
   const retired = [
-    'services/control-plane-go/internal/controlplane',
-    'services/control-plane-go/internal/oplbridge/route.go',
+    'backend/control-plane-go/internal/controlplane',
+    'backend/control-plane-go/internal/oplbridge/route.go',
   ];
   for (const path of retired) {
     assert.equal(existsSync(path), false, `retired task projection surface must be gone: ${path}`);

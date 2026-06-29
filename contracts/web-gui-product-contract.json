@@ -863,7 +863,7 @@
       {
         "id": "ai_native_research_home_v1_shell",
         "state": "done",
-        "evidence": "apps/web/index.html declares data-ui-variant=ai_native_research_home_v1, uses side navigation plus first-view composer, retires the left-rail workbench structure, and must pass refreshed repo-local browser visual QA through npm run verify:browser"
+        "evidence": "frontend/web/index.html declares data-ui-variant=ai_native_research_home_v1, uses side navigation plus first-view composer, retires the left-rail workbench structure, and must pass refreshed repo-local browser visual QA through npm run verify:browser"
       },
       {
         "id": "owner_receipt_closeout",

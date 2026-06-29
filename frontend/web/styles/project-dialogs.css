@@ -1,0 +1,201 @@
+.file-library, .plaza-view {
+  flex: 1;
+  overflow: auto;
+  padding: 32px;
+  width: 100%;
+}
+.file-library header, .plaza-view header {
+  justify-content: space-between;
+  margin: 0 auto 24px;
+  max-width: 760px;
+}
+.file-tabs {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 4px;
+  margin: 0 auto 16px;
+  max-width: 760px;
+}
+.file-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  min-height: 42px;
+  padding: 8px 16px;
+}
+.file-tabs button[aria-selected="true"] { border-bottom-color: var(--primary); }
+.file-list, .plaza-grid {
+  display: grid;
+  gap: 10px;
+  margin: 0 auto;
+  max-width: 760px;
+}
+.plaza-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.file-list article, .plaza-grid article, .drop-zone, .more-view {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.drop-zone {
+  border-style: dashed;
+  margin: 0 auto 18px;
+  max-width: 760px;
+  text-align: center;
+}
+.empty-workflow { text-align: center; }
+.empty-workflow span {
+  color: var(--muted-foreground);
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+}
+.more-view {
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: 620px;
+}
+
+.account-popover, .search-sheet, .billing-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(28, 26, 23, 0.18);
+  position: fixed;
+  z-index: 60;
+}
+.account-popover {
+  bottom: 18px;
+  left: 250px;
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  width: min(360px, calc(100vw - 28px));
+}
+.account-popover header, .search-sheet header, .billing-panel header, .inspector-sheet header {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+.account-popover dl, .billing-panel dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 16px 0;
+}
+.account-popover dl div, .billing-panel dl div {
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+dd { color: var(--foreground); font-weight: 600; margin: 2px 0 0; }
+.sheet-backdrop {
+  background: rgba(28, 26, 23, 0.2);
+  inset: 0;
+  position: fixed;
+  z-index: 50;
+}
+.search-sheet {
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  left: 240px;
+  top: 0;
+  width: 320px;
+}
+.search-sheet input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 12px 16px;
+}
+.project-window-search-results {
+  display: grid;
+  gap: 4px;
+  overflow: auto;
+  padding: 8px;
+}
+.project-window-search-results button {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  min-height: 52px;
+  padding: 9px 10px;
+  text-align: left;
+}
+.project-window-search-results button:hover { background: var(--muted); }
+.empty-state { padding: 18px; text-align: center; }
+.billing-panel {
+  left: 50%;
+  max-width: 390px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100vw - 32px);
+}
+
+.inspector-sheet {
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 340px;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.inspector-tabs {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+}
+.inspector-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  flex: 1;
+  min-height: 42px;
+}
+.inspector-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+.inspector-sheet section {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+}
+.inspector-sheet dl, .inspector-sheet ol {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+}
+.inspector-sheet li, .inspector-sheet dl div {
+  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  list-style: none;
+  padding: 10px;
+}
+
+.api-key-dialog {
+  background: rgba(28, 26, 23, 0.46);
+  display: grid;
+  inset: 0;
+  place-items: center;
+  position: fixed;
+  z-index: 80;
+}
+.api-key-dialog-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.24);
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  padding: 22px;
+  width: calc(100% - 32px);
+}

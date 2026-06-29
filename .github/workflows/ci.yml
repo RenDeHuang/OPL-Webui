@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: services/control-plane-go/go.mod
+          go-version-file: backend/control-plane-go/go.mod
 
       - name: Run verify
         run: npm run verify

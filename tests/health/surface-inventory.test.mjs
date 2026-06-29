@@ -78,15 +78,15 @@ test('surface inventory covers scripts, contracts, tests, recurring docs, workfl
     ...collectFiles('scripts', (file) => file.endsWith('.mjs')),
     ...collectFiles('contracts', (file) => file.endsWith('.json')),
     ...collectFiles('tests', (file) => file.endsWith('.test.mjs')),
-    ...collectFiles('services', (file) => file.endsWith('_test.go')),
+    ...collectFiles('backend', (file) => file.endsWith('_test.go')),
     ...requiredLongLivedPaths,
   ]) {
     assert.ok(paths.has(path), `surface inventory missing long-lived path: ${path}`);
   }
 
-  assert.ok(paths.has('apps/web/src/onePersonLabWeb.mjs'), 'inventory should include the Web app owner module');
-  assert.ok(paths.has('services/control-plane-go/cmd/opl-webui-control-plane/main.go'), 'inventory should include the Go control-plane owner module');
-  assert.equal(paths.has('services/control-plane-go/internal/webapp/postgres_chat.go'), false, 'inventory must not mirror ordinary implementation files');
+  assert.ok(paths.has('frontend/web/src/onePersonLabWeb.mjs'), 'inventory should include the Web app owner module');
+  assert.ok(paths.has('backend/control-plane-go/cmd/opl-webui-control-plane/main.go'), 'inventory should include the Go control-plane owner module');
+  assert.equal(paths.has('backend/control-plane-go/internal/webapp/postgres_chat.go'), false, 'inventory must not mirror ordinary implementation files');
 });
 
 function collectFiles(dir, predicate) {

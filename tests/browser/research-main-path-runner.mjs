@@ -1,10 +1,32 @@
 #!/usr/bin/env node
-import { spawn, spawnSync } from 'node:child_process';
-import { once } from 'node:events';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import http from 'node:http';
-import { homedir, tmpdir } from 'node:os';
+import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  activate,
+  assertPage,
+  captureScreenshot,
+  connectCDP,
+  createPageTarget,
+  delay,
+  describePageState,
+  describeResearchResultState,
+  evaluateJSON,
+  findBrowserBinary,
+  focusElement,
+  keyPress,
+  normalizeBaseUrl,
+  sanitizeBaseUrl,
+  startBrowser,
+  startControlPlane,
+  startMockChatUpstream,
+  typeInto,
+  userClick,
+  waitFor,
+  waitForAuthState,
+  waitForAuthStateOrMessage,
+  waitForBoundOrUnboundAuthState,
+  waitUntil,
+} from './helpers/browser-cdp-helper.mjs';
 import { assertRuntimeAdmissionAuditKinds, exerciseOnboardingPath, exerciseSpecialistNotReadyPath, exerciseSpecialistReadyPath, resolveRuntimeAdmissionScenario } from './runtime-admission-helper.mjs';
 const repoRoot = new URL('../../', import.meta.url).pathname;
 const commercialCrossRepoCanary = process.argv.includes('--commercial-cross-repo-canary') || process.env.OPL_COMMERCIAL_CROSS_REPO_BROWSER_CANARY === '1';
@@ -22,9 +44,9 @@ try {
   const upstream = mode === 'local' ? await startMockChatUpstream() : undefined;
   if (upstream) state.cleanup.push(() => upstream.close());
   const app = mode === 'local'
-    ? await startControlPlane(upstream.baseUrl, state.cleanup)
+    ? await startControlPlane(upstream.baseUrl, state.cleanup, repoRoot)
     : { baseUrl: config.baseUrl };
-  const browser = await startBrowser(browserBinary);
+  const browser = await startBrowser(browserBinary, state.cleanup);
 
   const pageWebSocketDebuggerUrl = await createPageTarget(browser.devtoolsBaseUrl);
   const cdp = await connectCDP(pageWebSocketDebuggerUrl);
@@ -222,330 +244,9 @@ async function resetSessionIfAuthenticated(cdp) {
   await waitForAuthState(cdp, 'anonymous', 'initial logout');
 }
 
-function findBrowserBinary() {
-  if (process.env.OPL_BROWSER_BINARY) return process.env.OPL_BROWSER_BINARY;
-  for (const candidate of ['chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable', 'chrome']) {
-    if (spawnSyncStatus('which', [candidate]) === 0) return candidate;
-  }
-  const playwrightChromium = findPlaywrightChromiumBinary();
-  if (playwrightChromium) return playwrightChromium;
-  throw new Error('No browser binary found. Set OPL_BROWSER_BINARY=/path/to/chrome, preinstall Chrome/Chromium on the runner, or run `npx playwright install chromium` without --with-deps before npm run verify:browser.');
-}
-
-function spawnSyncStatus(command, args) {
-  return spawnSync(command, args, { stdio: 'ignore' }).status;
-}
-
-function findPlaywrightChromiumBinary() {
-  const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH, join(homedir(), '.cache/ms-playwright')].filter(Boolean);
-  for (const root of roots) {
-    if (!existsSync(root)) continue;
-    for (const dir of readdirSync(root).filter((entry) => entry.startsWith('chromium-')).sort().reverse()) for (const chromeDir of ['chrome-linux64', 'chrome-linux']) {
-      const binary = join(root, dir, chromeDir, 'chrome');
-      if (existsSync(binary)) return binary;
-    }
-  }
-  return '';
-}
-
-async function startMockChatUpstream() {
-  const requests = [];
-  const server = http.createServer(async (request, response) => {
-    let raw = '';
-    for await (const chunk of request) raw += chunk;
-    const body = raw ? JSON.parse(raw) : {};
-    requests.push({ path: request.url, body });
-    response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ output_text: 'mock upstream response for research chat' }));
-  });
-  await listen(server);
-  const { port } = server.address();
-  return { baseUrl: `http://127.0.0.1:${port}`, requests, close: () => closeServer(server) };
-}
-
-async function startControlPlane(upstreamBaseUrl, cleanup) {
-  const port = await freePort();
-  const child = spawn('go', ['run', './services/control-plane-go/cmd/opl-webui-control-plane'], {
-    cwd: repoRoot,
-    env: {
-      ...process.env, HOST: '127.0.0.1', PORT: String(port), OPL_WEBUI_ENV: 'development',
-      OPL_SESSION_SECRET: 'browser-e2e-session-secret-32-bytes',
-      OPL_API_KEY_ENCRYPTION_SECRET: 'browser-e2e-api-key-secret-32-bytes',
-      OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstreamBaseUrl,
-      OPL_CHAT_MODEL: 'browser-e2e-model', OPL_DATABASE_URL: '',
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-    detached: true,
-  });
-  cleanup.push(() => closeChildProcess(child));
-  const output = [];
-  child.stdout.on('data', (chunk) => output.push(String(chunk)));
-  child.stderr.on('data', (chunk) => output.push(String(chunk)));
-  const baseUrl = `http://127.0.0.1:${port}`;
-  await waitForHTTP(`${baseUrl}/healthz`, () => {
-    if (child.exitCode !== null) throw new Error(`control plane exited early:\n${output.join('')}`);
-  }, 120000);
-  return { baseUrl };
-}
-
-async function startBrowser(binary) {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'opl-browser-e2e-'));
-  const child = spawn(binary, [
-    '--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run',
-    '--no-default-browser-check', '--disable-dev-shm-usage', '--remote-debugging-port=0',
-    `--user-data-dir=${userDataDir}`, 'about:blank',
-  ], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
-  state.cleanup.push(() => closeChildProcess(child, () => rmSync(userDataDir, { recursive: true, force: true })));
-
-  let devtools = '';
-  const output = { stdout: [], stderr: [] };
-  child.stdout.on('data', (chunk) => output.stdout.push(String(chunk)));
-  child.stderr.on('data', (chunk) => {
-    const text = String(chunk);
-    output.stderr.push(text);
-    const match = text.match(/DevTools listening on (ws:\/\/\S+)/);
-    if (match) devtools = match[1];
-  });
-  await waitUntil(() => {
-    if (child.exitCode !== null) throw new Error(browserStartupError(binary, child, output));
-    return devtools;
-  });
-  const versionURL = devtools.replace(/^ws:\/\/([^/]+).*$/, 'http://$1/json/version');
-  const version = await fetchJSON(versionURL);
-  if (!version.webSocketDebuggerUrl) throw new Error('/json/version did not expose webSocketDebuggerUrl');
-  const devtoolsBaseUrl = versionURL.replace('/json/version', '');
-  return { devtoolsBaseUrl };
-}
-
-function browserStartupError(binary, child, output) {
-  return ['browser exited before DevTools became available', `binary: ${binary}`, `exitCode: ${child.exitCode}`, `signalCode: ${child.signalCode || ''}`, `stderr: ${trimProcessOutput(output.stderr.join(''))}`, `stdout: ${trimProcessOutput(output.stdout.join(''))}`].join('\n');
-}
-
-async function createPageTarget(devtoolsBaseUrl) {
-  const created = await fetchJSON(`${devtoolsBaseUrl}/json/new?about:blank`, { method: 'PUT' });
-  if (created.webSocketDebuggerUrl) return created.webSocketDebuggerUrl;
-  const targets = await fetchJSON(`${devtoolsBaseUrl}/json/list`);
-  const page = targets.find((target) => target.type === 'page' && target.webSocketDebuggerUrl);
-  if (!page) throw new Error('Chrome did not expose a page target webSocketDebuggerUrl');
-  return page.webSocketDebuggerUrl;
-}
-
-async function connectCDP(webSocketDebuggerUrl) {
-  const socket = new WebSocket(webSocketDebuggerUrl);
-  await once(socket, 'open');
-  let nextID = 1;
-  const pending = new Map();
-  socket.addEventListener('message', (event) => {
-    const message = JSON.parse(event.data);
-    if (!message.id) return;
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    if (message.error) request.reject(new Error(JSON.stringify(message.error)));
-    else request.resolve(message.result);
-  });
-  return {
-    send(method, params = {}) {
-      const id = nextID++;
-      socket.send(JSON.stringify({ id, method, params }));
-      return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-    },
-    close() {
-      socket.close();
-      return Promise.resolve();
-    },
-  };
-}
-
 async function submitPrompt(cdp, prompt) {
   await typeInto(cdp, '#chat-input', prompt);
   await activate(cdp, '[data-chat-submit]');
-}
-
-async function typeInto(cdp, selector, text) {
-  await focusElement(cdp, selector);
-  await selectAll(cdp);
-  await keyPress(cdp, { key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8 });
-  if (text) await cdp.send('Input.insertText', { text });
-  await waitFor(
-    cdp,
-    `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(text)}`,
-    async () => {
-      const state = await evaluateJSON(cdp, `({
-        selector: ${JSON.stringify(selector)},
-        expected: ${JSON.stringify(text)},
-        actual: document.querySelector(${JSON.stringify(selector)})?.value,
-        activeElement: document.activeElement?.id || document.activeElement?.tagName,
-      })`);
-      return `typeInto did not update input: ${JSON.stringify(state)}`;
-    },
-  );
-}
-
-async function userClick(cdp, selector) {
-  const { x, y } = await elementCenter(cdp, selector);
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
-  await delay(50);
-}
-
-async function activate(cdp, selector) {
-  await userClick(cdp, selector);
-  if (!await elementExists(cdp, selector)) return;
-  await focusElement(cdp, selector, { required: false });
-  await delay(50);
-}
-
-async function elementExists(cdp, selector) {
-  return Boolean((await cdp.send('Runtime.evaluate', { expression: `document.querySelector(${JSON.stringify(selector)}) !== null`, returnByValue: true })).result?.value);
-}
-
-async function elementCenter(cdp, selector) {
-  const selectorJSON = JSON.stringify(selector);
-  await cdp.send('Runtime.evaluate', {
-    expression: `document.querySelector(${selectorJSON})?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' })`,
-    awaitPromise: true,
-  });
-  return waitUntil(async () => {
-    const result = await cdp.send('Runtime.evaluate', {
-      expression: `(() => {
-        const element = document.querySelector(${selectorJSON});
-        if (!element) return null;
-        const rect = element.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        const hit = document.elementFromPoint(x, y);
-        if (!hit || (hit !== element && !element.contains(hit))) return null;
-        return { x, y };
-      })()`,
-      returnByValue: true,
-    });
-    return result.result?.value;
-  }, 5000, () => `element is not clickable at center: ${selector}`);
-}
-
-async function focusElement(cdp, selector, options = {}) {
-  await cdp.send('Runtime.evaluate', {
-    expression: `document.querySelector(${JSON.stringify(selector)})?.focus()`,
-    awaitPromise: true,
-  });
-  if (options.required === false) return;
-  await waitFor(cdp, `document.activeElement === document.querySelector(${JSON.stringify(selector)})`);
-}
-
-async function waitForAuthState(cdp, authState, label) {
-  await waitFor(
-    cdp,
-    `document.body.dataset.authState === ${JSON.stringify(authState)}`,
-    () => describePageState(cdp, `${label} did not reach ${authState}`),
-  );
-}
-
-async function waitForBoundOrUnboundAuthState(cdp, label) {
-  await waitFor(
-    cdp,
-    '["authenticated_unbound","authenticated_bound"].includes(document.body.dataset.authState)',
-    () => describePageState(cdp, `${label} did not reach authenticated_unbound or authenticated_bound`),
-  );
-}
-
-async function waitForAuthStateOrMessage(cdp, authState, messagePattern, label) {
-  const deadline = Date.now() + 30000;
-  while (Date.now() < deadline) {
-    const state = await evaluateJSON(cdp, `({
-      authState: document.body.dataset.authState,
-      settingsMessage: document.querySelector('[data-settings-message]')?.textContent || ''
-    })`);
-    if (state.authState === authState) return true;
-    if (messagePattern.test(state.settingsMessage)) return false;
-    await delay(100);
-  }
-  throw new Error(await describePageState(cdp, `${label} did not reach ${authState} or expected message`));
-}
-
-async function describePageState(cdp, message) {
-  const state = await evaluateJSON(cdp, `({
-    message: ${JSON.stringify(message)},
-	    authState: document.body.dataset.authState,
-	    chatState: document.body.dataset.chatState,
-	    settingsMessage: document.querySelector('[data-settings-message]')?.textContent,
-    sessionStatus: document.querySelector('[data-session-status]')?.textContent,
-    providerStatus: document.querySelector('[data-provider-status]')?.textContent,
-    emailLength: document.querySelector('#auth-email')?.value?.length,
-    passwordLength: document.querySelector('#auth-password')?.value?.length,
-    apiKeyLength: document.querySelector('#api-key')?.value?.length,
-    activeElement: document.activeElement?.id || document.activeElement?.tagName,
-    session: await fetch('/api/session/current')
-      .then(async (response) => ({ status: response.status, ok: response.ok }))
-      .catch((error) => ({ error: String(error) })),
-  })`);
-  return JSON.stringify(state);
-}
-
-async function describeResearchResultState(cdp, message) {
-  const state = await evaluateJSON(cdp, `({
-    message: ${JSON.stringify(message)},
-    authState: document.body.dataset.authState,
-    chatState: document.body.dataset.chatState,
-    researchResultMarker: document.querySelector('[data-research-result]')?.dataset.researchResultMarker,
-    researchResultSections: document.querySelector('[data-research-result]')?.querySelectorAll('[data-research-result-section]').length,
-    totalResearchResultSections: document.querySelectorAll('[data-research-result-section]').length,
-    researchCardHTML: document.querySelector('[data-research-result]')?.outerHTML,
-    runtimeGateVisible: document.querySelector('[data-runtime-gate]')?.classList.contains('is-visible'),
-    runtimeTaskMarker: document.querySelector('[data-runtime-task-card]')?.dataset.runtimeTaskMarker,
-    chatLogText: document.querySelector('[data-chat-log]')?.textContent,
-    audit: await fetch('/api/account/audit-events')
-      .then(async (response) => {
-        const body = await response.json().catch(() => ({}));
-        const eventMetadata = (body.events ?? []).slice(-20).map((event) => {
-          const allowed = ['conversationId', 'model', 'upstreamKind', 'upstreamStatus', 'upstreamHost', 'upstreamModel'];
-          return {
-            eventKind: event.eventKind,
-            metadata: Object.fromEntries(Object.entries(event.metadata ?? {}).filter(([key]) => allowed.includes(key))),
-          };
-        });
-        return {
-          status: response.status,
-          ok: response.ok,
-          latestUpstreamFailure: [...eventMetadata].reverse().find((event) => event.eventKind === 'chat.upstream_failed') ?? null,
-          eventKinds: (body.events ?? []).slice(-12).map((event) => event.eventKind),
-          eventMetadata,
-        };
-      })
-      .catch((error) => ({ error: String(error) })),
-  })`);
-  return JSON.stringify(state);
-}
-
-async function selectAll(cdp) {
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Control', code: 'ControlLeft', windowsVirtualKeyCode: 17 });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Control', code: 'ControlLeft', windowsVirtualKeyCode: 17 });
-}
-
-async function keyPress(cdp, key) {
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', ...key });
-  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
-}
-
-async function waitFor(cdp, expression, describeFailure, timeoutMs = 30000) {
-  await waitUntil(async () => Boolean((await cdp.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.value), timeoutMs, describeFailure);
-}
-
-async function assertPage(cdp, expression, label) {
-  const result = await cdp.send('Runtime.evaluate', { expression, returnByValue: true });
-  if (!result.result?.value) throw new Error(`browser assertion failed: ${label}`);
-}
-
-async function evaluateJSON(cdp, expression) {
-  const result = await cdp.send('Runtime.evaluate', {
-    expression: `(async () => JSON.stringify(await (${expression})))()`,
-    returnByValue: true,
-    awaitPromise: true,
-  });
-  return JSON.parse(result.result?.value || '{}');
 }
 
 async function readAuditEvents(cdp) {
@@ -579,7 +280,7 @@ async function captureVisualQualityEvidence(cdp, runMode, accessibilityCloseout)
     await waitFor(cdp, 'document.readyState === "complete" && (!document.fonts || document.fonts.ready.then(() => true))');
     await activate(cdp, '[data-inspector-open="autonomy"]'); await keyPress(cdp, { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 }); await waitFor(cdp, 'document.body.dataset.inspectorState === "autonomy" && document.querySelector("[data-inspector-sheet]")?.hidden === false', () => describePageState(cdp, `inspector did not open for ${viewport.id}`));
     const path = join('.runtime', 'browser-visual', `research-main-path-${runMode}-${viewport.id}-${stamp}.png`);
-    await captureScreenshot(cdp, path);
+    await captureScreenshot(cdp, path, repoRoot);
     const layout = await readVisualLayout(cdp);
     viewports[viewport.id] = {
       viewport: { width: viewport.width, height: viewport.height, deviceScaleFactor: viewport.deviceScaleFactor, mobile: viewport.mobile },
@@ -921,79 +622,3 @@ function summarizeVisualQualityRubric(viewports, closeout, artifactChecks) {
   const cleanLayout = results.every((result) => result.layout.horizontalOverflowPx === 0 && result.layout.textOverflowCount === 0);
   return { hierarchyClarityPass: results.every((result) => result.layout.visualRubricProbe.headingSequence.includes('h1')), copyDensityPass: results.every((result) => result.layout.visualRubricProbe.visibleParagraphs <= 24), spacingRhythmPass: cleanLayout, mobileComfortPass: ['mobile', 'compact'].every((id) => viewports[id].layout.inspector.mobileBottomSheet === true && viewports[id].layout.inspector.mobileSheetHeightRatio <= 0.64), focusPathPass: closeout.keyboardPath.homeToSkills === true && closeout.keyboardPath.skillsToHome === true && closeout.keyboardPath.escapeClosesModal === true, emptyErrorLoadingClarityPass: results.every((result) => result.layout.visualRubricProbe.visibleParagraphs > 0), surfaceOwnershipPass: results.every((result) => result.layout.visualRubricProbe.forbiddenVisibleText === false), scientificArtifactDensityPass: artifactChecks.researchArtifactDensityPass === true };
 }
-
-async function captureScreenshot(cdp, relativePath) {
-  const result = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
-  if (!result.data) throw new Error(`Page.captureScreenshot did not return data for ${relativePath}`);
-  writeFileSync(join(repoRoot, relativePath), Buffer.from(result.data, 'base64'));
-}
-
-async function waitUntil(check, timeoutMs = 30000, describeFailure) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError;
-  while (Date.now() < deadline) {
-    try {
-      const result = await check();
-      if (result) return result;
-    } catch (error) {
-      lastError = error;
-    }
-    await delay(100);
-  }
-  if (describeFailure) {
-    throw new Error(await describeFailure());
-  }
-  throw lastError || new Error('timed out');
-}
-
-async function waitForHTTP(url, failFast, timeoutMs = 60000) {
-  await waitUntil(async () => {
-    failFast?.();
-    try {
-      const response = await fetch(url);
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }, timeoutMs);
-}
-
-async function fetchJSON(url, init = {}) {
-  const response = await fetch(url, init);
-  if (!response.ok) throw new Error(`${url} returned ${response.status}`);
-  return response.json();
-}
-
-async function listen(server) {
-  server.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-}
-
-async function freePort() {
-  const server = http.createServer();
-  await listen(server);
-  const { port } = server.address();
-  await closeServer(server);
-  return port;
-}
-
-function closeServer(server) {
-  server.closeAllConnections?.();
-  return new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
-}
-
-async function closeChildProcess(child, afterClose = () => {}) {
-  try {
-    if (child.exitCode === null) {
-      process.kill(-child.pid, 'SIGTERM');
-      await Promise.race([once(child, 'exit'), delay(1500).then(() => process.kill(-child.pid, 'SIGKILL'))]);
-    }
-  } finally {
-    afterClose();
-  }
-}
-
-function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''); }
-function sanitizeBaseUrl(value) { const url = new URL(value); return `${url.protocol}//${url.host}`; }
-function trimProcessOutput(text) { const normalized = String(text || '').replace(/\s+/g, ' ').trim(); return normalized ? normalized.slice(-1200) : '(empty)'; }

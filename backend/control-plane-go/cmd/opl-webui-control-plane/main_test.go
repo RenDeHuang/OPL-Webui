@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RenDeHuang/OPL-Webui/services/control-plane-go/internal/webapp"
+	"github.com/RenDeHuang/OPL-Webui/backend/control-plane-go/internal/webapp"
 )
 
 func TestServerAddressUsesHostAndPort(t *testing.T) {

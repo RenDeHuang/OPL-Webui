@@ -37,7 +37,7 @@
 ## 2026-06-14 postgres-driver-runtime
 
 - summary: 接入 pgx-backed Postgres task store runtime；配置 `OPL_DATABASE_URL` 后启动时 open、ping 并初始化 `task_projections` schema，失败关闭连接并 fail closed。
-- verified: `cd services/control-plane-go && go test ./internal/mvp`, `npm run verify:contract`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`, local 4174 memory-store smoke。
+- verified: `cd backend/control-plane-go && go test ./internal/mvp`, `npm run verify:contract`, `npm run gate:review`, `npm run repo:bloat --silent`, `sentrux check /home/dev/projects/ui`, local 4174 memory-store smoke。
 - cannot claim: 已做真实云 Postgres 联通验证、auth、queue、billing、object storage、OPL worker 或公网生产部署。
 
 ## 2026-06-15 cloud-mvp-readiness
@@ -79,7 +79,7 @@
 ## 2026-06-17 repo-governance-sync
 
 - summary: 同步 active truth 和 next cursor；加固 MVP task HTTP contract；修复 DB canary intent drift；补强 cloud image runtime dependency health coverage；修正 bloat gate 对 active change 七件套的 durable doc 计数语义。
-- verified: `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, `sentrux check .`, `cd services/control-plane-go && go test ./...`。
+- verified: `npm run verify`, `npm run gate:review`, `npm run repo:bloat`, `sentrux check .`, `cd backend/control-plane-go && go test ./...`。
 - cannot claim: 真实 production rollout、真实 staging、完整 SaaS、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 release-automation
@@ -97,7 +97,7 @@
 ## 2026-06-17 monitoring-surface
 
 - summary: Go control plane 增加 `GET /metricsz` 只读 monitoring projection，复用 runtimegate readiness truth，暴露 service、environment、ready 和缺失依赖 key 统计，不读取 secret、不连接 DB、不调用 OPL CLI。
-- verified: `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- verified: `cd backend/control-plane-go && go test ./cmd/opl-webui-control-plane`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 已线上部署 `/metricsz`、真实云监控/告警/SLO、完整 production ready SaaS、真实 auth、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 release-metrics-smoke
@@ -115,37 +115,37 @@
 ## 2026-06-17 tenant-auth-boundary
 
 - summary: Go control plane 增加 `medopl_launch_token` HMAC Bearer 边界；cloud/production task intake 由 token 注入 tenant/workspace/user，body identity 冲突返回 `TENANT_BOUNDARY_MISMATCH`，stored lookup 校验 token 边界；Web 默认 task request 不再自报 tenant/workspace/user；cloud manifest 通过 `opl-webui-auth` SecretRef 注入 signing secret。
-- verified: `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./internal/runtimegate`, `node --test tests/contract/cloud-mvp-deploy-shape.test.mjs tests/contract/web-demo-data.test.mjs tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- verified: `cd backend/control-plane-go && go test ./internal/mvp`, `cd backend/control-plane-go && go test ./internal/runtimegate`, `node --test tests/contract/cloud-mvp-deploy-shape.test.mjs tests/contract/web-demo-data.test.mjs tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实登录、session/RBAC、线上 rollout、完整多租户 SaaS、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 stable-boundary-ids
 
 - summary: `tenantId`、`workspaceId`、`userId` 统一收敛为 stable boundary ID；body identity 和 launch-token claims 共用校验，禁止 `/`、空格、过短或过长值进入 task projection、store key 或 lookup path。
-- verified: `cd services/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- verified: `cd backend/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实登录、session/RBAC、workspace membership、production rollout、billing、queue、object storage、OPL worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 task-user-persistence
 
 - summary: Postgres `task_projections` schema 和 insert/update path 增加 `user_id`；新表 schema 要求 `user_id text not null`，已有表通过 additive drift migration 增加列，后续 task writes 显式保存 `projection.UserID`。
-- verified: `cd services/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
+- verified: `cd backend/control-plane-go && go test ./internal/mvp`, `git diff --check`, `npm run repo:bloat`, `npm run verify`, `npm run gate:review`, `sentrux check .`。
 - cannot claim: 真实 DB migration 已执行、完整 commercial data model、usage/quota/billing、production rollout、OPL worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 task-usage-ledger
 
 - summary: Postgres schema 增加 tenant/workspace/user scoped `usage_events`；`SaveTaskProjection` 在一个 transaction 内 upsert task projection 并写入 deterministic `task.created` event，`event_id=runId`、`quantity=1`、`source_ref=taskId`，重复 save 通过 conflict no-op 不重复计量。
-- verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
+- verified: targeted `cd backend/control-plane-go && go test ./internal/mvp`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
 - cannot claim: quota enforcement、billing/invoicing、usage dashboard、production DB migration 已执行、OPL worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 auth-session-boundary
 
 - summary: Go control plane 增加 `POST /api/session/launch`，用有效 `medopl_launch_token` Bearer token 签发 HttpOnly `opl_session` cookie；task create / lookup 在 Bearer token 后 fallback 到 session cookie 注入 tenant/workspace/user 边界；HTTP contract helper 拆分以保持 test 文件收敛。
-- verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
+- verified: targeted `cd backend/control-plane-go && go test ./internal/mvp`, `cd backend/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
 - cannot claim: 真实登录/OAuth、RBAC、session revocation、workspace membership、MedOPL API integration、production rollout、完整多租户 SaaS、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 session-current-boundary
 
 - summary: Go control plane 增加 `GET /api/session/current`，复用 Bearer/session cookie HMAC 校验后返回当前 `tenantId`、`workspaceId`、`userId` 和 `authMode` projection；HTTP contract 断言 session cookie 可查询 current boundary 且响应不含 token material。
-- verified: targeted `cd services/control-plane-go && go test ./internal/mvp`, `cd services/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
+- verified: targeted `cd backend/control-plane-go && go test ./internal/mvp`, `cd backend/control-plane-go && go test ./cmd/opl-webui-control-plane`, `node --test tests/contract/go-control-plane-http.test.mjs`, `node --test tests/health/registry-coverage.test.mjs`, `npm run repo:bloat`；full gates recorded in commit evidence。
 - cannot claim: 真实登录/OAuth、RBAC、session revocation、workspace membership、MedOPL API integration、production rollout、完整多租户 SaaS、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 session-auth-production-evidence
@@ -157,7 +157,7 @@
 ## 2026-06-17 tenant-workspace-persistence
 
 - summary: 建立商业 SaaS 数据骨架 v1：`users`、`tenants`、`tenant_memberships`、`workspaces`、`workspace_memberships` schema；新增 `GET /api/workspaces/current`、`GET /api/tasks`、`POST /api/tasks`、`GET /api/tasks/{taskId}`；API 只从 bearer/session auth boundary 推导 tenant/workspace/user，缺 membership fail closed，tenant A 不能读取 tenant B task，前端最小接入 workspace/task list。
-- verified: targeted `cd services/control-plane-go && go test ./...`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/health/registry-coverage.test.mjs`, plus final full gates recorded in commit evidence。
+- verified: targeted `cd backend/control-plane-go && go test ./...`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/health/registry-coverage.test.mjs`, plus final full gates recorded in commit evidence。
 - cannot claim: production rollout、真实注册登录、workspace invitation、复杂 RBAC、billing、worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 tenant-workspace-production-evidence
@@ -169,7 +169,7 @@
 ## 2026-06-17 usage-quota-enforcement
 
 - summary: 建立 usage/quota enforcement v1：默认 `mvp` plan、task quota `2`、usage period `monthly`；`POST /api/tasks` 创建前按 auth-derived tenant/workspace 检查 quota，未超额时 task projection 与 usage event 继续同边界写入，超额时返回 `QUOTA_EXCEEDED` 且不写 task projection 或 usage event；`GET /api/workspaces/current` 返回 plan、task quota、usage period、used count 和 remaining count；前端只显示最小 usage/quota 状态。
-- verified: red `cd services/control-plane-go && go test ./internal/mvp` failed on missing quota API, red `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs` failed on missing `usageQuota`; targeted green `cd services/control-plane-go && go test ./internal/mvp`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; final gates recorded in commit evidence。
+- verified: red `cd backend/control-plane-go && go test ./internal/mvp` failed on missing quota API, red `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs` failed on missing `usageQuota`; targeted green `cd backend/control-plane-go && go test ./internal/mvp`, `node --test tests/contract/saas-workspace-task-api.test.mjs tests/contract/web-demo-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; final gates recorded in commit evidence。
 - cannot claim: production rollout、真实支付、billing provider、复杂 plan 管理、workspace invitation、复杂 RBAC、worker、真实 OPL execution 或 OPL mutation。
 
 ## 2026-06-17 usage-quota-production-evidence
@@ -193,7 +193,7 @@
 ## 2026-06-18 - one-person-lab-web
 
 - summary: 将 OPL-Webui 重新校准并实现为 Genspark-like one-person-lab-web with ChatGPT-like base chatbot；新增 public account register/login/logout/current session、HttpOnly `opl_session`、hidden personal tenant/workspace、API Key encrypted binding、fixed `https://gflabtoken.cn/v1` provider、普通 chat、conversation isolation 和 @OPL runtime gate。删除旧 `demoData.mjs`、旧 `/api/mvp/*` public route 和无 consumer `mvp-task-http` schema；Web shell 不再展示 workspace/Drive/team/pricing/demo artifact。
-- verified: `node --test tests/contract/go-control-plane-http.test.mjs tests/contract/one-person-lab-chat-upstream.test.mjs`; `node --test tests/contract/one-person-lab-web-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; `node --test tests/health/registry-coverage.test.mjs tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`; `cd services/control-plane-go && go test ./...`.
+- verified: `node --test tests/contract/go-control-plane-http.test.mjs tests/contract/one-person-lab-chat-upstream.test.mjs`; `node --test tests/contract/one-person-lab-web-data.test.mjs tests/smoke/web-demo-shell.test.mjs`; `node --test tests/health/registry-coverage.test.mjs tests/contract/change-package-lifecycle.test.mjs tests/contract/cloud-mvp-deploy-shape.test.mjs`; `cd backend/control-plane-go && go test ./...`.
 - cannot claim: 还没有本次 production rollout evidence；没有真实邮箱验证、找回密码、复杂 RBAC、支付 provider、MedOPL runtime status bridge、OPL worker、object storage 或真实 OPL execution/mutation。
 
 ## 2026-06-18 - one-person-lab-web-production-evidence
@@ -211,7 +211,7 @@
 ## 2026-06-18 - figma-2-21-production-closeout: 固化 `1fc361d Figma workbench UI 已 production verified`；image `uswccr.ccs.tencentyun.com/webopl/opl-webui:1fc361d`，rollout revision `14`，Running Ready Pod `opl-webui-control-plane-54546f5bff-h8xcq`，Error/Failed Pod none；`/healthz`、`/readyz missing=[]`、`/metricsz`、`/`、`/#settings` 均 200，页面包含“严肃工作的 AI 工作台”、“OPL WebUI 应承接的五件事”和 `https://gflabtoken.cn/v1`；guards: `POST /api/chat` no cookie 401 `AUTH_REQUIRED`、`GET /api/chat` 405 `METHOD_NOT_ALLOWED`、wrong login 401 `INVALID_CREDENTIALS`。cannot claim: 真实 OPL execution/mutation、object storage、billing、node pool 生命周期或完整 production ready SaaS。
 ## 2026-06-18 - saas-dogfood-guardrails
 - summary: A1 Gap Audit 后补齐 one-person-lab-web 主路径最小 dogfood guardrails：普通 chat 在 upstream 前执行 per-user monthly quota/abuse precheck，超额返回 `429 CHAT_QUOTA_EXCEEDED` 且不调用 gflabtoken；新增 `GET /api/account/audit-events` 只返回当前用户 sanitized audit events，覆盖 register/login/API Key/runtime gate/chat/quota/upstream failure，不记录 password、raw API Key、session secret 或 DB URL。Postgres schema 增加 `webapp_audit_events` 与 `webapp_chat_usage`；Webui-side guardrail 不等同 billing，最终计费仍归 MedOPL/sub2api。
-- verified: RED `node --test tests/contract/one-person-lab-chat-upstream.test.mjs` failed on missing 429 quota guard；GREEN targeted Node contracts/smoke and `cd services/control-plane-go && go test ./...` passed；final gates recorded in commit evidence。
+- verified: RED `node --test tests/contract/one-person-lab-chat-upstream.test.mjs` failed on missing 429 quota guard；GREEN targeted Node contracts/smoke and `cd backend/control-plane-go && go test ./...` passed；final gates recorded in commit evidence。
 - cannot claim: production rollout、真实线上 quota/audit behavior、真实 MedOPL runtime bridge、object storage、billing/payment provider、真实 OPL execution/mutation 或完整 production ready SaaS。
 ## 2026-06-18 - capability-source-path-manifest
 - summary: B/C Gap Audit 后将 Web capabilities 从纯手写数组推进为 source-path pinned manifest：view model 暴露 `syncMode=source_path_pinned_manifest`、`dynamicSync=false`、`one-person-lab-app/contracts/app-product-profile.json` 和 `one-person-lab/contracts/opl-framework/domains.json` source paths，并保留 MAS/MAG/RCA parity metadata；GitHub `ls-remote` 因 TLS/连接失败，明确 `commitPin=blocked_by_github_tls_timeout`，不伪造动态同步或上游 commit。
@@ -251,7 +251,7 @@
 - cannot claim: frontend split completed, UI behavior changed, API behavior changed, production dogfood complete, MedOPL integration complete, billing complete, or real OPL execution complete。
 
 ## 2026-06-18 - controlplane-mvp-retirement
-- summary: Retired `services/control-plane-go/internal/mvp` from active source, migrated surviving implementation to `internal/controlplane`, removed no-consumer compatibility surfaces, updated imports/canary/registry/stale guard, split Postgres schema, and ratcheted durable file budget to 85.
+- summary: Retired `backend/control-plane-go/internal/mvp` from active source, migrated surviving implementation to `internal/controlplane`, removed no-consumer compatibility surfaces, updated imports/canary/registry/stale guard, split Postgres schema, and ratcheted durable file budget to 85.
 - verified: RED stale-retirement guard; targeted Go and lifecycle/bloat tests; `npm run verify`; `npm run gate:review`; `npm run repo:bloat`; `sentrux check .`。
 - cannot claim: business behavior changed, production rollout, MedOPL runtime bridge, billing, storage, OPL worker, or real OPL execution/mutation。
 
@@ -266,7 +266,7 @@
 - cannot claim: new UI behavior, production rollout, runtime execution, MedOPL runtime status bridge, or production authenticated dogfood e2e.
 
 ## 2026-06-19 - repo-slimming-and-stale-name-retirement
-- summary: Conservative repo slimming: compacted closed change packages from `changes/active`, deleted placeholder `docs/history/README.md` and `tests/README.md`, merged `apps/web/styles/v3.css` into `apps/web/styles.css`, removed the extra stylesheet link, renamed the smoke test to `tests/smoke/web-shell.test.mjs`, and updated lifecycle/registry/stale-guard tests to enforce the slimmer shape.
+- summary: Conservative repo slimming: compacted closed change packages from `changes/active`, deleted placeholder `docs/history/README.md` and `tests/README.md`, merged `frontend/web/styles/v3.css` into `frontend/web/styles.css`, removed the extra stylesheet link, renamed the smoke test to `tests/smoke/web-shell.test.mjs`, and updated lifecycle/registry/stale-guard tests to enforce the slimmer shape.
 - verified: RED targeted tests failed first on existing placeholder/stale files, old active truth, missing archive summaries, and old stylesheet link; GREEN targeted `node --test tests/contract/change-package-lifecycle.test.mjs tests/smoke/foundation.test.mjs tests/smoke/web-shell.test.mjs tests/health/registry-coverage.test.mjs tests/health/repo-bloat.test.mjs` passed 24/24; stale scan left only retirement assertions and historical closeout references; `git diff --check` passed; `npm run verify` passed with health 21/21, contract 40/40, Go package tests, and smoke 5/5; `npm run gate:review` passed; `npm run repo:bloat` passed with files 82/85, markdown docs 10/24, activeChangeDocs 0, tests 16/17; `sentrux check .` passed 9 rules with quality `7369`.
 - cannot claim: product behavior change, production rollout, deploy lane removal, Go control-plane behavior change, MedOPL runtime bridge, or real OPL execution/mutation.
 
@@ -276,7 +276,7 @@
 - cannot claim: production rollout, new product behavior, MedOPL runtime bridge, real OPL execution/mutation, billing, storage, or production authenticated dogfood evidence.
 
 ## 2026-06-19 - web-product-app-structure
-- summary: Phase 1 of the one-person-lab-web goal split the Web product shell into focused owner modules. `apps/web/src/onePersonLabWeb.mjs` is now the thin canonical product entry; `onePersonLabWebState.mjs` owns constants, API helpers, account state, and view-model creation; `onePersonLabWebDom.mjs` owns browser bootstrapping, event binding, render updates, and DOM mutation. Existing public tests still import from the product entry, and no compatibility alias or new product behavior was added.
+- summary: Phase 1 of the one-person-lab-web goal split the Web product shell into focused owner modules. `frontend/web/src/onePersonLabWeb.mjs` is now the thin canonical product entry; `onePersonLabWebState.mjs` owns constants, API helpers, account state, and view-model creation; `onePersonLabWebDom.mjs` owns browser bootstrapping, event binding, render updates, and DOM mutation. Existing public tests still import from the product entry, and no compatibility alias or new product behavior was added.
 - verified: RED web data contract failed first on missing state owner module; GREEN targeted Web tests passed 12/12; targeted governance tests passed 9/9; `git diff --check` passed; `npm run repo:bloat` passed with active docs present; `sentrux check .` passed 9 rules with quality `7351`; `npm run verify` passed with health 23/23, contract 41/41, Go package tests, and smoke 5/5; fresh `npm run gate:review` passed.
 - cannot claim: React/Next migration, UI redesign, production rollout, MedOPL runtime bridge, real OPL execution/mutation, billing, storage, or materials/deliverables projection.
 

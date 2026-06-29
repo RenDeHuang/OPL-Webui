@@ -3,8 +3,8 @@
 !Dockerfile
 !go.work
 !services
-!services/control-plane-go
-!services/control-plane-go/**
+!backend/control-plane-go
+!backend/control-plane-go/**
 !apps
-!apps/web
-!apps/web/**
+!frontend/web
+!frontend/web/**

@@ -1,0 +1,47 @@
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Geist+Mono:wght@400;500&display=swap");
+
+:root {
+  color: #1c1a17;
+  background: #f5f2ec;
+  font-family: "DM Sans", Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --background: #f5f2ec;
+  --foreground: #1c1a17;
+  --card: #faf8f4;
+  --muted: #e8e4da;
+  --muted-foreground: #6b6558;
+  --primary: #2f6b4f;
+  --primary-foreground: #ffffff;
+  --accent: #d4e8db;
+  --accent-foreground: #1c4030;
+  --destructive: #b53a2f;
+  --border: rgba(28, 26, 23, 0.12);
+  --input-background: #eeeae2;
+  --sidebar: #ede9e0;
+  --sidebar-accent: #e4dfd5;
+  --ring: rgba(47, 107, 79, 0.3);
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { min-height: 100%; }
+body {
+  background: var(--background);
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+[hidden] { display: none !important; }
+button, input, textarea, a { color: inherit; font: inherit; }
+button { cursor: pointer; min-height: 36px; min-width: 36px; }
+button:disabled, [aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; pointer-events: none; }
+a { text-decoration: none; }
+h1, h2, h3, p { margin: 0; }
+p, small, dd { color: var(--muted-foreground); line-height: 1.55; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.brand-text, .sidebar-brand, .auth-brand span, .public-hero h1, .home-composer h1, .file-library h1, .plaza-view h1 {
+  font-family: "Lora", Georgia, serif;
+}

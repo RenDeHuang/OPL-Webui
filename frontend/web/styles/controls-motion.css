@@ -1,0 +1,53 @@
+.primary-button, .secondary-button, .text-button, .icon-button, .round-send, .file-library header button, .plaza-view header button {
+  align-items: center;
+  border-radius: var(--radius);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 14px;
+}
+.primary-button {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--primary-foreground);
+}
+.primary-button:hover { background: #265840; border-color: #265840; }
+.secondary-button, .icon-button, .file-library header button, .plaza-view header button {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.secondary-button:hover, .icon-button:hover, .file-library header button:hover, .plaza-view header button:hover {
+  background: var(--muted);
+}
+.text-button {
+  background: transparent;
+  border: 0;
+}
+.round-send {
+  background: var(--foreground);
+  border: 1px solid var(--foreground);
+  border-radius: 50%;
+  color: var(--background);
+  min-width: 36px;
+  padding: 0;
+}
+.large { min-height: 48px; padding-inline: 22px; }
+.full { width: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  button, a, input, textarea, .account-popover, .search-sheet, .billing-panel, .inspector-sheet {
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  }
+  button:active { transform: translateY(1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

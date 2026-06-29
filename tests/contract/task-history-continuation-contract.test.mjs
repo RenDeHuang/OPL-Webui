@@ -17,7 +17,7 @@ test('task history contract fixes refs-only continuation shape and cannot-claim 
   const product = readJson('contracts/web-product-profile.json');
   const pageState = readJson('contracts/web-page-state-matrix.json');
   const api = readJson('contracts/web-api.openapi.json');
-  const postgresSchema = readFileSync('services/control-plane-go/internal/webapp/postgres.go', 'utf8');
+  const postgresSchema = readFileSync('backend/control-plane-go/internal/webapp/postgres.go', 'utf8');
 
   assert.equal(product.taskHistoryContinuationCenter.slice, 'task_history_deliverable_continuation_center_v0');
   assert.equal(product.taskHistoryContinuationCenter.ownerSurface, 'account_based_user_product_layer');

@@ -39,6 +39,6 @@
     "check:diff": "git diff --check",
     "lane:advisory": "node scripts/lane-advisory.mjs",
     "lane:check": "node scripts/lane-check.mjs",
-    "start": "go run ./services/control-plane-go/cmd/opl-webui-control-plane"
+    "start": "go run ./backend/control-plane-go/cmd/opl-webui-control-plane"
   }
 }

@@ -12,7 +12,7 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts['repo:bloat'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['line:budget'], 'node scripts/repo-bloat-audit.mjs');
   assert.equal(pkg.scripts['check:diff'], 'git diff --check');
-  assert.equal(pkg.scripts.start, 'go run ./services/control-plane-go/cmd/opl-webui-control-plane');
+  assert.equal(pkg.scripts.start, 'go run ./backend/control-plane-go/cmd/opl-webui-control-plane');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs current');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
@@ -320,7 +320,7 @@ test('current frontend engineering stays static until browser/product evidence r
   assert.equal(pkg.scripts.build, undefined);
   assert.equal(existsSync('vite.config.ts'), false);
   assert.equal(existsSync('package-lock.json'), false);
-  assert.match(dockerfile, /COPY apps\/web apps\/web/);
+  assert.match(dockerfile, /COPY frontend\/web frontend\/web/);
   assert.doesNotMatch(workflow, /npm run build/);
 });
 

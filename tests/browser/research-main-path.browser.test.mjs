@@ -3,7 +3,10 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { readWebSource } from '../contract/helpers/web-source-reader.mjs';
+
 const runnerPath = 'tests/browser/research-main-path-runner.mjs';
+const browserHelperPath = 'tests/browser/helpers/browser-cdp-helper.mjs';
 const runtimeAdmissionHelperPath = 'tests/browser/runtime-admission-helper.mjs';
 const cloudRolloutWorkflowPath = '.github/workflows/cloud-rollout.yml';
 
@@ -119,7 +122,9 @@ test('research main path runs in a real browser and records page-state evidence'
 
 test('browser runner uses user-like browser input instead of direct DOM mutation', () => {
   const runner = readFileSync(runnerPath, 'utf8');
-  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const browserHelper = readFileSync(browserHelperPath, 'utf8');
+  const runnerSource = `${runner}\n${browserHelper}`;
+  const domSource = readWebSource();
 
   for (const required of [
     '--production',
@@ -145,12 +150,12 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
     'openChatRoute',
     '[data-shell-action="home"]',
   ]) {
-    assert.match(runner, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(runnerSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.doesNotMatch(runner, /\.value\s*=(?!=)/);
-  assert.doesNotMatch(runner, /\.click\(\)/);
-  assert.doesNotMatch(runner, /requestSubmit\(\)/);
+  assert.doesNotMatch(runnerSource, /\.value\s*=(?!=)/);
+  assert.doesNotMatch(runnerSource, /\.click\(\)/);
+  assert.doesNotMatch(runnerSource, /requestSubmit\(\)/);
   assert.match(runner, /async function openAnonymousAuthForm/);
   assert.match(runner, /async function openAccountPopover/);
   assert.match(runner, /Boolean\(document\.querySelector\("#auth-email"\) && document\.querySelector\("#auth-email"\)\.offsetParent !== null\)/);
@@ -168,6 +173,8 @@ test('browser runner uses user-like browser input instead of direct DOM mutation
 
 test('production browser e2e prepares a browser without sudo and reports startup diagnostics', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const browserHelper = readFileSync(browserHelperPath, 'utf8');
+  const runnerSource = `${runner}\n${browserHelper}`;
   const workflow = readFileSync(cloudRolloutWorkflowPath, 'utf8');
 
   assert.match(workflow, /production-browser-e2e:[\s\S]*?runs-on:\s*ubuntu-latest/);
@@ -177,15 +184,15 @@ test('production browser e2e prepares a browser without sudo and reports startup
   assert.match(workflow, /GITHUB_ENV/);
   assert.match(workflow, /chrome-linux\*\/chrome/);
   assert.doesNotMatch(workflow, /--with-deps|sudo|apt-get|apt install/);
-  assert.match(runner, /browser exited before DevTools became available/);
-  assert.match(runner, /binary:/);
-  assert.match(runner, /exitCode:/);
-  assert.match(runner, /stderr:/);
-  assert.match(runner, /stdout:/);
-  assert.match(runner, /OPL_BROWSER_BINARY/);
-  assert.match(runner, /preinstall Chrome\/Chromium/);
-  assert.match(runner, /chrome-linux64/);
-  assert.match(runner, /chrome-linux/);
+  assert.match(runnerSource, /browser exited before DevTools became available/);
+  assert.match(runnerSource, /binary:/);
+  assert.match(runnerSource, /exitCode:/);
+  assert.match(runnerSource, /stderr:/);
+  assert.match(runnerSource, /stdout:/);
+  assert.match(runnerSource, /OPL_BROWSER_BINARY/);
+  assert.match(runnerSource, /preinstall Chrome\/Chromium/);
+  assert.match(runnerSource, /chrome-linux64/);
+  assert.match(runnerSource, /chrome-linux/);
 });
 
 test('commercial cross-repo browser canary is separated from strict ordinary upstream browser e2e', () => {
@@ -278,22 +285,26 @@ test('production browser e2e waits for async research results and reports page e
 
 test('production browser e2e preserves sanitized upstream failure audit metadata', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const browserHelper = readFileSync(browserHelperPath, 'utf8');
+  const runnerSource = `${runner}\n${browserHelper}`;
 
-  assert.match(runner, /eventMetadata/);
-  assert.match(runner, /upstreamStatus/);
-  assert.match(runner, /upstreamHost/);
-  assert.match(runner, /upstreamModel/);
-  assert.match(runner, /upstreamKind/);
+  assert.match(runnerSource, /eventMetadata/);
+  assert.match(runnerSource, /upstreamStatus/);
+  assert.match(runnerSource, /upstreamHost/);
+  assert.match(runnerSource, /upstreamModel/);
+  assert.match(runnerSource, /upstreamKind/);
 });
 
 test('production browser e2e reports latest upstream failure before verbose audit history', () => {
   const runner = readFileSync(runnerPath, 'utf8');
+  const browserHelper = readFileSync(browserHelperPath, 'utf8');
+  const runnerSource = `${runner}\n${browserHelper}`;
 
-  assert.match(runner, /latestUpstreamFailure/);
-  assert.match(runner, /chat\.upstream_failed/);
-  assert.match(runner, /slice\(-20\)/);
-  assert.match(runner, /slice\(-12\)/);
-  assert.match(runner, /upstreamStatus/);
+  assert.match(runnerSource, /latestUpstreamFailure/);
+  assert.match(runnerSource, /chat\.upstream_failed/);
+  assert.match(runnerSource, /slice\(-20\)/);
+  assert.match(runnerSource, /slice\(-12\)/);
+  assert.match(runnerSource, /upstreamStatus/);
 });
 
 test('production browser e2e retries only audited transient upstream failures', () => {

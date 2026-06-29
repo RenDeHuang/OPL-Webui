@@ -6,7 +6,7 @@ import {
   reliabilityStatusForResult,
   runRuntimeTask,
   runtimeTaskCardForGate,
-} from '../../apps/web/src/onePersonLabWeb.mjs';
+} from '../../frontend/web/src/onePersonLabWeb.mjs';
 
 test('web data checks MedOPL runtime gate before runtime-required task run', async () => {
   const calls = [];

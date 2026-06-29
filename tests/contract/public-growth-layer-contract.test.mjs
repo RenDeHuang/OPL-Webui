@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { readWebSource } from './helpers/web-source-reader.mjs';
+
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
@@ -71,7 +73,7 @@ test('public page-state contract exposes anonymous task start and login return p
 });
 
 test('public direct-copy auth entry does not rely on authenticated account popover state', () => {
-  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const domSource = readWebSource();
 
   assert.match(domSource, /function openAnonymousAuth/);
   assert.match(domSource, /data-public-start-cta[\s\S]*?openAnonymousAuth/);

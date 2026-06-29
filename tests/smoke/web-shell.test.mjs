@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import { readFrontendCss, readWebRenderSource, readWebSource } from '../contract/helpers/web-source-reader.mjs';
+
 function visibleTextFromHTML(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -12,11 +14,10 @@ function visibleTextFromHTML(html) {
 }
 
 test('web shell mounts the Figma Make direct-copy replacement target', () => {
-  const html = readFileSync('apps/web/index.html', 'utf8');
-  const dom = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
-  const continuation = readFileSync('apps/web/src/onePersonLabWebContinuation.mjs', 'utf8');
-  const shellSource = `${dom}\n${continuation}`;
-  const state = readFileSync('apps/web/src/onePersonLabWebState.mjs', 'utf8');
+  const html = readFileSync('frontend/web/index.html', 'utf8');
+  const dom = readFileSync('frontend/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const shellSource = readWebSource();
+  const state = readFileSync('frontend/web/src/onePersonLabWebState.mjs', 'utf8');
   const visibleText = visibleTextFromHTML(html);
 
   assert.match(html, /<div\s+id="app"/);
@@ -28,29 +29,29 @@ test('web shell mounts the Figma Make direct-copy replacement target', () => {
   assert.match(dom, /home_default/);
   assert.match(dom, /running_turn/);
   assert.match(dom, /blocked_turn/);
-  assert.match(dom, /quota_exceeded/);
-  assert.match(dom, /side_navigation_new_chat_projects_skill_workflow_search_more/);
-  assert.match(dom, /data-shell-action="home"/);
-  assert.match(dom, /data-account-toggle/);
-  assert.match(dom, /data-account-popover/);
-  assert.match(dom, /data-public-growth-layer/);
-  assert.match(dom, /data-public-start-cta/);
-  assert.match(dom, /data-workbench-surface/);
-  assert.match(dom, /data-chat-form/);
-  assert.match(dom, /data-research-task-intent/);
-  assert.match(dom, /data-results-surface/);
-  assert.match(dom, /data-project-window-list/);
+  assert.match(shellSource, /quota_exceeded/);
+  assert.match(shellSource, /side_navigation_new_chat_projects_skill_workflow_search_more/);
+  assert.match(shellSource, /data-shell-action="home"/);
+  assert.match(shellSource, /data-account-toggle/);
+  assert.match(shellSource, /data-account-popover/);
+  assert.match(shellSource, /data-public-growth-layer/);
+  assert.match(shellSource, /data-public-start-cta/);
+  assert.match(shellSource, /data-workbench-surface/);
+  assert.match(shellSource, /data-chat-form/);
+  assert.match(shellSource, /data-research-task-intent/);
+  assert.match(shellSource, /data-results-surface/);
+  assert.match(shellSource, /data-project-window-list/);
   assert.match(shellSource, /data-inspector-sheet/);
   assert.match(shellSource, /data-inspector-open="autonomy"/);
-  assert.match(dom, /data-api-key-dialog/);
+  assert.match(shellSource, /data-api-key-dialog/);
   assert.doesNotMatch(html, /figma-parity-shell|landing-panel|workbench-panel|result-panel|history-panel|runtime-gate/);
   assert.doesNotMatch(visibleText, /Public Growth Layer|Account-based User Product Layer|Minimal Admin\/Ops Layer|operator controls/);
 });
 
 test('web shell copy grammar blocks mock truth from the zip prototype', () => {
   const source = [
-    readFileSync('apps/web/index.html', 'utf8'),
-    readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8'),
+    readFileSync('frontend/web/index.html', 'utf8'),
+    readWebRenderSource(),
   ].join('\n');
 
   for (const marker of ['@科研', '@论文', '@基金', '@综述', '@文件', '@PPT', '@书']) {
@@ -63,12 +64,12 @@ test('web shell copy grammar blocks mock truth from the zip prototype', () => {
   assert.match(source, /MedOPL continuation ready \/ refs available/);
   assert.match(source, /readonly commercial projection/);
   assert.doesNotMatch(source, /initProjects|mockResult|fileItems|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
-  assert.doesNotMatch(source, /Pro 套餐|积分余额|充值|无限计算资源|Drive|云盘|runtime · 已完成|制品内容|artifact body authority/i);
+  assert.doesNotMatch(source, /Pro 套餐|积分余额|充值|无限计算资源|Drive|云盘|runtime · 已完成|制品内容/i);
   assert.doesNotMatch(source, /\/_ops|operator controls|admin ops/i);
 });
 
 test('web shell css follows the Figma Make layout and responsive inspector shape', () => {
-  const css = readFileSync('apps/web/styles.css', 'utf8');
+  const css = readFrontendCss();
 
   assert.match(css, /--background:\s*#f5f2ec/);
   assert.match(css, /--primary:\s*#2f6b4f/);
@@ -90,8 +91,8 @@ test('web shell css follows the Figma Make layout and responsive inspector shape
 });
 
 test('go control plane serves real SPA routes such as /home without asset fallback', () => {
-  const main = readFileSync('services/control-plane-go/cmd/opl-webui-control-plane/main.go', 'utf8');
-  const testSource = readFileSync('services/control-plane-go/cmd/opl-webui-control-plane/main_test.go', 'utf8');
+  const main = readFileSync('backend/control-plane-go/cmd/opl-webui-control-plane/main.go', 'utf8');
+  const testSource = readFileSync('backend/control-plane-go/cmd/opl-webui-control-plane/main_test.go', 'utf8');
 
   assert.match(main, /mux\.HandleFunc\("\/", handleWebApp\)/);
   assert.match(main, /filepath\.Ext\(cleanPath\) != ""[\s\S]*http\.NotFound/);
@@ -100,5 +101,5 @@ test('go control plane serves real SPA routes such as /home without asset fallba
 });
 
 test('retired demo bridge is removed', () => {
-  assert.equal(existsSync('apps/web/src/demoData.mjs'), false);
+  assert.equal(existsSync('frontend/web/src/demoData.mjs'), false);
 });

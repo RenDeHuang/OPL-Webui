@@ -7,10 +7,10 @@
   "machineBoundary": "Active web shell carrier, shell ownership boundary, Figma-code mapping, and validation commands; product identity remains in web-product-profile and GUI grammar remains in web-gui-product-contract.",
   "activeShell": {
     "id": "opl_web_static_esm_shell",
-    "sourceRoot": "apps/web",
-    "entryHtml": "apps/web/index.html",
-    "entryModule": "apps/web/src/onePersonLabWeb.mjs",
-    "styleEntry": "apps/web/styles.css",
+    "sourceRoot": "frontend/web",
+    "entryHtml": "frontend/web/index.html",
+    "entryModule": "frontend/web/src/onePersonLabWeb.mjs",
+    "styleEntry": "frontend/web/styles.css",
     "runtime": "static_html_css_esm",
     "framework": "none",
     "migrationPolicy": "stay_static_until_component_state_or_visual_regression_evidence_requires_framework"

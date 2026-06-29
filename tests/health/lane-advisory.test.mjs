@@ -8,7 +8,7 @@ import {
 
 test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
-    'apps/web/src/onePersonLabWeb.mjs',
+    'frontend/web/src/onePersonLabWeb.mjs',
   ]), ['smoke', 'interaction', 'browser']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
@@ -16,7 +16,7 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   ]), ['interaction', 'contract', 'browser']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
-    'services/control-plane-go/internal/webapp/handlers.go',
+    'backend/control-plane-go/internal/webapp/handlers.go',
   ]), ['contract', 'go']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
@@ -25,7 +25,7 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   ]), ['release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
-    'services/control-plane-go/internal/oplbridge/snapshot.go',
+    'backend/control-plane-go/internal/oplbridge/snapshot.go',
   ]), ['integration']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
@@ -50,7 +50,7 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
 test('lane advisory CLI reports suggestions without failing the gate', () => {
   const stdout = execFileSync(
     process.execPath,
-    ['scripts/lane-advisory.mjs', 'apps/web/index.html', 'deploy/web-cloud/RUNBOOK.md'],
+    ['scripts/lane-advisory.mjs', 'frontend/web/index.html', 'deploy/web-cloud/RUNBOOK.md'],
     { encoding: 'utf8' },
   );
 

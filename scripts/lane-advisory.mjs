@@ -18,8 +18,8 @@ const TARGET_ORDER = Object.freeze([
 const RULES = Object.freeze([
   Object.freeze({
     name: 'opl bridge or runtime gate',
-    matches: (file) => file.startsWith('services/control-plane-go/internal/oplbridge/')
-      || file.startsWith('services/control-plane-go/internal/runtimegate/')
+    matches: (file) => file.startsWith('backend/control-plane-go/internal/oplbridge/')
+      || file.startsWith('backend/control-plane-go/internal/runtimegate/')
       || file === 'contracts/web-runtime-bridge.json',
     targets: Object.freeze(['integration']),
   }),
@@ -36,14 +36,14 @@ const RULES = Object.freeze([
   }),
   Object.freeze({
     name: 'web shell',
-    matches: (file) => file.startsWith('apps/web/'),
+    matches: (file) => file.startsWith('frontend/web/'),
     targets: Object.freeze(['smoke', 'interaction', 'browser']),
   }),
   Object.freeze({
     name: 'go control plane',
-    matches: (file) => file.startsWith('services/control-plane-go/')
-      && !file.startsWith('services/control-plane-go/internal/oplbridge/')
-      && !file.startsWith('services/control-plane-go/internal/runtimegate/'),
+    matches: (file) => file.startsWith('backend/control-plane-go/')
+      && !file.startsWith('backend/control-plane-go/internal/oplbridge/')
+      && !file.startsWith('backend/control-plane-go/internal/runtimegate/'),
     targets: Object.freeze(['contract', 'go']),
   }),
   Object.freeze({
@@ -117,8 +117,8 @@ const RULES = Object.freeze([
   Object.freeze({
     name: 'go test',
     matches: (file) => file.endsWith('_test.go')
-      && !file.startsWith('services/control-plane-go/internal/oplbridge/')
-      && !file.startsWith('services/control-plane-go/internal/runtimegate/'),
+      && !file.startsWith('backend/control-plane-go/internal/oplbridge/')
+      && !file.startsWith('backend/control-plane-go/internal/runtimegate/'),
     targets: Object.freeze(['go']),
   }),
 ]);

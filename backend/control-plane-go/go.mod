@@ -1,4 +1,4 @@
-module github.com/RenDeHuang/OPL-Webui/services/control-plane-go
+module github.com/RenDeHuang/OPL-Webui/backend/control-plane-go
 
 go 1.22
 

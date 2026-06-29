@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
-import * as web from '../../apps/web/src/onePersonLabWeb.mjs';
+import * as web from '../../frontend/web/src/onePersonLabWeb.mjs';
+import { readWebSource, WEB_SOURCE_FILES } from './helpers/web-source-reader.mjs';
 
 function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')); }
 function assertIncludesAll(actual, expected, label) { for (const item of expected) assert.equal(actual.includes(item), true, `missing ${label}: ${item}`); }
@@ -543,7 +544,7 @@ test('web data module calls session provider and chat APIs only', async () => {
 });
 
 test('browser bootstrap probes current session without loading OPL snapshot', () => {
-  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const domSource = readWebSource();
 
   assert.match(domSource, /loadOnePersonLabWebState\(fetch, \{ loadSnapshot: false \}\)/);
   assert.doesNotMatch(domSource, /loadOnePersonLabWebState\(fetch, \{ probeSession: false, loadSnapshot: false \}\)/);
@@ -760,7 +761,7 @@ test('web data module surfaces runtime gate with MedOPL deep link', async () => 
 
 test('runtime marker policy is explicit and does not gate uncontracted at-mentions', () => {
   const runtime = readJson('contracts/web-runtime-bridge.json');
-  const domSource = readFileSync('apps/web/src/onePersonLabWebDom.mjs', 'utf8');
+  const domSource = readWebSource();
 
   assert.deepEqual(web.RUNTIME_REQUIRED_MARKERS, runtime.runtimeRequiredMarkers);
   assert.deepEqual(web.LIGHTWEIGHT_MARKERS, runtime.lightweightMarkers);
@@ -987,9 +988,9 @@ test('web view model keeps workspace hidden and exposes fixed provider surface',
   assert.doesNotMatch(JSON.stringify(view), /https:\/\/gflabtoken\.cn\/v1|base_url/i);
 });
 
-test('web product entry delegates state and DOM ownership to focused modules', () => {
-  const entry = readFileSync('apps/web/src/onePersonLabWeb.mjs', 'utf8');
-  for (const path of ['apps/web/src/onePersonLabWebState.mjs', 'apps/web/src/onePersonLabWebDom.mjs']) assert.equal(existsSync(path), true, `missing owner module: ${path}`);
+test('web product entry delegates state DOM and surface ownership to focused modules', () => {
+  const entry = readFileSync('frontend/web/src/onePersonLabWeb.mjs', 'utf8');
+  for (const path of ['frontend/web/src/onePersonLabWebState.mjs', 'frontend/web/src/onePersonLabWebDom.mjs', ...WEB_SOURCE_FILES.filter((path) => path.includes('/surfaces/'))]) assert.equal(existsSync(path), true, `missing owner module: ${path}`);
   assert.match(entry, /onePersonLabWebState\.mjs/);
   assert.match(entry, /onePersonLabWebDom\.mjs/);
   assert.doesNotMatch(entry, /querySelector|addEventListener|appendMessage|writeJSON|readJSON|providerFallback/);

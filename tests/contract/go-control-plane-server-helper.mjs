@@ -8,7 +8,7 @@ const buildDir = mkdtempSync(join(tmpdir(), 'opl-webui-go-control-plane-'));
 const binaryPath = join(buildDir, 'opl-webui-control-plane');
 const fakeOplPath = join(buildDir, 'opl');
 
-execFileSync('go', ['build', '-o', binaryPath, './services/control-plane-go/cmd/opl-webui-control-plane'], {
+execFileSync('go', ['build', '-o', binaryPath, './backend/control-plane-go/cmd/opl-webui-control-plane'], {
   stdio: 'inherit',
 });
 

@@ -1,0 +1,107 @@
+@media (max-width: 1040px) {
+  .search-sheet { left: 240px; }
+  .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lower-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plaza-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding-bottom: 72px;
+  }
+  .sidebar {
+    align-items: center;
+    bottom: 0;
+    border-right: 0;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 42px;
+    height: auto;
+    left: 0;
+    overflow: visible;
+    padding: 8px;
+    position: fixed;
+    right: 0;
+    z-index: 45;
+  }
+  .sidebar-brand { font-size: 0; padding: 0; }
+  .sidebar-brand::before {
+    align-items: center;
+    background: var(--primary);
+    border-radius: 50%;
+    color: #fff;
+    content: "OPL";
+    display: flex;
+    font-family: "DM Sans", sans-serif;
+    font-size: 9px;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+  }
+  .top-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0;
+  }
+  .top-nav button, .sidebar-bottom > button, .account-anchor > button {
+    justify-content: center;
+    min-height: 38px;
+    padding: 6px 4px;
+  }
+  .top-nav span, .sidebar-bottom span:first-child, .project-tree, .sidebar-divider, .account-anchor strong, .account-anchor small { display: none; }
+  .sidebar-bottom {
+    border-top: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+  .account-popover {
+    bottom: 76px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+  .workspace-frame, .workspace-main {
+    display: block;
+    min-height: calc(100vh - 72px);
+    overflow: visible;
+  }
+  .home-composer, .blocked-view, .quota-view, .plaza-view {
+    min-height: calc(100vh - 72px);
+    padding: 28px 16px 48px;
+  }
+  .public-nav { padding: 16px; }
+  .nav-actions { gap: 6px; }
+  .public-hero { padding: 36px 16px 64px; }
+  .hero-actions { align-items: stretch; flex-direction: column; }
+  .hero-actions > * { width: 100%; }
+  .trust-strip { align-items: center; flex-direction: column; margin-top: 42px; }
+  .mode-grid, .lower-grid { grid-template-columns: 1fr; }
+  .result-scroll { padding: 28px 16px; }
+  .result-topbar { padding: 0 84px 0 12px; }
+  .pill-input { width: calc(100% - 24px); }
+  .search-sheet {
+    bottom: 0;
+    left: 0;
+    top: auto;
+    width: 100%;
+  }
+  .inspector-sheet {
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--border);
+    bottom: 0;
+    box-shadow: 0 -18px 48px rgba(28, 26, 23, 0.18);
+    height: auto;
+    left: 0;
+    max-height: 64vh;
+    position: fixed;
+    right: 0;
+    z-index: 70;
+  }
+  .inspector-sheet section { max-height: calc(64vh - 92px); }
+}
