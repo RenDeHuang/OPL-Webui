@@ -383,7 +383,7 @@
       "id": "commercial_product_user_journey_depth_v1",
       "ownerSurface": "account-based-user-product-layer",
       "state": "active",
-      "currentPhaseId": "skill_model_plus_toolbar_slice",
+      "currentPhaseId": "product_acceptance_browser_e2e",
       "currentStatus": "partial",
       "launchBlocking": false,
       "cannotClaim": [
@@ -532,6 +532,7 @@
           ]
         },
         {"id":"skill_model_plus_toolbar_slice","status":"done","objective":"Make model selector, plus menu, and Skill import real typed Webui controls without claiming model inventory, runtime upload, or Skill execution.","entryCriteria":["task_continuation_history evidence exists"],"exitCriteria":["model selector opens and hides base_url/fake model identity","plus menu exposes typed actions and no dead click","Skill import exposes select/validate/error states without fake success"],"evidenceSources":["repo_local","browser"],"blockerTypes":["missing_browser_e2e"],"acceptance":["model selector is selectable profile only","plus menu actions are typed","Skill import failure is explicit and does not fake imported state","runtime/file actions hand off instead of Web-owned execution"],"nextStepOpeners":["open streaming_chat_turns before final product acceptance","open product_acceptance_browser_e2e after all Web-owned journey gaps close"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"typed controls and browser evidence only; owner visual copy review remains external"},"requiredEvals":[{"id":"skill_model_plus_browser_e2e","contract":"tests/browser/interaction-truth.browser.test.mjs","proves":["model selector, plus menu, and Skill import typed states work in browser"],"doesNotProve":["real model inventory","Skill execution","runtime file upload","production-ready SaaS"],"failureBlocks":["skill/model/plus product control claim"]}]},
+        {"id":"streaming_chat_turns","status":"done","objective":"Make ordinary research chat feel like a real turn lifecycle with submitted/progressive/waiting/complete or error states, without claiming upstream token streaming.","entryCriteria":["skill_model_plus_toolbar_slice evidence exists"],"exitCriteria":["ordinary @科研 browser flow observes submitted, progressive, waiting_upstream, and complete or error turn stages","turn lifecycle stages are rendered from real request lifecycle state","token streaming remains cannot-claim"],"evidenceSources":["repo_local","browser"],"blockerTypes":["missing_browser_e2e"],"acceptance":["turn lifecycle is visible in the chat log","no instant static result only","no fake token streaming","ordinary path still does not require runtime/storage"],"nextStepOpeners":["open product_acceptance_browser_e2e after streaming_chat_turns closes"],"ownerReceipt":{"required":false,"source":"repo_local","reason":"request lifecycle browser evidence only; token streaming and owner visual copy review remain external"},"requiredEvals":[{"id":"streaming_chat_turn_browser_e2e","contract":"tests/browser/research-main-path.browser.test.mjs","proves":["ordinary research turn lifecycle is browser-visible"],"doesNotProve":["token streaming implemented","upstream provider streaming support","production-ready SaaS"],"failureBlocks":["streaming chat turn UX claim"]}]},
         {
           "id": "product_acceptance_browser_e2e",
           "status": "not_started",

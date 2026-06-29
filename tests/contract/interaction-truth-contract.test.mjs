@@ -98,10 +98,13 @@ test('interaction truth separates current green route guard from product journey
 
   assert.equal(interaction.productJourneyDepth?.state, 'admitted_product_gap');
   assert.equal(interaction.productJourneyDepth?.interactionTruthStatus, 'green');
-  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial_returning_continuation_repo_browser_done');
+  assert.equal(interaction.productJourneyDepth?.productValueStatus, 'partial_streaming_chat_turns_repo_browser_done');
   assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
   assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
-  assertIncludesAll(interaction.productJourneyDepth?.openGaps ?? [], ['streaming_chat_turns', 'product_acceptance_browser_e2e'], 'interaction product-depth open gap');
+  assert.deepEqual(interaction.productJourneyDepth?.chatTurnLifecycle?.requiredStages, ['submitted', 'progressive', 'waiting_upstream', 'complete', 'error']);
+  assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.fakeTokenStreamingAllowed, false);
+  assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.status, 'repo_browser_done_v1');
+  assert.deepEqual(interaction.productJourneyDepth?.openGaps, ['product_acceptance_browser_e2e']);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('skill_import'), false);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('model_selector'), false);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('plus_menu'), false);
@@ -114,5 +117,7 @@ test('interaction truth separates current green route guard from product journey
   assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.retireBusinessName, '任务历史 / 交付接续');
   assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.replacementBusinessName, '项目 / 窗口');
   assertIncludesAll(pageState.commercialProductUserJourneyDepth?.handoffTriggers ?? [], ['runtime_required', 'file_upload', 'specialist_run_intent'], 'page-state handoff trigger');
+  assertIncludesAll(pageState.commercialProductUserJourneyDepth?.chatTurnLifecycle?.requiredSelectors ?? [], ['[data-turn-stage]', '[data-turn-stage="submitted"]', '[data-turn-stage="progressive"]', '[data-turn-stage="waiting_upstream"]'], 'page-state chat turn selector');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.chatTurnLifecycle?.fakeStreamingAllowed, false);
   assertIncludesAll(pageState.commercialProductUserJourneyDepth?.cannotClaim ?? [], ['fake project/window data', 'Web-owned runtime/storage/payment truth', 'artifact body authority'], 'page-state product-depth cannot claim');
 });

@@ -194,7 +194,7 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_product_contract_stabilization_v1.evalResults.find((result) => result.id === 'commercial_product_primitives_contract').status, 'pass');
   assert.equal(byGap.commercial_product_contract_stabilization_v1.evalResults.find((result) => result.id === 'variable_expression_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.status, 'partial');
-  assert.equal(byGap.commercial_product_user_journey_depth_v1.currentPhaseId, 'skill_model_plus_toolbar_slice');
+  assert.equal(byGap.commercial_product_user_journey_depth_v1.currentPhaseId, 'product_acceptance_browser_e2e');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'commercial_product_journey_map').status, 'pass');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'webui_medopl_product_owner_split').status, 'pass');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'product_depth_implementation_open').status, 'blocked');

@@ -25,6 +25,8 @@ test('research main path runs in a real browser and records page-state evidence'
   assert.equal(evidence.pageStates.firstValueProgressiveTurnObserved, true);
   assert.equal(evidence.pageStates.firstValueProgressiveTurnState, 'complete');
   assert.equal(evidence.pageStates.firstValueProgressiveBoundary, 'request_lifecycle_not_token_stream');
+  assert.deepEqual(evidence.pageStates.chatTurnStagesObserved, ['submitted', 'progressive', 'waiting_upstream', 'complete']);
+  assert.equal(evidence.pageStates.chatTurnFakeStreaming, false);
   assert.ok(
     ['specialist_not_ready_path', 'specialist_ready_path', 'onboarding_path'].includes(evidence.pageStates.runtimeAdmissionScenario),
     `unexpected runtime admission scenario: ${evidence.pageStates.runtimeAdmissionScenario}`,

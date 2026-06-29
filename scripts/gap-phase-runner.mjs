@@ -340,6 +340,8 @@ function evaluateCommercialProductUserJourneyDepth({ product }) {
   const depth = product?.commercialProductUserJourneyDepth;
   const webGaps = depth?.webOwnedGaps ?? [];
   const medoplOwned = depth?.medoplOwned ?? [];
+  const streamingTurnsOpenOrDone = webGaps.includes('streaming_chat_turns')
+    || depth?.chatInteractionModel?.status === 'repo_browser_done_v1';
   return [
     evalResult({
       id: 'commercial_product_journey_map',
@@ -356,7 +358,7 @@ function evaluateCommercialProductUserJourneyDepth({ product }) {
       id: 'webui_medopl_product_owner_split',
       dimension: 'contract',
       status: depth?.projectWindowModel?.status === 'implemented_projection_backed_v1'
-        && webGaps.includes('streaming_chat_turns')
+        && streamingTurnsOpenOrDone
         && medoplOwned.includes('runtime_readiness')
         && medoplOwned.includes('storage_resource_binding')
         ? 'pass'

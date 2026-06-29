@@ -53,6 +53,7 @@ const state = {
   activeConversationMeta: null,
   messages: [],
   firstValueTurn: null,
+  chatTurnStages: [],
   lastResult: null,
   lastRuntimeTaskCard: null,
   pendingPublicTask: null,
@@ -326,13 +327,18 @@ function renderMessage(message) {
 function renderFirstValueTurn(turn) {
   document.body.dataset.lastFirstValueTurnState = turn.state;
   document.body.dataset.lastFirstValueProgressiveBoundary = turn.progressiveBoundary;
-  const text = turn.state === 'progressive'
-    ? '正在拆解研究问题、证据线索和下一步。'
-    : turn.message;
+  document.body.dataset.chatTurnStagesObserved = state.chatTurnStages.join(',');
+  document.body.dataset.chatTurnFakeStreaming = 'false';
   return `
     <article class="message assistant-message" data-first-value-turn-state data-turn-state="${escapeAttr(turn.state)}" data-progressive-boundary="${escapeAttr(turn.progressiveBoundary)}">
-      <p>${escapeHTML(text)}</p>
+      <div class="turn-stage-row">${state.chatTurnStages.map(renderTurnStage).join('')}</div>
+      <p>${escapeHTML(turn.message)}</p>
     </article>`;
+}
+
+function renderTurnStage(stage) {
+  const labels = { submitted: '已提交', progressive: '拆解中', waiting_upstream: '等待响应', complete: '已完成', error: '失败' };
+  return `<span data-turn-stage="${escapeAttr(stage)}">${escapeHTML(labels[stage] || stage)}</span>`;
 }
 
 function renderBlockedView() {
@@ -612,12 +618,17 @@ async function chatSubmit(event) {
   state.shellState = 'running_turn';
   state.showInspector = shouldAutoOpenInspector();
   state.lastResult = null;
+  state.chatTurnStages = ['submitted', 'progressive'];
   state.firstValueTurn = firstValueTurnForPrompt(message, 'progressive');
+  render();
+  await yieldRenderedTurn();
+  state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream'];
   render();
   await yieldRenderedTurn();
   const result = await sendChatMessage(fetch, message);
   document.body.dataset.chatState = chatStateForResult(result);
   if (!result.ok) {
+    state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream', 'error'];
     state.firstValueTurn = firstValueTurnForPrompt(message, 'error', result.message || result.errorCode || '上游暂时不可用。');
     state.messages.push({ role: 'assistant', content: result.message || result.errorCode || '上游暂时不可用。' });
     render();
@@ -625,6 +636,7 @@ async function chatSubmit(event) {
   }
   const researchResult = researchResultForChat({ ...result, prompt: message });
   state.lastResult = { prompt: message, researchResult };
+  state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream', researchResult ? 'complete' : 'error'];
   state.firstValueTurn = firstValueTurnForPrompt(message, researchResult ? 'complete' : 'error');
   if (!researchResult) state.messages.push({ role: 'assistant', content: result.assistantMessage?.content || '已收到。' });
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
@@ -633,10 +645,11 @@ async function chatSubmit(event) {
 
 function firstValueTurnForPrompt(prompt, stateName, message = '已生成研究计划草案。') {
   if (!String(prompt || '').includes('@科研')) return null;
+  const byState = { submitted: '已提交研究问题。', progressive: '正在拆解研究问题、证据线索和下一步。', waiting_upstream: '等待账号能力返回结构化结果。', complete: message, error: message };
   return {
     state: stateName,
     progressiveBoundary: 'request_lifecycle_not_token_stream',
-    message,
+    message: byState[stateName] || message,
   };
 }
 

@@ -95,6 +95,8 @@ try {
     firstValueProgressiveTurnObserved: document.body.dataset.firstValueProgressiveTurnObserved === 'true',
     firstValueProgressiveTurnState: document.body.dataset.lastFirstValueTurnState || document.querySelector('[data-first-value-turn-state]')?.dataset.turnState || '',
     firstValueProgressiveBoundary: document.body.dataset.lastFirstValueProgressiveBoundary || document.querySelector('[data-first-value-turn-state]')?.dataset.progressiveBoundary || '',
+    chatTurnStagesObserved: (document.body.dataset.chatTurnStagesObserved || '').split(',').filter(Boolean),
+    chatTurnFakeStreaming: document.body.dataset.chatTurnFakeStreaming === 'true',
     projectWindowCount: Number(document.body.dataset.lastProjectWindowCount || document.querySelectorAll('[data-project-window-item]').length),
     projectWindowStatus: document.body.dataset.lastProjectWindowStatus || document.querySelector('[data-project-window-item]')?.dataset.projectWindowStatus,
     projectWindowContinueHref: document.body.dataset.lastProjectWindowContinueHref || document.querySelector('[data-project-window-continue]')?.href,
@@ -991,9 +993,7 @@ async function closeChildProcess(child, afterClose = () => {}) {
 }
 
 function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-
 function normalizeBaseUrl(value) { return String(value || '').replace(/\/+$/, ''); }
-
 function sanitizeBaseUrl(value) { const url = new URL(value); return `${url.protocol}//${url.host}`; }
 
 function trimProcessOutput(text) { const normalized = String(text || '').replace(/\s+/g, ' ').trim(); return normalized ? normalized.slice(-1200) : '(empty)'; }
