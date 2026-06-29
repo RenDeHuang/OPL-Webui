@@ -101,9 +101,10 @@ test('registry points only at existing test files', () => {
 });
 
 test('verify suites separate daily current from explicit heavy lanes', () => {
-  assert.deepEqual(VERIFY_SUITES.fast, ['fast', 'ui', 'api', 'health-light', 'go-light']);
-  assert.deepEqual(VERIFY_SUITES.current, VERIFY_SUITES.fast);
-  assert.deepEqual(VERIFY_SUITES.ui, ['ui', 'interaction']);
+  assert.deepEqual(VERIFY_SUITES.fast, ['fast']);
+  assert.deepEqual(VERIFY_SUITES.dev, ['fast', 'ui']);
+  assert.deepEqual(VERIFY_SUITES.current, ['fast', 'ui', 'api', 'go-light']);
+  assert.deepEqual(VERIFY_SUITES.ui, ['ui']);
   assert.deepEqual(VERIFY_SUITES.api, ['api', 'go-light']);
   assert.deepEqual(VERIFY_SUITES['browser:golden'], ['browser']);
   assert.deepEqual(VERIFY_SUITES.contract, ['contract', 'interaction']);
@@ -153,13 +154,14 @@ test('current suite excludes runtime release browser and heavy sidecar gates', (
   }
 });
 
-test('fast suite is the default local product engineering feedback lane', () => {
+test('fast and dev suites stay cheap for local product engineering feedback', () => {
   const fastLanes = new Set(VERIFY_SUITES.fast);
-  assert.deepEqual([...fastLanes], ['fast', 'ui', 'api', 'health-light', 'go-light']);
+  assert.deepEqual([...fastLanes], ['fast']);
+  assert.deepEqual(VERIFY_SUITES.dev, ['fast', 'ui']);
 
   const forbiddenProofLevels = new Set(['browser', 'production']);
   const forbiddenLanes = new Set(['browser', 'interaction-browser', 'integration', 'release', 'real-medopl']);
-  for (const laneName of VERIFY_SUITES.fast) {
+  for (const laneName of [...new Set([...VERIFY_SUITES.fast, ...VERIFY_SUITES.dev])]) {
     assert.equal(forbiddenLanes.has(laneName), false, `${laneName} must not run in fast`);
     for (const entry of TEST_LANE_REGISTRY[laneName].tests) {
       assert.equal(forbiddenProofLevels.has(entry.proofLevel), false, `${entry.file} must not be fast proof ${entry.proofLevel}`);

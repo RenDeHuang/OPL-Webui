@@ -10,6 +10,7 @@ export const LIFECYCLE_ROLES = Object.freeze([
 ]);
 export const VERIFY_SUITE_NAMES = Object.freeze([
   'current',
+  'dev',
   'fast',
   'smoke',
   'ui',
@@ -200,7 +201,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['test registry taxonomy and coverage are machine-enforced'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['test-workflow'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/lane-advisory.test.mjs',
@@ -215,7 +216,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['changed files map to targeted verification lanes'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['test-workflow'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/lane-check.test.mjs',
@@ -230,7 +231,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['review gate requires fresh targeted lane evidence for the current diff'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['test-workflow'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/ai-development-gate.test.mjs',
@@ -270,7 +271,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['long-lived repository surfaces declare owner, consumer, contract or machine boundary, and retirement metadata when temporary'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['repo-hygiene', 'test-workflow'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/repo-bloat.test.mjs',
@@ -285,7 +286,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['repository bloat audit reports line-budget violations and portfolio ownership signals'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['repo-hygiene'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/workflow-entrypoint.test.mjs',
@@ -315,7 +316,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['fixed governance docs expose owner, purpose, state, and machine-boundary lifecycle surfaces'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['repo-governance', 'docs-truth'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/health/gap-phase-system.test.mjs',
@@ -345,7 +346,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['retired routes, vocabulary, fake data, and stale product surfaces do not re-enter active source'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['retired-surface'],
-    verifySuites: ['current', 'health'],
+    verifySuites: ['health'],
   }),
   testEntry({
     file: 'tests/contract/fixed-truth-lifecycle.test.mjs',
@@ -375,7 +376,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['local Go control plane HTTP API satisfies auth, session, account, readonly projection, and chat contract behavior'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE],
     riskTriggers: ['public-api', 'control-plane-go'],
-    verifySuites: ['fast', 'current', 'api', 'contract'],
+    verifySuites: ['current', 'api', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/admin-ops-v0-contract.test.mjs',
@@ -542,7 +543,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['Web view model, browser bootstrap, API client wrappers, sanitized reliability state, runtime gate card, and source delegation behavior stay stable for UI product development'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE],
     riskTriggers: ['apps-web', 'page-state'],
-    verifySuites: ['fast', 'current', 'ui', 'contract'],
+    verifySuites: ['dev', 'current', 'ui', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/web-source-boundary-contract.test.mjs',
@@ -557,7 +558,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['frontend/backend source boundary is explicit and the Web product entry delegates render implementation to focused frontend surface modules'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_USER_BEHAVIOR_EVIDENCE, 'new UI behavior', 'production rollout'],
     riskTriggers: ['apps-web', 'contract'],
-    verifySuites: ['fast', 'current', 'ui', 'contract'],
+    verifySuites: ['dev', 'current', 'ui', 'contract'],
   }),
   testEntry({
     file: 'tests/contract/web-runtime-state.test.mjs',
@@ -664,7 +665,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['Go control plane command package compiles and preserves command-level behavior'],
     doesNotProve: NOT_PRODUCTION_EVIDENCE,
     riskTriggers: ['control-plane-go'],
-    verifySuites: ['fast', 'current', 'go'],
+    verifySuites: ['current', 'go'],
   }),
   testEntry({
     file: 'backend/control-plane-go/internal/webapp/chat_test.go',
@@ -685,7 +686,7 @@ const TEST_ENTRIES = Object.freeze([
     proves: ['Go webapp chat package preserves upstream chat and guardrail behavior'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_RUNTIME_EVIDENCE],
     riskTriggers: ['control-plane-go', 'byok', 'public-api'],
-    verifySuites: ['fast', 'current', 'go'],
+    verifySuites: ['current', 'go'],
   }),
   testEntry({
     file: 'backend/control-plane-go/internal/oplbridge/snapshot_test.go',
@@ -850,9 +851,10 @@ export const TEST_LANE_REGISTRY = Object.freeze({
 });
 
 export const VERIFY_SUITES = Object.freeze({
-  fast: Object.freeze(['fast', 'ui', 'api', 'health-light', 'go-light']),
-  current: Object.freeze(['fast', 'ui', 'api', 'health-light', 'go-light']),
-  ui: Object.freeze(['ui', 'interaction']),
+  fast: Object.freeze(['fast']),
+  dev: Object.freeze(['fast', 'ui']),
+  current: Object.freeze(['fast', 'ui', 'api', 'go-light']),
+  ui: Object.freeze(['ui']),
   api: Object.freeze(['api', 'go-light']),
   contract: Object.freeze(['contract', 'interaction']),
   interaction: Object.freeze(['interaction', 'interaction-browser']),

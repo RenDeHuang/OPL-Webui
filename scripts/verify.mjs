@@ -4,11 +4,18 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { TEST_LANE_REGISTRY, VERIFY_SUITES } from './test-classification.mjs';
-import { currentDiffFingerprint, DEFAULT_EVIDENCE_PATH, resolveDefaultBaseRef } from './lane-check.mjs';
+import {
+  collectChangedFiles,
+  currentDiffFingerprint,
+  DEFAULT_EVIDENCE_PATH,
+  resolveDefaultBaseRef,
+} from './lane-check.mjs';
+import { recommendedVerifyTargetsForFiles } from './lane-advisory.mjs';
 
 const mode = process.argv[2] ?? 'current';
 const target = mode === 'suite' ? process.argv[3] : mode;
-const lanes = VERIFY_SUITES[target] ?? (TEST_LANE_REGISTRY[target] ? [target] : undefined);
+const changedFiles = mode === 'dev' ? process.argv.slice(3) : [];
+const lanes = resolveLanes(mode, target, changedFiles);
 const serializedNodeLanes = new Set(['browser']);
 
 if (!lanes) {
@@ -56,6 +63,27 @@ if (!failed) {
 }
 
 process.exit(failed ? 1 : 0);
+
+function resolveLanes(currentMode, currentTarget, files) {
+  if (currentMode === 'dev') {
+    const changed = files.length > 0 ? files : collectChangedFiles(resolveDefaultBaseRef());
+    const impactedTargets = recommendedVerifyTargetsForFiles(changed);
+    const devTargets = impactedTargets.length > 0 ? impactedTargets : ['fast'];
+    const laneNames = new Set(['fast']);
+    for (const devTarget of devTargets) {
+      const suite = VERIFY_SUITES[devTarget] ?? (TEST_LANE_REGISTRY[devTarget] ? [devTarget] : undefined);
+      if (!suite) {
+        throw new Error(`Dev verify inferred unknown target: ${devTarget}`);
+      }
+      for (const laneName of suite) {
+        laneNames.add(laneName);
+      }
+    }
+    return [...laneNames];
+  }
+
+  return VERIFY_SUITES[currentTarget] ?? (TEST_LANE_REGISTRY[currentTarget] ? [currentTarget] : undefined);
+}
 
 function uniqueGoPackageEntries(entries) {
   const seen = new Set();

@@ -5,6 +5,7 @@
   "scripts": {
     "verify": "node scripts/verify.mjs fast",
     "verify:fast": "node scripts/verify.mjs suite fast",
+    "verify:dev": "node scripts/verify.mjs dev",
     "verify:ui": "node scripts/verify.mjs suite ui",
     "verify:api": "node scripts/verify.mjs suite api",
     "verify:health": "node scripts/verify.mjs suite health",
@@ -22,6 +23,7 @@
     "verify:real-medopl": "node scripts/verify.mjs suite real-medopl",
     "verify:full": "node scripts/verify.mjs full",
     "test:health": "node scripts/verify.mjs suite health",
+    "test:dev": "node scripts/verify.mjs dev",
     "test:smoke": "node scripts/verify.mjs suite smoke",
     "test:contract": "node scripts/verify.mjs suite contract",
     "test:interaction": "node scripts/verify.mjs suite interaction",

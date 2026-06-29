@@ -8,12 +8,12 @@ import {
 
 test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
-    'frontend/web/src/app/main.mjs',
-  ]), ['ui', 'smoke', 'interaction', 'browser:golden']);
+    'frontend/web/src/features/public-landing/publicAuthSurface.mjs',
+  ]), ['ui']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'contracts/web-page-state-matrix.json',
-  ]), ['interaction', 'contract', 'browser:golden']);
+  ]), ['interaction', 'contract']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'backend/control-plane-go/internal/webapp/handlers.go',
@@ -22,7 +22,7 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     '.github/workflows/cloud-rollout.yml',
     'scripts/cloud-rollout.mjs',
-  ]), ['release']);
+  ]), ['browser:golden', 'release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'backend/control-plane-go/internal/oplbridge/snapshot.go',
@@ -40,7 +40,7 @@ test('lane advisory maps changed files to targeted verify lanes', () => {
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'scripts/release-evidence-sync.mjs',
     'contracts/web-release-profile.json',
-  ]), ['release']);
+  ]), ['browser:golden', 'release']);
 
   assert.deepEqual(recommendedVerifyTargetsForFiles([
     'tests/real-medopl/real-medopl-business-flow.e2e.test.mjs',
@@ -55,6 +55,23 @@ test('lane advisory CLI reports suggestions without failing the gate', () => {
   );
 
   assert.match(stdout, /\[lane-advisory\]/);
-  assert.match(stdout, /npm run verify:browser:golden/);
+  assert.match(stdout, /npm run verify:ui/);
   assert.match(stdout, /npm run verify:release/);
+});
+
+test('lane advisory keeps browser golden out of ordinary UI surface edits', () => {
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'frontend/web/src/features/workbench/workbenchSurface.mjs',
+    'frontend/web/styles/workbench.css',
+  ]), ['ui']);
+});
+
+test('lane advisory escalates shared route and browser runner edits without making all UI changes release-like', () => {
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'frontend/web/src/app/shellController.mjs',
+  ]), ['ui', 'interaction']);
+
+  assert.deepEqual(recommendedVerifyTargetsForFiles([
+    'tests/browser/research-main-path-runner.mjs',
+  ]), ['browser:golden', 'browser']);
 });

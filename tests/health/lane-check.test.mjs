@@ -9,25 +9,27 @@ import {
   evaluateLaneEvidence,
   readVerifyEvidence,
 } from '../../scripts/lane-check.mjs';
+import { VERIFY_SUITES } from '../../scripts/test-classification.mjs';
 
 test('lane check fails when required lanes have no matching verification evidence', () => {
   const result = evaluateLaneEvidence({
-    changedFiles: ['frontend/web/src/app/main.mjs'],
+    changedFiles: ['frontend/web/src/features/public-landing/publicAuthSurface.mjs'],
     evidence: { runs: [] },
     diffFingerprint: 'current-diff',
   });
 
   assert.equal(result.ok, false);
-  assert.deepEqual(result.requiredTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
-  assert.deepEqual(result.missingTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
+  assert.deepEqual(result.requiredTargets, ['ui']);
+  assert.deepEqual(result.missingTargets, ['ui']);
 });
 
 test('lane check accepts targeted lane evidence for the same diff fingerprint', () => {
   const result = evaluateLaneEvidence({
-    changedFiles: ['frontend/web/src/app/main.mjs'],
+    changedFiles: ['frontend/web/src/features/public-landing/publicAuthSurface.mjs'],
     evidence: {
       runs: [
-        { status: 'passed', target: 'fast', lanes: ['fast', 'ui', 'api', 'health-light', 'go-light'], diffFingerprint: 'current-diff' },
+        { status: 'passed', target: 'fast', lanes: ['fast'], diffFingerprint: 'current-diff' },
+        { status: 'passed', target: 'ui', lanes: ['ui'], diffFingerprint: 'current-diff' },
         { status: 'passed', target: 'smoke', lanes: ['smoke'], diffFingerprint: 'current-diff' },
         { status: 'passed', target: 'interaction', lanes: ['interaction', 'interaction-browser'], diffFingerprint: 'current-diff' },
         { status: 'passed', target: 'browser:golden', lanes: ['browser'], diffFingerprint: 'current-diff' },
@@ -37,7 +39,7 @@ test('lane check accepts targeted lane evidence for the same diff fingerprint', 
   });
 
   assert.equal(result.ok, true);
-  assert.deepEqual(result.requiredTargets, ['ui', 'smoke', 'interaction', 'browser:golden']);
+  assert.deepEqual(result.requiredTargets, ['ui']);
   assert.deepEqual(result.missingTargets, []);
 });
 
@@ -54,8 +56,37 @@ test('lane check rejects stale verification evidence from an older diff fingerpr
   });
 
   assert.equal(result.ok, false);
-  assert.deepEqual(result.requiredTargets, ['interaction', 'contract', 'browser:golden']);
-  assert.deepEqual(result.missingTargets, ['interaction', 'contract', 'browser:golden']);
+  assert.deepEqual(result.requiredTargets, ['interaction', 'contract']);
+  assert.deepEqual(result.missingTargets, ['interaction', 'contract']);
+});
+
+test('lane check treats ordinary UI surface edits as local UI proof, not release browser proof', () => {
+  const result = evaluateLaneEvidence({
+    changedFiles: ['frontend/web/src/features/dialogs/dialogSurface.mjs'],
+    evidence: {
+      runs: [
+        { status: 'passed', target: 'ui', lanes: ['ui'], diffFingerprint: 'current-diff' },
+      ],
+    },
+    diffFingerprint: 'current-diff',
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.requiredTargets, ['ui']);
+  assert.deepEqual(result.missingTargets, []);
+});
+
+test('verify suites keep daily fast/dev checks separate from release and browser proof', () => {
+  assert.deepEqual(VERIFY_SUITES.fast, ['fast']);
+  assert.deepEqual(VERIFY_SUITES.dev, ['fast', 'ui']);
+  assert.deepEqual(VERIFY_SUITES.ui, ['ui']);
+  assert.deepEqual(VERIFY_SUITES.current, ['fast', 'ui', 'api', 'go-light']);
+  assert.equal(VERIFY_SUITES.fast.includes('health-light'), false);
+  assert.equal(VERIFY_SUITES.fast.includes('browser'), false);
+  assert.equal(VERIFY_SUITES.dev.includes('browser'), false);
+  assert.equal(VERIFY_SUITES.dev.includes('release'), false);
+  assert.equal(VERIFY_SUITES.full.includes('browser'), true);
+  assert.equal(VERIFY_SUITES.full.includes('release'), true);
 });
 
 test('lane check can read verify evidence from disk', () => {

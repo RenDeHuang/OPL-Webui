@@ -15,10 +15,12 @@ test('workflow entrypoints are wired through package scripts', () => {
   assert.equal(pkg.scripts.start, 'go run ./backend/control-plane-go/cmd/opl-webui-control-plane');
   assert.equal(pkg.scripts.verify, 'node scripts/verify.mjs fast');
   assert.equal(pkg.scripts['verify:fast'], 'node scripts/verify.mjs suite fast');
+  assert.equal(pkg.scripts['verify:dev'], 'node scripts/verify.mjs dev');
   assert.equal(pkg.scripts['verify:ui'], 'node scripts/verify.mjs suite ui');
   assert.equal(pkg.scripts['verify:api'], 'node scripts/verify.mjs suite api');
   assert.equal(pkg.scripts['verify:browser:golden'], 'node scripts/verify.mjs suite browser:golden');
   assert.equal(pkg.scripts['test:health'], 'node scripts/verify.mjs suite health');
+  assert.equal(pkg.scripts['test:dev'], 'node scripts/verify.mjs dev');
   assert.equal(pkg.scripts['test:contract'], 'node scripts/verify.mjs suite contract');
   assert.equal(pkg.scripts['test:smoke'], 'node scripts/verify.mjs suite smoke');
   assert.equal(pkg.scripts['verify:interaction'], 'node scripts/verify.mjs suite interaction');
@@ -62,8 +64,7 @@ test('github ci workflow runs local gates only', () => {
   assert.match(workflow, /actions\/setup-node/);
   assert.match(workflow, /actions\/setup-go/);
   assert.match(workflow, /npm run verify:fast/);
-  assert.match(workflow, /npm run verify:api/);
-  assert.match(workflow, /npm run verify:ui/);
+  assert.match(workflow, /node scripts\/verify\.mjs current/);
   assert.match(workflow, /npm run verify:backend/);
   assert.match(workflow, /npm run verify:security/);
   assert.match(workflow, /npx --yes playwright install chromium/);
@@ -71,6 +72,8 @@ test('github ci workflow runs local gates only', () => {
   assert.match(workflow, /npm run gate:review/);
   assert.match(workflow, /contents:\s*read/);
 
+  assert.doesNotMatch(workflow, /npm run verify:api/);
+  assert.doesNotMatch(workflow, /npm run verify:ui/);
   assert.doesNotMatch(workflow, /kubectl/i);
   assert.doesNotMatch(workflow, /cloud-rollout\.mjs/i);
   assert.doesNotMatch(workflow, /docker\s+(?:build|push)/i);

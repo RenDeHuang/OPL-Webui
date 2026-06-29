@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const TARGET_ORDER = Object.freeze([
   'fast',
+  'dev',
   'ui',
   'smoke',
   'api',
@@ -21,6 +22,14 @@ const TARGET_ORDER = Object.freeze([
 
 const RULES = Object.freeze([
   Object.freeze({
+    name: 'web app shell or route controller',
+    matches: (file) => file === 'frontend/web/src/app/main.mjs'
+      || file === 'frontend/web/src/app/shellController.mjs'
+      || file === 'frontend/web/index.html'
+      || file === 'frontend/web/styles.css',
+    targets: Object.freeze(['ui', 'interaction']),
+  }),
+  Object.freeze({
     name: 'opl bridge or runtime gate',
     matches: (file) => file.startsWith('backend/control-plane-go/internal/oplbridge/')
       || file.startsWith('backend/control-plane-go/internal/runtimegate/')
@@ -36,12 +45,16 @@ const RULES = Object.freeze([
   Object.freeze({
     name: 'page state contract',
     matches: (file) => file === 'contracts/web-page-state-matrix.json',
-    targets: Object.freeze(['interaction', 'contract', 'browser:golden']),
+    targets: Object.freeze(['interaction', 'contract']),
   }),
   Object.freeze({
-    name: 'web shell',
-    matches: (file) => file.startsWith('frontend/web/'),
-    targets: Object.freeze(['ui', 'smoke', 'interaction', 'browser:golden']),
+    name: 'web product surface',
+    matches: (file) => file.startsWith('frontend/web/')
+      && file !== 'frontend/web/src/app/main.mjs'
+      && file !== 'frontend/web/src/app/shellController.mjs'
+      && file !== 'frontend/web/index.html'
+      && file !== 'frontend/web/styles.css',
+    targets: Object.freeze(['ui']),
   }),
   Object.freeze({
     name: 'go control plane',
@@ -61,7 +74,7 @@ const RULES = Object.freeze([
       || file === '.dockerignore'
       || file === '.dockerignore.cloud'
       || file === 'contracts/web-release-profile.json',
-    targets: Object.freeze(['release']),
+    targets: Object.freeze(['release', 'browser:golden']),
   }),
   Object.freeze({
     name: 'public contract',

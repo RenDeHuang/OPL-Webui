@@ -99,11 +99,11 @@ test('fixed truth documents the retired changes workflow and current gap', () =>
   assert.match(status, /three-layer product modules plus explicit gap slices/);
   assert.match(status, /docs\/active\/README\.md/);
   assert.match(status, /Product work moves one slice at a time/);
-  assert.match(status, /fast = fast \+ ui \+ api \+ health-light \+ go-light/);
+  assert.match(status, /Daily `npm run verify` runs the `fast` suite only/);
   assert.match(status, /scripts\/lane-advisory\.mjs/);
   assert.match(decisions, /Per-change `changes\/active` packages are retired/);
   assert.match(decisions, /File count is report-only/);
-  assert.match(decisions, /fixed main lanes and dynamic targeted lanes/);
+  assert.match(decisions, /surface-level impacted lanes and release-time full gates/);
   assert.match(decisions, /lane-check\/gate evidence/);
   assert.match(portfolio, /Retired Workflow/);
   assert.match(portfolio, /Active Baton Lifecycle/);
