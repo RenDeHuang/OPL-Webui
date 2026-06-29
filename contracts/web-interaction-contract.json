@@ -101,6 +101,7 @@
     "openGaps": ["streaming_chat_turns", "skill_import", "autonomy_inspector", "model_selector", "plus_menu"],
     "doesNotProve": ["commercial product journey complete", "first value optimized", "project/window implementation complete"]
   },
+  "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "dialogSheetTruth": {
     "accountPopover": {
       "openTrigger": "bottom_account_avatar",

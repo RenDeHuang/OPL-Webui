@@ -157,6 +157,7 @@ function evaluateGap(gap, phase, context) {
     ...evaluateCommonGap(gap, phase, context),
     ...({
       ui_ux_product_depth: evaluateUiUxGap(context),
+      commercial_product_contract_stabilization_v1: evaluateCommercialProductContractStabilization(context),
       commercial_product_user_journey_depth_v1: evaluateCommercialProductUserJourneyDepth(context),
       commercial_product_maturity_gap_v1: evaluateCommercialProductMaturityGap(gap),
       commercial_saas_depth: evaluateCommercialGap(context),
@@ -298,6 +299,39 @@ function evaluateUiUxGap({ gui }) {
         : 'blocked',
       proves: ['human owner accepted the UI/UX production claim when present'],
       doesNotProve: ['production evidence', 'complete UI/UX design system', 'assistive technology conformance'],
+    }),
+  ];
+}
+
+function evaluateCommercialProductContractStabilization({ product }) {
+  const primitives = product?.commercialProductPrimitives;
+  const durable = primitives?.durablePrimitives ?? [];
+  const variable = primitives?.variableExpression ?? [];
+  const mustNotFreeze = primitives?.mustNotFreeze ?? [];
+  return [
+    evalResult({
+      id: 'commercial_product_primitives_contract',
+      dimension: 'contract',
+      status: primitives?.state === 'active_contract_stabilization_v1'
+        && durable.includes('Project')
+        && durable.includes('Window')
+        && durable.includes('MedOPLHandoff')
+        && primitives?.primitives?.Project?.fakeDataAllowed === false
+        ? 'pass'
+        : 'fail',
+      proves: ['durable commercial product primitives are machine-readable'],
+      doesNotProve: ['UI implementation', 'production readiness', 'MedOPL runtime/storage/payment readiness'],
+    }),
+    evalResult({
+      id: 'variable_expression_boundary',
+      dimension: 'contract',
+      status: variable.includes('exact marketing copy')
+        && variable.includes('model inventory')
+        && mustNotFreeze.includes('MedOPL runtime implementation')
+        ? 'pass'
+        : 'fail',
+      proves: ['contract stabilization does not freeze variable UI expression or MedOPL internals'],
+      doesNotProve: ['owner visual acceptance', 'final copy approval', 'pricing/model availability'],
     }),
   ];
 }

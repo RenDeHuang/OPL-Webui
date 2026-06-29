@@ -184,7 +184,7 @@
     "state": "active_gap_admitted",
     "defaultProjectModel": "project_with_many_conversation_windows",
     "searchSurface": {"scope":"project_windows","mustNotSearch":"one_off_static_chat_only"},
-    "taskHistoryRetirement": {"retireBusinessName":"任务历史 / 交付接续","replacementBusinessName":"项目 / 窗口","rule":"retire when project/window implementation lands"},
+    "taskHistoryRetirement": {"retireBusinessName":"任务历史 / 交付接续","replacementBusinessName":"项目 / 窗口","rule":"retire when project/window implementation lands","retireWhen":"project_window_contract_slice lands"},
     "handoffTriggers": ["runtime_required", "file_upload", "specialist_run_intent"],
     "chatTurnStates": ["composing", "submitted", "streaming_or_progressing", "blocked", "ready_for_followup"],
     "skillImportStates": ["select", "validate", "imported", "error"],
@@ -192,6 +192,7 @@
     "toolbarTargets": ["model_selector", "plus_menu"],
     "cannotClaim": ["fake project/window data", "Web-owned runtime/storage/payment truth", "artifact body authority"]
   },
+  "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "chatStates": [
     "idle",
     "research_entry_selected",

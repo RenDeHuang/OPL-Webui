@@ -73,6 +73,7 @@ test('each gap phase has owner, eval, evidence, cannot-claim, and blocker bounda
     'medopl_readonly_evidence',
     'commercial_runtime_admission_alignment_v1',
     'commercial_product_maturity_gap_v1',
+    'commercial_product_contract_stabilization_v1',
     'commercial_product_user_journey_depth_v1',
     'runtime_execution_boundary',
     'commercial_saas_depth',
@@ -188,6 +189,10 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_classification_contract').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'webui_owner_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_maturity_gap_v1.evalResults.find((result) => result.id === 'maturity_implementation_queue').status, 'pass');
+  assert.equal(byGap.commercial_product_contract_stabilization_v1.status, 'done');
+  assert.equal(byGap.commercial_product_contract_stabilization_v1.currentPhaseId, 'product_primitives_baseline');
+  assert.equal(byGap.commercial_product_contract_stabilization_v1.evalResults.find((result) => result.id === 'commercial_product_primitives_contract').status, 'pass');
+  assert.equal(byGap.commercial_product_contract_stabilization_v1.evalResults.find((result) => result.id === 'variable_expression_boundary').status, 'pass');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.status, 'partial');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.currentPhaseId, 'first_value_optimization');
   assert.equal(byGap.commercial_product_user_journey_depth_v1.evalResults.find((result) => result.id === 'commercial_product_journey_map').status, 'pass');
@@ -227,9 +232,9 @@ test('gap phase runner evaluates each gap across repo, production, owner, contra
   assert.equal(byGap.commercial_cross_repo_dynamic_current_truth_sync.status, 'done');
   assert.equal(byGap.commercial_cross_repo_dynamic_current_truth_sync.evalResults.find((result) => result.id === 'closed_summary_stable_contracts').status, 'pass');
 
-  assert.equal(report.readyToAdvanceCount, 10);
+  assert.equal(report.readyToAdvanceCount, 11);
   assert.deepEqual(report.summary, {
-    done: 10,
+    done: 11,
     partial: 2,
     blocked: 2,
     not_started: 0,
