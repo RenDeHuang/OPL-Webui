@@ -59,7 +59,7 @@ try {
   const accessibilityCloseout = await captureAccessibilityCloseout(cdp);
 
   await openAccountPopover(cdp);
-  await waitFor(cdp, 'Boolean(document.querySelector("#api-key") && document.querySelector("#api-key").offsetParent !== null)');
+  await ensureAPIKeyFormVisible(cdp);
   const apiKeySaveCount = await auditKindCount(cdp, 'api_key.saved');
   await typeInto(cdp, '#api-key', config.apiKey);
   await activate(cdp, '[data-save-key-button]');
@@ -176,6 +176,12 @@ async function openAnonymousAuthForm(cdp) {
 async function openAccountPopover(cdp) {
   await activate(cdp, '[data-account-toggle]');
   await waitFor(cdp, 'document.querySelector("[data-account-popover]")?.hidden === false', () => describePageState(cdp, 'account popover did not expose account panel'));
+}
+
+async function ensureAPIKeyFormVisible(cdp) {
+  const apiKeyVisible = await evaluateJSON(cdp, 'Boolean(document.querySelector("#api-key") && document.querySelector("#api-key").offsetParent !== null)');
+  if (!apiKeyVisible) await activate(cdp, '[data-provider-change-key]');
+  await waitFor(cdp, 'Boolean(document.querySelector("#api-key") && document.querySelector("#api-key").offsetParent !== null)', () => describePageState(cdp, 'account popover did not expose API key form'));
 }
 
 async function openChatRoute(cdp) {

@@ -266,6 +266,8 @@ test('production browser e2e waits for API key save completion on already-bound 
   const runner = readFileSync(runnerPath, 'utf8');
 
   assert.match(runner, /const apiKeySaveCount = await auditKindCount\(cdp, 'api_key\.saved'\)/);
+  assert.match(runner, /ensureAPIKeyFormVisible/);
+  assert.match(runner, /\[data-provider-change-key\]/);
   assert.match(runner, /waitForAuditKindCount\(cdp, 'api_key\.saved', apiKeySaveCount \+ 1\)/);
   assert.doesNotMatch(runner, /activate\(cdp, '\[data-save-key-button\]'\);\n\s*await waitForAuthState\(cdp, 'authenticated_bound', 'api key binding'\)/);
 });
