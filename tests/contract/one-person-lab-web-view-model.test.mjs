@@ -130,6 +130,46 @@ test('browser bootstrap probes current session without loading OPL snapshot', ()
   assert.doesNotMatch(domSource, /loadOnePersonLabWebState\(fetch, \{ probeSession: false, loadSnapshot: false \}\)/);
 });
 
+test('workbench closure p0 keeps account new chat project search and inspector language product-safe', () => {
+  const domSource = readWebSource();
+
+  assert.match(domSource, /createConversation\(fetch/);
+  assert.match(domSource, /data-new-chat-trigger/);
+  assert.match(domSource, /data-conversation-list/);
+  assert.match(domSource, /data-conversation-entry/);
+  assert.match(domSource, /data-conversation-empty/);
+  assert.match(domSource, /data-provider-bound-summary/);
+  assert.match(domSource, /data-provider-change-key/);
+  assert.match(domSource, /data-provider-form/);
+  assert.match(domSource, /新建项目/);
+  assert.match(domSource, /搜索聊天、项目、文件/);
+  assert.match(domSource, /暂无聊天、项目或文件/);
+  assert.match(domSource, /data-turn-stage/);
+  assert.match(domSource, /INSPECTOR_TABS/);
+  assert.match(domSource, /autonomy:\s*'进度'/);
+  assert.match(domSource, /进度/);
+  assert.match(domSource, /引用/);
+  assert.match(domSource, /结果/);
+  assert.match(domSource, /下一步/);
+
+  assert.doesNotMatch(domSource, /<span>Account<\/span>/);
+  assert.doesNotMatch(domSource, /Go control plane/);
+  assert.doesNotMatch(domSource, /masked key/);
+  assert.doesNotMatch(domSource, /readonly commercial projection/);
+  assert.doesNotMatch(domSource, /API key \/ quota projection/);
+  assert.doesNotMatch(domSource, /external capability handoff/);
+  assert.doesNotMatch(domSource, /项目 \/ 窗口/);
+  assert.doesNotMatch(domSource, /新建窗口/);
+  assert.doesNotMatch(domSource, /继续窗口/);
+  assert.doesNotMatch(domSource, /开始窗口/);
+  assert.doesNotMatch(domSource, /搜索窗口/);
+  assert.doesNotMatch(domSource, /暂无窗口/);
+  assert.doesNotMatch(domSource, />自治</);
+  assert.doesNotMatch(domSource, />输入</);
+  assert.doesNotMatch(domSource, />输出</);
+  assert.doesNotMatch(domSource, /activityTimeline: 'idle'/);
+});
+
 test('web data module exposes hash view and account state machine', () => {
   const pageStates = readJson('contracts/web-page-state-matrix.json');
 

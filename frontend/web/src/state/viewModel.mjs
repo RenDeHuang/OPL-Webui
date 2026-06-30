@@ -122,7 +122,7 @@ export function runtimeTaskCardForPrompt(prompt = '') {
     marker: semantic.marker,
     requiredCapability: semantic.workflow,
     title: `${semantic.marker} 进入 MedOPL 专业能力`,
-    message: '继续到 MedOPL 开通或确认运行资源；回到 Web 后保留当前窗口上下文和 refs 投影。',
+    message: '继续到 MedOPL 开通或确认运行资源；回到 Web 后保留当前任务上下文和 refs 投影。',
     handoffMode: 'conversion_handoff',
     capabilityMarker: semantic.marker,
     reason: 'specialist_capability_requires_medopl_runtime_or_resource_binding',

@@ -138,7 +138,7 @@
     "slice": "task_history_deliverable_continuation_center_v0",
     "route": "projects",
     "surface": "project_window_continuation_center_projection",
-    "visibleBusinessName": "项目 / 窗口",
+    "visibleBusinessName": "项目",
     "legacyBusinessName": "任务历史 / 交付接续",
     "legacyBusinessNameRetiredFromPrimaryUi": true,
     "owner": "account_based_user_product_layer",
@@ -187,15 +187,15 @@
   "commercialProductUserJourneyDepth": {
     "state": "active_gap_admitted",
     "defaultProjectModel": "project_with_many_conversation_windows",
-    "searchSurface": {"scope":"project_windows","mustNotSearch":"one_off_static_chat_only"},
-    "taskHistoryRetirement": {"retireBusinessName":"任务历史 / 交付接续","replacementBusinessName":"项目 / 窗口","rule":"retire when project/window implementation lands","retireWhen":"project_window_contract_slice lands"},
+    "searchSurface": {"scope":"project_conversation_file_refs","mustNotSearch":"one_off_static_chat_only"},
+    "taskHistoryRetirement": {"retireBusinessName":"任务历史 / 交付接续","replacementBusinessName":"项目","rule":"retire when project/conversation implementation lands","retireWhen":"project_conversation_contract_slice lands"},
     "handoffTriggers": ["runtime_required", "file_upload", "specialist_run_intent"],
     "chatTurnStates": ["composing", "submitted", "progressive", "waiting_upstream", "complete", "error", "blocked", "ready_for_followup"],
     "chatTurnLifecycle": {"requiredSelectors":["[data-turn-stage]","[data-turn-stage=\"submitted\"]","[data-turn-stage=\"progressive\"]","[data-turn-stage=\"waiting_upstream\"]"],"completeOrErrorSelector":"[data-turn-stage=\"complete\"], [data-turn-stage=\"error\"]","sourceOfTruth":"request lifecycle state from Webui fetch and Go control plane response","fakeStreamingAllowed":false,"cannotClaim":["token streaming implemented","upstream provider streaming support"]},
     "skillImportStates": ["select", "validate", "imported", "error"],
     "inspectorTabsTarget": ["autonomy", "inputs", "outputs", "why_next"],
     "toolbarTargets": ["model_selector", "plus_file_attach"],
-    "cannotClaim": ["fake project/window data", "Web-owned runtime/storage/payment truth", "artifact body authority"]
+    "cannotClaim": ["fake project/conversation data", "Web-owned runtime/storage/payment truth", "artifact body authority"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "chatStates": [
@@ -384,7 +384,7 @@
         "openTrigger": "side_nav_search",
         "closeTrigger": ["explicit_close", "escape", "outside_click", "route_change"],
         "focusReturn": "side_nav_search",
-        "emptyState": "project_window_search_empty",
+        "emptyState": "project_conversation_file_search_empty",
         "forbiddenContent": ["skills", "workflows", "prompts", "provider_settings"]
       },
       "more": {
@@ -428,7 +428,7 @@
           "kind": "sheet",
           "targetView": "home",
           "localOnly": true,
-          "consumer": "project_window_search",
+          "consumer": "project_conversation_file_search",
           "forbiddenApis": ["/api/search"]
         },
         {
@@ -479,7 +479,7 @@
     "librarySurfaces": {
       "skills": { "scopes": ["my_skills", "opl_skills"], "actions": ["import_skill"] },
       "workflows": { "scopes": ["my_workflows", "opl_workflows"], "actions": ["create_workflow", "import_workflow"] },
-      "projects": { "scopes": ["my_project_windows"], "actions": ["continue_window"], "requiredApis": ["/api/tasks", "/api/tasks/{taskId}"], "projection": "project_window_refs_status_metadata_only", "doesNotProve": ["dedicated project/window persistence API"] }
+      "projects": { "scopes": ["my_projects", "my_conversations", "task_projection"], "actions": ["new_project", "continue_conversation"], "requiredApis": ["/api/chat/conversations", "/api/tasks", "/api/tasks/{taskId}"], "projection": "conversation_draft_list_plus_project_window_refs_status_metadata_only", "doesNotProve": ["dedicated project persistence API"] }
     },
     "inspector": {
       "defaultState": "hidden",

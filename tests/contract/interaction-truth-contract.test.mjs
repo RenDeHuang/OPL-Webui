@@ -51,12 +51,13 @@ test('formal launch interaction truth fixes top-level route auth pending task si
   assert.equal(interaction.pendingTaskTruth.mustNotFabricateResult, true);
 
   assert.equal(interaction.sidebarTruth.scope, 'account_based_user_product_layer_only');
-  assert.equal(interaction.sidebarTruth.projectsSurfaceBusinessName, '项目 / 窗口');
+  assert.equal(interaction.sidebarTruth.projectsSurfaceBusinessName, '项目');
   assert.equal(interaction.sidebarTruth.legacyTaskHistoryBusinessNameRetired, true);
-  assert.equal(interaction.sidebarTruth.projectWindowSource, 'GET /api/tasks projection until project/window persistence exists');
+  assert.equal(interaction.sidebarTruth.projectWindowSource, 'GET /api/tasks projection plus /api/chat/conversations draft list until dedicated project persistence exists');
   assert.equal(interaction.sidebarTruth.taskHistorySource, 'GET /api/tasks');
   assert.equal(interaction.sidebarTruth.taskHistoryProjection, 'refs_status_metadata_only');
-  assertIncludesAll(interaction.sidebarTruth.forbiddenStaticCopy, ['v20文件夹', 'New project', 'opl', 'medopl', '空项目', '新建项目'], 'forbidden static sidebar copy');
+  assert.equal(interaction.sidebarTruth.allowedProjectCreateAction, '新建项目');
+  assertIncludesAll(interaction.sidebarTruth.forbiddenStaticCopy, ['v20文件夹', 'New project', 'opl', 'medopl', '空项目'], 'forbidden static sidebar copy');
   assertIncludesAll(interaction.cannotClaim, ['payment', 'runtime execution', 'artifact body/storage truth', 'full SaaS', 'production-ready SaaS', 'fake project/workspace data'], 'cannot claim');
   assertIncludesAll(interaction.implementationGate.currentGreen, ['contract_guard_green', 'browser_guard_green', 'repo_bloat_orphanGrowth_zero'], 'green implementation guard');
 });
@@ -79,7 +80,7 @@ test('current Web UI must not satisfy formal launch until interaction truth is i
     },
     {
       label: 'sidebar must not include static Figma project copy',
-      pass: !/v20文件夹|New project|name: 'opl'|name: 'medopl'|空项目|新建项目/.test(domSource),
+      pass: !/v20文件夹|New project|name: 'opl'|name: 'medopl'|空项目/.test(domSource),
     },
     {
       label: 'project/window sidebar must be backed by the Go control plane projection or empty state',
@@ -101,8 +102,8 @@ test('interaction truth separates current green route guard from product journey
   assert.equal(interaction.productJourneyDepth?.state, 'admitted_product_gap');
   assert.equal(interaction.productJourneyDepth?.interactionTruthStatus, 'green');
   assert.equal(interaction.productJourneyDepth?.productValueStatus, 'repo_browser_product_acceptance_done_owner_pending_v1');
-  assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目 / 窗口');
-  assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_windows');
+  assert.equal(interaction.productJourneyDepth?.projectsSurfaceBusinessName, '项目');
+  assert.equal(interaction.productJourneyDepth?.searchTruth, 'search_project_conversation_file_refs');
   assert.deepEqual(interaction.productJourneyDepth?.chatTurnLifecycle?.requiredStages, ['submitted', 'progressive', 'waiting_upstream', 'complete', 'error']);
   assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.fakeTokenStreamingAllowed, false);
   assert.equal(interaction.productJourneyDepth?.chatTurnLifecycle?.status, 'repo_browser_done_v1');
@@ -111,15 +112,15 @@ test('interaction truth separates current green route guard from product journey
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('model_selector'), false);
   assert.equal(interaction.productJourneyDepth?.openGaps?.includes('plus_menu'), false);
   assert.equal((interaction.productJourneyDepth?.openGaps ?? []).includes('autonomy_inspector'), false);
-  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'token streaming implemented', 'dedicated project/window persistence API'], 'interaction product-depth doesNotProve');
+  assertIncludesAll(interaction.productJourneyDepth?.doesNotProve ?? [], ['commercial product journey complete', 'token streaming implemented', 'dedicated project persistence API'], 'interaction product-depth doesNotProve');
 
   assert.equal(pageState.commercialProductUserJourneyDepth?.state, 'active_gap_admitted');
   assert.equal(pageState.commercialProductUserJourneyDepth?.defaultProjectModel, 'project_with_many_conversation_windows');
-  assert.equal(pageState.commercialProductUserJourneyDepth?.searchSurface?.scope, 'project_windows');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.searchSurface?.scope, 'project_conversation_file_refs');
   assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.retireBusinessName, '任务历史 / 交付接续');
-  assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.replacementBusinessName, '项目 / 窗口');
+  assert.equal(pageState.commercialProductUserJourneyDepth?.taskHistoryRetirement?.replacementBusinessName, '项目');
   assertIncludesAll(pageState.commercialProductUserJourneyDepth?.handoffTriggers ?? [], ['runtime_required', 'file_upload', 'specialist_run_intent'], 'page-state handoff trigger');
   assertIncludesAll(pageState.commercialProductUserJourneyDepth?.chatTurnLifecycle?.requiredSelectors ?? [], ['[data-turn-stage]', '[data-turn-stage="submitted"]', '[data-turn-stage="progressive"]', '[data-turn-stage="waiting_upstream"]'], 'page-state chat turn selector');
   assert.equal(pageState.commercialProductUserJourneyDepth?.chatTurnLifecycle?.fakeStreamingAllowed, false);
-  assertIncludesAll(pageState.commercialProductUserJourneyDepth?.cannotClaim ?? [], ['fake project/window data', 'Web-owned runtime/storage/payment truth', 'artifact body authority'], 'page-state product-depth cannot claim');
+  assertIncludesAll(pageState.commercialProductUserJourneyDepth?.cannotClaim ?? [], ['fake project/conversation data', 'Web-owned runtime/storage/payment truth', 'artifact body authority'], 'page-state product-depth cannot claim');
 });

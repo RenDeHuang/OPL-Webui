@@ -94,7 +94,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.project-window-list small { max-width: 48px; }
+.project-window-list small {
+  flex: 0 0 76px;
+  max-width: 76px;
+  text-align: right;
+}
 .project-window-list {
   border-left: 1px solid rgba(28, 26, 23, 0.1);
   margin-left: 17px;

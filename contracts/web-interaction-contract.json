@@ -79,19 +79,20 @@
   "sidebarTruth": {
     "scope": "account_based_user_product_layer_only",
     "surface": "authenticated_workbench_navigation",
-    "projectsSurfaceBusinessName": "项目 / 窗口",
+    "projectsSurfaceBusinessName": "项目",
     "legacyTaskHistoryBusinessNameRetired": true,
     "genericProjectLanguagePolicy": "allowed_only_as_project_window_surface_backed_by_projection_or_empty_state",
-    "projectWindowSource": "GET /api/tasks projection until project/window persistence exists",
-    "projectWindowProjection": "project_window_refs_status_metadata_only",
+    "projectWindowSource": "GET /api/tasks projection plus /api/chat/conversations draft list until dedicated project persistence exists",
+    "projectWindowProjection": "conversation_draft_list_plus_project_window_refs_status_metadata_only",
     "taskHistorySource": "GET /api/tasks",
     "taskHistoryProjection": "refs_status_metadata_only",
     "emptyState": {
       "id": "project_window_empty",
-      "copy": "还没有窗口。选择一个任务入口后，真实 Go control plane projection 会出现在这里。",
+      "copy": "还没有聊天。新聊天会先创建草稿，任务结果只显示真实投影或空态。",
       "mustBeShownWhen": "GET /api/tasks returns empty tasks array"
     },
-    "forbiddenStaticCopy": ["v20文件夹", "New project", "opl", "medopl", "空项目", "新建项目"],
+    "allowedProjectCreateAction": "新建项目",
+    "forbiddenStaticCopy": ["v20文件夹", "New project", "opl", "medopl", "空项目"],
     "forbiddenDataSources": ["figma_static_copy", "zip_mock_data", "hardcoded_project_tree", "workspace_placeholder"],
     "mustNotClaim": ["fake project/workspace data"]
   },
@@ -99,11 +100,11 @@
     "state": "admitted_product_gap",
     "interactionTruthStatus": "green",
     "productValueStatus": "repo_browser_product_acceptance_done_owner_pending_v1",
-    "projectsSurfaceBusinessName": "项目 / 窗口",
-    "searchTruth": "search_project_windows",
+    "projectsSurfaceBusinessName": "项目",
+    "searchTruth": "search_project_conversation_file_refs",
     "chatTurnLifecycle": {"status":"repo_browser_done_v1","requiredStages":["submitted","progressive","waiting_upstream","complete","error"],"progressiveBoundary":"request_lifecycle_not_token_stream","fakeTokenStreamingAllowed":false,"sourceOfTruth":"Webui request lifecycle and Go control plane chat response"},
     "openGaps": [],
-    "doesNotProve": ["commercial product journey complete", "token streaming implemented", "dedicated project/window persistence API"]
+    "doesNotProve": ["commercial product journey complete", "token streaming implemented", "dedicated project persistence API"]
   },
   "productPrimitiveTruth": {"contract":"contracts/web-product-profile.json#/commercialProductPrimitives","state":"active_contract_stabilization_v1","doesNotImplementUi":true},
   "dialogSheetTruth": {
@@ -120,8 +121,8 @@
       "closeTrigger": "close_button_or_escape",
       "escapeBehavior": "close_and_return_focus_to_search_nav_action",
       "focusReturn": "search_nav_action",
-      "emptyState": "project_window_search_empty",
-      "errorState": "sanitized_project_window_search_error"
+      "emptyState": "project_conversation_file_search_empty",
+      "errorState": "sanitized_project_conversation_file_search_error"
     },
     "apiKeyDialog": {
       "openTrigger": "send_without_bound_api_key",

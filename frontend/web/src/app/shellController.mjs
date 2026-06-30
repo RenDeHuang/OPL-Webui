@@ -2,6 +2,7 @@ import {
   checkRuntimeGate,
   chatStateForPrompt,
   chatStateForResult,
+  createConversation,
   createInitialOnePersonLabViewModel,
   loadOnePersonLabWebState,
   loginAccount,
@@ -36,6 +37,7 @@ const state = {
   inspectorTab: 'autonomy',
   selectedModelProfile: 'auto',
   skillImportState: 'idle',
+  showApiKeyChange: false,
   activeConversationId: '',
   activeConversationMeta: null,
   messages: [],
@@ -103,7 +105,7 @@ function bindClicks() {
   app?.querySelector('[data-toggle-password]')?.addEventListener('click', () => { state.showPassword = !state.showPassword; render(); });
   app?.querySelectorAll('[data-shell-action]').forEach((button) => button.addEventListener('click', () => runShellAction(button.dataset.shellAction)));
   app?.querySelector('[data-search-trigger]')?.addEventListener('click', () => { state.showSearch = true; state.focusReturnSelector = '[data-search-trigger]'; render(); });
-  app?.querySelector('[data-account-toggle]')?.addEventListener('click', (event) => {
+  app?.querySelectorAll('[data-account-toggle]').forEach((button) => button.addEventListener('click', (event) => {
     event.stopPropagation();
     if (state.view.accountState === 'anonymous') {
       openAnonymousAuth(event.currentTarget.dataset.authMode, '[data-account-toggle]');
@@ -112,11 +114,13 @@ function bindClicks() {
     state.showAccount = !state.showAccount;
     state.focusReturnSelector = '[data-account-toggle]';
     render();
-  });
+  }));
   app?.querySelector('[data-account-popover-close]')?.addEventListener('click', () => { state.showAccount = false; focusAfterRender('[data-account-toggle]'); render(); });
   app?.querySelectorAll('[data-overlay-close="search"]').forEach((button) => button.addEventListener('click', () => { state.showSearch = false; focusAfterRender('[data-search-trigger]'); render(); }));
   app?.querySelectorAll('[data-billing-close]').forEach((button) => button.addEventListener('click', () => { state.showBilling = false; render(); }));
   app?.querySelector('[data-billing-summary-open]')?.addEventListener('click', () => { state.showBilling = true; render(); });
+  app?.querySelector('[data-provider-change-key]')?.addEventListener('click', () => { state.showApiKeyChange = true; render(); document.querySelector('#api-key')?.focus({ preventScroll: true }); });
+  app?.querySelector('[data-provider-change-cancel]')?.addEventListener('click', () => { state.showApiKeyChange = false; render(); });
   app?.querySelector('[data-logout-button]')?.addEventListener('click', logoutAndRefresh);
   app?.querySelector('[data-model-selector]')?.addEventListener('click', () => { state.showModelMenu = !state.showModelMenu; render(); });
   app?.querySelector('[data-model-menu-close]')?.addEventListener('click', () => { state.showModelMenu = false; focusAfterRender('[data-model-selector]'); render(); });
@@ -129,7 +133,7 @@ function bindClicks() {
   app?.querySelector('[data-inspector-close]')?.addEventListener('click', () => closeInspector());
   app?.querySelectorAll('[data-inspector-tab]').forEach((button) => button.addEventListener('click', () => openInspector(button.dataset.inspectorTab, state.focusReturnSelector || '[data-inspector-open]')));
   app?.querySelector('[data-api-key-dialog-close]')?.addEventListener('click', () => closeAPIKeyDialog());
-  app?.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => { closeAPIKeyDialog(false); state.showAccount = true; render(); document.querySelector('#api-key')?.focus({ preventScroll: true }); });
+  app?.querySelector('[data-api-key-dialog-primary]')?.addEventListener('click', () => { closeAPIKeyDialog(false); state.showAccount = true; state.showApiKeyChange = true; render(); document.querySelector('#api-key')?.focus({ preventScroll: true }); });
 }
 
 function bindForms() {
@@ -207,6 +211,7 @@ async function providerSubmit(event) {
   }
   state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
   state.showAccount = true;
+  state.showApiKeyChange = false;
   render();
   setSettingsMessage(`API Key 已更新：${result.maskedKey || '已绑定'}`);
 }
@@ -238,7 +243,7 @@ async function chatSubmit(event) {
   state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream'];
   render();
   await yieldRenderedTurn();
-  const result = await sendChatMessage(fetch, message);
+  const result = await sendChatMessage(fetch, message, state.activeConversationId);
   document.body.dataset.chatState = chatStateForResult(result);
   if (!result.ok) {
     state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream', 'error'];
@@ -248,6 +253,7 @@ async function chatSubmit(event) {
     return;
   }
   const researchResult = researchResultForChat({ ...result, prompt: message });
+  if (result.conversationId) state.activeConversationId = result.conversationId;
   state.lastResult = { prompt: message, researchResult };
   state.chatTurnStages = ['submitted', 'progressive', 'waiting_upstream', researchResult ? 'complete' : 'error'];
   state.firstValueTurn = firstValueTurnForPrompt(message, researchResult ? 'complete' : 'error');
@@ -334,12 +340,8 @@ function restorePendingPublicTask() {
 
 function runShellAction(action) {
   if (action === 'home') {
-    state.shellState = 'home_default';
-    state.showInspector = false;
-    state.firstValueTurn = null;
-    state.lastResult = null;
-    state.messages = [];
-    setHashView('home');
+    void startNewConversation();
+    return;
   } else if (action === 'projects') {
     state.shellState = 'project_window_continuation_center';
     setHashView('projects');
@@ -353,6 +355,28 @@ function runShellAction(action) {
     state.shellState = 'more';
     setHashView('more');
   }
+  render();
+}
+
+async function startNewConversation() {
+  state.shellState = 'home_default';
+  state.showInspector = false;
+  state.firstValueTurn = null;
+  state.lastResult = null;
+  state.messages = [];
+  state.chatTurnStages = [];
+  state.activeConversationMeta = null;
+  setHashView('home');
+  render();
+  if (state.view.accountState !== 'anonymous') {
+    const result = await createConversation(fetch, '新聊天');
+    if (result.ok && result.conversation?.conversationId) {
+      state.activeConversationId = result.conversation.conversationId;
+      state.activeConversationMeta = result.conversation;
+      state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+    }
+  }
+  focusAfterRender('#chat-input');
   render();
 }
 

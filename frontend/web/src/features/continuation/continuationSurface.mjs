@@ -4,14 +4,33 @@ export const INSPECTOR_TABS = Object.freeze(['autonomy', 'inputs', 'outputs', 'w
 
 export function renderProjectWindowCenter(view, helpers) {
   const tasks = view.taskHistory?.tasks || [];
+  const conversations = view.conversations || [];
   return `
     <section class="file-library" data-shell-state="project_window_continuation_center" data-project-window-center data-projection-source="GET /api/tasks">
-      <header><h1>项目 / 窗口</h1><button type="button" data-shell-action="home">新建窗口</button></header>
-      <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">running</button><button type="button">blocked</button></div>
+      <header><h1>项目</h1><button type="button" data-shell-action="home">新建项目</button></header>
+      <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">进行中</button><button type="button">需处理</button></div>
       <div class="file-list" data-project-window-list>
-        ${tasks.length === 0 ? '<p data-project-window-empty>还没有窗口。开始一次任务后会显示可继续的窗口。</p>' : tasks.map((task) => renderProjectWindowCard(task, helpers)).join('')}
+        ${conversations.length === 0 && tasks.length === 0 ? '<p data-project-window-empty>还没有项目。新建项目会先创建一个聊天草稿；专业任务投影返回后会显示进度和下一步。</p>' : ''}
+        ${conversations.map((conversation) => renderConversationCard(conversation, helpers)).join('')}
+        ${tasks.map((task) => renderProjectWindowCard(task, helpers)).join('')}
       </div>
     </section>`;
+}
+
+export function renderConversationCard(conversation, helpers) {
+  return `
+    <article data-conversation-entry data-conversation-id="${helpers.escapeAttr(conversation.conversationId)}" data-conversation-status="${helpers.escapeAttr(conversation.status || 'draft')}">
+      <strong>${helpers.escapeHTML(conversation.title || '新聊天')}</strong>
+      <small>${helpers.escapeHTML(conversationStatusLabel(conversation.status))} · ${helpers.escapeHTML(helpers.formatShortDate(conversation.updatedAt))}</small>
+      <div class="project-window-signals" data-project-window-continuation-signals>
+        <span data-project-window-current-objective>${helpers.escapeHTML(conversation.title || '新聊天')}</span>
+        <span data-project-window-input-refs>等待消息或材料引用</span>
+        <span data-project-window-output-refs>暂无输出</span>
+        <span data-project-window-blocker-why>暂无阻塞</span>
+        <span data-project-window-next-action>继续聊天</span>
+      </div>
+      <button type="button" data-shell-action="home">继续聊天</button>
+    </article>`;
 }
 
 export function renderProjectWindowCard(task, helpers) {
@@ -27,24 +46,27 @@ export function renderProjectWindowCard(task, helpers) {
         <span data-project-window-blocker-why>${helpers.escapeHTML(snapshot.blockerWhy)}</span>
         <span data-project-window-next-action>${helpers.escapeHTML(snapshot.nextAction)}</span>
       </div>
-      <a data-project-window-continue href="${helpers.escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续窗口</a>
+      <a data-project-window-continue href="${helpers.escapeAttr(task.deeplink || MEDOPL_DEEP_LINK)}">继续任务</a>
     </article>`;
 }
 
 export function renderSearchSheet(view, helpers) {
   const tasks = view.taskHistory?.tasks || [];
+  const conversations = view.conversations || [];
+  const hasResults = tasks.length > 0 || conversations.length > 0;
   return `
     <div class="sheet-backdrop" data-overlay-close="search"></div>
     <aside class="search-sheet" data-search-sheet data-overlay-state="open" data-figma-slice="figma_dialog_sheet_projection_slice">
-      <header><span>搜索窗口</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
-      <input id="project-window-search" type="search" data-window-search data-window-search-scope="project_windows" data-window-search-source="GET /api/tasks" placeholder="搜索项目窗口..." aria-label="搜索项目窗口">
+      <header><span>搜索聊天</span><button type="button" data-overlay-close="search" aria-label="关闭搜索">x</button></header>
+      <input id="project-window-search" type="search" data-window-search data-window-search-scope="project_conversation_file_refs" data-window-search-source="GET /api/chat/conversations + GET /api/tasks" placeholder="搜索聊天、项目、文件..." aria-label="搜索聊天、项目、文件">
       <div class="project-window-search-results" data-project-window-search-results>
+        ${conversations.map((conversation) => `<button type="button" data-project-window-search-result data-conversation-id="${helpers.escapeAttr(conversation.conversationId)}"><strong>${helpers.escapeHTML(conversation.title || '新聊天')}</strong><small>${helpers.escapeHTML(conversationStatusLabel(conversation.status))} · ${helpers.escapeHTML(helpers.formatShortDate(conversation.updatedAt))}</small></button>`).join('')}
         ${tasks.length === 0 ? '' : tasks.map((task) => {
           const snapshot = continuationSnapshot(task);
           return `<button type="button" data-project-window-search-result><strong>${helpers.escapeHTML(snapshot.currentObjective)}</strong><small>${helpers.escapeHTML(helpers.formatShortDate(task.updatedAt))} · ${helpers.escapeHTML(snapshot.nextAction)}</small></button>`;
         }).join('')}
       </div>
-      <p class="empty-state" data-project-window-search-empty ${tasks.length > 0 ? 'hidden' : ''}>暂无窗口</p>
+      <p class="empty-state" data-project-window-search-empty ${hasResults ? 'hidden' : ''}>暂无聊天、项目或文件。开始新聊天后会出现在这里。</p>
     </aside>`;
 }
 
@@ -57,23 +79,23 @@ export function renderInspector(state, helpers) {
         ${INSPECTOR_TABS.map((tab) => `<button type="button" data-inspector-tab="${tab}" aria-selected="${String(state.inspectorTab === tab)}">${tabLabel(tab)}</button>`).join('')}
       </div>
       <section data-inspector-panel="autonomy" ${state.inspectorTab === 'autonomy' ? '' : 'hidden'}>
-        <h3>自治状态</h3>
-        <p data-inspector-autonomy-empty>显示当前窗口的自治目标、输入输出引用和下一步。</p>
+        <h3>进度</h3>
+        <p data-inspector-autonomy-empty>显示当前任务正在做什么、引用了什么，以及下一步。</p>
         <dl>
           <div><dt>目标</dt><dd data-inspector-autonomy-current-objective>${helpers.escapeHTML(snapshot.currentObjective)}</dd></div>
           <div><dt>正在做</dt><dd data-inspector-autonomy-timeline>${helpers.escapeHTML(snapshot.activityTimeline)}</dd></div>
         </dl>
       </section>
       <section data-inspector-panel="inputs" ${state.inspectorTab === 'inputs' ? '' : 'hidden'}>
-        <h3>输入 refs</h3>
-        ${renderRefs(snapshot.inputs, 'data-inspector-input-refs', helpers, '等待输入引用')}
+        <h3>引用</h3>
+        ${renderRefs(snapshot.inputs, 'data-inspector-input-refs', helpers, '等待材料或引用')}
       </section>
       <section data-inspector-panel="outputs" ${state.inspectorTab === 'outputs' ? '' : 'hidden'}>
-        <h3>输出 refs</h3>
-        ${renderRefs(snapshot.outputs, 'data-inspector-output-refs', helpers, '等待输出引用')}
+        <h3>结果</h3>
+        ${renderRefs(snapshot.outputs, 'data-inspector-output-refs', helpers, '暂无结果')}
       </section>
       <section data-inspector-panel="why_next" ${state.inspectorTab === 'why_next' ? '' : 'hidden'}>
-        <h3>原因 / 下一步</h3>
+        <h3>下一步</h3>
         <dl>
           <div><dt>为什么</dt><dd data-inspector-blocker-why>${helpers.escapeHTML(snapshot.blockerWhy)}</dd></div>
           <div><dt>下一步</dt><dd data-inspector-next-action>${helpers.escapeHTML(snapshot.nextAction)}</dd></div>
@@ -142,8 +164,8 @@ function activeInspectorSnapshot(state) {
     };
   }
   return {
-    currentObjective: '选择任务入口后开始窗口',
-    activityTimeline: 'idle',
+    currentObjective: '选择任务入口后开始任务',
+    activityTimeline: '等待任务开始',
     inputs: [],
     outputs: [],
     blockerWhy: 'no active blocker',
@@ -155,23 +177,23 @@ function continuationSnapshot(task = {}) {
   const inputs = Array.isArray(task.materialRefs) ? task.materialRefs : [];
   const outputs = [...(Array.isArray(task.deliverableRefs) ? task.deliverableRefs : []), ...(Array.isArray(task.progressRefs) ? task.progressRefs : [])];
   const blockerTitle = task.blocker?.title || task.blocker?.kind || '';
-  const action = task.allowedNextActions?.[0]?.label || task.nextStep || '继续窗口';
+  const action = task.allowedNextActions?.[0]?.label || task.nextStep || '继续任务';
   const currentObjective = projectWindowTitle(task);
   return {
     currentObjective,
     activityTimeline: task.status || 'projection',
     inputs,
     outputs,
-    inputsSummary: inputs.length ? `${inputs.length} input refs` : 'no input refs',
-    outputsSummary: outputs.length ? `${outputs.length} output refs` : 'no output refs',
-    blockerWhy: blockerTitle || (task.status === 'blocked' ? 'waiting for MedOPL readiness' : 'no active blocker'),
+    inputsSummary: inputs.length ? `${inputs.length} 个输入引用` : '暂无输入引用',
+    outputsSummary: outputs.length ? `${outputs.length} 个输出引用` : '暂无输出引用',
+    blockerWhy: blockerTitle || (task.status === 'blocked' ? '等待 MedOPL 开通' : '暂无阻塞'),
     nextAction: action,
     refCount: inputs.length + outputs.length,
   };
 }
 
 export function projectWindowTitle(task = {}) {
-  return `${task.marker || ''} ${task.taskType || task.taskIntent || '窗口'}`.trim();
+  return `${task.marker || ''} ${task.taskType || task.taskIntent || '任务'}`.trim();
 }
 
 export function modelProfileLabel(stateOrProfile) {
@@ -187,9 +209,14 @@ export function modelProfileLabel(stateOrProfile) {
 
 function tabLabel(tab) {
   return {
-    autonomy: '自治',
-    inputs: '输入',
-    outputs: '输出',
-    why_next: '原因/下一步',
+    autonomy: '进度',
+    inputs: '引用',
+    outputs: '结果',
+    why_next: '下一步',
   }[tab] || tab;
+}
+
+function conversationStatusLabel(status) {
+  const labels = { draft: '草稿', running: '运行中', completed: '已完成', failed: '失败' };
+  return labels[status] || '聊天';
 }

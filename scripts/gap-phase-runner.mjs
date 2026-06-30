@@ -348,7 +348,9 @@ function evaluateCommercialProductUserJourneyDepth({ product }) {
       dimension: 'contract',
       status: depth?.state === 'active_gap_admitted'
         && depth?.interactionCompleteDoesNotProveProductValueComplete === true
-        && depth?.projectWindowModel?.businessName === '项目 / 窗口'
+        && depth?.projectWindowModel?.businessName === '项目'
+        && depth?.projectWindowModel?.windowSearchScope === 'project_conversation_file_refs'
+        && String(depth?.projectWindowModel?.dataTruth ?? '').includes('/api/chat/conversations')
         ? 'pass'
         : 'fail',
       proves: ['commercial product journey depth is admitted separately from interaction completion'],

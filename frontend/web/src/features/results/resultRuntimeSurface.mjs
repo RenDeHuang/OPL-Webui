@@ -25,7 +25,7 @@ export function renderResultView(state, helpers) {
       <form class="pill-input" data-chat-form>
         <button type="button" aria-label="上传文件" data-plus-file-trigger>+</button>
         <input id="chat-input" name="message" placeholder="有问题，尽管问">
-        <button type="button">API key</button>
+        <button type="button" data-account-toggle>模型服务</button>
         <button type="submit" data-chat-submit aria-label="发送">▮▮▮</button>
       </form>
     </section>`;
@@ -43,10 +43,10 @@ function renderResearchResult(result, { escapeAttr, escapeHTML }) {
         </section>
       `).join('')}
       <div class="result-actions" aria-label="结果操作">
-        <button type="button" aria-label="复制">Copy</button>
-        <button type="button" aria-label="收藏">Save</button>
-        <button type="button" aria-label="重新生成">Again</button>
-        <button type="button" aria-label="更多">More</button>
+        <button type="button" aria-label="复制">复制</button>
+        <button type="button" aria-label="收藏">收藏</button>
+        <button type="button" aria-label="重新生成">重新生成</button>
+        <button type="button" aria-label="更多">更多</button>
       </div>
     </article>`;
 }
@@ -84,7 +84,7 @@ export function renderBlockedView(state, helpers) {
       </div>
       <article class="runtime-card is-visible" data-runtime-gate data-medopl-handoff="${helpers.escapeAttr(taskCard.handoffMode || 'conversion_handoff')}" data-handoff-return-context="${helpers.escapeAttr(taskCard.returnContext || 'current_project_window')}" data-handoff-next-action="${helpers.escapeAttr(taskCard.nextAction?.id || 'open_medopl')}">
         <div data-runtime-task-card="${helpers.escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${helpers.escapeAttr(taskCard.marker || '')}" data-runtime-projection-status="${helpers.escapeAttr(taskCard.status || '')}" data-runtime-run-ref="${helpers.escapeAttr(taskCard.runRef || '')}">
-          <span>${helpers.escapeHTML(taskCard.capabilityMarker || taskCard.marker || '@论文')} · MedOPL conversion handoff</span>
+          <span>${helpers.escapeHTML(taskCard.capabilityMarker || taskCard.marker || '@论文')} · 前往 MedOPL 开通</span>
           <h2>${helpers.escapeHTML(taskCard.title || '需要 MedOPL 授权')}</h2>
           <p>${helpers.escapeHTML(taskCard.message || 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。')}</p>
           ${renderRuntimeProjectionRefs(taskCard, helpers)}
@@ -120,9 +120,9 @@ export function renderQuotaView() {
       <div class="reliability-banner" data-reliability-status data-state="quota_exceeded">
         <strong data-reliability-title>额度已用完</strong>
         <span data-reliability-action>查看额度</span>
-        <small data-reliability-details>当前只显示 API key / quota projection，不提供 Web-owned payment。</small>
+        <small data-reliability-details>当前只显示 MedOPL 用量状态，不在 Web 中处理付款。</small>
       </div>
-      <a class="primary-button" href="${MEDOPL_DEEP_LINK}/billing">external capability handoff</a>
+      <a class="primary-button" href="${MEDOPL_DEEP_LINK}/billing">前往 MedOPL</a>
       <button type="button" data-shell-action="home">返回主界面</button>
     </section>`;
 }

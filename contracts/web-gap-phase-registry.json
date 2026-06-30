@@ -388,7 +388,7 @@
       "launchBlocking": false,
       "cannotClaim": [
         "commercial product journey complete",
-        "dedicated project/window persistence API",
+        "dedicated project persistence API",
         "token streaming implemented",
         "production-ready SaaS"
       ],
@@ -416,7 +416,7 @@
           "blockerTypes": ["missing_contract", "missing_owner_visual_copy_review"],
           "acceptance": [
             "first value moment is defined but not claimed complete",
-            "任务历史 / 交付接续 is marked for retirement in favor of 项目 / 窗口",
+            "任务历史 / 交付接续 is marked for retirement in favor of 项目",
             "MedOPL handoff is a specialist conversion path, not an error jump",
             "no payment/runtime/storage/artifact authority moves into Webui"
           ],
@@ -492,12 +492,12 @@
         {
           "id": "project_window_continuation",
           "status": "done",
-          "objective": "Replace task-history wording with projects/windows: each project can hold multiple conversation windows with context, and search searches windows.",
+          "objective": "Replace task-history wording with projects and conversations: each project can hold multiple conversations with context, and search covers chats, projects, and file refs.",
           "entryCriteria": ["user_journey_map is done"],
-          "exitCriteria": ["project/window state contract exists", "search scope is project_windows", "old task-history business wording is retired from current UI DOM and browser assertions"],
+          "exitCriteria": ["project/conversation state contract exists", "search scope is project_conversation_file_refs", "old task-history business wording is retired from current UI DOM and browser assertions"],
           "evidenceSources": ["repo_local", "browser"],
           "blockerTypes": ["missing_go_projection_contract", "missing_browser_e2e"],
-          "acceptance": ["no fake project/window data", "Go control plane /api/tasks projection or contract-backed empty state only", "old task-history assertions and selectors are retired or rewritten from current Web shell"],
+          "acceptance": ["no fake project/conversation data", "Go control plane /api/chat/conversations draft list plus /api/tasks projection or contract-backed empty state only", "old task-history assertions and selectors are retired or rewritten from current Web shell"],
           "nextStepOpeners": ["open task_continuation_history once project/window projection is stable"],
           "ownerReceipt": {"required": false, "source": "repo_local", "reason": "projection-backed IA and selector retirement; owner visual copy review remains in first_value_optimization"},
           "requiredEvals": [
@@ -505,7 +505,7 @@
               "id": "project_window_contract_browser_e2e",
               "contract": "contracts/web-page-state-matrix.json#/commercialProductUserJourneyDepth",
               "proves": ["project/window continuation and search truth are implemented at projection-backed repo/browser scope"],
-              "doesNotProve": ["dedicated project/window persistence API", "artifact body authority", "storage truth", "production-ready SaaS"],
+              "doesNotProve": ["dedicated project persistence API", "artifact body authority", "storage truth", "production-ready SaaS"],
               "failureBlocks": ["project/window projection-backed implementation claim"]
             }
           ]

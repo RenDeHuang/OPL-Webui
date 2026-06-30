@@ -71,9 +71,10 @@ test('web shell copy grammar blocks mock truth from the zip prototype', () => {
   for (const required of ['progress refs', 'deliverable refs', 'materials refs', 'blocker/next step', 'MedOPL/OPL deeplink']) {
     assert.match(source, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(source, /Go control plane/);
   assert.match(source, /MedOPL continuation ready \/ refs available/);
-  assert.match(source, /readonly commercial projection/);
+  assert.match(source, /用量与额度/);
+  assert.match(source, /密钥只保存在服务器/);
+  assert.doesNotMatch(source, /Go control plane|masked key|readonly commercial projection|API key \/ quota projection|external capability handoff/);
   assert.doesNotMatch(source, /initProjects|mockResult|fileItems|demoData|demo:\/\/|fake storage|fake billing|fake runtime execution/i);
   assert.doesNotMatch(source, /Pro 套餐|积分余额|充值|无限计算资源|Drive|云盘|runtime · 已完成|制品内容/i);
   assert.doesNotMatch(source, /\/_ops|operator controls|admin ops/i);

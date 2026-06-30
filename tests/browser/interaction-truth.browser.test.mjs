@@ -5,7 +5,7 @@ import test from 'node:test';
 const runnerPath = 'tests/browser/interaction-truth-runner.mjs';
 
 function collectViolations(evidence) {
-  const forbiddenSidebarCopy = /v20文件夹|New project|(?:^|\b)opl(?:\b|$)|(?:^|\b)medopl(?:\b|$)|空项目|新建项目/;
+  const forbiddenSidebarCopy = /v20文件夹|New project|(?:^|\b)opl(?:\b|$)|(?:^|\b)medopl(?:\b|$)|空项目/;
   return [
     {
       label: '/ must render public growth landing',
@@ -85,8 +85,8 @@ function collectViolations(evidence) {
         && evidence.afterAuth.workbench.projectWindowProjectionOnly === true,
     },
     {
-      label: 'search sheet must search project windows, not one-off task history copy',
-      pass: evidence.afterAuth.dialogSheetProjection.searchOpen.scope === 'project_windows'
+      label: 'search sheet must search chats projects and files, not one-off task history copy',
+      pass: evidence.afterAuth.dialogSheetProjection.searchOpen.scope === 'project_conversation_file_refs'
         && evidence.afterAuth.dialogSheetProjection.searchOpen.projectionOnly === true,
     },
     {

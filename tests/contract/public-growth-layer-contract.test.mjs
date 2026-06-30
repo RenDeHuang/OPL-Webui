@@ -199,8 +199,8 @@ test('commercial product user journey depth is admitted separately from interact
   assert.equal(depth.firstValueMoment.status, 'repo_browser_optimized_v1_streaming_turn_done');
   assert.equal(depth.firstValueMoment.progressiveBoundary, 'request_lifecycle_not_token_stream');
   assert.equal(depth.firstValueMoment.target, 'ordinary_research_chat_first_value_in_project_window');
-  assert.equal(depth.projectWindowModel.businessName, '项目 / 窗口');
-  assert.equal(depth.projectWindowModel.windowSearchScope, 'project_windows');
+  assert.equal(depth.projectWindowModel.businessName, '项目');
+  assert.equal(depth.projectWindowModel.windowSearchScope, 'project_conversation_file_refs');
   assert.equal(depth.projectWindowModel.status, 'implemented_projection_backed_v1');
   assert.equal(depth.chatInteractionModel.requiredFeel, 'request_lifecycle_progressive_turns');
   assert.equal(depth.chatInteractionModel.status, 'repo_browser_done_v1');
@@ -228,5 +228,5 @@ test('commercial product user journey depth is admitted separately from interact
   assert.equal(depth.webOwnedGaps.includes('autonomy_inspector'), false);
   assertIncludesAll(depth.medoplOwned, ['runtime_readiness', 'storage_resource_binding', 'billing_payment_truth', 'file_runtime_processing'], 'MedOPL-owned product journey item');
   assertIncludesAll(depth.ownerVisualCopyReview, ['reduce_primary_surface_explanatory_copy', 'project_window_language', 'medopl_conversion_copy', 'inspector_information_density'], 'owner copy review item');
-  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'dedicated project/window persistence API', 'token streaming implemented', 'production-ready SaaS'], 'product journey cannot claim');
+  assertIncludesAll(depth.cannotClaim, ['commercial product journey complete', 'dedicated project persistence API', 'token streaming implemented', 'production-ready SaaS'], 'product journey cannot claim');
 });

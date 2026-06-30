@@ -58,11 +58,11 @@ test('project window and search primitives retire task-history as the primary bu
   assert.equal(window.businessName, '窗口');
   assert.equal(window.contextBoundary, 'window_context_is_isolated_inside_project');
   assertIncludesAll(window.requiredProjection, ['windowId', 'projectId', 'title', 'updatedAt', 'lastTurnPreview', 'status'], 'window projection');
-  assert.equal(search.scope, 'project_windows');
+  assert.equal(search.scope, 'project_conversation_file_refs');
   assert.equal(search.mustNotSearch, 'one_off_static_chat_only');
   assert.equal(search.sourceOfTruth, 'Go control plane projection or contract-backed empty state');
-  assert.equal(pageState.commercialProductUserJourneyDepth.taskHistoryRetirement.replacementBusinessName, '项目 / 窗口');
-  assert.equal(pageState.commercialProductUserJourneyDepth.taskHistoryRetirement.retireWhen, 'project_window_contract_slice lands');
+  assert.equal(pageState.commercialProductUserJourneyDepth.taskHistoryRetirement.replacementBusinessName, '项目');
+  assert.equal(pageState.commercialProductUserJourneyDepth.taskHistoryRetirement.retireWhen, 'project_conversation_contract_slice lands');
 });
 
 test('turn skill model composer inspector and MedOPL handoff primitives keep Webui decoupled from runtime payment storage truth', () => {
@@ -110,9 +110,9 @@ test('returning continuation UI follows project window autonomy truth without re
 
   const taskContinuation = product.commercialProductUserJourneyDepth.taskContinuationHistory;
   assert.equal(taskContinuation.status, 'repo_browser_done_v1');
-  assert.equal(taskContinuation.sourceOfTruth, 'Go control plane /api/tasks projection or contract-backed empty state');
+  assert.equal(taskContinuation.sourceOfTruth, 'Go control plane /api/chat/conversations draft list plus /api/tasks projection or contract-backed empty state');
   assertIncludesAll(taskContinuation.requiredSignals, ['current_objective', 'activity_timeline', 'input_refs', 'output_refs', 'blocker_why', 'next_action'], 'task continuation signal');
-  assertIncludesAll(taskContinuation.doesNotProve, ['dedicated project/window persistence API', 'token streaming implemented', 'artifact body authority', 'storage truth', 'runtime execution'], 'task continuation boundary');
+  assertIncludesAll(taskContinuation.doesNotProve, ['dedicated project persistence API', 'token streaming implemented', 'artifact body authority', 'storage truth', 'runtime execution'], 'task continuation boundary');
   assert.deepEqual(pageState.commercialProductUserJourneyDepth.inspectorTabsTarget, ['autonomy', 'inputs', 'outputs', 'why_next']);
 
   assert.match(implementation, /data-inspector-open="autonomy"/);
@@ -127,7 +127,7 @@ test('returning continuation UI follows project window autonomy truth without re
   assert.match(implementation, /data-project-window-output-refs/);
   assert.match(implementation, /data-project-window-blocker-why/);
   assert.match(implementation, /data-project-window-next-action/);
-  assert.match(implementation, /data-window-search-source="GET \/api\/tasks"/);
+  assert.match(implementation, /data-window-search-source="GET \/api\/chat\/conversations \+ GET \/api\/tasks"/);
   assert.doesNotMatch(implementation, /\['files', 'progress', 'output'\]/);
   assert.doesNotMatch(implementation, /data-inspector-open="files"/);
 });

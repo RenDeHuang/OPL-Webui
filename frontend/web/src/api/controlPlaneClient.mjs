@@ -50,6 +50,10 @@ export async function saveAPIKey(fetchRef, apiKey, session = { ok: true }) {
   return writeJSON(fetchRef, '/api/settings/model-provider', { apiKey }, 'PUT');
 }
 
+export async function createConversation(fetchRef, title = '') {
+  return writeJSON(fetchRef, '/api/chat/conversations', { title });
+}
+
 export async function sendChatMessage(fetchRef, message, conversationId = '') {
   return writeJSON(fetchRef, '/api/chat', { message, conversationId });
 }

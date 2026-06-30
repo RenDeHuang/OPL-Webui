@@ -416,7 +416,57 @@
         "summary": "List current user's conversations.",
         "responses": {
           "200": {
-            "description": "Conversation list."
+            "description": "Conversation list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "405": {
+            "description": "Method not allowed."
+          },
+          "423": {
+            "description": "User is disabled by operator policy."
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a current-user draft conversation before the first message.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Draft conversation created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationCreate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Draft conversation could not be created."
           },
           "401": {
             "description": "Authentication required."
@@ -675,6 +725,9 @@
         ]
       },
       "TaskRef": { "type": "object", "required": ["ref"], "properties": { "ref": { "type": "string" }, "label": { "type": "string" }, "status": { "type": "string" }, "kind": { "type": "string" }, "source": { "type": "string" } }, "additionalProperties": false },
+      "ConversationSummary": { "type": "object", "required": ["conversationId", "title", "status", "messageCount", "createdAt", "updatedAt"], "properties": { "conversationId": { "type": "string" }, "title": { "type": "string" }, "status": { "enum": ["draft", "completed"] }, "messageCount": { "type": "integer" }, "createdAt": { "type": "string" }, "updatedAt": { "type": "string" } }, "additionalProperties": false },
+      "ConversationList": { "type": "object", "required": ["ok", "conversations"], "properties": { "ok": { "type": "boolean" }, "conversations": { "type": "array", "items": { "$ref": "#/components/schemas/ConversationSummary" } } }, "additionalProperties": false },
+      "ConversationCreate": { "type": "object", "required": ["ok", "conversation"], "properties": { "ok": { "type": "boolean" }, "conversation": { "$ref": "#/components/schemas/ConversationSummary" } }, "additionalProperties": false },
       "TaskNextAction": { "type": "object", "required": ["id", "label", "deepLink"], "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "deepLink": { "type": "string" } }, "additionalProperties": false },
       "TaskBlocker": { "type": "object", "required": ["kind", "title", "deepLink"], "properties": { "kind": { "type": "string" }, "title": { "type": "string" }, "nextAction": { "type": "string" }, "deepLink": { "type": "string" } }, "additionalProperties": false },
       "TaskHistoryItem": { "type": "object", "required": ["taskId", "taskType", "taskIntent", "marker", "status", "updatedAt", "progressRefs", "deliverableRefs", "materialRefs", "nextStep", "allowedNextActions", "deeplink", "webuiArtifactBody", "webuiStorageTruth"], "properties": { "taskId": { "type": "string" }, "taskType": { "type": "string" }, "taskIntent": { "type": "string" }, "marker": { "type": "string" }, "conversationId": { "type": "string" }, "status": { "type": "string" }, "createdAt": { "type": "string" }, "updatedAt": { "type": "string" }, "progressRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "deliverableRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "materialRefs": { "type": "array", "items": { "$ref": "#/components/schemas/TaskRef" } }, "blocker": { "$ref": "#/components/schemas/TaskBlocker" }, "nextStep": { "type": "string" }, "allowedNextActions": { "type": "array", "items": { "$ref": "#/components/schemas/TaskNextAction" } }, "deeplink": { "type": "string" }, "webuiArtifactBody": { "const": "forbidden" }, "webuiStorageTruth": { "const": "forbidden" } }, "additionalProperties": false },

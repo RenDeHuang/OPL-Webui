@@ -37,6 +37,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
   assert.deepEqual(responseCodes(api, '/api/opl/runtime-gate', 'post'), ['200', '400', '401', '405', '423', '424', '502', '504']);
   assert.deepEqual(responseCodes(api, '/api/opl/runs', 'post'), ['200', '400', '401', '405', '423', '424', '502', '504']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'get'), ['200', '401', '405', '423']);
+  assert.deepEqual(responseCodes(api, '/api/chat/conversations', 'post'), ['201', '400', '401', '405', '423']);
   assert.deepEqual(responseCodes(api, '/api/chat/conversations/{conversationId}', 'get'), ['200', '400', '401', '404', '405', '423']);
   assert.deepEqual(responseCodes(api, '/api/account/audit-events', 'get'), ['200', '401', '405', '423']);
   assert.deepEqual(responseCodes(api, '/api/account/billing-summary', 'get'), ['200', '401', '405', '423']);
@@ -392,6 +393,38 @@ test('chat conversations are isolated by public account session', async () => {
       headers: { cookie: userB.cookieHeader },
     });
     assert.equal(readB.response.status, 404);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('new chat creates a durable draft conversation before the first message', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  try {
+    const session = await register(baseUrl, 'draft-chat@example.com');
+
+    const created = await authedPost(baseUrl, '/api/chat/conversations', session.cookieHeader, { title: '' });
+    assert.equal(created.response.status, 201);
+    assert.equal(created.body.ok, true);
+    assert.match(created.body.conversation.conversationId, /^conv_/);
+    assert.equal(created.body.conversation.title, '新聊天');
+    assert.equal(created.body.conversation.status, 'draft');
+    assertNoSensitiveMaterial(created.body);
+
+    const list = await jsonFetch(`${baseUrl}/api/chat/conversations`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(list.response.status, 200);
+    assert.equal(list.body.conversations.length, 1);
+    assert.equal(list.body.conversations[0].conversationId, created.body.conversation.conversationId);
+    assert.equal(list.body.conversations[0].status, 'draft');
+
+    const read = await jsonFetch(`${baseUrl}/api/chat/conversations/${created.body.conversation.conversationId}`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(read.response.status, 200);
+    assert.equal(read.body.conversation.status, 'draft');
+    assert.deepEqual(read.body.messages, []);
   } finally {
     await stopGoServer(child);
   }

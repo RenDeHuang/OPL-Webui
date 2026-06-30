@@ -79,7 +79,7 @@ func (server Server) HandleCommercialStatus(response http.ResponseWriter, reques
 }
 
 func (server Server) HandleConversations(response http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
+	if request.Method != http.MethodGet && request.Method != http.MethodPost {
 		writeError(response, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
 		return
 	}
@@ -87,7 +87,36 @@ func (server Server) HandleConversations(response http.ResponseWriter, request *
 	if !ok {
 		return
 	}
-	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversations": server.Store.ListConversations(user.ID)})
+	if request.Method == http.MethodPost {
+		var payload struct {
+			Title string `json:"title,omitempty"`
+		}
+		if !decodeStrict(response, request, &payload) {
+			return
+		}
+		title := strings.TrimSpace(payload.Title)
+		if title == "" {
+			title = "新聊天"
+		}
+		conversation, err := server.Store.CreateConversation(user.ID, title)
+		if err != nil {
+			writeError(response, http.StatusBadRequest, "CONVERSATION_NOT_FOUND", "conversation could not be created")
+			return
+		}
+		server.recordAudit(user.ID, "chat.conversation_draft_created", map[string]string{"conversationId": conversation.ID})
+		writeJSON(response, http.StatusCreated, map[string]any{"ok": true, "conversation": conversationSummary(conversation, 0)})
+		return
+	}
+	conversations := server.Store.ListConversations(user.ID)
+	summaries := make([]map[string]any, 0, len(conversations))
+	for _, conversation := range conversations {
+		_, messages, ok := server.Store.GetConversation(user.ID, conversation.ID)
+		if !ok {
+			continue
+		}
+		summaries = append(summaries, conversationSummary(conversation, len(messages)))
+	}
+	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversations": summaries})
 }
 
 func (server Server) HandleTaskHistory(response http.ResponseWriter, request *http.Request) {
@@ -183,7 +212,7 @@ func (server Server) HandleConversation(response http.ResponseWriter, request *h
 		writeError(response, http.StatusNotFound, "CONVERSATION_NOT_FOUND", "conversation was not found")
 		return
 	}
-	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversation": conversation, "messages": messages})
+	writeJSON(response, http.StatusOK, map[string]any{"ok": true, "conversation": conversationSummary(conversation, len(messages)), "messages": messages})
 }
 
 func runtimeStatusProjection() map[string]any {
@@ -289,6 +318,21 @@ func (server Server) ensureConversation(userID string, conversationID string, me
 	}
 	conversation, err := server.Store.CreateConversation(userID, title)
 	return conversation, err == nil
+}
+
+func conversationSummary(conversation Conversation, messageCount int) map[string]any {
+	status := "draft"
+	if messageCount > 0 {
+		status = "completed"
+	}
+	return map[string]any{
+		"conversationId": conversation.ID,
+		"title":          conversation.Title,
+		"status":         status,
+		"messageCount":   messageCount,
+		"createdAt":      conversation.CreatedAt,
+		"updatedAt":      conversation.UpdatedAt,
+	}
 }
 
 func (server Server) writeRuntimeRequired(response http.ResponseWriter, userID string, conversationID string) {
