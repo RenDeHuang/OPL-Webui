@@ -62,11 +62,11 @@
     "state": "deployed_replacement_candidate",
     "targetContract": "contracts/web-gui-product-contract.json#/figmaParityUiReplacementTarget",
     "productionUiReplaced": true,
-    "releaseEvidenceImpact": "folded_success_run_28422674169",
+    "releaseEvidenceImpact": "folded_success_run_28427419239",
     "productionEvidence": {
-      "commit": "ba32d695e186e30fc2133002c59b2b7c781f4eb3",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69",
-      "runId": 28422674169
+      "commit": "cd3332f04e2a257a5ded19d36e8b4b55d6990373",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f",
+      "runId": 28427419239
     },
     "appliesToRoutes": ["home", "projects", "skills", "workflows"],
     "doesNotApplyTo": ["minimal_admin_ops_layer", "/_ops", "operator_controls"],

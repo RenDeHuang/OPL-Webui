@@ -12,7 +12,7 @@
     "minimalAdminOpsLayer": "partial",
     "minimalAdminOpsLayerCompletedSlice": "registration_policy_user_status_v0",
     "minimalAdminOpsLayerNextGap": "dogfood_release_evidence_summary_not_started",
-    "productionRollout": "folded_success_run_28422674169",
+    "productionRollout": "folded_success_run_28427419239",
     "taskHistoryContinuationCenter": "done_v0",
     "cannotClaimFromAdminOpsV0": ["full SaaS","payment lifecycle","team/RBAC lifecycle","HA","runtime sync"],
     "evidenceBoundary": "Admin/Ops v0 can only prove minimum account admission/operator controls when implemented; it cannot prove commercial SaaS, payment, team/RBAC, HA, or runtime sync."
@@ -64,8 +64,8 @@
       "semanticJsonChecks": ["/readyz ok=true missing=[]","/metricsz ok=true missingDependencyCount=0"]
     }
   },
-  "latestMainEvidence": {"truthLayer":"run_evidence","evidenceScope":"latest-main-rollout","state":"folded_success_run_28422674169","runId":28422674169,"runUrl":"https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169","commit":"ba32d695e186e30fc2133002c59b2b7c781f4eb3","image":"uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69","workflow":"Cloud Rollout","completedAt":"2026-06-30T05:42:35Z","requiredStages":["Production Dry Run","Production Image Preflight","Production Apply","Production Availability Probe After Apply","Production Authenticated Dogfood E2E","Production Browser E2E"],"canClaim":["latest-main production evidence folded back","OPL-Webui controlled launch ready","three-layer knowledge delivery Web platform v1"],"cannotClaim":["production-ready SaaS","full SaaS","payment/team/RBAC/HA","runtime execution","artifact body/storage truth"],"rawLogPolicy":{"storesRawLogs":false,"storesSecretValues":false}},
-  "controlledLaunchReadiness": {"mode":"single_node_controlled_launch_v1","claim":"controlled_launch_readiness","owner":"one-person-lab-web-release","consumer":"release_operator","state":"latest_main_ba32d69_supported_by_folded_production_evidence_run_28422674169","businessCapabilityV1":{"contract":"contracts/web-product-profile.json#/webBusinessCapabilityV1","hardGateForControlledLaunch":true,"proof":["contracts/web-product-profile.json#/accountBasedWebAppMainPath","contracts/web-page-state-matrix.json#/userMainPathStates","productionBrowserE2EReadiness.latestAttempt"]},"hardGates":["release_image_exists","production_dry_run","production_apply","canary_smoke","availability_probe","account_session_byok_audit_quota_postgres_contracts","service_unavailable_fail_closed_contract"],"supportingEvidence":["production_authenticated_dogfood_real_upstream_structured_research_success","production_browser_e2e_real_upstream_structured_research_success","medopl_readonly_projection_dogfood","scheduled_canary_first_success"],"realUpstreamStructuredResearch":{"hardGateForControlledLaunch":false,"evidenceSource":"productionDogfoodReadiness.latestSuccessfulRun and productionBrowserE2EReadiness.latestAttempt when success","blockedAttemptPolicy":"blocked_by_upstream_provider cannot invalidate account/session/BYOK/service_unavailable fail-closed evidence by itself"},"serviceUnavailableFailClosed":{"hardGateForControlledLaunch":true,"contract":"contracts/web-page-state-matrix.json#/reliabilityModel","proof":"tests/contract/one-person-lab-web-data.test.mjs and tests/contract/one-person-lab-chat-upstream.test.mjs"},"longTaskContinuity":{"requiredProjection":["refs","progress_refs","deliverable_refs","deeplink","blocker_next_step"],"contracts":["contracts/web-runtime-bridge.json#/projectionPolicy","contracts/web-page-state-matrix.json#/structuredResultShape"]},"saasControlPlane":{"requiredContracts":["account_session","tenant_isolation","BYOK","sanitized_audit","quota_guard","postgres_store_path","release_canary"],"proof":["tests/contract/go-control-plane-http.test.mjs","tests/contract/one-person-lab-chat-upstream.test.mjs","go test ./internal/webapp"]},"productionEvidencePolicy":{"latestMainRequiresNewFoldback":true,"historicalFoldbackRunId":28142197152,"doesNotAutoApplyToLaterMainCommits":true},"cannotClaim":["production-ready SaaS","upstream provider availability","production concurrent SaaS readiness","multi-node HA","automatic rollback","Web-side OPL runtime execution","artifact body authority","full commercial SaaS lifecycle"],"latestMainEvidence":{"truthLayer":"run_evidence","evidenceScope":"latest-main-rollout","state":"folded_success_run_28422674169","runId":28422674169,"runUrl":"https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169","commit":"ba32d695e186e30fc2133002c59b2b7c781f4eb3","image":"uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69","workflow":"Cloud Rollout","completedAt":"2026-06-30T05:42:35Z","requiredStages":["Production Dry Run","Production Image Preflight","Production Apply","Production Availability Probe After Apply","Production Authenticated Dogfood E2E","Production Browser E2E"],"canClaim":["latest-main production evidence folded back","OPL-Webui controlled launch ready","three-layer knowledge delivery Web platform v1"],"cannotClaim":["production-ready SaaS","full SaaS","payment/team/RBAC/HA","runtime execution","artifact body/storage truth"],"rawLogPolicy":{"storesRawLogs":false,"storesSecretValues":false}}},
+  "latestMainEvidence": {"truthLayer":"run_evidence","evidenceScope":"latest-main-rollout","state":"folded_success_run_28427419239","runId":28427419239,"runUrl":"https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239","commit":"cd3332f04e2a257a5ded19d36e8b4b55d6990373","image":"uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f","workflow":"Cloud Rollout","completedAt":"2026-06-30T07:30:19Z","requiredStages":["Production Dry Run","Production Image Preflight","Production Apply","Production Availability Probe After Apply","Production Authenticated Dogfood E2E","Production Browser E2E"],"canClaim":["latest-main production evidence folded back","OPL-Webui controlled launch ready","three-layer knowledge delivery Web platform v1"],"cannotClaim":["production-ready SaaS","full SaaS","payment/team/RBAC/HA","runtime execution","artifact body/storage truth"],"rawLogPolicy":{"storesRawLogs":false,"storesSecretValues":false}},
+  "controlledLaunchReadiness": {"mode":"single_node_controlled_launch_v1","claim":"controlled_launch_readiness","owner":"one-person-lab-web-release","consumer":"release_operator","state":"latest_main_cd3332f_supported_by_folded_production_evidence_run_28427419239","businessCapabilityV1":{"contract":"contracts/web-product-profile.json#/webBusinessCapabilityV1","hardGateForControlledLaunch":true,"proof":["contracts/web-product-profile.json#/accountBasedWebAppMainPath","contracts/web-page-state-matrix.json#/userMainPathStates","productionBrowserE2EReadiness.latestAttempt"]},"hardGates":["release_image_exists","production_dry_run","production_apply","canary_smoke","availability_probe","account_session_byok_audit_quota_postgres_contracts","service_unavailable_fail_closed_contract"],"supportingEvidence":["production_authenticated_dogfood_real_upstream_structured_research_success","production_browser_e2e_real_upstream_structured_research_success","medopl_readonly_projection_dogfood","scheduled_canary_first_success"],"realUpstreamStructuredResearch":{"hardGateForControlledLaunch":false,"evidenceSource":"productionDogfoodReadiness.latestSuccessfulRun and productionBrowserE2EReadiness.latestAttempt when success","blockedAttemptPolicy":"blocked_by_upstream_provider cannot invalidate account/session/BYOK/service_unavailable fail-closed evidence by itself"},"serviceUnavailableFailClosed":{"hardGateForControlledLaunch":true,"contract":"contracts/web-page-state-matrix.json#/reliabilityModel","proof":"tests/contract/one-person-lab-web-data.test.mjs and tests/contract/one-person-lab-chat-upstream.test.mjs"},"longTaskContinuity":{"requiredProjection":["refs","progress_refs","deliverable_refs","deeplink","blocker_next_step"],"contracts":["contracts/web-runtime-bridge.json#/projectionPolicy","contracts/web-page-state-matrix.json#/structuredResultShape"]},"saasControlPlane":{"requiredContracts":["account_session","tenant_isolation","BYOK","sanitized_audit","quota_guard","postgres_store_path","release_canary"],"proof":["tests/contract/go-control-plane-http.test.mjs","tests/contract/one-person-lab-chat-upstream.test.mjs","go test ./internal/webapp"]},"productionEvidencePolicy":{"latestMainRequiresNewFoldback":true,"historicalFoldbackRunId":28142197152,"doesNotAutoApplyToLaterMainCommits":true},"cannotClaim":["production-ready SaaS","upstream provider availability","production concurrent SaaS readiness","multi-node HA","automatic rollback","Web-side OPL runtime execution","artifact body authority","full commercial SaaS lifecycle"],"latestMainEvidence":{"truthLayer":"run_evidence","evidenceScope":"latest-main-rollout","state":"folded_success_run_28427419239","runId":28427419239,"runUrl":"https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239","commit":"cd3332f04e2a257a5ded19d36e8b4b55d6990373","image":"uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f","workflow":"Cloud Rollout","completedAt":"2026-06-30T07:30:19Z","requiredStages":["Production Dry Run","Production Image Preflight","Production Apply","Production Availability Probe After Apply","Production Authenticated Dogfood E2E","Production Browser E2E"],"canClaim":["latest-main production evidence folded back","OPL-Webui controlled launch ready","three-layer knowledge delivery Web platform v1"],"cannotClaim":["production-ready SaaS","full SaaS","payment/team/RBAC/HA","runtime execution","artifact body/storage truth"],"rawLogPolicy":{"storesRawLogs":false,"storesSecretValues":false}}},
   "productionReleaseFailures": {
     "mode": "sanitized_failed_release_foldback",
     "state": "latest_failed_run_27878485498_image_missing_rollout_order_issue",
@@ -90,7 +90,7 @@
   },
   "productionDogfoodReadiness": {
     "mode": "secret_gated_http_authenticated_e2e",
-    "state": "executed_success_run_28422674169_real_chat_readonly_confirmed",
+    "state": "executed_success_run_28427419239_real_chat_readonly_confirmed",
     "evidenceScope": "historical",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
@@ -135,13 +135,13 @@
     },
     "cannotClaim": ["browser e2e","MedOPL runtime execution","quota exhaustion production evidence","billing source of truth","storage or node pool mutation"],
     "latestSuccessfulRun": {
-      "runId": 28422674169,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169",
-      "commit": "ba32d695e186e30fc2133002c59b2b7c781f4eb3",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69",
+      "runId": 28427419239,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239",
+      "commit": "cd3332f04e2a257a5ded19d36e8b4b55d6990373",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-30T05:42:35Z",
+      "completedAt": "2026-06-30T07:30:19Z",
       "realChat": true,
       "medoplReadonly": true,
       "publicMetadataConfirmsReadonlySwitch": true,
@@ -158,7 +158,7 @@
   },
   "productionAvailabilityReadiness": {
     "mode": "no_secret_public_http_probe",
-    "state": "executed_success_run_28422674169_after_apply",
+    "state": "executed_success_run_28427419239_after_apply",
     "evidenceScope": "historical",
     "defaultEnabled": false,
     "requiresProductionSecrets": false,
@@ -179,13 +179,13 @@
     "forbiddenSecrets": ["KUBECONFIG","OPL_IMAGE","OPL_DATABASE_URL","PGPASSWORD","MEDOPL_TOKEN","TCR_PASSWORD"],
     "cannotClaim": ["multi-node HA","production authenticated dogfood","production browser e2e","production-ready SaaS","MedOPL runtime execution","billing/payment/storage/node pool mutation"],
     "latestSuccessfulRun": {
-      "runId": 28422674169,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169",
-      "commit": "ba32d695e186e30fc2133002c59b2b7c781f4eb3",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69",
+      "runId": 28427419239,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239",
+      "commit": "cd3332f04e2a257a5ded19d36e8b4b55d6990373",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-30T05:42:35Z",
+      "completedAt": "2026-06-30T07:30:19Z",
       "afterStage": "production_apply_canary_smoke",
       "samples": 3,
       "stages": ["production_dry_run","production_apply","production_availability_probe_after_apply"],
@@ -195,7 +195,7 @@
   },
   "productionBrowserE2EReadiness": {
     "mode": "secret_gated_chromium_research_main_path",
-    "state": "executed_success_run_28422674169",
+    "state": "executed_success_run_28427419239",
     "evidenceScope": "historical",
     "defaultEnabled": false,
     "requiresProductionSecrets": true,
@@ -213,10 +213,10 @@
     "forbiddenSecrets": ["KUBECONFIG","OPL_DATABASE_URL","PGPASSWORD","MEDOPL_TOKEN","TCR_PASSWORD"],
     "coverage": ["real_browser_login","api_key_binding","research_task_template_selected","structured_research_result_sections","ordinary_chat_real_completion","chat_completed_audit","paper_runtime_gate","grant_runtime_gate","progress_refs_projection","deliverable_refs_projection","blocker_next_step","medopl_deeplink","runtime_gate_audit","sanitized_browser_evidence"],
     "latestAttempt": {
-      "runId": 28422674169,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169",
-      "commit": "ba32d695e186e30fc2133002c59b2b7c781f4eb3",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69",
+      "runId": 28427419239,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239",
+      "commit": "cd3332f04e2a257a5ded19d36e8b4b55d6990373",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f",
       "workflow": "Cloud Rollout",
       "targetHost": "https://opl.medopl.cn",
       "status": "success",
@@ -286,7 +286,7 @@
   },
   "productionObservabilityBaseline": {
     "mode": "no_secret_public_http_observability_baseline_v1",
-    "state": "release_probe_executed_run_28422674169_scheduled_canary_success_pending_long_term_ops",
+    "state": "release_probe_executed_run_28427419239_scheduled_canary_success_pending_long_term_ops",
     "evidenceScope": "historical",
     "currentPhase": "ops_evidence_contracts",
     "nextPhase": "ops_contract_detail",
@@ -316,13 +316,13 @@
       "storesSecretValues": false
     },
     "latestSuccessfulRun": {
-      "runId": 28422674169,
-      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28422674169",
-      "commit": "ba32d695e186e30fc2133002c59b2b7c781f4eb3",
-      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:ba32d69",
+      "runId": 28427419239,
+      "runUrl": "https://github.com/RenDeHuang/OPL-Webui/actions/runs/28427419239",
+      "commit": "cd3332f04e2a257a5ded19d36e8b4b55d6990373",
+      "image": "uswccr.ccs.tencentyun.com/webopl/opl-webui:cd3332f",
       "targetHost": "https://opl.medopl.cn",
       "workflow": "Cloud Rollout",
-      "completedAt": "2026-06-30T05:42:35Z",
+      "completedAt": "2026-06-30T07:30:19Z",
       "coverage": ["/healthz repeated samples","/readyz repeated samples","/metricsz repeated samples","/ repeated samples","/metricsz summary fields"]
     },
     "productionReadinessLevels": [
