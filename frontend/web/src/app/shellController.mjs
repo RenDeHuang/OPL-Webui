@@ -38,6 +38,7 @@ const state = {
   selectedModelProfile: 'auto',
   skillImportState: 'idle',
   showApiKeyChange: false,
+  newChatStatus: 'idle',
   activeConversationId: '',
   activeConversationMeta: null,
   messages: [],
@@ -366,6 +367,7 @@ async function startNewConversation() {
   state.messages = [];
   state.chatTurnStages = [];
   state.activeConversationMeta = null;
+  state.newChatStatus = state.view.accountState === 'anonymous' ? 'created' : 'pending';
   setHashView('home');
   render();
   if (state.view.accountState !== 'anonymous') {
@@ -374,6 +376,9 @@ async function startNewConversation() {
       state.activeConversationId = result.conversation.conversationId;
       state.activeConversationMeta = result.conversation;
       state.view = await loadOnePersonLabWebState(fetch, { loadSnapshot: false });
+      state.newChatStatus = 'created';
+    } else {
+      state.newChatStatus = 'error';
     }
   }
   focusAfterRender('#chat-input');

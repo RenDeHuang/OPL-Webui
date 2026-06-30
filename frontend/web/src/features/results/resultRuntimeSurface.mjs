@@ -35,7 +35,7 @@ function renderResearchResult(result, { escapeAttr, escapeHTML }) {
   document.body.dataset.lastResearchResultSections = String(result.sections.length);
   return `
     <article class="research-result" data-research-result="${escapeAttr(result.kind)}" data-research-result-marker="${escapeAttr(result.marker)}">
-      <div class="status-line">MedOPL continuation ready / refs available</div>
+      <div class="status-line">已生成研究计划，可继续补充材料和引用线索。</div>
       ${result.sections.map((section) => `
         <section data-research-result-section="${escapeAttr(section.id)}">
           <h3>${escapeHTML(section.title)}</h3>
@@ -86,7 +86,10 @@ export function renderBlockedView(state, helpers) {
         <div data-runtime-task-card="${helpers.escapeAttr(taskCard.kind || 'runtime_task_card')}" data-runtime-task-marker="${helpers.escapeAttr(taskCard.marker || '')}" data-runtime-projection-status="${helpers.escapeAttr(taskCard.status || '')}" data-runtime-run-ref="${helpers.escapeAttr(taskCard.runRef || '')}">
           <span>${helpers.escapeHTML(taskCard.capabilityMarker || taskCard.marker || '@论文')} · 前往 MedOPL 开通</span>
           <h2>${helpers.escapeHTML(taskCard.title || '需要 MedOPL 授权')}</h2>
-          <p>${helpers.escapeHTML(taskCard.message || 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。')}</p>
+          <dl class="handoff-next-actions">
+            <div><dt>发生了什么</dt><dd>${helpers.escapeHTML(taskCard.message || '这个任务需要先在 MedOPL 开通专业运行资源。')}</dd></div>
+            <div><dt>建议下一步</dt><dd>前往 MedOPL 处理，完成后回到当前聊天继续。</dd></div>
+          </dl>
           ${renderRuntimeProjectionRefs(taskCard, helpers)}
           <a href="${helpers.escapeAttr(taskCard.deepLink || MEDOPL_DEEP_LINK)}">前往 MedOPL 处理</a>
         </div>
@@ -107,10 +110,10 @@ function renderRuntimeProjectionRefs(taskCard = {}, { escapeAttr, escapeHTML }) 
   if (progress.length === 0 && deliverables.length === 0 && artifacts.length === 0) return '';
   return `
     <div class="runtime-projection" data-runtime-run-projection data-webui-artifact-body="${escapeAttr(taskCard.webuiArtifactBody || 'forbidden')}" data-webui-storage-truth="${escapeAttr(taskCard.webuiStorageTruth || 'forbidden')}">
-      <span>refs projection only</span>
-      ${progress.length > 0 ? `<ul data-runtime-progress-refs>${progress.map((item) => `<li>${escapeHTML(item.stage || item.title || item.state || 'progress ref')}</li>`).join('')}</ul>` : ''}
-      ${deliverables.length > 0 ? `<ul data-runtime-deliverable-refs>${deliverables.map((item) => `<li>${escapeHTML(item.deliverableId || item.ref || item.title || item.kind || 'deliverable ref')}</li>`).join('')}</ul>` : ''}
-      ${artifacts.length > 0 ? `<ul data-runtime-artifact-refs>${artifacts.map((item) => `<li>${escapeHTML(item.artifactRef || item.title || item.kind || 'artifact ref')}</li>`).join('')}</ul>` : ''}
+      <span>已同步进度和交付线索</span>
+      ${progress.length > 0 ? `<ul data-runtime-progress-refs>${progress.map((item) => `<li>${escapeHTML(item.stage || item.title || item.state || '进度')}</li>`).join('')}</ul>` : ''}
+      ${deliverables.length > 0 ? `<ul data-runtime-deliverable-refs>${deliverables.map((item) => `<li>${escapeHTML(item.title || item.kind || item.deliverableId || item.ref || '交付')}</li>`).join('')}</ul>` : ''}
+      ${artifacts.length > 0 ? `<ul data-runtime-artifact-refs>${artifacts.map((item) => `<li>${escapeHTML(item.title || item.kind || item.artifactRef || '输出')}</li>`).join('')}</ul>` : ''}
     </div>`;
 }
 

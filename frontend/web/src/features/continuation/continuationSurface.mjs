@@ -7,10 +7,10 @@ export function renderProjectWindowCenter(view, helpers) {
   const conversations = view.conversations || [];
   return `
     <section class="file-library" data-shell-state="project_window_continuation_center" data-project-window-center data-projection-source="GET /api/tasks">
-      <header><h1>项目</h1><button type="button" data-shell-action="home">新建项目</button></header>
+      <header><h1>项目</h1><button type="button" data-shell-action="home">新聊天</button></header>
       <div class="file-tabs"><button type="button" aria-selected="true">全部</button><button type="button">进行中</button><button type="button">需处理</button></div>
       <div class="file-list" data-project-window-list>
-        ${conversations.length === 0 && tasks.length === 0 ? '<p data-project-window-empty>还没有项目。新建项目会先创建一个聊天草稿；专业任务投影返回后会显示进度和下一步。</p>' : ''}
+        ${conversations.length === 0 && tasks.length === 0 ? '<p data-project-window-empty>暂无项目归档。先从新聊天保存上下文。</p>' : ''}
         ${conversations.map((conversation) => renderConversationCard(conversation, helpers)).join('')}
         ${tasks.map((task) => renderProjectWindowCard(task, helpers)).join('')}
       </div>
@@ -24,7 +24,7 @@ export function renderConversationCard(conversation, helpers) {
       <small>${helpers.escapeHTML(conversationStatusLabel(conversation.status))} · ${helpers.escapeHTML(helpers.formatShortDate(conversation.updatedAt))}</small>
       <div class="project-window-signals" data-project-window-continuation-signals>
         <span data-project-window-current-objective>${helpers.escapeHTML(conversation.title || '新聊天')}</span>
-        <span data-project-window-input-refs>等待消息或材料引用</span>
+        <span data-project-window-input-refs>等待消息或材料</span>
         <span data-project-window-output-refs>暂无输出</span>
         <span data-project-window-blocker-why>暂无阻塞</span>
         <span data-project-window-next-action>继续聊天</span>
@@ -38,7 +38,7 @@ export function renderProjectWindowCard(task, helpers) {
   return `
     <article data-project-window-item="${helpers.escapeAttr(task.taskId)}" data-project-window-status="${helpers.escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
       <strong>${helpers.escapeHTML(snapshot.currentObjective)}</strong>
-      <small>${helpers.escapeHTML(task.status || 'projection')} · ${helpers.escapeHTML(helpers.formatShortDate(task.updatedAt))} · ${snapshot.refCount} refs</small>
+      <small>${helpers.escapeHTML(taskStatusLabel(task.status))} · ${helpers.escapeHTML(helpers.formatShortDate(task.updatedAt))} · ${snapshot.refCount} 条线索</small>
       <div class="project-window-signals" data-project-window-continuation-signals>
         <span data-project-window-current-objective>${helpers.escapeHTML(snapshot.currentObjective)}</span>
         <span data-project-window-input-refs>${helpers.escapeHTML(snapshot.inputsSummary)}</span>
@@ -80,7 +80,7 @@ export function renderInspector(state, helpers) {
       </div>
       <section data-inspector-panel="autonomy" ${state.inspectorTab === 'autonomy' ? '' : 'hidden'}>
         <h3>进度</h3>
-        <p data-inspector-autonomy-empty>显示当前任务正在做什么、引用了什么，以及下一步。</p>
+        <p data-inspector-autonomy-empty>显示当前任务正在做什么、用了哪些材料、下一步是什么。</p>
         <dl>
           <div><dt>目标</dt><dd data-inspector-autonomy-current-objective>${helpers.escapeHTML(snapshot.currentObjective)}</dd></div>
           <div><dt>正在做</dt><dd data-inspector-autonomy-timeline>${helpers.escapeHTML(snapshot.activityTimeline)}</dd></div>
@@ -105,7 +105,7 @@ export function renderInspector(state, helpers) {
 }
 
 export function renderModelMenu(state, helpers) {
-  const configuredModel = state.view?.modelSelector?.model || 'gpt-5.5';
+  const configuredModel = state.view?.modelSelector?.model || '当前默认模型';
   const profiles = [
     ['auto', `当前配置：${configuredModel}`, '由 config.toml / OPL_CHAT_MODEL 决定'],
     ['fast', '快速', '适合轻量问答和草稿'],
@@ -146,7 +146,7 @@ export function renderSkillImportDialog(state, helpers) {
 
 function renderRefs(refs, attr, helpers, emptyLabel) {
   if (!refs.length) return `<p ${attr}>${helpers.escapeHTML(emptyLabel)}</p>`;
-  return `<ul ${attr}>${refs.map((ref) => `<li>${helpers.escapeHTML(ref.label || ref.ref || ref.kind || 'ref')}</li>`).join('')}</ul>`;
+  return `<ul ${attr}>${refs.map((ref) => `<li>${helpers.escapeHTML(ref.label || ref.ref || ref.kind || '引用')}</li>`).join('')}</ul>`;
 }
 
 function activeInspectorSnapshot(state) {
@@ -159,8 +159,8 @@ function activeInspectorSnapshot(state) {
       activityTimeline: '已生成研究计划草案',
       inputs: [],
       outputs: result.sections.map((section) => ({ label: section.title, ref: section.id })),
-      blockerWhy: 'ordinary path does not require runtime/storage',
-      nextAction: '继续追问，或选择专业任务进入 MedOPL handoff',
+      blockerWhy: '普通科研聊天无需前往 MedOPL',
+      nextAction: '继续追问，或选择专业任务前往 MedOPL',
     };
   }
   return {
@@ -168,7 +168,7 @@ function activeInspectorSnapshot(state) {
     activityTimeline: '等待任务开始',
     inputs: [],
     outputs: [],
-    blockerWhy: 'no active blocker',
+    blockerWhy: '暂无阻塞',
     nextAction: '从 @科研 或专业任务入口开始',
   };
 }
@@ -181,11 +181,11 @@ function continuationSnapshot(task = {}) {
   const currentObjective = projectWindowTitle(task);
   return {
     currentObjective,
-    activityTimeline: task.status || 'projection',
+    activityTimeline: taskStatusLabel(task.status),
     inputs,
     outputs,
-    inputsSummary: inputs.length ? `${inputs.length} 个输入引用` : '暂无输入引用',
-    outputsSummary: outputs.length ? `${outputs.length} 个输出引用` : '暂无输出引用',
+    inputsSummary: inputs.length ? `${inputs.length} 个输入材料` : '暂无输入材料',
+    outputsSummary: outputs.length ? `${outputs.length} 个输出结果` : '暂无输出结果',
     blockerWhy: blockerTitle || (task.status === 'blocked' ? '等待 MedOPL 开通' : '暂无阻塞'),
     nextAction: action,
     refCount: inputs.length + outputs.length,
@@ -200,7 +200,7 @@ export function modelProfileLabel(stateOrProfile) {
   const selected = typeof stateOrProfile === 'string' ? stateOrProfile : stateOrProfile?.selectedModelProfile;
   const configuredModel = typeof stateOrProfile === 'object' ? stateOrProfile.view?.modelSelector?.model : '';
   const labels = {
-    auto: `模型：${configuredModel || 'gpt-5.5'}`,
+    auto: `模型：${configuredModel || '默认配置'}`,
     fast: '模型：快速配置',
     deep: '模型：深度配置',
   };
@@ -219,4 +219,9 @@ function tabLabel(tab) {
 function conversationStatusLabel(status) {
   const labels = { draft: '草稿', running: '运行中', completed: '已完成', failed: '失败' };
   return labels[status] || '聊天';
+}
+
+function taskStatusLabel(status) {
+  const labels = { blocked: '待开通', running: '进行中', completed: '已完成', failed: '失败', projected: '已同步' };
+  return labels[status] || '已记录';
 }

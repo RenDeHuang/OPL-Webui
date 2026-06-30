@@ -122,7 +122,7 @@ export function runtimeTaskCardForPrompt(prompt = '') {
     marker: semantic.marker,
     requiredCapability: semantic.workflow,
     title: `${semantic.marker} 进入 MedOPL 专业能力`,
-    message: '继续到 MedOPL 开通或确认运行资源；回到 Web 后保留当前任务上下文和 refs 投影。',
+    message: '继续到 MedOPL 开通或确认运行资源；回到 Web 后保留当前任务上下文和进度线索。',
     handoffMode: 'conversion_handoff',
     capabilityMarker: semantic.marker,
     reason: 'specialist_capability_requires_medopl_runtime_or_resource_binding',
@@ -154,8 +154,8 @@ export function runtimeTaskCardForRun(prompt = '', run = {}) {
   const runRef = run.run?.runId || run.run?.runRef || run.artifactRef || '';
   return {
     ...base,
-    title: `${base.marker} MedOPL continuation ready`,
-    message: 'MedOPL 已接受运行意图；Web 只显示 refs、progress 和 deliverables projection。',
+    title: `${base.marker} MedOPL 已接收任务`,
+    message: 'MedOPL 已接受运行任务；Web 只显示进度和交付线索。',
     status,
     runRef,
     progress: Array.isArray(run.progress) ? run.progress : [],
@@ -311,7 +311,7 @@ export function sanitizeGateState(gateState = {}) {
 export function normalizeRuntimeBlocker(blocker = {}) {
   return {
     kind: String(blocker.kind || 'runtime_blocked'),
-    title: String(blocker.title || 'MedOPL runtime gate blocked'),
+    title: String(blocker.title || 'MedOPL 专业运行资源尚未开通'),
     nextAction: String(blocker.nextAction || ''),
     deepLink: safeMedoplDeepLink(blocker.deepLink),
   };
@@ -327,8 +327,8 @@ export function normalizeNextAction(action = {}) {
 
 function researchResultSectionBody(sectionID, summary) {
   if (sectionID === 'research_plan') return summary;
-  if (sectionID === 'evidence_refs') return '把关键材料、引用和数据来源作为 refs 继续补充；当前不返回文件正文。';
-  return '下一步可继续 @科研 细化计划，或用 @论文、@基金 进入 MedOPL gate。';
+  if (sectionID === 'evidence_refs') return '继续补充关键材料、引用和数据来源；当前不返回文件正文。';
+  return '下一步可继续 @科研 细化计划，或用 @论文、@基金 前往 MedOPL。';
 }
 
 function ctaForState(state) {
@@ -352,7 +352,7 @@ function runtimeStatusAction(result = {}) {
 
 function runtimeGateMessage(gateState = {}) {
   const blockers = Array.isArray(gateState.blockers) ? gateState.blockers.map(normalizeRuntimeBlocker) : [];
-  if (blockers.length === 0) return 'Web 只显示授权入口和只读投影，不执行真实 OPL 任务。';
+  if (blockers.length === 0) return '这个任务需要先在 MedOPL 开通专业运行资源。';
   return blockers.map((blocker) => blocker.title).join(' / ');
 }
 

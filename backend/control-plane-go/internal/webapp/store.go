@@ -133,6 +133,7 @@ type Store interface {
 	SaveAPIKeyBinding(APIKeyBinding) error
 	GetAPIKeyBinding(userID string) (APIKeyBinding, bool)
 	CreateConversation(userID string, title string) (Conversation, error)
+	UpdateConversationTitle(userID string, conversationID string, title string) (Conversation, error)
 	ListConversations(userID string) []Conversation
 	GetConversation(userID string, conversationID string) (Conversation, []ChatMessage, bool)
 	AddMessage(ChatMessage) error
@@ -279,6 +280,19 @@ func (store *MemoryStore) CreateConversation(userID string, title string) (Conve
 	defer store.mu.Unlock()
 	now := time.Now().UTC()
 	conversation := Conversation{ID: "conv_" + randomHex(8), UserID: userID, Title: title, CreatedAt: now, UpdatedAt: now}
+	store.conversations[conversation.ID] = conversation
+	return conversation, nil
+}
+
+func (store *MemoryStore) UpdateConversationTitle(userID string, conversationID string, title string) (Conversation, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	conversation, ok := store.conversations[conversationID]
+	if !ok || conversation.UserID != userID {
+		return Conversation{}, ErrNotFound
+	}
+	conversation.Title = title
+	conversation.UpdatedAt = time.Now().UTC()
 	store.conversations[conversation.ID] = conversation
 	return conversation, nil
 }

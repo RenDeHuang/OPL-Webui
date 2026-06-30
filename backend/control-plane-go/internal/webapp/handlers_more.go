@@ -312,12 +312,19 @@ func (server Server) ensureConversation(userID string, conversationID string, me
 		conversation, _, ok := server.Store.GetConversation(userID, conversationID)
 		return conversation, ok
 	}
-	title := message
+	conversation, err := server.Store.CreateConversation(userID, conversationTitleFromMessage(message))
+	return conversation, err == nil
+}
+
+func conversationTitleFromMessage(message string) string {
+	title := strings.TrimSpace(message)
+	if title == "" {
+		return "新聊天"
+	}
 	if len([]rune(title)) > 32 {
 		title = string([]rune(title)[:32])
 	}
-	conversation, err := server.Store.CreateConversation(userID, title)
-	return conversation, err == nil
+	return title
 }
 
 func conversationSummary(conversation Conversation, messageCount int) map[string]any {
@@ -336,7 +343,7 @@ func conversationSummary(conversation Conversation, messageCount int) map[string
 }
 
 func (server Server) writeRuntimeRequired(response http.ResponseWriter, userID string, conversationID string) {
-	content := "该能力需要 MedOPL Runtime / Storage / Node Pool"
+	content := "该能力需要前往 MedOPL 开通或确认专业运行资源。"
 	_ = server.Store.AddMessage(ChatMessage{ConversationID: conversationID, UserID: userID, Role: "assistant", Content: content})
 	server.recordAudit(userID, "runtime_gate.required", map[string]string{"conversationId": conversationID})
 	writeJSON(response, http.StatusConflict, map[string]any{

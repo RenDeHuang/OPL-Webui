@@ -141,7 +141,10 @@ test('workbench closure p0 keeps account new chat project search and inspector l
   assert.match(domSource, /data-provider-bound-summary/);
   assert.match(domSource, /data-provider-change-key/);
   assert.match(domSource, /data-provider-form/);
-  assert.match(domSource, /新建项目/);
+  assert.match(domSource, /新聊天/);
+  assert.match(domSource, /data-new-chat-pending/);
+  assert.match(domSource, /data-new-chat-status/);
+  assert.match(domSource, /聊天草稿已创建/);
   assert.match(domSource, /搜索聊天、项目、文件/);
   assert.match(domSource, /暂无聊天、项目或文件/);
   assert.match(domSource, /data-turn-stage/);
@@ -151,6 +154,8 @@ test('workbench closure p0 keeps account new chat project search and inspector l
   assert.match(domSource, /引用/);
   assert.match(domSource, /结果/);
   assert.match(domSource, /下一步/);
+  assert.match(domSource, /发生了什么/);
+  assert.match(domSource, /建议下一步/);
 
   assert.doesNotMatch(domSource, /<span>Account<\/span>/);
   assert.doesNotMatch(domSource, /Go control plane/);
@@ -158,6 +163,12 @@ test('workbench closure p0 keeps account new chat project search and inspector l
   assert.doesNotMatch(domSource, /readonly commercial projection/);
   assert.doesNotMatch(domSource, /API key \/ quota projection/);
   assert.doesNotMatch(domSource, /external capability handoff/);
+  assert.doesNotMatch(domSource, /MedOPL continuation ready \/ refs available/);
+  assert.doesNotMatch(domSource, /refs projection only/);
+  assert.doesNotMatch(domSource, /runtime gate blocked/i);
+  assert.doesNotMatch(domSource, /Web 只显示.*投影/);
+  assert.doesNotMatch(domSource, /专业任务投影/);
+  assert.doesNotMatch(domSource, />[^<]*任务投影[^<]*</);
   assert.doesNotMatch(domSource, /项目 \/ 窗口/);
   assert.doesNotMatch(domSource, /新建窗口/);
   assert.doesNotMatch(domSource, /继续窗口/);

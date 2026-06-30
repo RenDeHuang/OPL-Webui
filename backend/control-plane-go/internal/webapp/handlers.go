@@ -196,6 +196,11 @@ func (server Server) HandleChat(response http.ResponseWriter, request *http.Requ
 		return
 	}
 	_ = server.Store.AddMessage(ChatMessage{ConversationID: conversation.ID, UserID: user.ID, Role: "user", Content: payload.Message})
+	if conversation.Title == "新聊天" {
+		if renamed, err := server.Store.UpdateConversationTitle(user.ID, conversation.ID, conversationTitleFromMessage(payload.Message)); err == nil {
+			conversation = renamed
+		}
+	}
 	if requiresRuntime(payload.Message) {
 		server.writeRuntimeRequired(response, user.ID, conversation.ID)
 		return

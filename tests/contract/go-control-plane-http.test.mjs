@@ -432,9 +432,14 @@ test('chat conversations are isolated by public account session', async () => {
 });
 
 test('new chat creates a durable draft conversation before the first message', async () => {
-  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  const upstream = await startFakeUpstream();
+  const { child, baseUrl } = await startGoServerWithEnv({
+    ...secureEnv,
+    OPL_CHAT_TEST_UPSTREAM_BASE_URL: upstream.baseUrl,
+  });
   try {
     const session = await register(baseUrl, 'draft-chat@example.com');
+    await putJSON(baseUrl, '/api/settings/model-provider', session.cookieHeader, { apiKey: 'sk-draft-chat-secret' });
 
     const created = await authedPost(baseUrl, '/api/chat/conversations', session.cookieHeader, { title: '' });
     assert.equal(created.response.status, 201);
@@ -458,8 +463,25 @@ test('new chat creates a durable draft conversation before the first message', a
     assert.equal(read.response.status, 200);
     assert.equal(read.body.conversation.status, 'draft');
     assert.deepEqual(read.body.messages, []);
+
+    const chat = await authedPost(baseUrl, '/api/chat', session.cookieHeader, {
+      conversationId: created.body.conversation.conversationId,
+      message: '@科研 帮我设计一个长期课题',
+    });
+    assert.equal(chat.response.status, 200);
+    assert.equal(chat.body.conversationId, created.body.conversation.conversationId);
+
+    const afterFirstMessage = await jsonFetch(`${baseUrl}/api/chat/conversations`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(afterFirstMessage.response.status, 200);
+    assert.equal(afterFirstMessage.body.conversations.length, 1);
+    assert.equal(afterFirstMessage.body.conversations[0].status, 'completed');
+    assert.equal(afterFirstMessage.body.conversations[0].messageCount, 2);
+    assert.equal(afterFirstMessage.body.conversations[0].title, '@科研 帮我设计一个长期课题');
   } finally {
     await stopGoServer(child);
+    await upstream.close();
   }
 });
 

@@ -17,6 +17,20 @@ returning created_at, updated_at
 	return conversation, err
 }
 
+func (store PostgresStore) UpdateConversationTitle(userID string, conversationID string, title string) (Conversation, error) {
+	conversation := Conversation{}
+	err := store.db.QueryRowContext(context.Background(), `
+update chat_conversations
+set title = $3, updated_at = now()
+where id = $1 and user_id = $2
+returning id, user_id, title, created_at, updated_at
+`, conversationID, userID, title).Scan(&conversation.ID, &conversation.UserID, &conversation.Title, &conversation.CreatedAt, &conversation.UpdatedAt)
+	if err != nil {
+		return Conversation{}, err
+	}
+	return conversation, nil
+}
+
 func (store PostgresStore) ListConversations(userID string) []Conversation {
 	rows, err := store.db.QueryContext(context.Background(), `
 select id, user_id, title, created_at, updated_at

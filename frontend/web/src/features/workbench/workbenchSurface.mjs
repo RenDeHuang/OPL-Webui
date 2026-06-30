@@ -46,26 +46,29 @@ function renderSidebar(state, { escapeAttr, escapeHTML, formatShortDate }) {
     <aside class="sidebar" data-side-navigation aria-label="One Person Lab navigation">
       <div class="sidebar-brand">One Person Lab</div>
       <nav class="top-nav">
-        <button type="button" data-shell-action="home" data-new-chat-trigger><span aria-hidden="true">+</span><span class="nav-label">新聊天</span></button>
+        <button type="button" data-shell-action="home" data-new-chat-trigger data-new-chat-pending="${String(state.newChatStatus === 'pending')}" aria-busy="${String(state.newChatStatus === 'pending')}"><span aria-hidden="true">+</span><span class="nav-label">新聊天</span></button>
         <button type="button" data-search-trigger><span aria-hidden="true">⌕</span><span class="nav-label">搜索聊天</span></button>
         <button type="button" data-plus-file-trigger><span aria-hidden="true">↑</span><span class="nav-label">文件库</span></button>
         <button type="button" data-shell-action="workflows"><span aria-hidden="true">◷</span><span class="nav-label">已安排/任务</span></button>
         <button type="button" data-shell-action="skills"><span aria-hidden="true">◎</span><span class="nav-label">应用 / Skills</span></button>
       </nav>
+      ${state.newChatStatus === 'pending' ? '<p class="project-window-empty" data-new-chat-status>正在创建聊天草稿...</p>' : ''}
+      ${state.newChatStatus === 'created' ? '<p class="project-window-empty" data-new-chat-status>聊天草稿已创建。</p>' : ''}
+      ${state.newChatStatus === 'error' ? '<p class="project-window-empty" data-new-chat-status>创建失败，请重试。</p>' : ''}
       <div class="sidebar-divider"></div>
       <div class="project-tree" data-project-window-route data-projection-source="GET /api/tasks">
         <div class="tree-heading"><span>置顶</span></div>
-        <p class="project-window-empty">暂无置顶。重要聊天或项目可置顶后显示在这里。</p>
+        <p class="project-window-empty">暂无置顶。</p>
         <button type="button" class="tree-heading tree-heading-action" data-shell-action="projects"><span>项目</span></button>
-        <p class="project-window-empty">从新建项目开始组织长期课题；不会生成假项目数据。</p>
+        <p class="project-window-empty">项目归档即将接入；先用聊天保存上下文。</p>
         <div class="tree-heading"><span>聊天历史</span></div>
         <div class="project-window-list" data-project-window-list data-conversation-list>
-          ${conversations.length === 0 ? '<p data-conversation-empty>还没有聊天。点击新聊天会先创建草稿，发送后继续保留上下文。</p>' : conversations.map((conversation) => `
+          ${conversations.length === 0 ? '<p data-conversation-empty>暂无聊天。点击新聊天会创建草稿。</p>' : conversations.map((conversation) => `
             <button type="button" data-conversation-entry data-conversation-id="${escapeAttr(conversation.conversationId)}" data-conversation-status="${escapeAttr(conversation.status || 'draft')}" aria-current="${String(state.activeConversationId === conversation.conversationId)}">
               <span>${escapeHTML(conversation.title || '新聊天')}</span><small>${escapeHTML(conversationStatusLabel(conversation))} · ${escapeHTML(formatShortDate(conversation.updatedAt))}</small>
             </button>
           `).join('')}
-          ${tasks.length === 0 ? '<p data-project-window-empty>还没有任务投影。专业任务返回后会显示 refs、进度和下一步。</p>' : tasks.map((task) => `
+          ${tasks.length === 0 ? '<p data-project-window-empty>暂无专业任务。前往 MedOPL 后会回到这里显示进度。</p>' : tasks.map((task) => `
             <button type="button" data-project-window-entry data-project-window-item="${escapeAttr(task.taskId)}" data-project-window-status="${escapeAttr(task.status)}" data-projection-source="GET /api/tasks">
               <span>${escapeHTML(projectWindowTitle(task))}</span><small>${escapeHTML(formatShortDate(task.updatedAt))}</small>
             </button>
