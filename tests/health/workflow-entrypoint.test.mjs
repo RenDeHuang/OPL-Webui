@@ -155,6 +155,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /authenticated_dogfood_e2e:/);
   assert.match(workflow, /availability_probe:/);
   assert.match(workflow, /production_browser_e2e:/);
+  assert.match(workflow, /commercial_consumer_ready_path_e2e:/);
   assert.match(workflow, /rollback:/);
   assert.match(workflow, /production/);
   assert.match(workflow, /options:\s*\n\s*- production/);
@@ -186,6 +187,9 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /production-browser-e2e:/);
   assert.match(workflow, /production-browser-e2e:[\s\S]*?needs:\s*production-apply/);
   assert.match(workflow, /production-browser-e2e:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.production_browser_e2e\s*\}\}/);
+  assert.match(workflow, /commercial-consumer-ready-path-e2e:/);
+  assert.match(workflow, /commercial-consumer-ready-path-e2e:[\s\S]*?needs:\s*production-apply/);
+  assert.match(workflow, /commercial-consumer-ready-path-e2e:[\s\S]*?if:\s*\$\{\{\s*inputs\.apply && inputs\.commercial_consumer_ready_path_e2e\s*\}\}/);
   assert.match(workflow, /production-availability-probe-current:/);
   assert.match(workflow, /production-availability-probe-current:[\s\S]*?needs:\s*production-dry-run/);
   assert.match(workflow, /production-availability-probe-current:[\s\S]*?if:\s*\$\{\{\s*!inputs\.apply && !inputs\.rollback && inputs\.availability_probe\s*\}\}/);
@@ -212,6 +216,7 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(workflow, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
   assert.match(workflow, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
   assert.match(workflow, /node scripts\/cloud-rollout\.mjs --dogfood-e2e/);
+  assert.match(workflow, /node scripts\/cloud-rollout\.mjs --commercial-consumer-e2e/);
   assert.match(workflow, /node tests\/browser\/research-main-path-runner\.mjs --production/);
   assert.match(workflow, /RUNNER_TEMP\/kubeconfig/);
   assert.match(workflow, /chmod 600 "\$RUNNER_TEMP\/kubeconfig"/);
@@ -278,7 +283,10 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(rollbackJob, /KUBECONFIG="\$RUNNER_TEMP\/kubeconfig" node scripts\/cloud-rollout\.mjs --rollback/);
   assert.doesNotMatch(rollbackJob, /OPL_DOGFOOD_API_KEY|OPL_DATABASE_URL|PGPASSWORD|docker\s+push/i);
 
-  const productionBrowserJob = workflow.slice(workflow.indexOf('production-browser-e2e:'));
+  const productionBrowserJob = workflow.slice(
+    workflow.indexOf('production-browser-e2e:'),
+    workflow.indexOf('commercial-cross-repo-browser-canary:'),
+  );
   assert.match(productionBrowserJob, /environment:\s*production/);
   assert.match(productionBrowserJob, /runs-on:\s*ubuntu-latest/);
   assert.match(productionBrowserJob, /actions\/setup-node@v4/);
@@ -293,6 +301,24 @@ test('github cloud rollout workflow manually gates production rollout', () => {
   assert.match(productionBrowserJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
   assert.match(productionBrowserJob, /::add-mask::\$\{OPL_DOGFOOD_PASSWORD\}/);
   assert.doesNotMatch(productionBrowserJob, /self-hosted|tencent-cloud|KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD/i);
+
+  const commercialConsumerJob = workflow.slice(workflow.indexOf('commercial-consumer-ready-path-e2e:'));
+  assert.match(commercialConsumerJob, /environment:\s*production/);
+  assert.match(commercialConsumerJob, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
+  assert.match(commercialConsumerJob, /OPL_COMMERCIAL_CONSUMER_E2E:\s*1/);
+  assert.match(commercialConsumerJob, /OPL_BASE_URL:\s*https:\/\/opl\.medopl\.cn/);
+  assert.match(commercialConsumerJob, /MEDOPL_PUBLIC_BASE_URL:\s*https:\/\/portal\.medopl\.cn/);
+  assert.match(commercialConsumerJob, /OPL_DOGFOOD_EMAIL:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_EMAIL\s*\}\}/);
+  assert.match(commercialConsumerJob, /OPL_DOGFOOD_PASSWORD:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_PASSWORD\s*\}\}/);
+  assert.match(commercialConsumerJob, /OPL_DOGFOOD_API_KEY:\s*\$\{\{\s*secrets\.OPL_DOGFOOD_API_KEY\s*\}\}/);
+  assert.match(commercialConsumerJob, /MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256:\s*\$\{\{\s*secrets\.MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256\s*\}\}/);
+  assert.match(commercialConsumerJob, /MEDOPL_WEBHOOK_SECRET:\s*\$\{\{\s*secrets\.MEDOPL_WEBHOOK_SECRET\s*\}\}/);
+  assert.match(commercialConsumerJob, /::add-mask::\$\{OPL_DOGFOOD_API_KEY\}/);
+  assert.match(commercialConsumerJob, /::add-mask::\$\{OPL_DOGFOOD_PASSWORD\}/);
+  assert.match(commercialConsumerJob, /::add-mask::\$\{MEDOPL_WEBHOOK_SECRET\}/);
+  assert.match(commercialConsumerJob, /::add-mask::\$\{MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256\}/);
+  assert.match(commercialConsumerJob, /node scripts\/cloud-rollout\.mjs --commercial-consumer-e2e/);
+  assert.doesNotMatch(commercialConsumerJob, /KUBECONFIG|kubectl|OPL_DATABASE_URL|PGPASSWORD|TCR_PASSWORD|docker\s+push/i);
 
   const availabilityCurrentJob = workflow.slice(
     workflow.indexOf('production-availability-probe-current:'),

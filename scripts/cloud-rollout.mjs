@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from 'node:child_process';
+import { runCommercialConsumerE2E } from './commercial-consumer-canary.mjs';
 
 const args = new Set(process.argv.slice(2));
 const apply = args.has('--apply');
 const rollback = args.has('--rollback');
 const rollbackPlan = args.has('--rollback-plan');
 const imagePreflight = args.has('--image-preflight');
-const dryRun = !apply && !rollback && !rollbackPlan && !imagePreflight;
+const commercialConsumerE2E = args.has('--commercial-consumer-e2e');
+const dryRun = !apply && !rollback && !rollbackPlan && !imagePreflight && !commercialConsumerE2E;
 
-if ([apply, rollback, rollbackPlan, imagePreflight].filter(Boolean).length > 1) {
-  throw new Error('--apply, --rollback, --rollback-plan, and --image-preflight are mutually exclusive');
+if ([apply, rollback, rollbackPlan, imagePreflight, commercialConsumerE2E].filter(Boolean).length > 1) {
+  throw new Error('--apply, --rollback, --rollback-plan, and --image-preflight are mutually exclusive with --commercial-consumer-e2e');
 }
 
 const namespace = process.env.OPL_NAMESPACE ?? 'opl-webui';
@@ -49,6 +51,11 @@ if (args.has('--dogfood-e2e')) {
 
 if (args.has('--availability-probe')) {
   await runAvailabilityProbe();
+  process.exit(0);
+}
+
+if (commercialConsumerE2E) {
+  await runCommercialConsumerE2E();
   process.exit(0);
 }
 
@@ -605,7 +612,12 @@ function assertEqual(actual, expected, label) {
 
 function assertNoSensitive(value) {
   const text = JSON.stringify(value);
-  for (const sensitive of [process.env.OPL_DOGFOOD_API_KEY, process.env.OPL_DOGFOOD_PASSWORD]) {
+  for (const sensitive of [
+    process.env.OPL_DOGFOOD_API_KEY,
+    process.env.OPL_DOGFOOD_PASSWORD,
+    process.env.MEDOPL_WEBHOOK_SECRET,
+    process.env.MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256,
+  ]) {
     if (sensitive && text.includes(sensitive)) throw new Error('dogfood response contains sensitive material');
   }
   assertNoUnsafeFields(value);

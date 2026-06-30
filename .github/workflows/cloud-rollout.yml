@@ -43,6 +43,11 @@ on:
         required: true
         default: false
         type: boolean
+      commercial_consumer_ready_path_e2e:
+        description: Run scoped commercial consumer ready path e2e after approval against OPL-Webui and MedOPL public APIs.
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -380,3 +385,33 @@ jobs:
 
       - name: Run commercial cross-repo browser canary
         run: node tests/browser/research-main-path-runner.mjs --commercial-cross-repo-canary
+
+  commercial-consumer-ready-path-e2e:
+    name: Commercial Consumer Ready Path E2E
+    needs: production-apply
+    if: ${{ inputs.apply && inputs.commercial_consumer_ready_path_e2e }}
+    runs-on: [self-hosted, tencent-cloud, opl-webui]
+    environment: production
+    env:
+      OPL_BASE_URL: https://opl.medopl.cn
+      MEDOPL_PUBLIC_BASE_URL: https://portal.medopl.cn
+      OPL_COMMERCIAL_CONSUMER_E2E: 1
+      OPL_DOGFOOD_EMAIL: ${{ secrets.OPL_DOGFOOD_EMAIL }}
+      OPL_DOGFOOD_PASSWORD: ${{ secrets.OPL_DOGFOOD_PASSWORD }}
+      OPL_DOGFOOD_API_KEY: ${{ secrets.OPL_DOGFOOD_API_KEY }}
+      MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256: ${{ secrets.MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256 }}
+      MEDOPL_WEBHOOK_SECRET: ${{ secrets.MEDOPL_WEBHOOK_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mask commercial consumer secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${OPL_DOGFOOD_API_KEY}"
+          echo "::add-mask::${OPL_DOGFOOD_PASSWORD}"
+          echo "::add-mask::${MEDOPL_WEBHOOK_SECRET}"
+          echo "::add-mask::${MEDOPL_SESSION_BOOTSTRAP_SECRET_SHA256}"
+
+      - name: Run commercial consumer ready path e2e
+        run: node scripts/cloud-rollout.mjs --commercial-consumer-e2e
