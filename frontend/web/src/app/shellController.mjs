@@ -91,6 +91,12 @@ function bindCurrentDOM() {
 function bindClicks() {
   app?.querySelectorAll('[data-public-start-cta]').forEach((button) => button.addEventListener('click', () => openAnonymousAuth(button.dataset.authMode, '[data-public-start-cta]')));
   app?.querySelectorAll('[data-public-task-entry], [data-research-task]').forEach((button) => button.addEventListener('click', () => applyTaskPrompt(button)));
+  app?.querySelectorAll('[data-chat-submit]').forEach((button) => button.addEventListener('click', (event) => {
+    const form = button.form || button.closest('form');
+    if (!form || button.disabled) return;
+    event.preventDefault();
+    form.requestSubmit();
+  }));
   app?.querySelectorAll('[data-auth-tab]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authTab; render(); }));
   app?.querySelectorAll('[data-auth-submit]').forEach((button) => button.addEventListener('click', () => { state.authTab = button.dataset.authAction || state.authTab; }));
   app?.querySelector('[data-auth-close]')?.addEventListener('click', () => closeAnonymousAuth());

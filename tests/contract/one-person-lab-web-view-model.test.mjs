@@ -576,3 +576,14 @@ test('web product entry delegates state DOM and surface ownership to focused mod
   assert.ok(entry.split('\n').length <= 80, 'product entry should stay thin');
   assert.equal(existsSync('frontend/web/src/onePersonLabWeb.mjs'), false, 'old aggregate product entry must be retired');
 });
+
+test('chat submit click path explicitly submits its owning form', () => {
+  const controller = readFileSync('frontend/web/src/app/shellController.mjs', 'utf8');
+  const workbench = readFileSync('frontend/web/src/features/workbench/workbenchSurface.mjs', 'utf8');
+  const results = readFileSync('frontend/web/src/features/results/resultRuntimeSurface.mjs', 'utf8');
+
+  assert.match(controller, /data-chat-submit/);
+  assert.match(controller, /requestSubmit/);
+  assert.match(controller, /button\.form \|\| button\.closest\('form'\)/);
+  assert.match(workbench + results, /data-chat-submit/);
+});
