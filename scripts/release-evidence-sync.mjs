@@ -736,7 +736,44 @@ function runCli() {
     const profile = JSON.parse(readFileSync(options.updateReleaseProfile, 'utf8'));
     const nextProfile = foldSummaryIntoReleaseProfile({ profile, summary });
     writeFileSync(options.updateReleaseProfile, `${formatJsonPreservingCompactTopLevel(nextProfile)}\n`);
+    foldLatestMainEvidenceIntoUiReplacementContracts({
+      profile: nextProfile,
+      summary,
+      releaseProfilePath: options.updateReleaseProfile,
+    });
   }
+}
+
+function foldLatestMainEvidenceIntoUiReplacementContracts({ profile, summary, releaseProfilePath }) {
+  if (summary.status !== 'success' || !profile.latestMainEvidence) return;
+  const normalizedProfilePath = String(releaseProfilePath || '').replaceAll('\\', '/').replace(/^\.\//, '');
+  if (normalizedProfilePath !== 'contracts/web-release-profile.json') return;
+
+  const latest = profile.latestMainEvidence;
+  const guiPath = 'contracts/web-gui-product-contract.json';
+  const pageStatePath = 'contracts/web-page-state-matrix.json';
+  const guiEvidence = `"productionEvidence": {
+      "state": "${latest.state}",
+      "commit": "${latest.commit}",
+      "image": "${latest.image}",
+      "runId": ${latest.runId},
+      "runUrl": "${latest.runUrl}"
+    }`;
+  const pageStateEvidence = `"productionEvidence": {
+      "commit": "${latest.commit}",
+      "image": "${latest.image}",
+      "runId": ${latest.runId}
+    }`;
+
+  const guiText = readFileSync(guiPath, 'utf8')
+    .replace(/"productionEvidence": \{\n      "state": "folded_success_run_\d+",\n      "commit": "[^"]+",\n      "image": "[^"]+",\n      "runId": \d+,\n      "runUrl": "https:\/\/github\.com\/RenDeHuang\/OPL-Webui\/actions\/runs\/\d+"\n    \}/, guiEvidence)
+    .replace(/"releaseEvidenceChange": "folded_after_successful_controlled_launch_run_\d+"/, `"releaseEvidenceChange": "folded_after_successful_controlled_launch_run_${latest.runId}"`);
+  writeFileSync(guiPath, guiText);
+
+  const pageStateText = readFileSync(pageStatePath, 'utf8')
+    .replace(/"releaseEvidenceImpact": "folded_success_run_\d+"/, `"releaseEvidenceImpact": "${latest.state}"`)
+    .replace(/"productionEvidence": \{\n      "commit": "[^"]+",\n      "image": "[^"]+",\n      "runId": \d+\n    \}/, pageStateEvidence);
+  writeFileSync(pageStatePath, pageStateText);
 }
 
 function fetchGitHubRun(runId) {
