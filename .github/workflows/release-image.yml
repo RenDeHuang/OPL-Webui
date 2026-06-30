@@ -4,27 +4,75 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      canary_branch_image:
+        description: Build and push a scoped canary image for the selected branch after branch verification.
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
   packages: read
 
 jobs:
+  canary-branch-verify:
+    name: Canary Branch Verify
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.canary_branch_image }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/control-plane-go/go.mod
+
+      - name: Install Chromium for browser e2e
+        run: npx --yes playwright install chromium
+
+      - name: Run branch canary verification
+        run: |
+          npm run verify:fast
+          npm run verify:deploy
+          npm run verify:health
+          npm run verify:contract
+          npm run verify:browser:golden
+          npm run gate:review
+
   build-push:
     name: Build and Push Image
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository
+    needs: [canary-branch-verify]
+    if: |
+      always() && (
+        (github.event_name == 'workflow_run'
+          && github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'push'
+          && github.event.workflow_run.head_branch == 'main'
+          && github.event.workflow_run.head_repository.full_name == github.repository)
+        || (github.event_name == 'workflow_dispatch'
+          && inputs.canary_branch_image
+          && needs.canary-branch-verify.result == 'success')
+      )
     runs-on: [self-hosted, tencent-cloud, opl-webui]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Image metadata
         id: meta
         shell: bash
         run: |
-          head_sha="${{ github.event.workflow_run.head_sha }}"
+          head_sha="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}"
           short_sha="${head_sha::7}"
           image="uswccr.ccs.tencentyun.com/webopl/opl-webui:${short_sha}"
           echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"

@@ -119,12 +119,24 @@ test('github release image workflow only builds and pushes after ci passes', () 
   const workflow = readFileSync('.github/workflows/release-image.yml', 'utf8');
 
   assert.match(workflow, /workflow_run:/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /canary_branch_image:/);
   assert.match(workflow, /workflows:\s*\[\s*CI\s*\]/);
   assert.match(workflow, /types:\s*\[\s*completed\s*\]/);
   assert.match(workflow, /github\.event\.workflow_run\.conclusion == 'success'/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /github\.event\.workflow_run\.head_repository\.full_name == github\.repository/);
+  assert.match(workflow, /github\.event_name == 'workflow_run'/);
+  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && inputs\.canary_branch_image/);
   assert.match(workflow, /github\.event\.workflow_run\.head_sha/);
+  assert.match(workflow, /github\.sha/);
+  assert.match(workflow, /Canary Branch Verify/);
+  assert.match(workflow, /npm run verify:fast/);
+  assert.match(workflow, /npm run verify:deploy/);
+  assert.match(workflow, /npm run verify:health/);
+  assert.match(workflow, /npm run verify:contract/);
+  assert.match(workflow, /npm run verify:browser:golden/);
+  assert.match(workflow, /npm run gate:review/);
   assert.match(workflow, /docker\/setup-buildx-action/);
   assert.match(workflow, /docker\/login-action/);
   assert.match(workflow, /docker\/build-push-action/);
@@ -136,14 +148,13 @@ test('github release image workflow only builds and pushes after ci passes', () 
   assert.match(workflow, /OPL_BUILD_CONTEXT/);
   assert.match(workflow, /runs-on:\s*\[\s*self-hosted,\s*tencent-cloud,\s*opl-webui\s*\]/);
 
+  assert.doesNotMatch(workflow, /kubectl|KUBECONFIG|cloud-rollout\.mjs|--apply|--rollback/i);
   assert.doesNotMatch(workflow, /staging-rollout:/);
   assert.doesNotMatch(workflow, /environment:\s*staging/);
   assert.doesNotMatch(workflow, /staging\.opl\.medopl\.cn/);
   assert.doesNotMatch(workflow, /OPL_NAMESPACE:\s*opl-webui-staging/);
-  assert.doesNotMatch(workflow, /cloud-rollout\.mjs/);
-  assert.doesNotMatch(workflow, /KUBECONFIG/);
-  assert.doesNotMatch(workflow, /environment:\s*production/);
-  assert.doesNotMatch(workflow, /runs-on:\s*ubuntu-latest/);
+  const buildPushJob = workflow.slice(workflow.indexOf('build-push:'));
+  assert.doesNotMatch(buildPushJob, /runs-on:\s*ubuntu-latest/);
 });
 
 test('github cloud rollout workflow manually gates production rollout', () => {
