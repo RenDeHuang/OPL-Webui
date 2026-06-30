@@ -395,7 +395,7 @@ const TEST_ENTRIES = Object.freeze([
       'backend/control-plane-go/internal/webapp/handlers.go',
       'backend/control-plane-go/internal/webapp/store.go',
     ],
-    proves: ['Admin/Ops v0 controls registration policy and active/disabled user admission through operator-only sanitized audited APIs while remaining a partial layer with dogfood/release evidence summary not_started'],
+    proves: ['Admin/Ops v0 keeps public registration open for valid email shape and non-empty password while controlling active/disabled user admission through operator-only sanitized audited APIs'],
     doesNotProve: [...NOT_PRODUCTION_EVIDENCE, ...NOT_ADMIN_OPS_EXPANSION_EVIDENCE, 'support impersonation', 'runtime execution'],
     riskTriggers: ['public-api', 'control-plane-go', 'docs-truth', 'contract'],
     verifySuites: ['contract'],

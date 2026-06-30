@@ -42,7 +42,7 @@ test('Admin/Ops v0 contract fixes registration policy and user status boundaries
     'artifact_body_viewer',
     'production_mutation_installer',
   ]);
-  assert.deepEqual(product.minimalAdminOpsLayerContract.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
+  assert.deepEqual(product.minimalAdminOpsLayerContract.registrationMode.allowed, ['open']);
   assert.deepEqual(product.minimalAdminOpsLayerContract.userStatus.disabledDenies, ['login', 'session_current', 'chat', 'api_key_binding', 'user_product_path']);
   assert.equal(product.minimalAdminOpsLayerContract.operatorAuth.mode, 'operator_token_required');
   assert.equal(product.minimalAdminOpsLayerContract.audit.requiredFor.includes('user_disabled'), true);
@@ -72,7 +72,7 @@ test('Admin/Ops v0 contract fixes registration policy and user status boundaries
   }
 });
 
-test('registration policy fail-closes invite_only allowlist and disabled modes', async () => {
+test('registration policy is public open only and rejects non-open operator modes', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
     for (const mode of ['invite_only', 'allowlist', 'disabled']) {
@@ -80,25 +80,28 @@ test('registration policy fail-closes invite_only allowlist and disabled modes',
         method: 'PUT',
         body: { registrationMode: mode },
       });
-      assert.equal(policy.response.status, 200);
-      assert.equal(policy.body.registrationMode, mode);
+      assert.equal(policy.response.status, 400);
+      assert.equal(policy.body.errorCode, 'INVALID_REGISTRATION_MODE');
+      assertNoSensitiveMaterial(policy.body);
 
       const registration = await postJSON(baseUrl, '/api/auth/register', {
         email: `${mode}@example.com`,
-        password: 'correct horse battery staple',
+        password: 'x',
       });
-      assert.equal(registration.response.status, 423);
-      assert.equal(registration.body.errorCode, 'REGISTRATION_CLOSED');
+      assert.equal(registration.response.status, 201);
+      assert.equal(registration.body.email, `${mode}@example.com`);
       assertNoSensitiveMaterial(registration.body);
     }
 
-    await operatorFetch(baseUrl, '/api/ops/registration-policy', {
+    const openPolicy = await operatorFetch(baseUrl, '/api/ops/registration-policy', {
       method: 'PUT',
       body: { registrationMode: 'open' },
     });
+    assert.equal(openPolicy.response.status, 200);
+    assert.equal(openPolicy.body.registrationMode, 'open');
     const openRegistration = await postJSON(baseUrl, '/api/auth/register', {
       email: 'open-user@example.com',
-      password: 'correct horse battery staple',
+      password: 'x',
     });
     assert.equal(openRegistration.response.status, 201);
   } finally {

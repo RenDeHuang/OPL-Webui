@@ -141,13 +141,22 @@ function resolveRunConfig(runMode) {
     apiKey: process.env.OPL_DOGFOOD_API_KEY || '',
   };
   const missing = [];
-  if (!config.email.includes('@')) missing.push('OPL_DOGFOOD_EMAIL');
-  if (config.password.length < 12) missing.push('OPL_DOGFOOD_PASSWORD');
+  if (!isValidEmailShape(config.email)) missing.push('OPL_DOGFOOD_EMAIL');
+  if (config.password.length === 0) missing.push('OPL_DOGFOOD_PASSWORD');
   if (!config.apiKey) missing.push('OPL_DOGFOOD_API_KEY');
   if (missing.length > 0) {
     throw new Error(`production browser e2e missing valid secret inputs: ${missing.join(', ')}`);
   }
   return config;
+}
+
+function isValidEmailShape(email) {
+  const trimmed = String(email || '').trim();
+  const at = trimmed.indexOf('@');
+  if (at <= 0 || at !== trimmed.lastIndexOf('@') || at === trimmed.length - 1) return false;
+  const domain = trimmed.slice(at + 1);
+  const dot = domain.lastIndexOf('.');
+  return dot > 0 && dot < domain.length - 1;
 }
 
 async function authenticate(cdp, config) {

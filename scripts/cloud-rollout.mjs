@@ -545,15 +545,23 @@ function requireEnv(name) {
 
 function validateDogfoodCredentials() {
   const email = process.env.OPL_DOGFOOD_EMAIL?.trim() ?? '';
-  const password = process.env.OPL_DOGFOOD_PASSWORD?.trim() ?? '';
-  if (!email.includes('@')) {
+  const password = process.env.OPL_DOGFOOD_PASSWORD ?? '';
+  if (!isValidDogfoodEmail(email)) {
     console.error('OPL_DOGFOOD_EMAIL must be a valid email address.');
     process.exit(2);
   }
-  if (password.length < 12) {
-    console.error('OPL_DOGFOOD_PASSWORD must be at least 12 characters.');
+  if (password.length === 0) {
+    console.error('OPL_DOGFOOD_PASSWORD must be non-empty.');
     process.exit(2);
   }
+}
+
+function isValidDogfoodEmail(email) {
+  const at = email.indexOf('@');
+  if (at <= 0 || at !== email.lastIndexOf('@') || at === email.length - 1) return false;
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf('.');
+  return dot > 0 && dot < domain.length - 1;
 }
 
 function setValidatedImage(value) {

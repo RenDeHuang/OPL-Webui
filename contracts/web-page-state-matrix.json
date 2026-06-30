@@ -7,7 +7,7 @@
     { "id": "minimal_admin_ops_layer", "status": "partial", "surfaceOwner": "operator_only_controls", "defaultAudience": "operator" }
   ],
   "minimalAdminOpsLayer": {
-    "registrationMode": { "default": "open", "allowed": ["open", "invite_only", "allowlist", "disabled"] },
+    "registrationMode": { "default": "open", "allowed": ["open"], "policy": "public_open_only", "emailRequirement": "valid_email_shape", "passwordRequirement": "non_empty_only" },
     "userStatus": { "allowed": ["active", "disabled"] },
     "completedSlices": ["registration_policy_user_status_v0"],
     "nextGaps": {

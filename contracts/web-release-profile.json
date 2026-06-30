@@ -102,8 +102,8 @@
     "environment": "production",
     "requiredSecrets": ["OPL_DOGFOOD_EMAIL","OPL_DOGFOOD_PASSWORD","OPL_DOGFOOD_API_KEY"],
     "secretValidation": {
-      "OPL_DOGFOOD_EMAIL": "must contain @",
-      "OPL_DOGFOOD_PASSWORD": "min_length_12"
+      "OPL_DOGFOOD_EMAIL": "valid_email_shape",
+      "OPL_DOGFOOD_PASSWORD": "non_empty"
     },
     "requiredSwitches": ["OPL_PRODUCTION_DOGFOOD_E2E"],
     "optionalSwitches": ["OPL_PRODUCTION_DOGFOOD_REAL_CHAT","OPL_PRODUCTION_DOGFOOD_MEDOPL_READONLY"],

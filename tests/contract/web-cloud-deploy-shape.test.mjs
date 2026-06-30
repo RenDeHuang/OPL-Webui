@@ -201,7 +201,7 @@ test('web cloud runbook covers handoff steps without storing secrets', () => {
     'OPL_DOGFOOD_API_KEY',
     'OPL_DOGFOOD_PASSWORD',
     '默认跳过',
-    '至少 12 个字符',
+    '必须非空',
     '不打印 raw API Key',
   ]) {
     assert.match(runbook, new RegExp(required.replace(/[/-]/g, '\\$&'), 'i'));

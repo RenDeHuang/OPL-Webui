@@ -66,12 +66,8 @@ func (server Server) HandleRegister(response http.ResponseWriter, request *http.
 	if !decodeStrict(response, request, &payload) {
 		return
 	}
-	if server.Store.RegistrationMode() != RegistrationModeOpen {
-		writeError(response, http.StatusLocked, "REGISTRATION_CLOSED", "registration is closed by operator policy")
-		return
-	}
 	hash, err := hashPassword(payload.Password)
-	if err != nil || !strings.Contains(payload.Email, "@") {
+	if err != nil || !isValidEmail(payload.Email) {
 		writeError(response, http.StatusBadRequest, "INVALID_CREDENTIALS_INPUT", "valid email and password are required")
 		return
 	}

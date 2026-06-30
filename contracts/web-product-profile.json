@@ -59,13 +59,14 @@
     {
       "id": "minimal_admin_ops_layer",
       "status": "partial",
-      "scope": "minimum account admission and operator controls only",
+      "scope": "minimum public account admission and operator user-status controls only",
       "completedSlices": ["registration_policy_user_status_v0"],
       "nextGaps": {
         "dogfoodReleaseEvidenceSummary": "not_started",
         "hiddenOpsUi": "optional_reserved"
       },
-      "registrationModeAllowed": ["open", "invite_only", "allowlist", "disabled"],
+      "registrationModeAllowed": ["open"],
+      "publicRegistrationPolicy": "open_to_valid_email_shape_with_non_empty_password",
       "userStatusAllowed": ["active", "disabled"],
       "firstPhaseSurfaces": ["operator_only_api", "same_domain_hidden_ops_route"],
       "operatorOnlyCapabilities": ["view_sanitized_user_status", "view_quota", "view_audit", "disable_user", "enable_user"],
@@ -148,7 +149,7 @@
   "minimalAdminOpsLayerContract": {
     "ownerSurface": "operator_only_controls",
     "consumer": "operator",
-    "claim": "Admin/Ops v0 controls registration policy and user active/disabled admission with sanitized operator reads and audited mutations.",
+    "claim": "Admin/Ops v0 keeps public registration open and controls active/disabled user admission with sanitized operator reads and audited mutations.",
     "status": "partial",
     "completedSlices": ["registration_policy_user_status_v0"],
     "nextGaps": {
@@ -173,9 +174,12 @@
       "POST /api/ops/users/{userId}/status"
     ],
     "registrationMode": {
-      "allowed": ["open", "invite_only", "allowlist", "disabled"],
+      "allowed": ["open"],
       "default": "open",
-      "failClosedModes": ["invite_only", "allowlist", "disabled"]
+      "failClosedModes": [],
+      "policy": "public_open_only",
+      "emailRequirement": "valid_email_shape",
+      "passwordRequirement": "non_empty_only"
     },
     "userStatus": {
       "allowed": ["active", "disabled"],
@@ -191,8 +195,8 @@
       "adminReadReturns": ["userId", "email", "tenantId", "workspaceId", "userStatus", "createdAt", "quota", "auditSummary"]
     },
     "audit": {
-      "requiredFor": ["registration_policy_changed", "user_disabled", "user_enabled"],
-      "eventKinds": ["ops.registration_policy_changed", "ops.user_disabled", "ops.user_enabled"],
+      "requiredFor": ["user_disabled", "user_enabled"],
+      "eventKinds": ["ops.user_disabled", "ops.user_enabled"],
       "metadataPolicy": "sanitized_no_secret_no_session_cookie"
     },
     "tests": ["tests/contract/admin-ops-v0-contract.test.mjs"],

@@ -360,8 +360,7 @@ test('product contracts keep OPL-WebUI as one-person-lab-web instead of standalo
     'OPL_DOGFOOD_PASSWORD',
     'OPL_DOGFOOD_API_KEY',
   ]);
-  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_EMAIL, 'must contain @');
-  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_PASSWORD, 'min_length_12');
+  assert.deepEqual(release.productionDogfoodReadiness.secretValidation, { OPL_DOGFOOD_EMAIL: 'valid_email_shape', OPL_DOGFOOD_PASSWORD: 'non_empty' });
   for (const forbidden of ['KUBECONFIG', 'OPL_DATABASE_URL', 'PGPASSWORD', 'MEDOPL_TOKEN', 'TCR_PASSWORD']) {
     assert.equal(release.productionDogfoodReadiness.forbiddenSecrets.includes(forbidden), true, `dogfood must not need ${forbidden}`);
   }
@@ -927,7 +926,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.equal(byLayer.account_based_user_product_layer.claimStatus, 'done_v1_repo_browser');
   assertIncludesAll(byLayer.account_based_user_product_layer.owned, ['account_session', 'task_entry', 'page_state', 'sanitized_projection', 'refs', 'deeplink'], 'user layer owned surface');
   assertIncludesAll(byLayer.account_based_user_product_layer.forbiddenClaims, ['full_saas', 'payment', 'team_rbac', 'runtime_execution'], 'user layer forbidden claim');
-  assert.deepEqual(byLayer.minimal_admin_ops_layer.registrationModeAllowed, ['open', 'invite_only', 'allowlist', 'disabled']);
+  assert.deepEqual([byLayer.minimal_admin_ops_layer.registrationModeAllowed, byLayer.minimal_admin_ops_layer.publicRegistrationPolicy], [['open'], 'open_to_valid_email_shape_with_non_empty_password']);
   assert.deepEqual(byLayer.minimal_admin_ops_layer.userStatusAllowed, ['active', 'disabled']);
   assert.equal(byLayer.minimal_admin_ops_layer.activeSlice, undefined);
   assert.equal(byLayer.minimal_admin_ops_layer.completedSlices.includes('registration_policy_user_status_v0'), true);
@@ -950,8 +949,7 @@ test('product truth is fixed to growth user and minimal ops layers without full 
     ['account_based_user_product_layer', 'done_v1_repo_browser'],
     ['minimal_admin_ops_layer', 'partial'],
   ]);
-  assert.equal(pageState.minimalAdminOpsLayer.registrationMode.default, 'open');
-  assert.deepEqual(pageState.minimalAdminOpsLayer.registrationMode.allowed, ['open', 'invite_only', 'allowlist', 'disabled']);
+  assert.deepEqual([pageState.minimalAdminOpsLayer.registrationMode.default, pageState.minimalAdminOpsLayer.registrationMode.allowed, pageState.minimalAdminOpsLayer.registrationMode.policy, pageState.minimalAdminOpsLayer.registrationMode.emailRequirement, pageState.minimalAdminOpsLayer.registrationMode.passwordRequirement], ['open', ['open'], 'public_open_only', 'valid_email_shape', 'non_empty_only']);
   assert.deepEqual(pageState.minimalAdminOpsLayer.userStatus.allowed, ['active', 'disabled']);
   assert.equal(pageState.minimalAdminOpsLayer.completedSlices.includes('registration_policy_user_status_v0'), true);
   assert.equal(pageState.minimalAdminOpsLayer.nextGaps.dogfoodReleaseEvidenceSummary, 'not_started');
@@ -962,7 +960,8 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.equal(api['x-product-layers'].primary, 'account_based_user_product_layer');
   assert.equal(api['x-product-layers'].publicGrowthLayer.status, 'done_v1');
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.status, 'partial');
-  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.registrationModeAllowed.includes('allowlist'), true);
+  assert.deepEqual(api['x-product-layers'].minimalAdminOpsLayer.registrationModeAllowed, ['open']);
+  assert.equal(api['x-product-layers'].minimalAdminOpsLayer.publicRegistrationPolicy, byLayer.minimal_admin_ops_layer.publicRegistrationPolicy);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.forbiddenCapabilities.includes('payment'), true);
   assert.equal(api['x-product-layers'].minimalAdminOpsLayer.allAdminOperationsAudited, true);
   assert.equal(release.productLayerReadiness.accountBasedUserProductLayer, 'done_v1_repo_browser');
@@ -975,11 +974,10 @@ test('product truth is fixed to growth user and minimal ops layers without full 
   assert.doesNotMatch(JSON.stringify(product), /sub2api/i);
   assert.doesNotMatch(status, /sub2api/i);
   assert.doesNotMatch(active, /sub2api/i);
-  assert.match(status, /Public Growth Layer/);
-  assert.match(status, /Account-based User Product Layer/);
-  assert.match(status, /Minimal Admin\/Ops Layer/);
+  assert.match(status, /Public Growth Layer[\s\S]*Account-based User Product Layer[\s\S]*Minimal Admin\/Ops Layer/);
+  assert.doesNotMatch(status, /fail-closed non-open registration/i);
   assert.match(active, /Minimal Admin\/Ops Layer is partial/i);
-  assert.match(active, /registration policy and user status v0 is done/i);
+  assert.match(active, /public registration remains open for valid email shape and non-empty password, and user status v0 is done through operator-only API/i);
   assert.match(registry, /Admin\/Ops v0 does not prove full SaaS/);
 });
 

@@ -65,7 +65,7 @@ function renderAuthPage(state, { escapeAttr }) {
             <label for="auth-password">密码</label>
             <div class="field-with-icon">
               <span aria-hidden="true">#</span>
-              <input id="auth-password" name="password" type="${state.showPassword ? 'text' : 'password'}" autocomplete="current-password" placeholder="${isRegister ? '至少 8 位' : '********'}" value="${escapeAttr(state.authForm.password)}">
+              <input id="auth-password" name="password" type="${state.showPassword ? 'text' : 'password'}" autocomplete="current-password" placeholder="${isRegister ? '输入密码' : '********'}" value="${escapeAttr(state.authForm.password)}">
               <button type="button" data-toggle-password aria-label="${state.showPassword ? '隐藏密码' : '显示密码'}">${state.showPassword ? 'Hide' : 'Show'}</button>
             </div>
             <p class="form-message" data-settings-message role="status"></p>

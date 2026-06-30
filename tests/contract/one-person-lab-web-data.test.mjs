@@ -281,6 +281,8 @@ test('one-person-lab-web contracts define product truth instead of prose specs',
   assertIncludesAll(release.productionBrowserE2EReadiness.latestAttempt.canClaim, ['production browser e2e executed against https://opl.medopl.cn'], 'browser can-claim');
   assert.equal(release.productionBrowserE2EReadiness.latestAttempt.cannotClaim.includes('production browser e2e'), false);
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSecrets, ['OPL_DOGFOOD_EMAIL', 'OPL_DOGFOOD_PASSWORD', 'OPL_DOGFOOD_API_KEY']);
+  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_EMAIL, 'valid_email_shape');
+  assert.equal(release.productionDogfoodReadiness.secretValidation.OPL_DOGFOOD_PASSWORD, 'non_empty');
   assert.deepEqual(release.productionBrowserE2EReadiness.requiredSwitches, ['OPL_PRODUCTION_BROWSER_E2E']);
   assertIncludesAll(release.productionBrowserE2EReadiness.coverage, ['real_browser_login', 'api_key_binding', 'research_task_template_selected', 'structured_research_result_sections', 'paper_runtime_gate', 'grant_runtime_gate', 'progress_refs_projection', 'deliverable_refs_projection', 'blocker_next_step', 'medopl_deeplink'], 'browser coverage');
   assert.equal(release.productionBrowserE2EReadiness.cannotClaim.includes('production browser e2e'), false);

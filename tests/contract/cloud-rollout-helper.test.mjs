@@ -193,11 +193,11 @@ test('cloud rollout helper validates dogfood credentials locally before producti
           OPL_BASE_URL: fake.baseUrl,
           OPL_PRODUCTION_DOGFOOD_E2E: '1',
           OPL_DOGFOOD_EMAIL: 'dogfood@example.test',
-          OPL_DOGFOOD_PASSWORD: 'short',
+          OPL_DOGFOOD_PASSWORD: '',
           OPL_DOGFOOD_API_KEY: 'sk-dogfood-production-secret',
         },
       }),
-      /OPL_DOGFOOD_PASSWORD must be at least 12 characters/,
+      /Missing required OPL_DOGFOOD_PASSWORD/,
     );
     assert.equal(fake.requests.length, 0);
   } finally {

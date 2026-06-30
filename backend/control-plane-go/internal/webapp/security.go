@@ -32,12 +32,22 @@ type SessionClaims struct {
 }
 
 func hashPassword(password string) (string, error) {
-	password = strings.TrimSpace(password)
-	if len(password) < 12 {
+	if password == "" {
 		return "", errInvalidCredentialsInput
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hash), err
+}
+
+func isValidEmail(email string) bool {
+	normalized := normalizeEmail(email)
+	at := strings.Index(normalized, "@")
+	if at <= 0 || at != strings.LastIndex(normalized, "@") || at == len(normalized)-1 {
+		return false
+	}
+	domain := normalized[at+1:]
+	dot := strings.LastIndex(domain, ".")
+	return dot > 0 && dot < len(domain)-1
 }
 
 func verifyPassword(hash string, password string) bool {

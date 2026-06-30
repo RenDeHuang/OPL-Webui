@@ -103,7 +103,7 @@ test('OpenAPI contract covers implemented status and error-code surfaces', () =>
 test('one-person-lab-web auth supports register login logout and safe current session', async () => {
   const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
   try {
-    const registered = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'correct horse battery staple' });
+    const registered = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'x' });
     assert.equal(registered.response.status, 201);
     assert.match(registered.cookie, /opl_session=/);
     assert.equal(registered.body.email, 'user@example.com');
@@ -111,7 +111,7 @@ test('one-person-lab-web auth supports register login logout and safe current se
     assert.ok(registered.body.workspaceId);
     assertNoSensitiveMaterial(registered.body);
 
-    const duplicate = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'correct horse battery staple' });
+    const duplicate = await postJSON(baseUrl, '/api/auth/register', { email: 'user@example.com', password: 'x' });
     assert.equal(duplicate.response.status, 409);
     assert.equal(duplicate.body.errorCode, 'EMAIL_ALREADY_REGISTERED');
 
@@ -119,7 +119,7 @@ test('one-person-lab-web auth supports register login logout and safe current se
     assert.equal(wrong.response.status, 401);
     assert.equal(wrong.body.errorCode, 'INVALID_CREDENTIALS');
 
-    const loggedIn = await postJSON(baseUrl, '/api/auth/login', { email: 'user@example.com', password: 'correct horse battery staple' });
+    const loggedIn = await postJSON(baseUrl, '/api/auth/login', { email: 'user@example.com', password: 'x' });
     assert.equal(loggedIn.response.status, 200);
     assert.match(loggedIn.cookie, /opl_session=/);
 
@@ -137,6 +137,39 @@ test('one-person-lab-web auth supports register login logout and safe current se
     });
     assert.equal(logout.status, 204);
     assert.match(logout.headers.get('set-cookie'), /Max-Age=0/);
+  } finally {
+    await stopGoServer(child);
+  }
+});
+
+test('registration accepts any non-empty password and rejects invalid email shape', async () => {
+  const { child, baseUrl } = await startGoServerWithEnv(secureEnv);
+  try {
+    for (const [email, password] of [
+      ['short-password@example.com', 'x'],
+      ['symbol-password@example.com', '!'],
+      ['space-password@example.com', ' pass phrase '],
+    ]) {
+      const registered = await postJSON(baseUrl, '/api/auth/register', { email, password });
+      assert.equal(registered.response.status, 201);
+      assert.equal(registered.body.email, email);
+
+      const loggedIn = await postJSON(baseUrl, '/api/auth/login', { email, password });
+      assert.equal(loggedIn.response.status, 200);
+      assert.match(loggedIn.cookie, /opl_session=/);
+      assertNoSensitiveMaterial(loggedIn.body);
+    }
+
+    for (const email of ['plain', '@example.com', 'user@', 'user@example', 'user@@example.com']) {
+      const invalid = await postJSON(baseUrl, '/api/auth/register', { email, password: 'x' });
+      assert.equal(invalid.response.status, 400);
+      assert.equal(invalid.body.errorCode, 'INVALID_CREDENTIALS_INPUT');
+      assertNoSensitiveMaterial(invalid.body);
+    }
+
+    const emptyPassword = await postJSON(baseUrl, '/api/auth/register', { email: 'empty-password@example.com', password: '' });
+    assert.equal(emptyPassword.response.status, 400);
+    assert.equal(emptyPassword.body.errorCode, 'INVALID_CREDENTIALS_INPUT');
   } finally {
     await stopGoServer(child);
   }

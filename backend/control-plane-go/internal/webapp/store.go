@@ -16,10 +16,7 @@ var (
 )
 
 const (
-	RegistrationModeOpen       = "open"
-	RegistrationModeInviteOnly = "invite_only"
-	RegistrationModeAllowlist  = "allowlist"
-	RegistrationModeDisabled   = "disabled"
+	RegistrationModeOpen = "open"
 
 	UserStatusActive   = "active"
 	UserStatusDisabled = "disabled"
@@ -386,12 +383,7 @@ func newUser(email string, passwordHash string) User {
 }
 
 func validRegistrationMode(mode string) bool {
-	switch mode {
-	case RegistrationModeOpen, RegistrationModeInviteOnly, RegistrationModeAllowlist, RegistrationModeDisabled:
-		return true
-	default:
-		return false
-	}
+	return mode == RegistrationModeOpen
 }
 
 func validUserStatus(status string) bool {

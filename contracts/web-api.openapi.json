@@ -40,11 +40,9 @@
         "hiddenOpsUi": "optional_reserved"
       },
       "registrationModeAllowed": [
-        "open",
-        "invite_only",
-        "allowlist",
-        "disabled"
+        "open"
       ],
+      "publicRegistrationPolicy": "open_to_valid_email_shape_with_non_empty_password",
       "userStatusAllowed": [
         "active",
         "disabled"
@@ -750,10 +748,7 @@
           },
           "registrationMode": {
             "enum": [
-              "open",
-              "invite_only",
-              "allowlist",
-              "disabled"
+              "open"
             ]
           },
           "doesNotProve": {
