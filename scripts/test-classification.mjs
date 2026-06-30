@@ -495,7 +495,7 @@ const TEST_ENTRIES = Object.freeze([
       'backend/control-plane-go/cmd/opl-webui-control-plane/main.go',
       'backend/control-plane-go/internal/webapp/handlers.go',
     ],
-    proves: ['OPL-Webui bridges a runtime-required task through a real local MedOPL Go backend process for account/resource-state gate, owner lifecycle actions, run refs, billing ledger refs, and release/storage projection'],
+    proves: ['OPL-Webui bridges a runtime-required task through a real local MedOPL Go backend process for account/resource-state gate, owner lifecycle actions, run refs, billing ledger refs, task history/session resume, and release/storage projection'],
     doesNotProve: ['production-ready SaaS', 'fresh production rollout success', 'sandbox MedOPL account lifecycle', 'external payment settlement', 'real cloud compute provisioning', 'production storage mutation', 'OPL Framework domain truth', 'artifact body authority'],
     riskTriggers: ['runtime-gate', 'control-plane-go', 'medopl-real-integration'],
     verifySuites: ['real-medopl'],

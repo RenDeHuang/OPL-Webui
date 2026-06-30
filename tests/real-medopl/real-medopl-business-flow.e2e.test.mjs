@@ -27,7 +27,9 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
   const medopl = await startRealMedOPL(medoplDir, medoplRuntime);
   const webui = await startGoServerWithEnv({ ...webuiSecureEnv, MEDOPL_API_BASE_URL: medopl.baseUrl });
   try {
-    const session = await register(webui.baseUrl, 'real-medopl-e2e-user@example.com');
+    const email = 'real-medopl-e2e-user@example.com';
+    const password = 'correct horse battery staple';
+    const session = await register(webui.baseUrl, email, password);
     await saveAPIKey(webui.baseUrl, session.cookieHeader, 'sk-webui-real-medopl-secret');
     const context = {
       tenantId: session.body.tenantId,
@@ -35,6 +37,7 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
       userId: session.body.userId,
       workspaceId: session.body.workspaceId,
       taskIntent: 'paper_question',
+      conversationId: `real-medopl-${session.body.workspaceId}`,
     };
 
     const blockedGate = await webuiRuntimeGate(webui.baseUrl, session.cookieHeader, context);
@@ -144,6 +147,7 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
         taskIntent: context.taskIntent,
         marker: '@论文',
         prompt: '@论文 生成选题',
+        conversationId: context.conversationId,
         gateRefs: { launchId, fileRefs: [fileRef] },
       },
     });
@@ -185,6 +189,64 @@ test('OPL-Webui bridges a runtime-required task through a real MedOPL local busi
     assert.equal(typeof billing.body.ledgerRefs[0].ledgerEntryId, 'string');
     assert.equal(typeof billing.body.ledgerRefs[0].entryType, 'string');
     assertNoSensitiveMaterial(billing.body);
+    assertNoTruthMaterial(billing.body);
+
+    const taskList = await jsonFetch(`${webui.baseUrl}/api/tasks`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(taskList.response.status, 200);
+    assert.equal(taskList.body.ok, true);
+    assert.equal(taskList.body.owner, 'OnePersonLabWeb');
+    assert.equal(taskList.body.projection, 'refs_status_metadata_only');
+    assert.equal(taskList.body.tasks.length, 1);
+    const task = taskList.body.tasks[0];
+    assert.equal(task.conversationId, context.conversationId);
+    assert.equal(task.taskType, context.taskIntent);
+    assert.equal(task.marker, '@论文');
+    assert.equal(task.status, 'succeeded');
+    assert.equal(task.progressRefs[0].ref, 'run_started');
+    assert.equal(task.progressRefs[1].ref, 'artifact_available');
+    assert.equal(task.deliverableRefs[0].ref, run.body.deliverables[0].deliverableId);
+    assert.equal(task.deliverableRefs[0].status, 'available');
+    assert.equal(task.materialRefs[0].ref, fileRef);
+    assert.equal(task.allowedNextActions[0].id, 'continue_in_medopl');
+    assert.equal(task.deeplink, run.body.statusUrl);
+    assert.equal(task.webuiArtifactBody, 'forbidden');
+    assert.equal(task.webuiStorageTruth, 'forbidden');
+    assertNoSensitiveMaterial(taskList.body);
+    assertNoTruthMaterial(taskList.body);
+
+    const taskDetail = await jsonFetch(`${webui.baseUrl}/api/tasks/${encodeURIComponent(task.taskId)}`, {
+      headers: { cookie: session.cookieHeader },
+    });
+    assert.equal(taskDetail.response.status, 200);
+    assert.equal(taskDetail.body.ok, true);
+    assert.equal(taskDetail.body.task.taskId, task.taskId);
+    assert.equal(taskDetail.body.task.conversationId, context.conversationId);
+    assert.equal(taskDetail.body.task.deliverableRefs[0].ref, run.body.deliverables[0].deliverableId);
+    assertNoSensitiveMaterial(taskDetail.body);
+    assertNoTruthMaterial(taskDetail.body);
+
+    const resumedSession = await login(webui.baseUrl, email, password);
+    const resumedList = await jsonFetch(`${webui.baseUrl}/api/tasks`, {
+      headers: { cookie: resumedSession.cookieHeader },
+    });
+    assert.equal(resumedList.response.status, 200);
+    assert.equal(resumedList.body.tasks.length, 1);
+    assert.equal(resumedList.body.tasks[0].taskId, task.taskId);
+    assert.equal(resumedList.body.tasks[0].conversationId, context.conversationId);
+    assertNoSensitiveMaterial(resumedList.body);
+    assertNoTruthMaterial(resumedList.body);
+
+    const resumedDetail = await jsonFetch(`${webui.baseUrl}/api/tasks/${encodeURIComponent(task.taskId)}`, {
+      headers: { cookie: resumedSession.cookieHeader },
+    });
+    assert.equal(resumedDetail.response.status, 200);
+    assert.equal(resumedDetail.body.task.taskId, task.taskId);
+    assert.equal(resumedDetail.body.task.progressRefs[1].ref, 'artifact_available');
+    assert.equal(resumedDetail.body.task.deliverableRefs[0].ref, run.body.deliverables[0].deliverableId);
+    assertNoSensitiveMaterial(resumedDetail.body);
+    assertNoTruthMaterial(resumedDetail.body);
 
     const released = await medoplPost(medopl.baseUrl, '/api/v22/managed-environment/release', {
       workspaceId: context.workspaceId,
@@ -315,7 +377,7 @@ async function webuiRuntimeGate(baseUrl, cookie, context) {
       taskIntent: context.taskIntent,
       marker: '@论文',
       prompt: '@论文 生成选题',
-      conversationId: `real-medopl-${context.workspaceId}`,
+      conversationId: context.conversationId,
     },
   });
 }
@@ -333,12 +395,24 @@ async function medoplPost(baseUrl, path, body) {
   return result;
 }
 
-async function register(baseUrl, email) {
+async function register(baseUrl, email, password = 'correct horse battery staple') {
   const result = await jsonFetch(`${baseUrl}/api/auth/register`, {
     method: 'POST',
-    body: { email, password: 'correct horse battery staple' },
+    body: { email, password },
   });
   assert.equal(result.response.status, 201);
+  assert.equal(typeof result.body.tenantId, 'string');
+  assert.equal(typeof result.body.userId, 'string');
+  assert.equal(typeof result.body.workspaceId, 'string');
+  return result;
+}
+
+async function login(baseUrl, email, password) {
+  const result = await jsonFetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    body: { email, password },
+  });
+  assert.equal(result.response.status, 200);
   assert.equal(typeof result.body.tenantId, 'string');
   assert.equal(typeof result.body.userId, 'string');
   assert.equal(typeof result.body.workspaceId, 'string');
@@ -393,7 +467,19 @@ function redacted(value) {
 }
 
 function assertNoSensitiveMaterial(value) {
-  assert.doesNotMatch(JSON.stringify(value), /correct horse|password|sk-|rawProviderKey|apiKey|providerApiKey|bearerToken|launchToken|runtimeToken|kubeconfig|signedUrl|objectKey|storageKey|localPath|rawObjectStoreSecret|real-local-medopl-provider-key-material/i);
+  assert.doesNotMatch(JSON.stringify(value), /correct horse|password|sk-|rawProviderKey|apiKey|providerApiKey|bearerToken|launchToken|runtimeToken|kubeconfig|signedUrl|objectKey|storageObjectKey|storageKey|localPath|rawObjectStoreSecret|real-local-medopl-provider-key-material/i);
+}
+
+function assertNoTruthMaterial(value) {
+  assert.doesNotMatch(JSON.stringify(stripAllowedBoundaryFields(value)), /artifactBody|artifact_body|paymentTruth|billingTruth|storageObjectKey|domainVerdict|object-store|private\/object\/key/i);
+}
+
+function stripAllowedBoundaryFields(value) {
+  if (Array.isArray(value)) return value.map(stripAllowedBoundaryFields);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !['webuiArtifactBody', 'webuiDomainTruth', 'webuiStorageMutation', 'webuiBillingSourceOfTruth', 'webuiPaymentMutation', 'webuiStorageTruth'].includes(key))
+    .map(([key, item]) => [key, stripAllowedBoundaryFields(item)]));
 }
 
 function wait(ms) {
