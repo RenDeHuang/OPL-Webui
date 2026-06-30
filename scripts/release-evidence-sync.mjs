@@ -774,6 +774,68 @@ function foldLatestMainEvidenceIntoUiReplacementContracts({ profile, summary, re
     .replace(/"releaseEvidenceImpact": "folded_success_run_\d+"/, `"releaseEvidenceImpact": "${latest.state}"`)
     .replace(/"productionEvidence": \{\n      "commit": "[^"]+",\n      "image": "[^"]+",\n      "runId": \d+\n    \}/, pageStateEvidence);
   writeFileSync(pageStatePath, pageStateText);
+
+  foldLatestMainEvidenceIntoProductAndDocs({ latest });
+}
+
+function foldLatestMainEvidenceIntoProductAndDocs({ latest }) {
+  const shortCommit = typeof latest.commit === 'string' ? latest.commit.slice(0, 7) : '';
+  const releaseImage = latest.image ?? `uswccr.ccs.tencentyun.com/webopl/opl-webui:${shortCommit}`;
+  const refs = {
+    runId: String(latest.runId),
+    runUrl: latest.runUrl,
+    commit: latest.commit,
+    shortCommit,
+    image: releaseImage,
+    state: latest.state,
+  };
+
+  updateTextFile('contracts/web-product-profile.json', (text) => text
+    .replace(/"localMain":\{"head":"[0-9a-f]{40}","aheadOriginMain":0,"state":"pushed_ci_image_rollout_foldback_done"/, `"localMain":{"head":"${refs.commit}","aheadOriginMain":0,"state":"pushed_ci_image_rollout_foldback_done"`)
+    .replace(/"releaseImage":"uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:[^"]+","cloudRolloutRunId":\d+/, `"releaseImage":"${refs.image}","cloudRolloutRunId":${refs.runId}`)
+    .replace(/"id": "production_rollout",\n        "status": "folded_success_run_\d+"/, `"id": "production_rollout",\n        "status": "${refs.state}"`));
+
+  updateTextFile('docs/status.md', (text) => replaceLatestEvidenceText(text, refs));
+  updateTextFile('docs/active/README.md', (text) => replaceLatestEvidenceText(text, refs));
+  updateTextFile('deploy/web-cloud/RUNBOOK.md', (text) => replaceLatestEvidenceText(text, refs));
+}
+
+function updateTextFile(path, updater) {
+  const before = readFileSync(path, 'utf8');
+  const after = updater(before);
+  if (after !== before) writeFileSync(path, after);
+}
+
+function replaceLatestEvidenceText(text, refs) {
+  return text
+    .replace(/production rollout is `folded_success_run_\d+`/g, `production rollout is \`${refs.state}\``)
+    .replace(/`production_rollout`: folded_success_run_\d+/g, `\`production_rollout\`: ${refs.state}`)
+    .replace(/Production rollout latest-main evidence is folded back for commit `[^`]+` through Cloud Rollout run `\d+`/g, `Production rollout latest-main evidence is folded back for commit \`${refs.commit}\` through Cloud Rollout run \`${refs.runId}\``)
+    .replace(/Latest main production evidence is folded back from GitHub Actions run `\d+` for commit `[^`]+`, image `[^`]+`/g, `Latest main production evidence is folded back from GitHub Actions run \`${refs.runId}\` for commit \`${refs.commit}\`, image \`${refs.image}\``)
+    .replace(/Latest main production evidence is folded back from run `\d+` for commit `[^`]+`, image `[^`]+`/g, `Latest main production evidence is folded back from run \`${refs.runId}\` for commit \`${refs.commit}\`, image \`${refs.image}\``)
+    .replace(/Latest-main production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run `\d+` for commit `[^`]+`, image `[^`]+`/g, `Latest-main production authenticated dogfood HTTP evidence executed successfully in GitHub Actions run \`${refs.runId}\` for commit \`${refs.commit}\`, image \`${refs.image}\``)
+    .replace(/Production authenticated dogfood HTTP evidence passed in GitHub Actions run `\d+` for commit `[^`]+`, image `[^`]+`/g, `Production authenticated dogfood HTTP evidence passed in GitHub Actions run \`${refs.runId}\` for commit \`${refs.commit}\`, image \`${refs.image}\``)
+    .replace(/Latest-main production browser e2e executed successfully in GitHub Actions run `\d+`/g, `Latest-main production browser e2e executed successfully in GitHub Actions run \`${refs.runId}\``)
+    .replace(/Production browser e2e evidence passed in GitHub Actions run `\d+`/g, `Production browser e2e evidence passed in GitHub Actions run \`${refs.runId}\``)
+    .replace(/Production dogfood readonly projection was confirmed for latest-main run `\d+`/g, `Production dogfood readonly projection was confirmed for latest-main run \`${refs.runId}\``)
+    .replace(/Latest-main production availability probe executed successfully in GitHub Actions run `\d+` after production apply on image `[^`]+`/g, `Latest-main production availability probe executed successfully in GitHub Actions run \`${refs.runId}\` after production apply on image \`${refs.image}\``)
+    .replace(/Production availability probe succeeded in run `\d+`/g, `Production availability probe succeeded in run \`${refs.runId}\``)
+    .replace(/Production observability baseline v1 is folded back to latest-main run `\d+`/g, `Production observability baseline v1 is folded back to latest-main run \`${refs.runId}\``)
+    .replace(/latest-main release evidence is folded back to run `\d+`/g, `latest-main release evidence is folded back to run \`${refs.runId}\``)
+    .replace(/The Figma parity UI replacement candidate is deployed to production controlled launch at commit `[^`]+` with Cloud Rollout run `\d+`/g, `The Figma parity UI replacement candidate is deployed to production controlled launch at commit \`${refs.commit}\` with Cloud Rollout run \`${refs.runId}\``)
+    .replace(/Production controlled launch run `\d+` deployed commit `[^`]+` \/ image `[^`]+`/g, `Production controlled launch run \`${refs.runId}\` deployed commit \`${refs.commit}\` / image \`${refs.image}\``)
+    .replace(/MedOPL readonly foldback is confirmed for latest-main run `\d+`/g, `MedOPL readonly foldback is confirmed for latest-main run \`${refs.runId}\``)
+    .replace(/split Production Browser E2E passed in Cloud Rollout run `\d+`/g, `split Production Browser E2E passed in Cloud Rollout run \`${refs.runId}\``)
+    .replace(/Commercial Launch readiness closeout is closed after ([^.]+) for commit `[^`]+`/g, `Commercial Launch readiness closeout is closed after $1 for commit \`${refs.commit}\``)
+    .replace(/Latest-main production evidence is folded back only for commit `[^`]+`/g, `Latest-main production evidence is folded back only for commit \`${refs.commit}\``)
+    .replace(/Latest folded evidence is Cloud Rollout run `\d+`, commit `[^`]+`, image `[^`]+`/g, `Latest folded evidence is Cloud Rollout run \`${refs.runId}\`, commit \`${refs.commit}\`, image \`${refs.image}\``)
+    .replace(/run id: \d+/g, `run id: ${refs.runId}`)
+    .replace(/run URL: https:\/\/github\.com\/RenDeHuang\/OPL-Webui\/actions\/runs\/\d+/g, `run URL: ${refs.runUrl}`)
+    .replace(/job URL: https:\/\/github\.com\/RenDeHuang\/OPL-Webui\/actions\/runs\/\d+\/job\/\d+/g, `job URL: ${refs.runUrl}`)
+    .replace(/commit: [0-9a-f]{40}/g, `commit: ${refs.commit}`)
+    .replace(/image: uswccr\.ccs\.tencentyun\.com\/webopl\/opl-webui:[^\n]+/g, `image: ${refs.image}`)
+    .replace(/GitHub Actions run `\d+` 成功执行/g, `GitHub Actions run \`${refs.runId}\` 成功执行`)
+    .replace(/commit `[^`]+` \/ image `[^`]+`/g, `commit \`${refs.commit}\` / image \`${refs.image}\``);
 }
 
 function fetchGitHubRun(runId) {
