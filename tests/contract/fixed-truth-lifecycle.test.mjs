@@ -150,8 +150,11 @@ test('active baton and tombstone preserve next-agent context without becoming ma
 
 test('archive keeps prior production evidence while active truth points to current contracts', () => {
   const status = readFileSync('docs/status.md', 'utf8');
+  const active = readFileSync('docs/active/README.md', 'utf8');
   const closeout = readFileSync('docs/history/process/closeouts.md', 'utf8');
+  const product = readJson('contracts/web-product-profile.json');
   const release = readJson('contracts/web-release-profile.json');
+  const syncScript = readFileSync('scripts/release-evidence-sync.mjs', 'utf8');
   const { latest } = latestEvidence(release);
 
   assert.match(closeout, /24ba41f/);
@@ -175,6 +178,12 @@ test('archive keeps prior production evidence while active truth points to curre
   assert.match(status, /contracts\/web-release-profile\.json/);
   assert.match(status, /contracts\/web-development-profile\.json/);
   assert.match(status, new RegExp(`Latest main production evidence is folded back from GitHub Actions run \`${latest.runId}\``));
+  assert.deepEqual(release.truthLayering.layers.map((layer) => [layer.id, layer.owner, layer.mutationPolicy]), [['fixed_product_truth', 'contracts/web-product-profile.json#/productIdentity', 'change_only_when_product_boundary_changes'], ['active_status_truth', 'docs/status.md and docs/active/README.md', 'compact_summary_pointer_only'], ['run_evidence', 'contracts/web-release-profile.json#/latestMainEvidence', 'append_or_replace_sanitized_latest_evidence_only_after_successful_release_flow']]);
+  assert.deepEqual([release.truthLayering.releaseEvidenceMayDefineProductIdentity, release.truthLayering.productIdentityMutableByReleaseEvidence, release.latestMainEvidence.truthLayer, release.latestMainEvidence.evidenceScope], [false, false, 'run_evidence', 'latest-main-rollout']);
+  assert.equal(['contracts/web-release-profile.json#/latestMainEvidence', 'contracts/web-product-profile.json#/commercialLaunchReadiness', 'docs/status.md compact latest evidence summary'].every((item) => release.truthLayering.foldbackAllowedWrites.includes(item)) && ['contracts/web-product-profile.json#/productIdentity', 'contracts/web-product-profile.json#/uiSourceTruth', 'contracts/web-api.openapi.json API shape'].every((item) => release.truthLayering.foldbackForbiddenWrites.includes(item)), true);
+  assert.deepEqual([product.productIdentity.truthLayer, product.commercialLaunchReadiness.truthLayer, product.commercialLaunchReadiness.evidencePointerPolicy, product.gapMap.layers.find((layer) => layer.id === 'production_rollout').truthLayer], [['fixed_product_truth'], 'active_status_truth', 'compact_summary_only_not_product_identity', 'active_status_truth']);
+  assert.equal(/Fixed truth, active truth, and run evidence are separate layers/.test(status) && /Current Truth Layering/.test(active) && active.includes(`Production rollout latest-main evidence is folded back for commit \`${latest.commit}\``), true);
+  assert.equal(syncScript.includes('productIdentity') || syncScript.includes('uiSourceTruth'), false);
   assert.doesNotMatch(status, /one-person-lab-web-truth-reset/);
   assert.doesNotMatch(status, /repo-slimming-and-stale-name-retirement/);
   assert.doesNotMatch(status, /Latest `main` production evidence is folded back to GitHub Actions run `28142197152`/);

@@ -104,6 +104,8 @@ function foldLatestMainEvidenceIntoReleaseProfile({ profile, summary }) {
     ? summary.commit.slice(0, 7)
     : null;
   const latest = {
+    truthLayer: 'run_evidence',
+    evidenceScope: 'latest-main-rollout',
     state: `folded_success_run_${summary.runId}`,
     runId: summary.runId,
     runUrl: summary.runUrl,
@@ -889,7 +891,7 @@ function inferImageFromCommit(commit) {
 }
 
 function formatJsonPreservingCompactTopLevel(value) {
-  const compactKeys = new Set(['latestMainEvidence', 'controlledLaunchReadiness']);
+  const compactKeys = new Set(['truthLayering', 'latestMainEvidence', 'controlledLaunchReadiness']);
   return formatJsonValue(value, 0, ({ key, value: nestedValue }) => compactKeys.has(key) ? JSON.stringify(nestedValue) : null);
 }
 

@@ -15,7 +15,7 @@ Commercial product user journey depth is a product gap, not a release/ops gap. R
 
 `docs/active/README.md` now carries the lightweight current gap baton for worktree lanes and next-agent handoff. It supports the fixed truth set; it does not replace this status file or any machine contract.
 
-The current gap set is machine-owned by `contracts/web-product-profile.json#/gapMap`: growth layer is `done_v1`, user product layer is `done_v1_repo_browser`, admin ops layer is `partial`, and production rollout is `folded_success_run_28422674169`. Product identity is machine-owned by `contracts/web-product-profile.json#/productIdentity`. Production deploy is release evidence only: it can support readiness for a commit or rollout, but it cannot define, change, or rewrite OPL-Webui product identity.
+The current gap set is machine-owned by `contracts/web-product-profile.json#/gapMap`: growth layer is `done_v1`, user product layer is `done_v1_repo_browser`, admin ops layer is `partial`, and production rollout is `folded_success_run_28422674169`. Fixed truth, active truth, and run evidence are separate layers: product identity is fixed truth and machine-owned by `contracts/web-product-profile.json#/productIdentity`; current status and gap baton are active truth in `docs/status.md`, `docs/active/README.md`, and compact product profile pointers; concrete CI/rollout/dogfood/browser output is run evidence in `contracts/web-release-profile.json#/latestMainEvidence` and GitHub Actions. Production deploy is release evidence only: it can support readiness for a commit or rollout, but it cannot define, change, or rewrite OPL-Webui product identity.
 
 ## Machine Truth
 
