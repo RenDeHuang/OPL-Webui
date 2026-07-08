@@ -47,7 +47,7 @@ function assertLatestRun(run, latest) {
 test('package lifecycle exposes verification-only commands', () => {
   for (const scriptName of [
     'verify', 'verify:health', 'verify:smoke', 'verify:contract', 'test:health', 'test:smoke',
-    'test:contract', 'test:regression', 'gate:ai', 'gate:review', 'repo:bloat', 'line:budget', 'check:diff',
+    'test:contract', 'gate:ai', 'gate:review', 'repo:bloat', 'line:budget', 'check:diff',
   ]) {
     assert.ok(pkg.scripts[scriptName], `missing package script: ${scriptName}`);
   }

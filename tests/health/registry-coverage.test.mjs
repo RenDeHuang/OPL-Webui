@@ -30,7 +30,6 @@ test('registry covers the current lane model', () => {
     'browser',
     'integration',
     'release',
-    'regression',
     'real-medopl',
   ]) {
     assert.ok(TEST_LANE_REGISTRY[lane], `missing ${lane} lane`);
@@ -126,7 +125,6 @@ test('verify suites separate daily current from explicit heavy lanes', () => {
     'browser',
     'integration',
     'release',
-    'regression',
   ]);
   assert.deepEqual(VERIFY_SUITES['real-medopl'], ['real-medopl']);
 });

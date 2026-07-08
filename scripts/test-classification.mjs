@@ -27,7 +27,6 @@ export const VERIFY_SUITE_NAMES = Object.freeze([
   'integration',
   'release',
   'deploy',
-  'regression',
   'real-medopl',
   'full',
 ]);
@@ -828,6 +827,8 @@ function lane(name, description) {
   });
 }
 
+const regressionLane = lane('regression', 'Explicit regression reproductions with retirement metadata.');
+
 export const TEST_LANE_REGISTRY = Object.freeze({
   fast: lane('fast', 'Development fast lane alias for cheap local product engineering checks.'),
   smoke: lane('smoke', 'Minimal foundation and static Web shell smoke checks.'),
@@ -844,10 +845,7 @@ export const TEST_LANE_REGISTRY = Object.freeze({
   release: lane('release', 'Release evidence, deploy/cloud rollout helper, production dogfood/browser/availability, and readiness profile checks.'),
   deploy: lane('deploy', 'Compatibility alias for deploy scripts; use the release verify suite for active deploy evidence checks.'),
   'real-medopl': lane('real-medopl', 'Explicit real local MedOPL process E2E evidence; not part of current or full.'),
-  regression: Object.freeze({
-    description: 'Explicit regression reproductions.',
-    tests: Object.freeze([]),
-  }),
+  ...(regressionLane.tests.length > 0 ? { regression: regressionLane } : {}),
 });
 
 export const VERIFY_SUITES = Object.freeze({
@@ -876,7 +874,6 @@ export const VERIFY_SUITES = Object.freeze({
     'browser',
     'integration',
     'release',
-    'regression',
   ]),
   'real-medopl': Object.freeze(['real-medopl']),
 });
